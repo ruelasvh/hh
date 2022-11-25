@@ -7,20 +7,10 @@ import vector as p4
 from matplotlib.figure import Figure
 import hep2plts as plts
 
+SAMPLES_PATH = "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.gHH4b/output"
 
-X1000_S100_mc20a = "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.hh4b_boosted_via_sh4b_boosted/grid/output/user.viruelas.HH4b-no-trig.2022_10_20.801595.Py8EG_A14NNPDF23LO_XHS_X1000_S100_4b.e8448_a899_r13167_p5057_TREE/user.viruelas.30932128._000001.output-hh4b.root"
-
-X1000_S100_mc20d = "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.hh4b_boosted_via_sh4b_boosted/grid/output/user.viruelas.HH4b-no-trig.2022_10_20.801595.Py8EG_A14NNPDF23LO_XHS_X1000_S100_4b.e8448_a899_r13144_p5057_TREE/user.viruelas.30932122._000001.output-hh4b.root"
-
-X1000_S100_mc20e = "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.hh4b_boosted_via_sh4b_boosted/grid/output/user.viruelas.HH4b-no-trig.2022_10_20.801595.Py8EG_A14NNPDF23LO_XHS_X1000_S100_4b.e8448_a899_r13145_p5057_TREE/user.viruelas.30932125._000001.output-hh4b.root"
-
-X2000_S100_mc20a = "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.hh4b_boosted_via_sh4b_boosted/grid/output/user.viruelas.HH4b-no-trig.2022_10_20.801614.Py8EG_A14NNPDF23LO_XHS_X2000_S100_4b.e8448_a899_r13167_p5057_TREE/user.viruelas.30932131._000001.output-hh4b.root"
-
-X3000_S100_mc20a = "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.hh4b_boosted_via_sh4b_boosted/grid/output/user.viruelas.HH4b-no-trig.2022_10_20.801637.Py8EG_A14NNPDF23LO_XHS_X3000_S100_4b.e8448_a899_r13167_p5057_TREE/user.viruelas.30932136._000001.output-hh4b.root"
-
-X2000_S400_mc20e_TEST = "/lustre/fs22/group/atlas/ruelasv/run/analysis-variables.root"
-
-G_HH_bbbb_mc20d = "/lustre/fs22/group/atlas/ruelasv/hh4b-analysis-r22-build/run/analysis-variables.root"
+# mG300_mc20d = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514722.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M300.e8470_s3681_r13144_p5440_TREE/user.viruelas.31352503._000001.output-hh4b.root"
+mG300_mc20d = "/lustre/fs22/group/atlas/ruelasv/hh4b-analysis-r22-build/run/analysis-variables.root"
 
 invGeV = 1 / 1000
 
@@ -82,7 +72,7 @@ def draw_m_hist(data, ax, label=None, truth=None, title=None, atlas_sec_tag=None
 
 
 def draw_deltaR_hist(data, ax, label=None, truth=None, title=None, atlas_sec_tag=None):
-    bins = np.linspace(0, 10, 101)
+    bins = np.linspace(0, 1, 41)
     jet_counts, _ = np.histogram(data, bins)
 
     x_label = f"$\Delta R$ between largeR jets and {truth}"
@@ -99,7 +89,7 @@ def draw_deltaR_hist(data, ax, label=None, truth=None, title=None, atlas_sec_tag
 
 
 def match_jet_to_truth_particle(sample, cuts):
-    """Match jet to truth S or H using min delatR"""
+    """Match jet to truth H1 or H2 using min delatR"""
 
     jet_p4 = p4.zip(
         {
@@ -109,60 +99,60 @@ def match_jet_to_truth_particle(sample, cuts):
             "mass": sample["recojet_antikt10_NOSYS_m"][cuts],
         }
     )
-    H_p4 = p4.zip(
+    H1_p4 = p4.zip(
         {
-            "pt": sample["truth_H_pt"],
-            "eta": sample["truth_H_eta"],
-            "phi": sample["truth_H_phi"],
-            "mass": sample["truth_H_m"],
+            "pt": sample["truth_H1_pt"],
+            "eta": sample["truth_H1_eta"],
+            "phi": sample["truth_H1_phi"],
+            "mass": sample["truth_H1_m"],
         }
     )
-    S_p4 = p4.zip(
+    H2_p4 = p4.zip(
         {
-            "pt": sample["truth_S_pt"],
-            "eta": sample["truth_S_eta"],
-            "phi": sample["truth_S_phi"],
-            "mass": sample["truth_S_m"],
+            "pt": sample["truth_H2_pt"],
+            "eta": sample["truth_H2_eta"],
+            "phi": sample["truth_H2_phi"],
+            "mass": sample["truth_H2_m"],
         }
     )
 
     print(
-        f"total number events from jets, H and S in sample (all should be equal): {len(jet_p4)}, {len(H_p4)}, {len(S_p4)}"
+        f"total number events from jets, H1 and H2 in sample (all should be equal): {len(jet_p4)}, {len(H1_p4)}, {len(H2_p4)}"
     )
 
-    jet_deltaR_to_H = jet_p4.deltaR(H_p4)
-    jet_deltaR_to_S = jet_p4.deltaR(S_p4)
+    jet_dR_to_H1 = jet_p4.deltaR(H1_p4)
+    jet_dR_to_H2 = jet_p4.deltaR(H2_p4)
 
-    global_min_deltaR = 0.75
+    global_min_dR = 0.75
 
-    good = jet_deltaR_to_H < global_min_deltaR
-    jet_deltaR_to_H = ak.mask(jet_deltaR_to_H, good)
-    which_H = ak.argmin(jet_deltaR_to_H, axis=1, keepdims=True)
+    good = jet_dR_to_H1 < global_min_dR
+    jet_dR_to_H1 = ak.mask(jet_dR_to_H1, good)
+    which_H1 = ak.argmin(jet_dR_to_H1, axis=1, keepdims=True)
 
-    good = jet_deltaR_to_S < global_min_deltaR
-    jet_deltaR_to_S = ak.mask(jet_deltaR_to_S, good)
-    which_S = ak.argmin(jet_deltaR_to_S, axis=1, keepdims=True)
+    good = jet_dR_to_H2 < global_min_dR
+    jet_dR_to_H2 = ak.mask(jet_dR_to_H2, good)
+    which_H2 = ak.argmin(jet_dR_to_H2, axis=1, keepdims=True)
 
     print(
-        f"Jets that overlap in min deltaR for S and H: {ak.sum(jet_deltaR_to_H[which_H] == jet_deltaR_to_S[which_S])}"
+        f"Jets that overlap in min deltaR for H1 and H2: {ak.sum(jet_dR_to_H1[which_H1] == jet_dR_to_H2[which_H2])}"
     )
 
-    matched_to_H = ak.flatten(jet_deltaR_to_H[which_H] < jet_deltaR_to_S[which_S])
-    matched_to_S = ~matched_to_H
+    matched_to_H1 = ak.flatten(jet_dR_to_H1[which_H1] < jet_dR_to_H2[which_H2])
+    matched_to_H2 = ~matched_to_H1
 
-    which_S = ak.mask(which_S, matched_to_S)
-    which_H = ak.mask(which_H, matched_to_H)
+    which_H2 = ak.mask(which_H2, matched_to_H2)
+    which_H1 = ak.mask(which_H1, matched_to_H1)
 
-    truth_matched_to_H_jet = jet_p4[which_H]
-    truth_matched_to_S_jet = jet_p4[which_S]
+    truth_matched_to_H1_jet = jet_p4[which_H1]
+    truth_matched_to_H2_jet = jet_p4[which_H2]
 
     return {
-        "jet_deltaR_to_H": jet_deltaR_to_H,
-        "jet_deltaR_to_S": jet_deltaR_to_S,
-        "truth_matched_to_H_jet": truth_matched_to_H_jet,
-        "truth_matched_to_S_jet": truth_matched_to_S_jet,
-        "which_S": which_S,
-        "which_H": which_H,
+        "jet_dR_to_H1": jet_dR_to_H1,
+        "jet_dR_to_H2": jet_dR_to_H2,
+        "truth_matched_to_H1_jet": truth_matched_to_H1_jet,
+        "truth_matched_to_H2_jet": truth_matched_to_H2_jet,
+        "which_H1": which_H1,
+        "which_H2": which_H2,
     }
 
 
@@ -170,45 +160,56 @@ def btag_jets(truth_matched_jets, sample):
     vr_jets = sample[
         "recojet_antikt10_NOSYS_leadingVRTrackJetsBtag_DL1r_FixedCutBEff_77"
     ]
-    matched_vr_jets_to_H = vr_jets[truth_matched_jets["which_H"]]
-    matched_vr_jets_to_S = vr_jets[truth_matched_jets["which_S"]]
-    which_largeR_jets_matched_H_btag = ak.firsts(
-        ak.sum(matched_vr_jets_to_H, axis=2) >= 2
+    matched_vr_jets_to_H1 = vr_jets[truth_matched_jets["which_H1"]]
+    matched_vr_jets_to_H2 = vr_jets[truth_matched_jets["which_H2"]]
+    which_largeR_jets_matched_H1_btag = ak.firsts(
+        ak.sum(matched_vr_jets_to_H1, axis=2) >= 2
     )
-    which_largeR_jets_matched_S_btag = (ak.count(matched_vr_jets_to_S, axis=2) >= 2) & (
-        ak.sum(matched_vr_jets_to_S, axis=2) >= 2
-    )
+    which_largeR_jets_matched_H2_btag = (
+        ak.count(matched_vr_jets_to_H2, axis=2) >= 2
+    ) & (ak.sum(matched_vr_jets_to_H2, axis=2) >= 2)
     # which_largeR_jets_matched_S_btag = ak.firsts(
     #     ak.sum(matched_vr_jets_to_S, axis=2) >= 2
     # )
 
     return {
-        "truth_matched_to_H_jet_btag77": truth_matched_jets["truth_matched_to_H_jet"][
-            which_largeR_jets_matched_H_btag
+        "truth_matched_to_H1_jet_btag77": truth_matched_jets["truth_matched_to_H1_jet"][
+            which_largeR_jets_matched_H1_btag
         ],
-        "truth_matched_to_S_jet_btag77": truth_matched_jets["truth_matched_to_S_jet"][
-            which_largeR_jets_matched_S_btag
+        "truth_matched_to_H2_jet_btag77": truth_matched_jets["truth_matched_to_H2_jet"][
+            which_largeR_jets_matched_H2_btag
         ],
     }
+
+
+def compute_mass(p4_1, p4_2):
+    reconstructed_mass = (p4_1 + p4_2).mass
+    # print(ak.sum(~ak.is_none(reconstructed_mass)))
+    # print(reconstructed_mass[~ak.is_none(reconstructed_mass)])
+    return reconstructed_mass
 
 
 def draw_largeR_jets(largeR_dict):
     fig_jetPt, ax_jetPt = plts.subplots()
     fig_jetM, ax_jetM = plts.subplots()
-    fig_deltaR_to_H, ax_deltaR_to_H = plts.subplots()
-    fig_deltaR_to_S, ax_deltaR_to_S = plts.subplots()
-    fig_truth_matched_to_H_jetM, ax_truth_matched_to_H_jetM = plts.subplots()
-    fig_truth_matched_to_S_jetM, ax_truth_matched_to_S_jetM = plts.subplots()
-    fig_truth_matched_to_H_jetPt, ax_truth_matched_to_H_jetPt = plts.subplots()
-    fig_truth_matched_to_S_jetPt, ax_truth_matched_to_S_jetPt = plts.subplots()
     fig_VRtrack_jets, ax_VRtrack_jets = plts.subplots()
+    fig_deltaR_to_H1, ax_deltaR_to_H1 = plts.subplots()
+    fig_deltaR_to_H2, ax_deltaR_to_H2 = plts.subplots()
+    fig_truth_matched_to_H1_jetM, ax_truth_matched_to_H1_jetM = plts.subplots()
+    fig_truth_matched_to_H2_jetM, ax_truth_matched_to_H2_jetM = plts.subplots()
+    fig_truth_matched_to_H1_jetPt, ax_truth_matched_to_H1_jetPt = plts.subplots()
+    fig_truth_matched_to_H2_jetPt, ax_truth_matched_to_H2_jetPt = plts.subplots()
+    fig_truth_matched_to_H1H2_jetM, ax_truth_matched_to_H1H2_jetM = plts.subplots()
 
-    pt_cut = 100e3
+    pt_cut = 100
+    m_cut = 50
     eta_cut = 2
-    m_cut = 50e3
-    cuts_label = "$p_{\mathrm{T}}$ > 100 GeV, m > 50 GeV and $|\eta| < 2$"
+    cuts_label = f"$p_T$ > {pt_cut} GeV, m > {m_cut} GeV and $|\eta| < {eta_cut}$"
+    pt_cut = pt_cut / invGeV
+    m_cut = m_cut / invGeV
     for sample_name, sample in largeR_dict.items():
-        atlas_sec_tag = f"DSID 514722, mc20d\n{cuts_label}"
+        # atlas_sec_tag = f"DSID 514722, mc20d\n{cuts_label}"
+        atlas_sec_tag = f"{cuts_label}"
         cuts = (
             (sample["recojet_antikt10_NOSYS_pt"] > pt_cut)
             & (sample["recojet_antikt10_NOSYS_m"] > m_cut)
@@ -235,95 +236,107 @@ def draw_largeR_jets(largeR_dict):
 
         truth_matched_jets = match_jet_to_truth_particle(sample=sample, cuts=cuts)
         draw_deltaR_hist(
-            ak.ravel(truth_matched_jets["jet_deltaR_to_H"]),
-            ax_deltaR_to_H,
+            ak.ravel(truth_matched_jets["jet_dR_to_H1"]),
+            ax_deltaR_to_H1,
             sample_name,
-            truth="H",
+            truth="H1",
             atlas_sec_tag=atlas_sec_tag,
         )
         draw_deltaR_hist(
-            ak.ravel(truth_matched_jets["jet_deltaR_to_S"]),
-            ax_deltaR_to_S,
+            ak.ravel(truth_matched_jets["jet_dR_to_H2"]),
+            ax_deltaR_to_H2,
             sample_name,
-            truth="S",
+            truth="H2",
             atlas_sec_tag=atlas_sec_tag,
         )
         draw_m_hist(
-            ak.ravel(truth_matched_jets["truth_matched_to_H_jet"].mass),
-            ax_truth_matched_to_H_jetM,
+            ak.ravel(truth_matched_jets["truth_matched_to_H1_jet"].mass),
+            ax_truth_matched_to_H1_jetM,
             label=f"{sample_name} No btag",
-            truth="H",
+            truth="H1",
             atlas_sec_tag=atlas_sec_tag,
         )
         draw_pT_hist(
-            ak.ravel(truth_matched_jets["truth_matched_to_H_jet"].pt),
-            ax_truth_matched_to_H_jetPt,
+            ak.ravel(truth_matched_jets["truth_matched_to_H1_jet"].pt),
+            ax_truth_matched_to_H1_jetPt,
             label=f"{sample_name} No btag",
-            truth="H",
+            truth="H1",
             atlas_sec_tag=atlas_sec_tag,
         )
         draw_m_hist(
-            ak.ravel(truth_matched_jets["truth_matched_to_S_jet"].mass),
-            ax_truth_matched_to_S_jetM,
+            ak.ravel(truth_matched_jets["truth_matched_to_H2_jet"].mass),
+            ax_truth_matched_to_H2_jetM,
             label=f"{sample_name} No btag",
-            truth="S",
+            truth="H2",
             atlas_sec_tag=atlas_sec_tag,
         )
         draw_pT_hist(
-            ak.ravel(truth_matched_jets["truth_matched_to_S_jet"].pt),
-            ax_truth_matched_to_S_jetPt,
+            ak.ravel(truth_matched_jets["truth_matched_to_H2_jet"].pt),
+            ax_truth_matched_to_H2_jetPt,
             label=f"{sample_name} No btag",
-            truth="S",
+            truth="H2",
+            atlas_sec_tag=atlas_sec_tag,
+        )
+        draw_m_hist(
+            ak.ravel(
+                compute_mass(
+                    truth_matched_jets["truth_matched_to_H1_jet"],
+                    truth_matched_jets["truth_matched_to_H2_jet"],
+                )
+            ),
+            ax_truth_matched_to_H1H2_jetM,
+            label=f"{sample_name}",
             atlas_sec_tag=atlas_sec_tag,
         )
 
         truth_matched_jets_btag = btag_jets(truth_matched_jets, sample)
         draw_m_hist(
-            ak.ravel(truth_matched_jets_btag["truth_matched_to_H_jet_btag77"].mass),
-            ax_truth_matched_to_H_jetM,
+            ak.ravel(truth_matched_jets_btag["truth_matched_to_H1_jet_btag77"].mass),
+            ax_truth_matched_to_H1_jetM,
             label=f"{sample_name} btag77",
-            truth="H",
+            truth="H1",
             atlas_sec_tag=atlas_sec_tag,
         )
         draw_pT_hist(
-            ak.ravel(truth_matched_jets_btag["truth_matched_to_H_jet_btag77"].pt),
-            ax_truth_matched_to_H_jetPt,
+            ak.ravel(truth_matched_jets_btag["truth_matched_to_H1_jet_btag77"].pt),
+            ax_truth_matched_to_H1_jetPt,
             label=f"{sample_name} btag77",
-            truth="H",
+            truth="H1",
             atlas_sec_tag=atlas_sec_tag,
         )
         draw_m_hist(
-            ak.ravel(truth_matched_jets_btag["truth_matched_to_S_jet_btag77"].mass),
-            ax_truth_matched_to_S_jetM,
+            ak.ravel(truth_matched_jets_btag["truth_matched_to_H2_jet_btag77"].mass),
+            ax_truth_matched_to_H2_jetM,
             label=f"{sample_name} btag77",
-            truth="S",
+            truth="H2",
             atlas_sec_tag=atlas_sec_tag,
         )
         draw_pT_hist(
-            ak.ravel(truth_matched_jets_btag["truth_matched_to_S_jet_btag77"].pt),
-            ax_truth_matched_to_S_jetPt,
+            ak.ravel(truth_matched_jets_btag["truth_matched_to_H2_jet_btag77"].pt),
+            ax_truth_matched_to_H2_jetPt,
             label=f"{sample_name} btag77",
-            truth="S",
+            truth="H2",
             atlas_sec_tag=atlas_sec_tag,
         )
 
     fig_jetPt.savefig("large-R-jets-pT.png", bbox_inches="tight")
     fig_jetM.savefig("large-R-jets-mass.png", bbox_inches="tight")
-    fig_deltaR_to_H.savefig("large-R-jets-deltaR-to-H.png", bbox_inches="tight")
-    fig_deltaR_to_S.savefig("large-R-jets-deltaR-to-S.png", bbox_inches="tight")
-    fig_truth_matched_to_H_jetM.savefig(
-        "large-R-jets-mass-truth-matched-to-H.png", bbox_inches="tight"
-    )
-    fig_truth_matched_to_S_jetM.savefig(
-        "large-R-jets-mass-truth-matched-to-S.png", bbox_inches="tight"
-    )
-    fig_truth_matched_to_H_jetPt.savefig(
-        "large-R-jets-pT-truth-matched-to-H.png", bbox_inches="tight"
-    )
-    fig_truth_matched_to_S_jetPt.savefig(
-        "large-R-jets-pT-truth-matched-to-S.png", bbox_inches="tight"
-    )
     fig_VRtrack_jets.savefig("good_VR_track_jets.png", bbox_inches="tight")
+    fig_deltaR_to_H1.savefig("large-R-jets-deltaR-to-H1.png", bbox_inches="tight")
+    fig_deltaR_to_H2.savefig("large-R-jets-deltaR-to-H2.png", bbox_inches="tight")
+    fig_truth_matched_to_H1_jetM.savefig(
+        "large-R-jets-mass-truth-matched-to-H1.png", bbox_inches="tight"
+    )
+    fig_truth_matched_to_H2_jetM.savefig(
+        "large-R-jets-mass-truth-matched-to-H2.png", bbox_inches="tight"
+    )
+    fig_truth_matched_to_H1_jetPt.savefig(
+        "large-R-jets-pT-truth-matched-to-H1.png", bbox_inches="tight"
+    )
+    fig_truth_matched_to_H2_jetPt.savefig(
+        "large-R-jets-pT-truth-matched-to-H2.png", bbox_inches="tight"
+    )
+    fig_truth_matched_to_H1H2_jetM.savefig("H1H2-mass.png", bbox_inches="tight")
 
 
 # def run():
@@ -341,15 +354,12 @@ def draw_largeR_jets(largeR_dict):
 def run():
     largeR_dict = {}
     samples = {
-        "G_HH_bbbb": G_HH_bbbb_mc20d,
-        # "X1000_S100_mc20a": X1000_S100_mc20a,
-        # "X2000_S100_mc20a": X2000_S100_mc20a,
-        # "X3000_S100_mc20a": X3000_S100_mc20a,
+        "mG300_mc20d": mG300_mc20d,
     }
     for sname, fname in samples.items():
         with uproot.open(f"{fname}:AnalysisMiniTree") as f:
             largeR_dict[sname] = f.arrays(
-                filter_name="/(recojet_antikt10_NOSYS|truth_[HS])_[pt|eta|phi|m|goodVRTrackJets|leadingVRTrackJetsBtag_DL1r_FixedCutBEff_77]/",
+                filter_name="/(recojet_antikt10_NOSYS|truth_H[12])_[pt|eta|phi|m|goodVRTrackJets|leadingVRTrackJetsBtag_DL1r_FixedCutBEff_77]/",
             )
     draw_largeR_jets(largeR_dict)
 
