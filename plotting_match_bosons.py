@@ -4,24 +4,26 @@ import uproot
 import numpy as np
 import awkward as ak
 import vector as p4
-from matplotlib.figure import Figure
 import hep2plts as plts
 
 SAMPLES_PATH = "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.gHH4b/output"
 
-# mG300_mc20d = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514722.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M300.e8470_s3681_r13144_p5440_TREE/user.viruelas.31352503._000001.output-hh4b.root"
+mG3000_mc20a = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514741.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M3000.e8470_s3681_r13167_p5440_TREE/user.viruelas.31352673._000001.output-hh4b.root"
+mG2500_mc20a = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514739.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M2500.e8470_s3681_r13167_p5440_TREE/user.viruelas.31352660._000001.output-hh4b.root"
+mG2000_mc20a = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514737.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M2000.e8470_s3681_r13167_p5440_TREE/user.viruelas.31352649._000001.output-hh4b.root"
+mG1500_mc20a = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514734.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M1500.e8470_s3681_r13167_p5440_TREE/user.viruelas.31352623._000001.output-hh4b.root"
+mG1000_mc20a = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514729.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M1000.e8470_s3681_r13167_p5440_TREE/user.viruelas.31352581._000001.output-hh4b.root"
+
 mG300_mc20d = "/lustre/fs22/group/atlas/ruelasv/hh4b-analysis-r22-build/run/analysis-variables.root"
 
 invGeV = 1 / 1000
 
-# pT_bins = np.linspace(200, 2000, 36)
-# mass_bins = np.linspace(0, 1000, 51)
 
-
-def draw_leadingVR_jets(data, ax, label=None, title=None, atlas_sec_tag=None):
+def draw_jets_count(data, ax, label=None, title=None, atlas_sec_tag=None):
     bins = np.arange(10)
     jet_counts, _ = np.histogram(data, bins)
-    x_label = "Ghost Associated VR trk-jets"
+    x_label = "Number of jets/event"
+    y_label = "Frequency"
 
     ax.hhist(
         jet_counts,
@@ -29,6 +31,7 @@ def draw_leadingVR_jets(data, ax, label=None, title=None, atlas_sec_tag=None):
         label,
         title,
         x_label=x_label,
+        y_label=y_label,
         atlas_sec_tag=atlas_sec_tag,
     )
 
@@ -54,11 +57,19 @@ def draw_pT_hist(data, ax, label=None, truth=None, title=None, atlas_sec_tag=Non
     )
 
 
-def draw_m_hist(data, ax, label=None, truth=None, title=None, atlas_sec_tag=None):
-    bins = np.linspace(0, 600, 51)
+def draw_m_hist(
+    data,
+    ax,
+    label=None,
+    truth=None,
+    title=None,
+    xlabel=None,
+    atlas_sec_tag=None,
+    bins=None,
+):
+    bins = np.linspace(0, 600, 51) if bins is None else bins
     jet_counts, _ = np.histogram(data * invGeV, bins)
-    x_label = f"Leading large-R jet mass [GeV] {f'matched to {truth}' if truth else ''}"
-
+    x_label = xlabel if xlabel else r"$m_j$ [GeV]"
     ax.hhist(
         # normalized
         # jet_counts / np.sum(jet_counts),
@@ -75,7 +86,7 @@ def draw_deltaR_hist(data, ax, label=None, truth=None, title=None, atlas_sec_tag
     bins = np.linspace(0, 1, 41)
     jet_counts, _ = np.histogram(data, bins)
 
-    x_label = f"$\Delta R$ between largeR jets and {truth}"
+    x_label = f"$\Delta R (j,{truth})$"
 
     ax.hhist(
         # normalized
@@ -84,35 +95,42 @@ def draw_deltaR_hist(data, ax, label=None, truth=None, title=None, atlas_sec_tag
         label,
         title,
         x_label=x_label,
-        atlas_sec_tag=atlas_sec_tag,
+        atlas_sec_tag=atlas_sec_tag + f"\n$\Delta R < 0.75$",
     )
 
 
 def match_jet_to_truth_particle(sample, cuts):
     """Match jet to truth H1 or H2 using min delatR"""
 
+    jet_pt = sample["recojet_antikt10_NOSYS_pt"][cuts]
+    jet_eta = sample["recojet_antikt10_NOSYS_eta"][cuts]
+    jet_phi = sample["recojet_antikt10_NOSYS_phi"][cuts]
+    jet_m = sample["recojet_antikt10_NOSYS_m"][cuts]
+    n_jets = ak.count(jet_pt, axis=-1)
+    valid = n_jets > 1
+
     jet_p4 = p4.zip(
         {
-            "pt": sample["recojet_antikt10_NOSYS_pt"][cuts],
-            "eta": sample["recojet_antikt10_NOSYS_eta"][cuts],
-            "phi": sample["recojet_antikt10_NOSYS_phi"][cuts],
-            "mass": sample["recojet_antikt10_NOSYS_m"][cuts],
+            "pt": jet_pt[valid],
+            "eta": jet_eta[valid],
+            "phi": jet_phi[valid],
+            "mass": jet_m[valid],
         }
     )
     H1_p4 = p4.zip(
         {
-            "pt": sample["truth_H1_pt"],
-            "eta": sample["truth_H1_eta"],
-            "phi": sample["truth_H1_phi"],
-            "mass": sample["truth_H1_m"],
+            "pt": sample["truth_H1_pt"][valid],
+            "eta": sample["truth_H1_eta"][valid],
+            "phi": sample["truth_H1_phi"][valid],
+            "mass": sample["truth_H1_m"][valid],
         }
     )
     H2_p4 = p4.zip(
         {
-            "pt": sample["truth_H2_pt"],
-            "eta": sample["truth_H2_eta"],
-            "phi": sample["truth_H2_phi"],
-            "mass": sample["truth_H2_m"],
+            "pt": sample["truth_H2_pt"][valid],
+            "eta": sample["truth_H2_eta"][valid],
+            "phi": sample["truth_H2_phi"][valid],
+            "mass": sample["truth_H2_m"][valid],
         }
     )
 
@@ -133,15 +151,12 @@ def match_jet_to_truth_particle(sample, cuts):
     jet_dR_to_H2 = ak.mask(jet_dR_to_H2, good)
     which_H2 = ak.argmin(jet_dR_to_H2, axis=1, keepdims=True)
 
-    print(
-        f"Jets that overlap in min deltaR for H1 and H2: {ak.sum(jet_dR_to_H1[which_H1] == jet_dR_to_H2[which_H2])}"
-    )
+    # print(which_H1)
+    # print(which_H2)
 
-    matched_to_H1 = ak.flatten(jet_dR_to_H1[which_H1] < jet_dR_to_H2[which_H2])
-    matched_to_H2 = ~matched_to_H1
-
-    which_H2 = ak.mask(which_H2, matched_to_H2)
-    which_H1 = ak.mask(which_H1, matched_to_H1)
+    print(ak.sum(which_H1 == which_H2))
+    # print(jet_dR_to_H1[ak.count(which_H1[which_H1 == which_H2], axis=-1) > 0])
+    # print(jet_dR_to_H2[ak.count(which_H2[which_H1 == which_H2], axis=-1) > 0])
 
     truth_matched_to_H1_jet = jet_p4[which_H1]
     truth_matched_to_H2_jet = jet_p4[which_H2]
@@ -153,6 +168,7 @@ def match_jet_to_truth_particle(sample, cuts):
         "truth_matched_to_H2_jet": truth_matched_to_H2_jet,
         "which_H1": which_H1,
         "which_H2": which_H2,
+        "valid": valid,
     }
 
 
@@ -160,17 +176,22 @@ def btag_jets(truth_matched_jets, sample):
     vr_jets = sample[
         "recojet_antikt10_NOSYS_leadingVRTrackJetsBtag_DL1r_FixedCutBEff_77"
     ]
-    matched_vr_jets_to_H1 = vr_jets[truth_matched_jets["which_H1"]]
-    matched_vr_jets_to_H2 = vr_jets[truth_matched_jets["which_H2"]]
+    # pick events that have truth matched large-R jets
+    matched_vr_jets_to_H1 = vr_jets[truth_matched_jets["valid"]][
+        truth_matched_jets["which_H1"]
+    ]
+    matched_vr_jets_to_H2 = vr_jets[truth_matched_jets["valid"]][
+        truth_matched_jets["which_H2"]
+    ]
     which_largeR_jets_matched_H1_btag = ak.firsts(
-        ak.sum(matched_vr_jets_to_H1, axis=2) >= 2
+        ak.sum(matched_vr_jets_to_H1, axis=-1) >= 2
     )
-    which_largeR_jets_matched_H2_btag = (
-        ak.count(matched_vr_jets_to_H2, axis=2) >= 2
-    ) & (ak.sum(matched_vr_jets_to_H2, axis=2) >= 2)
-    # which_largeR_jets_matched_S_btag = ak.firsts(
-    #     ak.sum(matched_vr_jets_to_S, axis=2) >= 2
-    # )
+    which_largeR_jets_matched_H2_btag = ak.firsts(
+        ak.sum(matched_vr_jets_to_H2, axis=-1) >= 2
+    )
+    # which_largeR_jets_matched_H2_btag = (
+    #     ak.count(matched_vr_jets_to_H2, axis=2) >= 2
+    # ) & (ak.sum(matched_vr_jets_to_H2, axis=2) >= 2)
 
     return {
         "truth_matched_to_H1_jet_btag77": truth_matched_jets["truth_matched_to_H1_jet"][
@@ -183,16 +204,14 @@ def btag_jets(truth_matched_jets, sample):
 
 
 def compute_mass(p4_1, p4_2):
-    reconstructed_mass = (p4_1 + p4_2).mass
-    # print(ak.sum(~ak.is_none(reconstructed_mass)))
-    # print(reconstructed_mass[~ak.is_none(reconstructed_mass)])
-    return reconstructed_mass
+    reconstructed_system = p4_1 + p4_2
+    return reconstructed_system.mass
 
 
 def draw_largeR_jets(largeR_dict):
     fig_jetPt, ax_jetPt = plts.subplots()
     fig_jetM, ax_jetM = plts.subplots()
-    fig_VRtrack_jets, ax_VRtrack_jets = plts.subplots()
+    fig_jets_counts, ax_jets_counts = plts.subplots()
     fig_deltaR_to_H1, ax_deltaR_to_H1 = plts.subplots()
     fig_deltaR_to_H2, ax_deltaR_to_H2 = plts.subplots()
     fig_truth_matched_to_H1_jetM, ax_truth_matched_to_H1_jetM = plts.subplots()
@@ -210,10 +229,17 @@ def draw_largeR_jets(largeR_dict):
     for sample_name, sample in largeR_dict.items():
         # atlas_sec_tag = f"DSID 514722, mc20d\n{cuts_label}"
         atlas_sec_tag = f"{cuts_label}"
+        njets = ak.count(sample["recojet_antikt10_NOSYS_pt"], axis=-1)
         cuts = (
             (sample["recojet_antikt10_NOSYS_pt"] > pt_cut)
             & (sample["recojet_antikt10_NOSYS_m"] > m_cut)
             & (np.abs(sample["recojet_antikt10_NOSYS_eta"]) < eta_cut)
+        )
+        draw_jets_count(
+            ak.ravel(njets),
+            ax_jets_counts,
+            f"Large-R jets {sample_name}",
+            atlas_sec_tag=atlas_sec_tag,
         )
         draw_pT_hist(
             np.concatenate(sample["recojet_antikt10_NOSYS_pt"][cuts]),
@@ -227,10 +253,10 @@ def draw_largeR_jets(largeR_dict):
             sample_name,
             atlas_sec_tag=atlas_sec_tag,
         )
-        draw_leadingVR_jets(
+        draw_jets_count(
             np.concatenate(sample["recojet_antikt10_NOSYS_goodVRTrackJets"][cuts]),
-            ax_VRtrack_jets,
-            sample_name,
+            ax_jets_counts,
+            f"VR track jets {sample_name}",
             atlas_sec_tag=atlas_sec_tag,
         )
 
@@ -253,7 +279,7 @@ def draw_largeR_jets(largeR_dict):
             ak.ravel(truth_matched_jets["truth_matched_to_H1_jet"].mass),
             ax_truth_matched_to_H1_jetM,
             label=f"{sample_name} No btag",
-            truth="H1",
+            xlabel=r"$m_{j_1}$ [GeV]",
             atlas_sec_tag=atlas_sec_tag,
         )
         draw_pT_hist(
@@ -267,7 +293,7 @@ def draw_largeR_jets(largeR_dict):
             ak.ravel(truth_matched_jets["truth_matched_to_H2_jet"].mass),
             ax_truth_matched_to_H2_jetM,
             label=f"{sample_name} No btag",
-            truth="H2",
+            xlabel=r"$m_{j_2}$ [GeV]",
             atlas_sec_tag=atlas_sec_tag,
         )
         draw_pT_hist(
@@ -286,7 +312,9 @@ def draw_largeR_jets(largeR_dict):
             ),
             ax_truth_matched_to_H1H2_jetM,
             label=f"{sample_name}",
+            xlabel=r"$m_{j_1j_2}$ [GeV]",
             atlas_sec_tag=atlas_sec_tag,
+            bins=np.linspace(0, 3500, 51),
         )
 
         truth_matched_jets_btag = btag_jets(truth_matched_jets, sample)
@@ -321,7 +349,7 @@ def draw_largeR_jets(largeR_dict):
 
     fig_jetPt.savefig("large-R-jets-pT.png", bbox_inches="tight")
     fig_jetM.savefig("large-R-jets-mass.png", bbox_inches="tight")
-    fig_VRtrack_jets.savefig("good_VR_track_jets.png", bbox_inches="tight")
+    fig_jets_counts.savefig("jets_counts.png", bbox_inches="tight")
     fig_deltaR_to_H1.savefig("large-R-jets-deltaR-to-H1.png", bbox_inches="tight")
     fig_deltaR_to_H2.savefig("large-R-jets-deltaR-to-H2.png", bbox_inches="tight")
     fig_truth_matched_to_H1_jetM.savefig(
@@ -354,7 +382,12 @@ def draw_largeR_jets(largeR_dict):
 def run():
     largeR_dict = {}
     samples = {
-        "mG300_mc20d": mG300_mc20d,
+        # "mG300_mc20d": mG300_mc20d,
+        "mG1000_mc20a": mG1000_mc20a,
+        "mG1500_mc20a": mG1500_mc20a,
+        "mG2000_mc20a": mG2000_mc20a,
+        "mG2500_mc20a": mG2500_mc20a,
+        "mG3000_mc20a": mG3000_mc20a,
     }
     for sname, fname in samples.items():
         with uproot.open(f"{fname}:AnalysisMiniTree") as f:
