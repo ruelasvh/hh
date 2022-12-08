@@ -220,7 +220,7 @@ def draw_largeR_jets(largeR_dict):
     fig_truth_matched_to_H2_jetPt, ax_truth_matched_to_H2_jetPt = plts.subplots()
     fig_truth_matched_to_H1H2_jetM, ax_truth_matched_to_H1H2_jetM = plts.subplots()
 
-    pt_cut = 100
+    pt_cut = 250
     m_cut = 50
     eta_cut = 2
     cuts_label = f"$p_T$ > {pt_cut} GeV, m > {m_cut} GeV and $|\eta| < {eta_cut}$"
