@@ -22,17 +22,13 @@ invGeV = 1 / 1000
 
 
 def get_trig_passed(sample):
-    trig_passed = np.array(
-        [
-            sample[trig]
-            for trig in sample.keys()
-            if (
-                trig.startswith("trigPassed_HLT_j360")
-                | trig.startswith("trigPassed_HLT_j420")
-            )
-        ]
-    )
+    trig_passed = sample["trigPassed_HLT_j420_a10t_lcw_jes_35smcINF_L1J100"]
     return trig_passed
+
+
+def get_total_events(sample):
+    total_events = sample["cutbookkeepers"][0].values()[0]
+    return total_events
 
 
 def get_mass_point(sample_name):
@@ -41,7 +37,7 @@ def get_mass_point(sample_name):
 
 
 def compute_eff(trig_passed, total):
-    tot_trig_passed = np.sum(trig_passed)
+    tot_trig_passed = ak.sum(trig_passed)
     eff = tot_trig_passed / total
     return eff
 
@@ -52,7 +48,7 @@ def draw_trig_eff(largeR_dict):
     trig_passed = []
     mass_points = []
     for sample_name, sample in largeR_dict.items():
-        total_events += [sample["cutbookkeepers"][0][0]]
+        total_events += [get_total_events(sample)]
         trig_passed += [get_trig_passed(sample)]
         mass_points += [get_mass_point(sample_name)]
 
@@ -66,10 +62,7 @@ def draw_trig_eff(largeR_dict):
         atlas_sec_tag="Boosted channel, spin-2 signal",
         marker="o",
         enlarge=2,
-        # enlarge=30, # if y-axis log scale
     )
-    # ax_trigEff.set_yscale("log")
-
     ax_trigEff.axhline(y=1.0, color="k", linestyle="--")
     fig_trigEff.savefig("trig_eff.png", bbox_inches="tight")
 
@@ -89,11 +82,10 @@ def run():
     }
     for sname, fname in samples.items():
         with uproot.open(f"{fname}") as f:
-            cbk_key = [key for key in f.keys() if key.startswith("CutBookkeeper")][0]
-            cbk = f[cbk_key]
             tree = f["AnalysisMiniTree"]
-            branches = tree.arrays(filter_name="/trigPassed_HLT/i", library="np")
-            branches["cutbookkeepers"] = cbk.to_numpy()
+            cbk_key = [key for key in f.keys() if key.startswith("CutBookkeeper")][0]
+            branches = tree.arrays(filter_name="/trigPassed_HLT/i")
+            branches["cutbookkeepers"] = f[cbk_key]
             largeR_dict[sname] = branches
     draw_trig_eff(largeR_dict)
 
