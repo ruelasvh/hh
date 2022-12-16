@@ -18,11 +18,14 @@ mG800_mc20e = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514727.MGPy8EG_A14N
 mG700_mc20e = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514726.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M700.e8470_s3681_r13145_p5440_TREE/user.viruelas.31352546._000001.output-hh4b.root"
 mG600_mc20e = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514725.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M600.e8470_s3681_r13145_p5440_TREE/user.viruelas.31352535._000001.output-hh4b.root"
 
+mG300_mc20d = "/lustre/fs22/group/atlas/ruelasv/hh4b-analysis-r22-build/run/analysis-variables.root"
+
 invGeV = 1 / 1000
 
 
 def get_trig_passed(sample):
     trig_passed = sample["trigPassed_HLT_j420_a10t_lcw_jes_35smcINF_L1J100"]
+    # trig_passed = sample["trigPassed_HLT_j420_a10t_lcw_jes_40smcINF_L1J100"]
     return trig_passed
 
 
@@ -36,31 +39,84 @@ def get_mass_point(sample_name):
     return mass_point
 
 
-def compute_eff(trig_passed, total):
-    tot_trig_passed = ak.sum(trig_passed)
-    eff = tot_trig_passed / total
+def compute_eff(passed, total):
+    tot_passed = ak.sum(passed)
+    eff = tot_passed / total
     return eff
+
+
+def get_events_two_jets(sample):
+    vr_track_jets = sample[
+        "recojet_antikt10_NOSYS_leadingVRTrackJetsBtag_DL1r_FixedCutBEff_77"
+    ]
+    trig_passed = sample["trigPassed_HLT_j420_a10t_lcw_jes_35smcINF_L1J100"]
+    vr_track_jets_passed_trig = vr_track_jets[trig_passed]
+    largeR_jet_counts = ak.count(ak.count(vr_track_jets_passed_trig, axis=-1), axis=-1)
+    valid_two_largeR_jets = largeR_jet_counts > 1
+    return valid_two_largeR_jets
+
+
+def get_events_two_btags(sample):
+    vr_track_jets = sample[
+        "recojet_antikt10_NOSYS_leadingVRTrackJetsBtag_DL1r_FixedCutBEff_77"
+    ]
+    trig_passed = sample["trigPassed_HLT_j420_a10t_lcw_jes_35smcINF_L1J100"]
+    vr_track_jets_passed_trig = vr_track_jets[trig_passed]
+    vr_jet_btags = ak.sum(ak.sum(vr_track_jets_passed_trig, axis=-1), axis=-1)
+    valid_vr_jet_btags = vr_jet_btags > 3
+    return valid_vr_jet_btags
 
 
 def draw_trig_eff(largeR_dict):
     fig_trigEff, ax_trigEff = plts.subplots()
+    mass_points = []
     total_events = []
     trig_passed = []
-    mass_points = []
+    two_jets_passed = []
+    two_btags_passed = []
     for sample_name, sample in largeR_dict.items():
+        mass_points += [get_mass_point(sample_name)]
         total_events += [get_total_events(sample)]
         trig_passed += [get_trig_passed(sample)]
-        mass_points += [get_mass_point(sample_name)]
+        two_jets_passed += [get_events_two_jets(sample)]
+        two_btags_passed += [get_events_two_btags(sample)]
 
-    effs = [compute_eff(trig, tot) for trig, tot in zip(trig_passed, total_events)]
+    trig_passed_effs = [
+        compute_eff(passed, tot) for passed, tot in zip(trig_passed, total_events)
+    ]
+    print("trig_passed_effs", trig_passed_effs)
     ax_trigEff.pplot(
         mass_points,
-        effs,
+        trig_passed_effs,
         label="Trigger",
+        marker="o",
+        # x_label=r"m$\left( \mathit{G*_{KK}} \right)$ [TeV]",
+        # y_label=r"Acceptance $\times$ Efficiency",
+        # atlas_sec_tag="Boosted channel, spin-2 signal",
+        # enlarge=2,
+    )
+    two_jets_passed_effs = [
+        compute_eff(passed, tot) for passed, tot in zip(two_jets_passed, total_events)
+    ]
+    print("two_jets_passed_effs", two_jets_passed_effs)
+    ax_trigEff.pplot(
+        mass_points,
+        two_jets_passed_effs,
+        label=r"$\geq 2$ jets",
+        marker="v",
+    )
+    two_btags_passed_effs = [
+        compute_eff(passed, tot) for passed, tot in zip(two_btags_passed, total_events)
+    ]
+    print("two_btags_passed_effs", two_btags_passed_effs)
+    ax_trigEff.pplot(
+        mass_points,
+        two_btags_passed_effs,
+        label=r"$\geq 2$ b-tag",
         x_label=r"m$\left( \mathit{G*_{KK}} \right)$ [TeV]",
         y_label=r"Acceptance $\times$ Efficiency",
         atlas_sec_tag="Boosted channel, spin-2 signal",
-        marker="o",
+        marker="s",
         enlarge=2,
     )
     ax_trigEff.axhline(y=1.0, color="k", linestyle="--")
@@ -70,6 +126,7 @@ def draw_trig_eff(largeR_dict):
 def run():
     largeR_dict = {}
     samples = {
+        # "mG300_mc20d": mG300_mc20d
         "mG600_mc20e": mG600_mc20e,
         "mG700_mc20e": mG700_mc20e,
         "mG800_mc20e": mG800_mc20e,
@@ -84,7 +141,9 @@ def run():
         with uproot.open(f"{fname}") as f:
             tree = f["AnalysisMiniTree"]
             cbk_key = [key for key in f.keys() if key.startswith("CutBookkeeper")][0]
-            branches = tree.arrays(filter_name="/trigPassed_HLT/i")
+            branches = tree.arrays(
+                filter_name="/trigPassed_HLT_j420_a10t_lcw_jes_35smcINF_L1J100|recojet_antikt10_NOSYS_leadingVRTrackJetsBtag_DL1r_FixedCutBEff_77/i",
+            )
             branches["cutbookkeepers"] = f[cbk_key]
             largeR_dict[sname] = branches
     draw_trig_eff(largeR_dict)

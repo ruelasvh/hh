@@ -8,11 +8,15 @@ import hep2plts as plts
 
 SAMPLES_PATH = "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.gHH4b/output"
 
-mG3000_mc20a = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514741.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M3000.e8470_s3681_r13167_p5440_TREE/user.viruelas.31352673._000001.output-hh4b.root"
-mG2500_mc20a = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514739.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M2500.e8470_s3681_r13167_p5440_TREE/user.viruelas.31352660._000001.output-hh4b.root"
-mG2000_mc20a = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514737.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M2000.e8470_s3681_r13167_p5440_TREE/user.viruelas.31352649._000001.output-hh4b.root"
-mG1500_mc20a = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514734.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M1500.e8470_s3681_r13167_p5440_TREE/user.viruelas.31352623._000001.output-hh4b.root"
-mG1000_mc20a = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514729.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M1000.e8470_s3681_r13167_p5440_TREE/user.viruelas.31352581._000001.output-hh4b.root"
+mG3000_mc20e = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514741.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M3000.e8470_s3681_r13145_p5440_TREE/user.viruelas.31352670._000001.output-hh4b.root"
+mG2500_mc20e = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514739.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M2500.e8470_s3681_r13145_p5440_TREE/user.viruelas.31352658._000001.output-hh4b.root"
+mG2000_mc20e = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514737.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M2000.e8470_s3681_r13145_p5440_TREE/user.viruelas.31352641._000001.output-hh4b.root"
+mG1500_mc20e = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514734.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M1500.e8470_s3681_r13145_p5440_TREE/user.viruelas.31352621._000001.output-hh4b.root"
+mG1000_mc20e = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514729.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M1000.e8470_s3681_r13145_p5440_TREE/user.viruelas.31352577._000001.output-hh4b.root"
+mG900_mc20e = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514728.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M900.e8470_s3681_r13145_p5440_TREE/user.viruelas.31352567._000001.output-hh4b.root"
+mG800_mc20e = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514727.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M800.e8470_s3681_r13145_p5440_TREE/user.viruelas.31352557._000001.output-hh4b.root"
+mG700_mc20e = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514726.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M700.e8470_s3681_r13145_p5440_TREE/user.viruelas.31352546._000001.output-hh4b.root"
+mG600_mc20e = f"{SAMPLES_PATH}/user.viruelas.HH4b.2022_11_23.514725.MGPy8EG_A14N23LO_RS_G_hh_bbbb_c10_M600.e8470_s3681_r13145_p5440_TREE/user.viruelas.31352535._000001.output-hh4b.root"
 
 mG300_mc20d = "/lustre/fs22/group/atlas/ruelasv/hh4b-analysis-r22-build/run/analysis-variables.root"
 
@@ -36,8 +40,7 @@ def draw_jets_count(data, ax, label=None, title=None, atlas_sec_tag=None):
     )
 
 
-def draw_pT_hist(data, ax, label=None, truth=None, title=None, atlas_sec_tag=None):
-    # bins = np.linspace(250, 3500, 50)
+def draw_pT_hist(data, ax, label=None, truth=None, title=None, **kwargs):
     bins = np.linspace(100, 2000, 36)
     jet_counts, _ = np.histogram(data * invGeV, bins)
     x_label = (
@@ -53,7 +56,8 @@ def draw_pT_hist(data, ax, label=None, truth=None, title=None, atlas_sec_tag=Non
         label,
         title,
         x_label=x_label,
-        atlas_sec_tag=atlas_sec_tag,
+        log=True,
+        **kwargs,
     )
 
 
@@ -61,11 +65,10 @@ def draw_m_hist(
     data,
     ax,
     label=None,
-    truth=None,
     title=None,
     xlabel=None,
-    atlas_sec_tag=None,
     bins=None,
+    **kwargs,
 ):
     bins = np.linspace(0, 600, 51) if bins is None else bins
     jet_counts, _ = np.histogram(data * invGeV, bins)
@@ -78,7 +81,8 @@ def draw_m_hist(
         label,
         title,
         x_label=x_label,
-        atlas_sec_tag=atlas_sec_tag,
+        log=True,
+        **kwargs,
     )
 
 
@@ -90,12 +94,14 @@ def draw_deltaR_hist(data, ax, label=None, truth=None, title=None, atlas_sec_tag
 
     ax.hhist(
         # normalized
-        jet_counts / np.sum(jet_counts),
+        # jet_counts / np.sum(jet_counts),
+        jet_counts,
         bins,
         label,
         title,
         x_label=x_label,
         atlas_sec_tag=atlas_sec_tag + f"\n$\Delta R < 0.75$",
+        log=True,
     )
 
 
@@ -183,15 +189,20 @@ def btag_jets(truth_matched_jets, sample):
     matched_vr_jets_to_H2 = vr_jets[truth_matched_jets["valid"]][
         truth_matched_jets["which_H2"]
     ]
-    which_largeR_jets_matched_H1_btag = ak.firsts(
-        ak.sum(matched_vr_jets_to_H1, axis=-1) >= 2
-    )
-    which_largeR_jets_matched_H2_btag = ak.firsts(
-        ak.sum(matched_vr_jets_to_H2, axis=-1) >= 2
-    )
-    # which_largeR_jets_matched_H2_btag = (
-    #     ak.count(matched_vr_jets_to_H2, axis=2) >= 2
-    # ) & (ak.sum(matched_vr_jets_to_H2, axis=2) >= 2)
+    # pick events with at least 2 btagged vr jets
+    # which_largeR_jets_matched_H1_btag = ak.firsts(
+    #     ak.sum(matched_vr_jets_to_H1, axis=-1) >= 2
+    # )
+    # which_largeR_jets_matched_H2_btag = ak.firsts(
+    #     ak.sum(matched_vr_jets_to_H2, axis=-1) >= 2
+    # )
+    # # which_largeR_jets_matched_H2_btag = (
+    # #     ak.count(matched_vr_jets_to_H2, axis=2) >= 2
+    # # ) & (ak.sum(matched_vr_jets_to_H2, axis=2) >= 2)
+    vr_jet_btags_per_H1 = ak.sum(matched_vr_jets_to_H1, axis=-1)
+    vr_jet_btags_per_H2 = ak.sum(matched_vr_jets_to_H2, axis=-1)
+    which_largeR_jets_matched_H1_btag = vr_jet_btags_per_H1 >= 2
+    which_largeR_jets_matched_H2_btag = vr_jet_btags_per_H2 >= 2
 
     return {
         "truth_matched_to_H1_jet_btag77": truth_matched_jets["truth_matched_to_H1_jet"][
@@ -260,6 +271,7 @@ def draw_largeR_jets(largeR_dict):
             atlas_sec_tag=atlas_sec_tag,
         )
 
+        color = next(ax_truth_matched_to_H1_jetM._get_lines.prop_cycler)["color"]
         truth_matched_jets = match_jet_to_truth_particle(sample=sample, cuts=cuts)
         draw_deltaR_hist(
             ak.ravel(truth_matched_jets["jet_dR_to_H1"]),
@@ -278,30 +290,34 @@ def draw_largeR_jets(largeR_dict):
         draw_m_hist(
             ak.ravel(truth_matched_jets["truth_matched_to_H1_jet"].mass),
             ax_truth_matched_to_H1_jetM,
-            label=f"{sample_name} No btag",
+            label=f"{sample_name} (-- btag77)",
             xlabel=r"$m_{j_1}$ [GeV]",
             atlas_sec_tag=atlas_sec_tag,
+            color=color,
         )
         draw_pT_hist(
             ak.ravel(truth_matched_jets["truth_matched_to_H1_jet"].pt),
             ax_truth_matched_to_H1_jetPt,
-            label=f"{sample_name} No btag",
+            label=f"{sample_name} (-- btag77)",
             truth="H1",
             atlas_sec_tag=atlas_sec_tag,
+            color=color,
         )
         draw_m_hist(
             ak.ravel(truth_matched_jets["truth_matched_to_H2_jet"].mass),
             ax_truth_matched_to_H2_jetM,
-            label=f"{sample_name} No btag",
+            label=f"{sample_name} (-- btag77)",
             xlabel=r"$m_{j_2}$ [GeV]",
             atlas_sec_tag=atlas_sec_tag,
+            color=color,
         )
         draw_pT_hist(
             ak.ravel(truth_matched_jets["truth_matched_to_H2_jet"].pt),
             ax_truth_matched_to_H2_jetPt,
-            label=f"{sample_name} No btag",
+            label=f"{sample_name} (-- btag77)",
             truth="H2",
             atlas_sec_tag=atlas_sec_tag,
+            color=color,
         )
         draw_m_hist(
             ak.ravel(
@@ -321,32 +337,41 @@ def draw_largeR_jets(largeR_dict):
         draw_m_hist(
             ak.ravel(truth_matched_jets_btag["truth_matched_to_H1_jet_btag77"].mass),
             ax_truth_matched_to_H1_jetM,
-            label=f"{sample_name} btag77",
-            truth="H1",
+            xlabel=r"$m_{j_1}$ [GeV]",
+            # label=f"{sample_name} btag77",
             atlas_sec_tag=atlas_sec_tag,
+            color=color,
+            linestyle="dashed",
         )
         draw_pT_hist(
             ak.ravel(truth_matched_jets_btag["truth_matched_to_H1_jet_btag77"].pt),
             ax_truth_matched_to_H1_jetPt,
-            label=f"{sample_name} btag77",
+            # label=f"{sample_name} btag77",
             truth="H1",
             atlas_sec_tag=atlas_sec_tag,
+            color=color,
+            linestyle="dashed",
         )
         draw_m_hist(
             ak.ravel(truth_matched_jets_btag["truth_matched_to_H2_jet_btag77"].mass),
             ax_truth_matched_to_H2_jetM,
-            label=f"{sample_name} btag77",
-            truth="H2",
+            xlabel=r"$m_{j_2}$ [GeV]",
+            # label=f"{sample_name} btag77",
             atlas_sec_tag=atlas_sec_tag,
+            color=color,
+            linestyle="dashed",
         )
         draw_pT_hist(
             ak.ravel(truth_matched_jets_btag["truth_matched_to_H2_jet_btag77"].pt),
             ax_truth_matched_to_H2_jetPt,
-            label=f"{sample_name} btag77",
+            # label=f"{sample_name} btag77",
             truth="H2",
             atlas_sec_tag=atlas_sec_tag,
+            color=color,
+            linestyle="dashed",
         )
 
+    # ax_jetM.set_yscale("log")
     fig_jetPt.savefig("large-R-jets-pT.png", bbox_inches="tight")
     fig_jetM.savefig("large-R-jets-mass.png", bbox_inches="tight")
     fig_jets_counts.savefig("jets_counts.png", bbox_inches="tight")
@@ -383,11 +408,15 @@ def run():
     largeR_dict = {}
     samples = {
         # "mG300_mc20d": mG300_mc20d,
-        "mG1000_mc20a": mG1000_mc20a,
-        "mG1500_mc20a": mG1500_mc20a,
-        "mG2000_mc20a": mG2000_mc20a,
-        "mG2500_mc20a": mG2500_mc20a,
-        "mG3000_mc20a": mG3000_mc20a,
+        # "mG600_mc20e": mG600_mc20e,
+        "mG700_mc20e": mG700_mc20e,
+        # "mG800_mc20e": mG800_mc20e,
+        # "mG900_mc20e": mG900_mc20e,
+        "mG1000_mc20e": mG1000_mc20e,
+        "mG1500_mc20e": mG1500_mc20e,
+        "mG2000_mc20e": mG2000_mc20e,
+        "mG2500_mc20e": mG2500_mc20e,
+        "mG3000_mc20e": mG3000_mc20e,
     }
     for sname, fname in samples.items():
         with uproot.open(f"{fname}:AnalysisMiniTree") as f:
