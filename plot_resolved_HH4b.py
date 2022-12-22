@@ -153,6 +153,66 @@ def draw_trig_eff(ax, diHiggs, data):
 
 def draw_jet_pt_vs_trig_eff(axs, data, jet_cuts):
     jets_pt_pre_trig = data["recojet_antikt4_NOSYS_pt"][jet_cuts]
+    mass_res = 10
+    mass_bins = np.arange(20, 250, mass_res)
+
+    for i in np.arange(0, 4):
+        for i_trig, trig in enumerate(run3_all):
+            trig_selection = data[f"trigPassed_{trig}"]
+            jets_pt_post_trig = data["recojet_antikt4_NOSYS_pt"][trig_selection]
+            jets_pt_post_trig = jets_pt_post_trig[jet_cuts[trig_selection]]
+
+            h_tot, _ = np.histogram(jets_pt_pre_trig[:, i] * invGeV, mass_bins)
+            h_pass, _ = np.histogram(jets_pt_post_trig[:, i] * invGeV, mass_bins)
+            eff = (h_pass / h_tot) * 100
+            hep.histplot(
+                eff,
+                mass_bins,
+                ax=axs[i],
+                histtype="errorbar",
+                xerr=mass_res / 2,
+                yerr=np.sqrt(eff),
+                label=i_trig + 1,
+            )
+        axs[i].set_xlabel(f"jet_{i+1} " + r"$p_{T}$ [GeV]")
+        axs[i].set_ylabel("Efficiency")
+
+
+def draw_jet_pt_vs_trig_eff_btag(axs, data, jet_cuts):
+    jets_pt_pre_trig = data["recojet_antikt4_NOSYS_pt"][jet_cuts]
+    mass_res = 10
+    mass_bins = np.arange(20, 250, mass_res)
+    for i in np.arange(0, 4):
+        for i_trig, trig in enumerate(run3_all):
+            trig_selection = data[f"trigPassed_{trig}"]
+            jets_pt_post_trig = data["recojet_antikt4_NOSYS_pt"][trig_selection]
+            jets_pt_post_trig = jets_pt_post_trig[jet_cuts[trig_selection]]
+            btags = data["recojet_antikt4_NOSYS_DL1dv01_FixedCutBEff_77"][
+                trig_selection
+            ]
+            btags = btags[jet_cuts[trig_selection]]
+            btags_3j = ak.sum(btags, axis=-1) > 2
+            jets_pt_post_trig_btagged = jets_pt_post_trig[btags_3j]
+            h_tot, _ = np.histogram(jets_pt_pre_trig[:, i] * invGeV, mass_bins)
+            h_pass, _ = np.histogram(
+                jets_pt_post_trig_btagged[:, i] * invGeV, mass_bins
+            )
+            eff = (h_pass / h_tot) * 100
+            hep.histplot(
+                eff,
+                mass_bins,
+                ax=axs[i],
+                histtype="errorbar",
+                xerr=mass_res / 2,
+                yerr=np.sqrt(eff),
+                label=i_trig + 1,
+            )
+        axs[i].set_xlabel(f"jet_{i+1} " + r"$p_{T}$ [GeV]")
+        axs[i].set_ylabel("Efficiency")
+
+
+def draw_jet_pt_vs_trig_eff_all(axs, data, jet_cuts):
+    jets_pt_pre_trig = data["recojet_antikt4_NOSYS_pt"][jet_cuts]
     mass_res = 50
     mass_bins = np.arange(20, 1_000, mass_res)
     trig_selections = []
@@ -162,9 +222,6 @@ def draw_jet_pt_vs_trig_eff(axs, data, jet_cuts):
             trig_selections = trig_selection
         else:
             trig_selections = trig_selections | trig_selection
-
-    # jets_pt_post_trig = data["recojet_antikt4_NOSYS_pt"][trig_selections[jet_cuts]]
-    # jets_pt_post_trig = data["recojet_antikt4_NOSYS_pt"][jet_cuts[trig_selections]]
 
     jets_pt_post_trig = data["recojet_antikt4_NOSYS_pt"][trig_selections]
     jets_pt_post_trig = jets_pt_post_trig[jet_cuts[trig_selections]]
@@ -193,6 +250,9 @@ def draw_plots(data_dict):
     fig_jet_pt_vs_trig_eff, axs_jet_pt_vs_trig_eff = plt.subplots(
         2, 2, constrained_layout=True
     )
+    fig_jet_pt_vs_trig_eff_btag, axs_jet_pt_vs_trig_eff_btag = plt.subplots(
+        2, 2, constrained_layout=True
+    )
 
     for sample_name, data in data_dict.items():
         diHiggs = get_truth_diHiggs(data)
@@ -201,11 +261,15 @@ def draw_plots(data_dict):
         jet_cuts = get_valid_jets_mask(data)
         draw_jet_pt(ax_gets_pt, data, jet_cuts)
         draw_jet_pt_vs_trig_eff(axs_jet_pt_vs_trig_eff.flat, data, jet_cuts)
+        draw_jet_pt_vs_trig_eff_btag(axs_jet_pt_vs_trig_eff_btag.flat, data, jet_cuts)
 
     fig_diHiggs_mass.savefig("truth_diHiggs_mass.png", bbox_inches="tight")
     fig_trig_eff.savefig("trig_eff_vs_truth_diHiggs_mass.png", bbox_inches="tight")
     fig_jets_pt.savefig("leading_jets_pt.png", bbox_inches="tight")
     fig_jet_pt_vs_trig_eff.savefig("trig_eff_vs_jet_pt.png", bbox_inches="tight")
+    fig_jet_pt_vs_trig_eff_btag.savefig(
+        "trig_eff_vs_jet_pt_btag77.png", bbox_inches="tight"
+    )
 
 
 def run():
@@ -214,7 +278,7 @@ def run():
     for sample_name, sample_path in samples.items():
         with uproot.open(f"{sample_path}:AnalysisMiniTree") as tree:
             jets_dict[sample_name] = tree.arrays(
-                filter_name="/(recojet_antikt4_NOSYS|truth_H[12])_[pt|eta|phi|m]|trigPassed_HLT_[j80c|2j35c|j150]/i"
+                filter_name="/(recojet_antikt4_NOSYS|truth_H[12])_[pt|eta|phi|m|DL1dv]|trigPassed_HLT_[j80c|2j35c|j150]/i"
             )
     draw_plots(jets_dict)
 
