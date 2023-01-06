@@ -53,9 +53,6 @@ truth_diHiggs_mass_hist = IntHistogram(
     "truth_diHiggs_mass", [200_000, 1_300_000], bins=100
 )
 leading_jets_pt_hist = IntHistogramdd("leading_jets_pt", [20_000, 2_000_000], bins=100)
-leading_b_jets_pt_hist = IntHistogramdd(
-    "leading_b_jets_pt", [20_000, 2_000_000], bins=100
-)
 trig_sets_hists = {}
 for trig_set in trig_sets.keys():
     trig_sets_hists[trig_set] = IntHistogramdd(
@@ -77,6 +74,11 @@ for ith_leading_jet in np.arange(0, 4):
         )
 
 btaggers = ["DL1dv01_77", "GN120220509_77"]
+leading_b_jets_pt_hists = {}
+for btagger in btaggers:
+    leading_b_jets_pt_hists[btagger] = IntHistogramdd(
+        f"leading_b_jets_pt_{btagger}", [20_000, 2_000_000], bins=100
+    )
 trig_sets_btag_hists = {}
 for btagger in btaggers:
     trig_sets_btag_hists[btagger] = {}
@@ -207,7 +209,7 @@ def fill_b_jet_pt_hists(events, cuts=None, tagger="DL1dv01", tagger_eff="77"):
     btags = events[f"recojet_antikt4_NOSYS_{tagger}_FixedCutBEff_{tagger_eff}"]
     btags_4 = ak.sum(btags, axis=-1) > 3
     valid_post_btags_4 = cuts & btags_4
-    leading_b_jets_pt_hist.fill(
+    leading_b_jets_pt_hists[f"{tagger}_{tagger_eff}"].fill(
         *[jets_pt[valid_post_btags_4][:, i] for i in np.arange(0, 4)]
     )
 
@@ -325,6 +327,7 @@ def draw_leading_b_jet_pt_vs_trig_eff_hists(tagger="DL1dv01", tagger_eff="77"):
         borderaxespad=0.0,
     )
     fig.savefig(f"trig_eff_vs_jet_pt_{tagger}_{tagger_eff}.png", bbox_inches="tight")
+    plt.close()
 
 
 def draw_leading_jet_pt_vs_trig_eff_hists():
@@ -363,6 +366,7 @@ def draw_leading_jet_pt_vs_trig_eff_hists():
         borderaxespad=0.0,
     )
     fig.savefig("trig_eff_vs_jet_pt.png", bbox_inches="tight")
+    plt.close()
 
 
 def draw_truth_diHiggs_hists():
@@ -377,6 +381,7 @@ def draw_truth_diHiggs_hists():
     ax.set_ylabel("Events")
     ax.set_xlabel(r"$m_{hh}$ [GeV]")
     fig.savefig("truth_diHiggs_mass.png", bbox_inches="tight")
+    plt.close()
 
 
 def draw_truth_diHiggs_trig_eff_hists():
@@ -404,10 +409,10 @@ def draw_truth_diHiggs_trig_eff_hists():
     ax.set_ylabel("Efficiency [%]")
 
     fig.savefig("trig_eff_vs_truth_diHiggs_mass.png", bbox_inches="tight")
+    plt.close()
 
 
 def draw_truth_diHiggs_trig_eff_btag_hists(tagger="DL1dv01", tagger_eff="77"):
-    # fig, ax = plt.subplots()
     fig, (ax_top, ax_bottom) = plt.subplots(
         2, height_ratios=(20, 10), sharex=True, constrained_layout=True
     )
@@ -455,6 +460,7 @@ def draw_truth_diHiggs_trig_eff_btag_hists(tagger="DL1dv01", tagger_eff="77"):
         f"trig_eff_vs_truth_diHiggs_mass_4btags_{tagger}_{tagger_eff}.png",
         bbox_inches="tight",
     )
+    plt.close()
 
 
 def draw_jet_pt_hists():
@@ -474,13 +480,16 @@ def draw_jet_pt_hists():
     ax.set_ylabel("Jets")
     ax.set_yscale("log")
     fig.savefig("leading_jets_pt.png", bbox_inches="tight")
+    plt.close()
 
 
-def draw_b_jet_pt_hists():
+def draw_b_jet_pt_hists(tagger="DL1dv01", tagger_eff="77"):
     fig, ax = plt.subplots()
-    bins = leading_b_jets_pt_hist.edges
+    bins = leading_b_jets_pt_hists[f"{tagger}_{tagger_eff}"].edges
     labels = ["Leading", "Subleading", "Third Leading", "Fourth Leading"]
-    for ith_leading_jet_pt, label in zip(leading_b_jets_pt_hist.values, labels):
+    for ith_leading_jet_pt, label in zip(
+        leading_b_jets_pt_hists[f"{tagger}_{tagger_eff}"].values, labels
+    ):
         hep.histplot(
             ith_leading_jet_pt,
             bins * invGeV,
@@ -492,7 +501,8 @@ def draw_b_jet_pt_hists():
     ax.set_xlabel(r"$p_{T}$ [GeV]")
     ax.set_ylabel("Jets")
     ax.set_yscale("log")
-    fig.savefig("leading_b_jets_pt.png", bbox_inches="tight")
+    fig.savefig(f"leading_b_jets_pt{tagger}_{tagger_eff}.png", bbox_inches="tight")
+    plt.close()
 
 
 def fill_hists(events):
@@ -500,7 +510,8 @@ def fill_hists(events):
     fill_truth_diHiggs_hists(events, run3_cuts)
     fill_jet_pt_hists(events, run3_cuts)
     fill_leading_jet_pt_passed_trig_hists(events, run3_cuts)
-    fill_b_jet_pt_hists(events, cuts=run3_cuts)
+    fill_b_jet_pt_hists(events, cuts=run3_cuts, tagger="DL1dv01", tagger_eff="77")
+    fill_b_jet_pt_hists(events, cuts=run3_cuts, tagger="GN120220509", tagger_eff="77")
     fill_leading_b_jet_pt_vs_trig_hists(
         events, cuts=run3_cuts, tagger="DL1dv01", tagger_eff="77"
     )
@@ -527,7 +538,8 @@ def draw_hists():
     draw_truth_diHiggs_trig_eff_hists()
     draw_jet_pt_hists()
     draw_leading_jet_pt_vs_trig_eff_hists()
-    draw_b_jet_pt_hists()
+    draw_b_jet_pt_hists(tagger="DL1dv01", tagger_eff="77")
+    draw_b_jet_pt_hists(tagger="GN120220509", tagger_eff="77")
     draw_leading_b_jet_pt_vs_trig_eff_hists(tagger="DL1dv01", tagger_eff="77")
     draw_leading_b_jet_pt_vs_trig_eff_hists(tagger="GN120220509", tagger_eff="77")
     draw_truth_diHiggs_trig_eff_btag_hists(tagger="DL1dv01", tagger_eff="77")
@@ -535,11 +547,10 @@ def draw_hists():
 
 
 def run():
-    jets_dict = {}
-    samples = {"mc21_ggF_k10_small": mc21_ggF_k10_small}
+    # samples = {"mc21_ggF_k10_small": mc21_ggF_k10_small}
     # samples = {"mc21_ggF_k01_small": mc21_ggF_k01_small}
     # samples = {"mc21_ggF_k01": mc21_ggF_k01}
-    # samples = {"mc21_ggF_k01_small": mc21_ggF_k01_small}
+    samples = {"mc21_ggF_k10": mc21_ggF_k10}
     vars = ["pt", "eta", "phi", "m"]
     for sample_name, sample_path in samples.items():
         for events, report in uproot.iterate(
@@ -558,6 +569,29 @@ def run():
             print(report)
             fill_hists(events)
     draw_hists()
+
+
+# def run():
+#     vars = ["pt", "eta", "phi", "m"]
+#     for events, report in uproot.iterate(
+#         [
+#             f"{mc21_ggF_k01_small}*.root:AnalysisMiniTree",
+#             f"{mc21_ggF_k10_small}*.root:AnalysisMiniTree",
+#         ],
+#         [
+#             *[f"recojet_antikt4_NOSYS_{var}" for var in vars],
+#             *[f"truth_H1_{var}" for var in vars],
+#             *[f"truth_H2_{var}" for var in vars],
+#             *[f"trigPassed_{trig}" for trig in run3_all],
+#             "recojet_antikt4_NOSYS_DL1dv01_FixedCutBEff_77",
+#             "recojet_antikt4_NOSYS_GN120220509_FixedCutBEff_77",
+#         ],
+#         step_size="1 GB",
+#         report=True,
+#     ):
+#         print(dir(report))
+#         fill_hists(events)
+#     draw_hists()
 
 
 if __name__ == "__main__":
