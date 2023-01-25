@@ -1,16 +1,20 @@
+import concurrent.futures
 import uproot
 import numpy as np
 import awkward as ak
 import vector as p4
 import matplotlib.pyplot as plt
 import mplhep as hep
-from histograms import IntHistogram, IntHistogramdd
+from histograms import IntHistogram, IntHistogramdd, EffHistogram
 
 plt.style.use(hep.style.ATLAS)
 
+np.seterr(divide="ignore", invalid="ignore")
+
+executor = concurrent.futures.ThreadPoolExecutor(8 * 32)  # 32 threads
+
 invGeV = 1 / 1_000
 
-np.seterr(divide="ignore", invalid="ignore")
 
 # Define samples
 mc21_ggF_k01_small = "/lustre/fs22/group/atlas/ruelasv/hh4b-analysis-r22-build/run/analysis-variables-run3-k01"
@@ -40,12 +44,12 @@ run3_asymm_L1_all = run3_all[0:2] + run3_all[4:5]
 run2 = run3_all[2:4]
 
 trig_sets = {
-    "run2": run2,
-    "run3_main_stream": run3_main_stream,
-    "run3_delayed_stream": run3_delayed_stream,
-    "run3_asymm_L1_jet": run3_asymm_L1_jet,
-    "run3_asymm_L1_all": run3_asymm_L1_all,
-    "run3_all": run3_all,
+    "Run 2": run2,
+    "Main physics stream": run3_main_stream,
+    "Main + delayed streams": run3_delayed_stream,
+    "Asymm L1 jet": run3_asymm_L1_jet,
+    "Asymm L1 all": run3_asymm_L1_all,
+    "OR of all": run3_all,
 }
 
 # Define histograms
@@ -54,9 +58,9 @@ truth_diHiggs_mass_hist = IntHistogram(
 )
 leading_jets_pt_hist = IntHistogramdd("leading_jets_pt", [20_000, 2_000_000], bins=100)
 trig_sets_hists = {}
-for trig_set in trig_sets.keys():
-    trig_sets_hists[trig_set] = IntHistogramdd(
-        f"truth_diHiggs_passed_trig_{trig_set}", [200_000, 1_300_000], bins=40
+for trig_set_key in trig_sets.keys():
+    trig_sets_hists[trig_set_key] = EffHistogram(
+        f"truth_diHiggs_passed_trig_{trig_set_key}", [200_000, 1_300_000], bins=40
     )
 leading_jets_passed_trig_hists = {}
 for ith_leading_jet in np.arange(0, 4):
@@ -67,7 +71,7 @@ for ith_leading_jet in np.arange(0, 4):
     if ith_leading_jet == 3:
         bin_range = [20_000, 700_000]
     for trig_short in run3_all_short:
-        leading_jets_passed_trig_hists[ith_leading_jet][trig_short] = IntHistogramdd(
+        leading_jets_passed_trig_hists[ith_leading_jet][trig_short] = EffHistogram(
             f"jet{ith_leading_jet}_pt_passed_{trig_short}",
             bin_range,
             bins=30,
@@ -83,7 +87,7 @@ trig_sets_btag_hists = {}
 for btagger in btaggers:
     trig_sets_btag_hists[btagger] = {}
     for trig_set in trig_sets.keys():
-        trig_sets_btag_hists[btagger][trig_set] = IntHistogramdd(
+        trig_sets_btag_hists[btagger][trig_set] = EffHistogram(
             f"truth_diHiggs_passed_trig_{trig_set}_btag_{btagger}",
             [200_000, 1_300_000],
             bins=40,
@@ -101,7 +105,7 @@ for btagger in btaggers:
         for trig_short in run3_all_short:
             leading_jets_passed_trig_btag_hists[btagger][ith_leading_jet][
                 trig_short
-            ] = IntHistogramdd(
+            ] = EffHistogram(
                 f"b_jet{ith_leading_jet}_pt_passed_{trig_short}",
                 bin_range,
                 bins=30,
@@ -174,7 +178,7 @@ def compute_eff(passed, total, percentage=True):
 #                 ax=ax_top,
 #                 histtype="errorbar",
 #                 xerr=mass_res / 2,
-#                 yerr=np.sqrt(eff),
+#                 yerr=False,
 #                 label=trig_short,
 #             )
 #             # ratio = h_pass_btag / h_pass
@@ -190,7 +194,7 @@ def compute_eff(passed, total, percentage=True):
 #             )
 
 #         ax_top.set_ylabel("Efficiency [%]")
-#         ax_bottom.set_ylim(0, 5)
+#         ax_bottom.set_ylim(0.5, 2.1)
 #         ax_bottom.axhline(y=1.0, color="black")
 #         ax_bottom.set_xlabel(f"jet_{i+1} " + r"$p_{T}$ [GeV]")
 #         ax_bottom.set_ylabel(f"Ratio to b-tagged")
@@ -294,28 +298,26 @@ def draw_leading_b_jet_pt_vs_trig_eff_hists(tagger="DL1dv01", tagger_eff="77"):
     for i in np.arange(0, 4):
         ith_leading_jet = i
         for trig_short in run3_all_short:
-            h_pass, h_tot = leading_jets_passed_trig_btag_hists[
-                f"{tagger}_{tagger_eff}"
-            ][ith_leading_jet][trig_short].values
             mass_bins = (
                 leading_jets_passed_trig_btag_hists[f"{tagger}_{tagger_eff}"][
                     ith_leading_jet
                 ][trig_short].edges
                 * invGeV
             )
-            eff = (h_pass / h_tot) * 100
+            eff, err = leading_jets_passed_trig_btag_hists[f"{tagger}_{tagger_eff}"][
+                ith_leading_jet
+            ][trig_short].values
             hep.histplot(
-                eff,
+                eff * 100,
                 mass_bins,
                 ax=axs[i],
                 histtype="errorbar",
                 xerr=True,
-                yerr=np.sqrt(eff),
+                yerr=err * 100,
                 label=trig_short,
             )
-        # axs[i].set_ylim(-5, 55)
-        # axs[i].set_xlim(mass_bins[0], mass_bins[-1])
-        axs[i].set_ylim(0, 110)
+        axs[i].set_xlim(mass_bins[0], mass_bins[-1])
+        axs[i].set_ylim(0, 105)
         axs[i].set_xlabel(f"jet_{i+1} " + r"$p_{T}$ [GeV]")
         axs[i].set_ylabel("Efficiency [%]")
         handles, labels = axs[i].get_legend_handles_labels()
@@ -336,24 +338,23 @@ def draw_leading_jet_pt_vs_trig_eff_hists():
     for i in np.arange(0, 4):
         ith_leading_jet = i
         for trig_short in run3_all_short:
-            h_pass, h_tot = leading_jets_passed_trig_hists[ith_leading_jet][
-                trig_short
-            ].values
             mass_bins = (
                 leading_jets_passed_trig_hists[ith_leading_jet][trig_short].edges
                 * invGeV
             )
-            eff = (h_pass / h_tot) * 100
+            eff, err = leading_jets_passed_trig_hists[ith_leading_jet][
+                trig_short
+            ].values
             hep.histplot(
-                eff,
+                eff * 100,
                 mass_bins,
                 ax=axs[i],
                 histtype="errorbar",
                 xerr=True,
-                yerr=np.sqrt(eff),
+                yerr=err * 100,
                 label=trig_short,
             )
-        axs[i].set_ylim(-5, 115)
+        axs[i].set_ylim(0, 105)
         axs[i].set_xlim(mass_bins[0], mass_bins[-1])
         axs[i].set_xlabel(f"jet_{i+1} " + r"$p_{T}$ [GeV]")
         axs[i].set_ylabel("Efficiency [%]")
@@ -389,24 +390,24 @@ def draw_truth_diHiggs_trig_eff_hists():
     num_trig_sets = len(trig_sets_hists.keys())
     cm = plt.get_cmap("gist_ncar")
     for i_trig_set, trig_set_key in enumerate(trig_sets_hists.keys()):
-        h_pass_trig, h_tot = trig_sets_hists[trig_set_key].values
-        eff = (h_pass_trig / h_tot) * 100
+        mass_ranges = trig_sets_hists[trig_set_key].edges * invGeV
+        eff, err = trig_sets_hists[trig_set_key].values
         hep.histplot(
-            eff,
-            trig_sets_hists[trig_set_key].edges * invGeV,
+            eff * 100,
+            mass_ranges,
             ax=ax,
             histtype="errorbar",
             xerr=True,
-            yerr=np.sqrt(eff),
+            yerr=err * 100,
             label=trig_set_key,
             color=cm(1.0 * i_trig_set / num_trig_sets),
             # markersize=5.0,
             # elinewidth=0.8,
         )
     ax.legend(loc="lower center")
-    ax.set_ylim(0, 115)
+    ax.set_ylim(0, 105)
     ax.set_xlabel(r"$m_{HH}$ [GeV]")
-    ax.set_ylabel("Efficiency [%]")
+    ax.set_ylabel("Trigger Efficiency [%]")
 
     fig.savefig("trig_eff_vs_truth_diHiggs_mass.png", bbox_inches="tight")
     plt.close()
@@ -420,24 +421,23 @@ def draw_truth_diHiggs_trig_eff_btag_hists(tagger="DL1dv01", tagger_eff="77"):
     num_trig_sets = len(trig_sets_btagger_hists.keys())
     cm = plt.get_cmap("gist_ncar")
     for i_trig_set, trig_set_key in enumerate(trig_sets_btagger_hists.keys()):
-        h_pass_trig, h_tot = trig_sets_btagger_hists[trig_set_key].values
-        eff = (h_pass_trig / h_tot) * 100
         bins = trig_sets_btagger_hists[trig_set_key].edges * invGeV
+        eff, err = trig_sets_btagger_hists[trig_set_key].values
         hep.histplot(
-            eff,
+            eff * 100,
             bins,
             ax=ax_top,
             histtype="errorbar",
             xerr=True,
-            yerr=np.sqrt(eff),
+            yerr=err * 100,
             label=trig_set_key,
             color=cm(1.0 * i_trig_set / num_trig_sets),
             # markersize=5.0,
             # elinewidth=0.8,
         )
-        run2_key = "run2"
+        run2_key = "Run 2"
         if trig_set_key != run2_key:
-            ratio = h_pass_trig / trig_sets_btagger_hists[run2_key].values[0]
+            ratio = eff / trig_sets_btagger_hists[run2_key].values[0]
             hep.histplot(
                 ratio,
                 bins,
@@ -448,12 +448,12 @@ def draw_truth_diHiggs_trig_eff_btag_hists(tagger="DL1dv01", tagger_eff="77"):
                 label=trig_set_key,
                 color=cm(1.0 * i_trig_set / num_trig_sets),
             )
-    ax_top.set_ylim(0, 115)
+    ax_top.set_ylim(0, 105)
     ax_top.legend(loc="lower center")
-    ax_top.set_ylabel("Efficiency [%]")
+    ax_top.set_ylabel("Trigger Efficiency [%]")
     ax_bottom.set_xlabel(r"$m_{HH}$ [GeV]")
     ax_bottom.set_ylabel("Ratio to Run2")
-    ax_bottom.set_ylim(0, 5)
+    ax_bottom.set_ylim(0.5, 2.1)
     ax_bottom.axhline(y=1.0, color="black")
 
     fig.savefig(
@@ -565,6 +565,8 @@ def run():
             ],
             step_size="1 GB",
             report=True,
+            # decompression_executor=executor,
+            # interpretation_executor=executor,
         ):
             print(report)
             fill_hists(events)

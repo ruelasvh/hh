@@ -1,5 +1,6 @@
 import numpy as np
 from abc import ABC, abstractmethod
+from error_estimation import getEfficiencyWithUncertainties
 
 
 class Histogram(ABC):
@@ -36,3 +37,18 @@ class IntHistogramdd(IntHistogram):
     def fill(self, *vals):
         hist = np.array([np.histogram(data, self._bins)[0] for data in vals])
         self._hist = self._hist + hist
+
+
+class EffHistogram(IntHistogramdd):
+    def fill(self, *vals):
+        assert (
+            len(vals) == 2
+        ), "EffHistogram only accepts 2 input params, h_pass and h_total"
+        hist = np.array([np.histogram(data, self._bins)[0] for data in vals])
+        self._hist = self._hist + hist
+
+    @property
+    def values(self):
+        passed, total = self._hist
+        eff, err = getEfficiencyWithUncertainties(passed, total)
+        return eff, err
