@@ -76,7 +76,6 @@ for ith_leading_jet in np.arange(0, 4):
             bin_range,
             bins=30,
         )
-
 btaggers = ["DL1dv01_77", "GN120220509_77"]
 leading_b_jets_pt_hists = {}
 for btagger in btaggers:
@@ -569,31 +568,9 @@ def run():
             # interpretation_executor=executor,
         ):
             print(report)
-            fill_hists(events)
+            buckets = bucket(events)
+            # fill_hists(events)
     draw_hists()
-
-
-# def run():
-#     vars = ["pt", "eta", "phi", "m"]
-#     for events, report in uproot.iterate(
-#         [
-#             f"{mc21_ggF_k01_small}*.root:AnalysisMiniTree",
-#             f"{mc21_ggF_k10_small}*.root:AnalysisMiniTree",
-#         ],
-#         [
-#             *[f"recojet_antikt4_NOSYS_{var}" for var in vars],
-#             *[f"truth_H1_{var}" for var in vars],
-#             *[f"truth_H2_{var}" for var in vars],
-#             *[f"trigPassed_{trig}" for trig in run3_all],
-#             "recojet_antikt4_NOSYS_DL1dv01_FixedCutBEff_77",
-#             "recojet_antikt4_NOSYS_GN120220509_FixedCutBEff_77",
-#         ],
-#         step_size="1 GB",
-#         report=True,
-#     ):
-#         print(dir(report))
-#         fill_hists(events)
-#     draw_hists()
 
 
 if __name__ == "__main__":
