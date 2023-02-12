@@ -1,8 +1,9 @@
 import numpy as np
 import awkward as ak
 import vector as p4
-from histograms import EffHistogram
+from histograms import EffHistogram, EffHistogramdd
 import triggers
+import logging
 
 
 def init_leading_jets_passed_trig_hists():
@@ -51,12 +52,10 @@ def init_mH_passed_trig_hists():
 
 
 def fill_mH_passed_trig_hists(events, trigs_decisions, output):
-    """Recostruct m_h1 and m_h2 using jets sorted by pT."""
-
     h1_m = events["resolved_DL1dv01_FixedCutBEff_70_h1_m"]
     h2_m = events["resolved_DL1dv01_FixedCutBEff_70_h2_m"]
 
-    print(
+    logging.debug(
         f"total number events from jets, H1 and H2 in events (all should be equal): {len(h1_m)}, {len(h2_m)}"
     )
 
@@ -73,3 +72,27 @@ def fill_mH_passed_trig_hists(events, trigs_decisions, output):
                     h2_m[trig_decisions],
                     h2_m,
                 )
+
+
+def init_mH_plane_passed_trig_hists():
+    mH_plane_passed_trig_hists = {}
+    bin_range = (0, 200_000)
+    for trig in triggers.run3_all:
+        mH_plane_passed_trig_hists[trig] = EffHistogramdd(
+            f"mH_plane_passed_{trig}",
+            bin_range,
+            bins=100,
+        )
+    return mH_plane_passed_trig_hists
+
+
+def fill_mH_plane_passed_trig_hists(events, trigs_decisions, output):
+
+    h1_m = events["resolved_DL1dv01_FixedCutBEff_70_h1_m"]
+    h2_m = events["resolved_DL1dv01_FixedCutBEff_70_h2_m"]
+
+    for trig, hist in output.items():
+        trig_decisions = trigs_decisions[f"trigPassed_{trig}"]
+        passed_trig = np.column_stack((h1_m[trig_decisions], h2_m[trig_decisions]))
+        total = np.column_stack((h1_m, h2_m))
+        hist.fill(total)

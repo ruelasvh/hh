@@ -52,3 +52,24 @@ class EffHistogram(IntHistogramdd):
         passed, total = self._hist
         eff, err = getEfficiencyWithUncertainties(passed, total)
         return eff, err
+
+
+class EffHistogramdd(Histogram):
+    def __init__(self, name, binrange, bins=100, compress=True):
+        self._name = name
+        self._bins = np.linspace(*binrange, bins)
+        self._hist = np.zeros((self._bins.size - 1, self._bins.size - 1), dtype=float)
+        self._compression = dict(compression="gzip") if compress else {}
+
+    def fill(self, vals):
+        hist = np.histogramdd(vals, bins=(self._bins, self._bins))[0]
+        self._hist += np.array(hist)
+
+    @property
+    def values(self):
+        total = self._hist
+        return total
+
+    @property
+    def edges(self):
+        return self._bins

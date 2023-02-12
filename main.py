@@ -1,5 +1,4 @@
 import uproot
-import concurrent.futures
 import numpy as np
 import triggers
 from cuts import (
@@ -10,12 +9,14 @@ from cuts import (
 from fill_hists import (
     init_leading_jets_passed_trig_hists,
     init_mH_passed_trig_hists,
+    init_mH_plane_passed_trig_hists,
     fill_leading_jet_pt_passed_trig_hists,
     fill_mH_passed_trig_hists,
+    fill_mH_plane_passed_trig_hists,
 )
 from draw_hists import draw_hists
-
-executor = concurrent.futures.ThreadPoolExecutor(8 * 32)  # 32 threads
+import time
+import logging
 
 
 np.seterr(divide="ignore", invalid="ignore")
@@ -28,18 +29,22 @@ mc21_ggF_k10 = "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.hh4b.ggF/o
 
 def main():
     inputs = {
-        # "k01": mc21_ggF_k01_small,
-        # "k10": mc21_ggF_k10_small,
-        "k01": mc21_ggF_k01,
-        "k10": mc21_ggF_k10,
+        "k01": mc21_ggF_k01_small,
+        "k10": mc21_ggF_k10_small,
+        # "k01": mc21_ggF_k01,
+        # "k10": mc21_ggF_k10,
     }
     outputs = {}
+    st = time.time()
     for sample_name, sample_path in inputs.items():
         outputs[sample_name] = {}
         outputs[sample_name][
             "leading_jets_passed_trig_hists"
         ] = init_leading_jets_passed_trig_hists()
         outputs[sample_name]["mH_passed_trig_hists"] = init_mH_passed_trig_hists()
+        outputs[sample_name][
+            "mH_plane_passed_trig_hists"
+        ] = init_mH_plane_passed_trig_hists()
         for events, report in uproot.iterate(
             f"{sample_path}*.root:AnalysisMiniTree",
             filter_name=[
@@ -52,9 +57,6 @@ def main():
             ],
             step_size="1 GB",
             report=True,
-            # num_workers=6,
-            # decompression_executor=executor,
-            interpretation_executor=executor,
         ):
             print(report)
             # print(events.type.show())
@@ -74,7 +76,13 @@ def main():
                 select_trigger_decisions(events),
                 outputs[sample_name]["mH_passed_trig_hists"],
             )
-
+            fill_mH_plane_passed_trig_hists(
+                events,
+                select_trigger_decisions(events),
+                outputs[sample_name]["mH_plane_passed_trig_hists"],
+            )
+    et = time.time()
+    logging.info("Execution time:", et - st, "seconds")
     draw_hists(outputs)
 
 

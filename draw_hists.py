@@ -66,6 +66,26 @@ def set_leading_jets_y_lims(ith_var, ax):
         ax.set_xlim(0, 150)
 
 
+def draw_2d_var_vs_trig_eff_hists(hists, sample_name, var_label, y_lims=None):
+    n_plots = len(hists.items())
+    fig, axs = plt.subplots(2, n_plots - 2, constrained_layout=True)
+    axs = axs.flat
+    for ith_trig, trig_name, hist in zip(
+        np.arange(0, n_plots), triggers.run3_all_short, hists.values()
+    ):
+        ax = axs[ith_trig]
+        total = hist.values
+        bins = hist.edges * invGeV
+        hep.hist2dplot(
+            total,
+            bins,
+            bins,
+            ax=ax,
+        )
+    fig.savefig(f"{var_label}_plane_vs_trig_eff_{sample_name}.png", bbox_inches="tight")
+    plt.close()
+
+
 def draw_hists(outputs):
     for sample_name, hists_dict in outputs.items():
         if "leading_jets_passed_trig_hists" in hists_dict:
@@ -80,6 +100,14 @@ def draw_hists(outputs):
         if "mH_passed_trig_hists" in hists_dict:
             draw_var_vs_trig_eff_hists(
                 hists_dict["mH_passed_trig_hists"],
+                sample_name,
+                var_label="mH",
+            )
+
+    for sample_name, hists_dict in outputs.items():
+        if "mH_plane_passed_trig_hists" in hists_dict:
+            draw_2d_var_vs_trig_eff_hists(
+                hists_dict["mH_plane_passed_trig_hists"],
                 sample_name,
                 var_label="mH",
             )
