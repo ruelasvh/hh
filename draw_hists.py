@@ -30,7 +30,7 @@ def draw_var_vs_trig_eff_hists(hists, sample_name, var_label, y_lims=None):
                 label=f"{trig}: " + r"$\epsilon = $" + f"{(total_eff)}%",
             )
             hep.histplot(
-                (total / np.sum(total)),
+                (total / np.amax(total)),
                 bins,
                 histtype="fill",
                 stack=True,
@@ -39,8 +39,7 @@ def draw_var_vs_trig_eff_hists(hists, sample_name, var_label, y_lims=None):
             )
         if y_lims:
             y_lims(ith_var, ax)
-        ax.set_yscale("log")
-        ax.set_ylim(ax.get_ylim()[0], 1)
+        ax.set_ylim(ax.get_ylim()[0], 1.1)
         ax.set_xlabel(f"{var_label}{ith_var+1} [GeV]")
         ax.set_ylabel("Trigger Efficiency")
         handles, labels = ax.get_legend_handles_labels()
