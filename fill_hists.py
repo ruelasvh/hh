@@ -1,15 +1,15 @@
 import numpy as np
 import awkward as ak
 import vector as p4
+from collections import defaultdict
 from histograms import EffHistogram, EffHistogramdd
 import triggers
 import logging
 
 
 def init_leading_jets_passed_trig_hists():
-    leading_jets_passed_trig_hists = {}
+    leading_jets_passed_trig_hists = defaultdict(lambda: defaultdict(int))
     for ith_jet in np.arange(0, 4):
-        leading_jets_passed_trig_hists[ith_jet] = {}
         # bin_range = [20_000, 1_300_000]
         bin_range = [0, 1_300_000]
         if ith_jet == 2:
@@ -38,13 +38,12 @@ def fill_leading_jet_pt_passed_trig_hists(jet_pt, trigs_decisions, output):
 
 
 def init_mH_passed_trig_hists():
-    mH_passed_trig_hists = {}
-    for ith_h in np.arange(0, 2):
-        mH_passed_trig_hists[ith_h] = {}
-        bin_range = [0, 200_000]
+    mH_passed_trig_hists = defaultdict(lambda: defaultdict(int))
+    bin_range = [0, 200_000]
+    for ith_var in np.arange(0, 2):
         for trig in triggers.run3_all:
-            mH_passed_trig_hists[ith_h][trig] = EffHistogram(
-                f"mH{ith_h}_passed_{trig}",
+            mH_passed_trig_hists[ith_var][trig] = EffHistogram(
+                f"mH{ith_var}_passed_{trig}",
                 bin_range,
                 bins=100,
             )
@@ -59,15 +58,15 @@ def fill_mH_passed_trig_hists(events, trigs_decisions, output):
         f"total number events from jets, H1 and H2 in events (all should be equal): {len(h1_m)}, {len(h2_m)}"
     )
 
-    for ith_h, passed_trig_hists in output.items():
+    for ith_var, passed_trig_hists in output.items():
         for trig, hist in passed_trig_hists.items():
             trig_decisions = trigs_decisions[f"trigPassed_{trig}"]
-            if ith_h == 0:
+            if ith_var == 0:
                 hist.fill(
                     h1_m[trig_decisions],
                     h1_m,
                 )
-            if ith_h == 1:
+            if ith_var == 1:
                 hist.fill(
                     h2_m[trig_decisions],
                     h2_m,
@@ -75,14 +74,15 @@ def fill_mH_passed_trig_hists(events, trigs_decisions, output):
 
 
 def init_mH_plane_passed_trig_hists():
-    mH_plane_passed_trig_hists = {}
+    mH_plane_passed_trig_hists = defaultdict(lambda: defaultdict(int))
     bin_range = (0, 200_000)
-    for trig in triggers.run3_all:
-        mH_plane_passed_trig_hists[trig] = EffHistogramdd(
-            f"mH_plane_passed_{trig}",
-            bin_range,
-            bins=100,
-        )
+    for ith_var in np.arange(0, 1):
+        for trig in triggers.run3_all:
+            mH_plane_passed_trig_hists[ith_var][trig] = EffHistogramdd(
+                f"mH_plane_passed_{trig}",
+                bin_range,
+                bins=100,
+            )
     return mH_plane_passed_trig_hists
 
 
@@ -91,8 +91,9 @@ def fill_mH_plane_passed_trig_hists(events, trigs_decisions, output):
     h1_m = events["resolved_DL1dv01_FixedCutBEff_70_h1_m"]
     h2_m = events["resolved_DL1dv01_FixedCutBEff_70_h2_m"]
 
-    for trig, hist in output.items():
-        trig_decisions = trigs_decisions[f"trigPassed_{trig}"]
-        passed_trig = np.column_stack((h1_m[trig_decisions], h2_m[trig_decisions]))
-        total = np.column_stack((h1_m, h2_m))
-        hist.fill(total)
+    for ith_var, passed_trig_hists in output.items():
+        for trig, hist in passed_trig_hists.items():
+            trig_decisions = trigs_decisions[f"trigPassed_{trig}"]
+            passed_trig = np.column_stack((h1_m[trig_decisions], h2_m[trig_decisions]))
+            total = np.column_stack((h1_m, h2_m))
+            hist.fill(total)

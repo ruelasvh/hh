@@ -1,3 +1,4 @@
+from collections import defaultdict
 import uproot
 import numpy as np
 import triggers
@@ -34,10 +35,9 @@ def main():
         # "k01": mc21_ggF_k01,
         # "k10": mc21_ggF_k10,
     }
-    outputs = {}
+    outputs = defaultdict(lambda: defaultdict(int))
     st = time.time()
     for sample_name, sample_path in inputs.items():
-        outputs[sample_name] = {}
         outputs[sample_name][
             "leading_jets_passed_trig_hists"
         ] = init_leading_jets_passed_trig_hists()

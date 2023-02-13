@@ -9,7 +9,7 @@ invGeV = 1 / 1_000
 
 
 def draw_var_vs_trig_eff_hists(hists, sample_name, var_label, y_lims=None):
-    n_plots = len(hists.items())
+    n_plots = len(hists.keys())
     fig, axs = plt.subplots(2, n_plots // 2, constrained_layout=True)
     axs = axs.flat
     for ith_var, passed_trig_hists in hists.items():
@@ -66,21 +66,20 @@ def set_leading_jets_y_lims(ith_var, ax):
 
 
 def draw_2d_var_vs_trig_eff_hists(hists, sample_name, var_label, y_lims=None):
-    n_plots = len(hists.items())
-    fig, axs = plt.subplots(2, n_plots - 2, constrained_layout=True)
+    n_plots = 2
+    fig, axs = plt.subplots(n_plots, constrained_layout=True)
     axs = axs.flat
-    for ith_trig, trig_name, hist in zip(
-        np.arange(0, n_plots), triggers.run3_all_short, hists.values()
-    ):
-        ax = axs[ith_trig]
-        total = hist.values
-        bins = hist.edges * invGeV
-        hep.hist2dplot(
-            total,
-            bins,
-            bins,
-            ax=ax,
-        )
+    for ith_var, passed_trig_hists in hists.items():
+        ax = axs[ith_var]
+        for trig, hist in zip(triggers.run3_all_short, passed_trig_hists.values()):
+            total = hist.values
+            bins = hist.edges * invGeV
+            hep.hist2dplot(
+                total,
+                bins,
+                bins,
+                ax=ax,
+            )
     fig.savefig(f"{var_label}_plane_vs_trig_eff_{sample_name}.png", bbox_inches="tight")
     plt.close()
 
