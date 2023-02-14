@@ -61,14 +61,20 @@ class EffHistogramdd(Histogram):
         self._hist = np.zeros((self._bins.size - 1, self._bins.size - 1), dtype=float)
         self._compression = dict(compression="gzip") if compress else {}
 
-    def fill(self, vals):
-        hist = np.histogramdd(vals, bins=(self._bins, self._bins))[0]
-        self._hist += np.array(hist)
+    def fill(self, *vals):
+        assert (
+            len(vals) == 2
+        ), "EffHistogram only accepts 2 input params, h_pass and h_total"
+        hist = np.array(
+            [np.histogramdd(data, bins=(self._bins, self._bins))[0] for data in vals]
+        )
+        self._hist = self._hist + np.array(hist)
 
     @property
     def values(self):
-        total = self._hist
-        return total
+        passed, total = self._hist
+        eff = passed / total
+        return eff, None
 
     @property
     def edges(self):

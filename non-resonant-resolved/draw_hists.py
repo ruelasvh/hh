@@ -50,7 +50,7 @@ def draw_var_vs_trig_eff_hists(hists, sample_name, var_label, y_lims=None):
         loc="upper left",
         borderaxespad=0.0,
     )
-    fig.savefig(f"{var_label}_vs_trig_eff_{sample_name}.png", bbox_inches="tight")
+    fig.savefig(f"plots/{var_label}_vs_trig_eff_{sample_name}.png", bbox_inches="tight")
     plt.close()
 
 
@@ -66,21 +66,42 @@ def set_leading_jets_y_lims(ith_var, ax):
 
 
 def draw_2d_var_vs_trig_eff_hists(hists, sample_name, var_label, y_lims=None):
-    n_plots = 2
-    fig, axs = plt.subplots(n_plots, constrained_layout=True)
+    getSampleLabel = (
+        lambda l: r"$\kappa_{\lambda} = 1$"
+        if l == "k01"
+        else r"$\kappa_{\lambda} = 10$"
+    )
+
+    def setAxLabels(ax):
+        ax.set_ylabel(f"{var_label}2 [GeV]", fontsize=10)
+        ax.set_xlabel(f"{var_label}1 [GeV]", fontsize=10)
+        ax.tick_params(axis="both", which="major", labelsize=10)
+        ax.tick_params(axis="both", which="minor", labelsize=10)
+        ax.set_aspect("equal", adjustable="box")
+
+    n_plots = len(hists[0].keys())
+    fig, axs = plt.subplots(2, n_plots - 2, constrained_layout=True)
     axs = axs.flat
     for ith_var, passed_trig_hists in hists.items():
-        ax = axs[ith_var]
-        for trig, hist in zip(triggers.run3_all_short, passed_trig_hists.values()):
-            total = hist.values
+        for ith_trig, trig_name, hist in zip(
+            np.arange(0, n_plots), triggers.run3_all_short, passed_trig_hists.values()
+        ):
+            ax = axs[ith_trig + 1]
+            ax.set_title(trig_name, fontsize=10)
+            setAxLabels(ax)
+            eff, err = hist.values
             bins = hist.edges * invGeV
-            hep.hist2dplot(
-                total,
-                bins,
-                bins,
-                ax=ax,
-            )
-    fig.savefig(f"{var_label}_plane_vs_trig_eff_{sample_name}.png", bbox_inches="tight")
+            _, total = hist._hist
+            hep.hist2dplot(eff, bins, bins, ax=ax, cbar=False)
+        axs[ith_var].set_title(
+            getSampleLabel(sample_name),
+            fontsize=10,
+        )
+        setAxLabels(axs[ith_var])
+        hep.hist2dplot(total / np.amax(total), bins, bins, ax=axs[ith_var], cbar=False)
+    fig.savefig(
+        f"plots/{var_label}_plane_vs_trig_eff_{sample_name}.png", bbox_inches="tight"
+    )
     plt.close()
 
 

@@ -94,6 +94,6 @@ def fill_mH_plane_passed_trig_hists(events, trigs_decisions, output):
     for ith_var, passed_trig_hists in output.items():
         for trig, hist in passed_trig_hists.items():
             trig_decisions = trigs_decisions[f"trigPassed_{trig}"]
-            passed_trig = np.column_stack((h1_m[trig_decisions], h2_m[trig_decisions]))
+            passed = np.column_stack((h1_m[trig_decisions], h2_m[trig_decisions]))
             total = np.column_stack((h1_m, h2_m))
-            hist.fill(total)
+            hist.fill(passed, total)

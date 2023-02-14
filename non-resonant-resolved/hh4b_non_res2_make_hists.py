@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+
+"""
+build plots of everything
+"""
+
+import argparse
+import json
+from pathlib import Path
 from collections import defaultdict
 import uproot
 import numpy as np
@@ -22,19 +31,46 @@ import logging
 
 np.seterr(divide="ignore", invalid="ignore")
 
-mc21_ggF_k01_small = "/lustre/fs22/group/atlas/ruelasv/hh4b-analysis-r22-build/run/analysis-variables-run3-k01"
-mc21_ggF_k10_small = "/lustre/fs22/group/atlas/ruelasv/hh4b-analysis-r22-build/run/analysis-variables-run3-k10"
-mc21_ggF_k01 = "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.hh4b.ggF/output/user.viruelas.HH4b.ggF.2022_12_15.601479.PhPy8EG_HH4b_cHHH01d0.e8472_s3873_r13829_p5440_TREE/"
-mc21_ggF_k10 = "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.hh4b.ggF/output/user.viruelas.HH4b.ggF.2022_12_15.601480.PhPy8EG_HH4b_cHHH10d0.e8472_s3873_r13829_p5440_TREE/"
+
+class ParseKwargs(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, dict())
+        for value in values:
+            if ".json" in value:
+                with open(Path(value)) as ifile:
+                    values = json.load(ifile)
+                for key, value in values.items():
+                    getattr(namespace, self.dest)[key] = value
+            else:
+                key, value = value.split("=")
+                getattr(namespace, self.dest)[key] = value
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    defaults = dict(help="default: %(default)s")
+    parser.add_argument("inputs", nargs="*", action=ParseKwargs)
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        default=Path("hists.h5"),
+        **defaults,
+    )
+    parser.add_argument(
+        "-t", "--test", action="store_true", help="run on small test files"
+    )
+    return parser.parse_args()
 
 
 def main():
-    inputs = {
-        "k01": mc21_ggF_k01_small,
-        "k10": mc21_ggF_k10_small,
-        # "k01": mc21_ggF_k01,
-        # "k10": mc21_ggF_k10,
-    }
+    args = get_args()
+    inputs = args.inputs
+    if args.test and not bool(inputs):
+        inputs = {
+            "k01": Path("test-data/analysis-variables-mc21-ggF-k01"),
+            "k10": Path("test-data/analysis-variables-mc21-ggF-k10"),
+        }
     outputs = defaultdict(lambda: defaultdict(int))
     st = time.time()
     for sample_name, sample_path in inputs.items():
