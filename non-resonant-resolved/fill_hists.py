@@ -53,11 +53,9 @@ def init_mH_passed_trig_hists():
 def fill_mH_passed_trig_hists(events, trigs_decisions, output):
     h1_m = events["resolved_DL1dv01_FixedCutBEff_70_h1_m"]
     h2_m = events["resolved_DL1dv01_FixedCutBEff_70_h2_m"]
-
     logging.debug(
         f"total number events from jets, H1 and H2 in events (all should be equal): {len(h1_m)}, {len(h2_m)}"
     )
-
     for ith_var, passed_trig_hists in output.items():
         for trig, hist in passed_trig_hists.items():
             trig_decisions = trigs_decisions[f"trigPassed_{trig}"]
@@ -87,13 +85,53 @@ def init_mH_plane_passed_trig_hists():
 
 
 def fill_mH_plane_passed_trig_hists(events, trigs_decisions, output):
-
     h1_m = events["resolved_DL1dv01_FixedCutBEff_70_h1_m"]
     h2_m = events["resolved_DL1dv01_FixedCutBEff_70_h2_m"]
-
     for ith_var, passed_trig_hists in output.items():
         for trig, hist in passed_trig_hists.items():
             trig_decisions = trigs_decisions[f"trigPassed_{trig}"]
             passed = np.column_stack((h1_m[trig_decisions], h2_m[trig_decisions]))
             total = np.column_stack((h1_m, h2_m))
             hist.fill(passed, total)
+
+
+def init_mH_passed_pairing_hists():
+    mH_passed_pairing_hists = defaultdict(lambda: defaultdict(int))
+    bin_range = [0, 200_000]
+    for ith_var in np.arange(0, 2):
+        for ith_pair in np.arange(0, 1):
+            mH_passed_pairing_hists[ith_var][ith_pair] = EffHistogram(
+                f"mH{ith_var}_passed_h{ith_var}_pairing",
+                bin_range,
+                bins=100,
+            )
+    return mH_passed_pairing_hists
+
+
+def fill_mH_passed_pairing_hists(events, output):
+    h1_m = events["resolved_DL1dv01_FixedCutBEff_70_h1_m"]
+    h2_m = events["resolved_DL1dv01_FixedCutBEff_70_h2_m"]
+    h1_pairing_decisions = (
+        events[
+            "resolved_DL1dv01_FixedCutBEff_70_h1_closestTruthBsHaveSameInitialParticle"
+        ]
+        == 1
+    )
+    h2_pairing_decisions = (
+        events[
+            "resolved_DL1dv01_FixedCutBEff_70_h2_closestTruthBsHaveSameInitialParticle"
+        ]
+        == 1
+    )
+    for ith_var, passed_trig_hists in output.items():
+        for ith_pair, hist in passed_trig_hists.items():
+            if ith_var == 0:
+                hist.fill(
+                    h1_m[h1_pairing_decisions],
+                    h1_m,
+                )
+            if ith_var == 1:
+                hist.fill(
+                    h2_m[h2_pairing_decisions],
+                    h2_m,
+                )

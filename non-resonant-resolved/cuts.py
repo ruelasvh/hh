@@ -30,8 +30,8 @@ def select_jets_sorted_by_pt(events):
             "recojet_antikt4_NOSYS_eta",
             "recojet_antikt4_NOSYS_phi",
             "recojet_antikt4_NOSYS_m",
-            "recojet_antikt4_NOSYS_DL1dv01_FixedCutBEff_77",
-            "recojet_antikt4_NOSYS_GN120220509_FixedCutBEff_77",
+            "recojet_antikt4_NOSYS_DL1dv01_FixedCutBEff_70",
+            "recojet_antikt4_NOSYS_GN120220509_FixedCutBEff_70",
         ],
         indices,
     ]

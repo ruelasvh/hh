@@ -8,13 +8,17 @@ plt.style.use(hep.style.ATLAS)
 invGeV = 1 / 1_000
 
 
-def draw_var_vs_trig_eff_hists(hists, sample_name, var_label, y_lims=None):
+def draw_var_vs_eff_hists(hists, sample_name, var_label, eff_label, y_lims=None):
     n_plots = len(hists.keys())
     fig, axs = plt.subplots(2, n_plots // 2, constrained_layout=True)
     axs = axs.flat
     for ith_var, passed_trig_hists in hists.items():
         ax = axs[ith_var]
-        for trig, hist in zip(triggers.run3_all_short, passed_trig_hists.values()):
+        for key, hist in passed_trig_hists.items():
+            label = eff_label
+            if "trig" in eff_label:
+                trig_index = triggers.run3_all.index(key)
+                label = triggers.run3_all_short[trig_index]
             passed, total = hist._hist
             total_eff = np.sum(passed) / np.sum(total)
             total_eff = round(total_eff * 100)
@@ -27,7 +31,7 @@ def draw_var_vs_trig_eff_hists(hists, sample_name, var_label, y_lims=None):
                 histtype="errorbar",
                 xerr=True,
                 yerr=err,
-                label=f"{trig}: " + r"$\epsilon = $" + f"{(total_eff)}%",
+                label=f"{label}: " + r"$\epsilon = $" + f"{(total_eff)}%",
             )
             hep.histplot(
                 (total / np.amax(total)),
@@ -41,7 +45,7 @@ def draw_var_vs_trig_eff_hists(hists, sample_name, var_label, y_lims=None):
             y_lims(ith_var, ax)
         ax.set_ylim(ax.get_ylim()[0], 1.1)
         ax.set_xlabel(f"{var_label}{ith_var+1} [GeV]")
-        ax.set_ylabel("Trigger Efficiency")
+        ax.set_ylabel(f"{eff_label.capitalize()} Efficiency")
         handles, labels = ax.get_legend_handles_labels()
     fig.legend(
         handles,
@@ -50,7 +54,9 @@ def draw_var_vs_trig_eff_hists(hists, sample_name, var_label, y_lims=None):
         loc="upper left",
         borderaxespad=0.0,
     )
-    fig.savefig(f"plots/{var_label}_vs_trig_eff_{sample_name}.png", bbox_inches="tight")
+    fig.savefig(
+        f"plots/{var_label}_vs_{eff_label}_eff_{sample_name}.png", bbox_inches="tight"
+    )
     plt.close()
 
 
@@ -108,19 +114,21 @@ def draw_2d_var_vs_trig_eff_hists(hists, sample_name, var_label, y_lims=None):
 def draw_hists(outputs):
     for sample_name, hists_dict in outputs.items():
         if "leading_jets_passed_trig_hists" in hists_dict:
-            draw_var_vs_trig_eff_hists(
+            draw_var_vs_eff_hists(
                 hists_dict["leading_jets_passed_trig_hists"],
                 sample_name,
                 var_label=r"jet",
+                eff_label="trigger",
                 y_lims=set_leading_jets_y_lims,
             )
 
     for sample_name, hists_dict in outputs.items():
         if "mH_passed_trig_hists" in hists_dict:
-            draw_var_vs_trig_eff_hists(
+            draw_var_vs_eff_hists(
                 hists_dict["mH_passed_trig_hists"],
                 sample_name,
                 var_label="mH",
+                eff_label="trigger",
             )
 
     for sample_name, hists_dict in outputs.items():
@@ -129,4 +137,13 @@ def draw_hists(outputs):
                 hists_dict["mH_plane_passed_trig_hists"],
                 sample_name,
                 var_label="mH",
+            )
+
+    for sample_name, hists_dict in outputs.items():
+        if "mH_passed_pairing_hists" in hists_dict:
+            draw_var_vs_eff_hists(
+                hists_dict["mH_passed_pairing_hists"],
+                sample_name,
+                var_label="mH",
+                eff_label="pairing",
             )

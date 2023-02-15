@@ -23,10 +23,13 @@ from fill_hists import (
     fill_leading_jet_pt_passed_trig_hists,
     fill_mH_passed_trig_hists,
     fill_mH_plane_passed_trig_hists,
+    init_mH_passed_pairing_hists,
+    fill_mH_passed_pairing_hists,
 )
 from draw_hists import draw_hists
 import time
 import logging
+import concurrent.futures
 
 
 np.seterr(divide="ignore", invalid="ignore")
@@ -81,18 +84,22 @@ def main():
         outputs[sample_name][
             "mH_plane_passed_trig_hists"
         ] = init_mH_plane_passed_trig_hists()
+        outputs[sample_name]["mH_passed_pairing_hists"] = init_mH_passed_pairing_hists()
         for events, report in uproot.iterate(
             f"{sample_path}*.root:AnalysisMiniTree",
             filter_name=[
                 "/recojet_antikt4_NOSYS_(pt|eta|phi|m)/",
-                "/recojet_antikt4_NOSYS_(DL1dv01|GN120220509)_FixedCutBEff_77/",
+                "/recojet_antikt4_NOSYS_(DL1dv01|GN120220509)_FixedCutBEff_70/",
                 "/truth_H1_(pt|eta|phi|m)/",
                 "/truth_H2_(pt|eta|phi|m)/",
                 "/resolved_DL1dv01_FixedCutBEff_70_h(1|2)_m/",
+                "/resolved_DL1dv01_FixedCutBEff_70_h(1|2)_closestTruthBsHaveSameInitialParticle/",
                 *[f"trigPassed_{trig}" for trig in triggers.run3_all],
             ],
             step_size="1 GB",
             report=True,
+            decompression_executor=concurrent.futures.ThreadPoolExecutor(8 * 32),
+            interpretation_executor=concurrent.futures.ThreadPoolExecutor(8 * 32),
         ):
             print(report)
             # print(events.type.show())
@@ -116,6 +123,9 @@ def main():
                 events,
                 select_trigger_decisions(events),
                 outputs[sample_name]["mH_plane_passed_trig_hists"],
+            )
+            fill_mH_passed_pairing_hists(
+                events, outputs[sample_name]["mH_passed_pairing_hists"]
             )
     et = time.time()
     logging.info("Execution time:", et - st, "seconds")
