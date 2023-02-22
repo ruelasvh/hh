@@ -23,6 +23,7 @@ from fill_hists import (
     fill_leading_jet_pt_passed_trig_hists,
     fill_mH_passed_trig_hists,
     fill_mH_plane_passed_trig_hists,
+    fill_mH_plane_passed_exclusive_trig_hists,
     init_mH_passed_pairing_hists,
     fill_mH_passed_pairing_hists,
 )
@@ -63,6 +64,12 @@ def get_args():
     parser.add_argument(
         "-t", "--test", action="store_true", help="run on small test files"
     )
+    parser.add_argument(
+        "-s",
+        "--signal",
+        action="store_true",
+        help="sample is signal, process truth info",
+    )
     return parser.parse_args()
 
 
@@ -84,7 +91,13 @@ def main():
         outputs[sample_name][
             "mH_plane_passed_trig_hists"
         ] = init_mH_plane_passed_trig_hists()
-        outputs[sample_name]["mH_passed_pairing_hists"] = init_mH_passed_pairing_hists()
+        outputs[sample_name][
+            "mH_plane_passed_exclusive_trig_hists"
+        ] = init_mH_plane_passed_trig_hists(triggersOR=True)
+        if args.signal:
+            outputs[sample_name][
+                "mH_passed_pairing_hists"
+            ] = init_mH_passed_pairing_hists()
         for events, report in uproot.iterate(
             f"{sample_path}*.root:AnalysisMiniTree",
             filter_name=[
@@ -124,9 +137,15 @@ def main():
                 select_trigger_decisions(events),
                 outputs[sample_name]["mH_plane_passed_trig_hists"],
             )
-            fill_mH_passed_pairing_hists(
-                events, outputs[sample_name]["mH_passed_pairing_hists"]
+            fill_mH_plane_passed_exclusive_trig_hists(
+                events,
+                select_trigger_decisions(events),
+                outputs[sample_name]["mH_plane_passed_exclusive_trig_hists"],
             )
+            if args.signal:
+                fill_mH_passed_pairing_hists(
+                    events, outputs[sample_name]["mH_passed_pairing_hists"]
+                )
     et = time.time()
     logging.info("Execution time:", et - st, "seconds")
     draw_hists(outputs)

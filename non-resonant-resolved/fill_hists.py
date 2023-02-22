@@ -71,15 +71,21 @@ def fill_mH_passed_trig_hists(events, trigs_decisions, output):
                 )
 
 
-def init_mH_plane_passed_trig_hists():
+def init_mH_plane_passed_trig_hists(triggersOR=False):
     mH_plane_passed_trig_hists = defaultdict(lambda: defaultdict(int))
-    bin_range = (0, 200_000)
+    bin_range = (20_000, 200_000)
     for ith_var in np.arange(0, 1):
         for trig in triggers.run3_all:
             mH_plane_passed_trig_hists[ith_var][trig] = EffHistogramdd(
                 f"mH_plane_passed_{trig}",
                 bin_range,
-                bins=100,
+                bins=30,
+            )
+        if triggersOR:
+            mH_plane_passed_trig_hists[ith_var]["triggersOR"] = EffHistogramdd(
+                "mH_plane_passed_triggersOR",
+                bin_range,
+                bins=30,
             )
     return mH_plane_passed_trig_hists
 
@@ -93,6 +99,40 @@ def fill_mH_plane_passed_trig_hists(events, trigs_decisions, output):
             passed = np.column_stack((h1_m[trig_decisions], h2_m[trig_decisions]))
             total = np.column_stack((h1_m, h2_m))
             hist.fill(passed, total)
+
+
+def fill_mH_plane_passed_exclusive_trig_hists(events, trigs_decisions, output):
+    from functools import reduce
+
+    def get_all_trigs_or(skip_trig=None):
+        trigs = list(filter(lambda trig: trig != skip_trig, triggers.run3_all))
+        # return the or of all trigs expect skip_trig
+        return reduce(
+            lambda acc, it: acc | trigs_decisions[f"trigPassed_{it}"],
+            trigs,
+            trigs_decisions[f"trigPassed_{trigs[0]}"],
+        )
+
+    def get_exclusive_trig(trig):
+        trig_decicions_this = trigs_decisions[f"trigPassed_{trig}"]
+        trig_decicions_rest = get_all_trigs_or(trig)
+        # return true if this trig passes but not passing the rest
+        return trig_decicions_this & ~trig_decicions_rest
+
+    h1_m = events["resolved_DL1dv01_FixedCutBEff_70_h1_m"]
+    h2_m = events["resolved_DL1dv01_FixedCutBEff_70_h2_m"]
+    for ith_var, passed_trig_hists in output.items():
+        for trig, hist in passed_trig_hists.items():
+            if "triggersOR" in trig:
+                trig_decisions = get_all_trigs_or()
+                passed = np.column_stack((h1_m[trig_decisions], h2_m[trig_decisions]))
+                total = np.column_stack((h1_m, h2_m))
+                hist.fill(passed, total)
+            else:
+                trig_decisions = get_exclusive_trig(trig)
+                passed = np.column_stack((h1_m[trig_decisions], h2_m[trig_decisions]))
+                total = np.column_stack((h1_m, h2_m))
+                hist.fill(passed, total)
 
 
 def init_mH_passed_pairing_hists():
@@ -132,6 +172,7 @@ def fill_mH_passed_pairing_hists(events, output):
                 )
             if ith_var == 1:
                 hist.fill(
-                    h2_m[h2_pairing_decisions],
-                    h2_m,
+                    h2_m[h2_pairing_decisions],  # mass of the matched reconstructed
+                    h2_m,  # truth reconstructured mass
+                    # would take out resolution effects
                 )
