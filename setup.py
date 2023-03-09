@@ -4,7 +4,7 @@ setup(
     name="plot-hh4b-analysis",
     version="0.1",
     description="Code to plot the R22 HH4b analysis",
-    url="https://gitlab.cern.ch/viruelas/plot-hh4b-analysis",
+    url="https://github.com/ruelasvh/plot-hh4b-analysis.git",
     author="Victor Ruelas",
     author_email="victor.hugo.ruelas.rivera@cern.ch",
     license="MIT",
