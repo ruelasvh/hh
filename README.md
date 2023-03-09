@@ -2,7 +2,7 @@
 
 ## Installation
 ```bash
-git clone ssh://git@gitlab.cern.ch:7999/viruelas/plot-hh4b-analysis.git
+git clone https://github.com/ruelasvh/plot-hh4b-analysis.git
 cd plot-hh4b-analysis
 pip install -e .
 ```
