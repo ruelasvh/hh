@@ -2,7 +2,7 @@ import numpy as np
 import awkward as ak
 import vector as p4
 from collections import defaultdict
-from histograms import EffHistogram, EffHistogramdd
+from hist import EffHistogram, EffHistogramdd
 import triggers
 import logging
 

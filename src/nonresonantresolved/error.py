@@ -2,7 +2,7 @@ import numpy as np
 from scipy import stats
 
 
-def EfficiencyErrorBayesian(k, n, bUpper):
+def efficiency_error_bayesian(k, n, bUpper):
     """Error estimation based on Bayesian methods. Calculation is per bin.
     Parameters
     ----------
@@ -35,28 +35,28 @@ def EfficiencyErrorBayesian(k, n, bUpper):
             return mean - error
 
 
-def getEfficiencyWithUncertainties(passed, total):
+def get_efficiency_with_uncertainties(passed, total):
     """Get relative upper and lower error bar positions"""
     upper_err = np.array(
         [
-            EfficiencyErrorBayesian(passed, total, bUpper=True)
+            efficiency_error_bayesian(passed, total, bUpper=True)
             for passed, total in zip(passed, total)
         ]
     )
     lower_err = np.array(
         [
-            EfficiencyErrorBayesian(passed, total, bUpper=False)
+            efficiency_error_bayesian(passed, total, bUpper=False)
             for passed, total in zip(passed, total)
         ]
     )
 
     # TODO: Root implementation
     # upper_err = np.array(
-    #     [Bayesian(passed, total, bUpper=True) for passed, total in zip(passed, total)],
+    #     [bayesian(passed, total, bUpper=True) for passed, total in zip(passed, total)],
     #     dtype=np.float32,
     # )
     # lower_err = np.array(
-    #     [Bayesian(passed, total, bUpper=False) for passed, total in zip(passed, total)],
+    #     [bayesian(passed, total, bUpper=False) for passed, total in zip(passed, total)],
     #     dtype=np.float32,
     # )
 
@@ -66,13 +66,13 @@ def getEfficiencyWithUncertainties(passed, total):
 
 
 # TODO: as implemented in Root
-def Bayesian(total, passed, level=0.682689492137, alpha=1.0, beta=1.0, bUpper=False):
+def bayesian(total, passed, level=0.682689492137, alpha=1.0, beta=1.0, bUpper=False):
     a = passed + alpha
     b = (total - passed) + beta
-    return BetaCentralInterval(level, a, b, bUpper)
+    return beta_central_interval(level, a, b, bUpper)
 
 
-def BetaCentralInterval(level, a, b, bUpper):
+def beta_central_interval(level, a, b, bUpper):
     if bUpper:
         if (a > 0) & (b > 0):
             return stats.beta.ppf((1 + level) / 2, a, b)
