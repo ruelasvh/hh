@@ -14,5 +14,6 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Run files
-plots/*
 inputs*.json
+plots/*
+!plots/.gitkeep 
