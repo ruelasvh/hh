@@ -9,19 +9,22 @@ import numpy as np
 import argparse
 import json
 import time
-import logging
+import coloredlogs, logging
 from pathlib import Path
 import concurrent.futures
 
 # Package modules
-from src.nonresonantresolved.selection import select_n_jets_events, select_X_Wt_events
 from src.nonresonantresolved.drawhists import draw_hists
 from src.nonresonantresolved.inithists import init_hists
 from src.nonresonantresolved.fillhists import fill_hists
-from src.nonresonantresolved.branches import (
-    names as branch_names,
-    aliases as branch_aliases,
+from src.nonresonantresolved.branches import get_branch_aliases
+from shared.utils import (
+    logger,
+    concatenate_cutbookkeepers,
+    get_luminosity_weight,
+    get_datasetname_query,
 )
+from shared.api import get_metadata
 
 np.seterr(divide="ignore", invalid="ignore")
 
@@ -64,13 +67,17 @@ def get_args():
 
 def main():
     args = get_args()
-    logging.basicConfig(level=args.loglevel)
+    logger.setLevel(args.loglevel)
+    coloredlogs.install(level=logger.level, logger=logger)
     with open(args.input) as inputfile:
         input = json.load(inputfile)
     hists = init_hists(input, args)
-    if args.loglevel == logging.DEBUG:
+    if logger.level == logging.DEBUG:
         starttime = time.time()
+    branch_aliases = get_branch_aliases(args.signal)
+    branch_names = branch_aliases.keys()
     for sample_name, sample_path in input.items():
+        datasetname_query = ""
         for events, report in uproot.iterate(
             f"{sample_path}*.root:AnalysisMiniTree",
             branch_names,
@@ -80,21 +87,34 @@ def main():
             decompression_executor=concurrent.futures.ThreadPoolExecutor(8 * 32),
             interpretation_executor=concurrent.futures.ThreadPoolExecutor(8 * 32),
         ):
-            logging.info(report)
-            if args.loglevel == logging.DEBUG:
+            logger.info(f"Batch: {report}")
+            if logger.level == logging.DEBUG:
+                logger.debug("Columns: /n")
                 events.type.show()
 
-            four_central_jets_selected_events = select_n_jets_events(
-                events, eta_cut=2.5, njets=4
-            )
+            current_datasetname_query = get_datasetname_query(report.file_path)
+            if current_datasetname_query != datasetname_query:
+                datasetname_query = current_datasetname_query
+                metadata = get_metadata(datasetname_query)
+                logger.debug(f"Metadata: {metadata}")
+                _, sum_weights, _ = concatenate_cutbookkeepers(
+                    sample_path, report.file_path
+                )
+                luminosity_weight = get_luminosity_weight(metadata, sum_weights)
+                logger.debug(f"Luminosity weight: {luminosity_weight}")
+
+            # fill the histograms with batch
             fill_hists(
-                four_central_jets_selected_events,
+                events,
                 hists[sample_name],
+                luminosity_weight,
                 args,
-                uncut_events=events,
             )
-    if args.loglevel == logging.DEBUG:
-        logging.debug(f"Execution time: {time.time() - starttime} seconds")
+
+    if logger.level == logging.DEBUG:
+        logger.debug(
+            f"Loading data & filling histograms execution time: {time.time() - starttime} seconds"
+        )
 
     for sample_name in input.keys():
         draw_hists(hists[sample_name], sample_name, args)

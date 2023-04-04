@@ -32,3 +32,10 @@ def get_all_trigs_or(events, trigs, skip_trig=None):
         trigs,
         events[trigs[0]],
     )
+
+
+nth = {1: "first", 2: "second", 3: "third", 4: "fourth"}
+
+kin_vars = {"pt": "$p_T$", "eta": "$\eta$", "phi": "$\phi$", "m": "$m$"}
+
+inv_GeV = 1 / 1_000

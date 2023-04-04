@@ -3,9 +3,19 @@ import numpy as np
 import vector
 
 
-def select_n_jets_events(events, pt_cut=None, eta_cut=None, njets=4):
-    jet_pt = events["jet_pt"]
-    jet_eta = events["jet_eta"]
+def select_n_jets_events(
+    events,
+    jet_vars=None,
+    pt_cut=None,
+    eta_cut=None,
+    njets=4,
+):
+    if jet_vars is None:
+        return events
+    sorted_events = sort_jets_by_pt(events, jet_vars)
+    jet_pt_var, jet_eta_var, *_ = jet_vars
+    jet_pt = sorted_events[jet_pt_var]
+    jet_eta = sorted_events[jet_eta_var]
     if pt_cut and eta_cut:
         valid_events = (jet_pt > pt_cut) & (np.abs(jet_eta) < eta_cut)
     elif pt_cut and not eta_cut:
@@ -19,7 +29,20 @@ def select_n_jets_events(events, pt_cut=None, eta_cut=None, njets=4):
     else:
         valid_events = ak.num(jet_pt) >= njets
 
-    return events[valid_events]
+    return sorted_events[valid_events]
+
+
+def sort_jets_by_pt(events, jet_vars=None):
+    if jet_vars is None:
+        return events
+    sorted_index = ak.argsort(events[jet_vars[0]], ascending=False)
+    sorted_jets = events[
+        jet_vars,
+        sorted_index,
+    ]
+    for var in jet_vars:
+        sorted_events_by_jet_pt = ak.with_field(events, sorted_jets[var], var)
+    return sorted_events_by_jet_pt
 
 
 def X_HH(mH1, mH2):

@@ -18,6 +18,9 @@ setup(
         "scipy>=1.9.3",
         "uproot>=5.0.2",
         "vector>=0.11.0",
+        "pyAMI-core==5.1.2",
+        "pyAMI_atlas==5.1.0.1",
+        "coloredlogs>=15.0.1",
     ],
     entry_points={
         "console_scripts": [

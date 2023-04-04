@@ -24,12 +24,12 @@ def efficiency_error_bayesian(k, n, bUpper):
     error = np.sqrt(firstTerm - secondTerm)
     mean = k / n
     if bUpper:
-        if (mean + error) >= 1:
+        if (mean + error) > 1:
             return 1.0
         else:
             return mean + error
     else:
-        if (mean - error) <= 0:
+        if (mean - error) < 0:
             return 0.0
         else:
             return mean - error

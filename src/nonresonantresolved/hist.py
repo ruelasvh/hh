@@ -16,12 +16,17 @@ class BaseHistogram(ABC):
 class Histogram(BaseHistogram):
     def __init__(self, name, binrange, bins=100, compress=True):
         self._name = name
-        self._bins = np.linspace(*binrange, bins)
-        self._hist = np.zeros(self._bins.size - 1, dtype=np.int64)
+        self._binning = np.linspace(*binrange, bins)
+        self._hist = np.zeros(self._binning.size - 1, dtype=np.float64)
         self._compression = dict(compression="gzip") if compress else {}
 
-    def fill(self, vals):
-        hist = np.histogram(vals, self._bins)[0]
+    def fill(self, values, weights=None):
+        hist, _ = np.histogram(
+            values,
+            self._binning,
+            weights=weights,
+        )
+        # self._hist += hist
         self._hist = self._hist + hist
 
     @property
@@ -34,12 +39,12 @@ class Histogram(BaseHistogram):
 
     @property
     def edges(self):
-        return self._bins
+        return self._binning
 
 
 class Histogramdd(Histogram):
     def fill(self, *vals):
-        hist = np.array([np.histogram(data, self._bins)[0] for data in vals])
+        hist = np.array([np.histogram(data, self._binning)[0] for data in vals])
         self._hist = self._hist + hist
 
 
@@ -48,7 +53,7 @@ class EffHistogram(Histogramdd):
         assert (
             len(vals) == 2
         ), "EffHistogram only accepts 2 input params, h_pass and h_total"
-        hist = np.array([np.histogram(data, self._bins)[0] for data in vals])
+        hist = np.array([np.histogram(data, self._binning)[0] for data in vals])
         self._hist = self._hist + hist
 
     @property
@@ -61,8 +66,10 @@ class EffHistogram(Histogramdd):
 class EffHistogramdd(BaseHistogram):
     def __init__(self, name, binrange, bins=100, compress=True):
         self._name = name
-        self._bins = np.linspace(*binrange, bins)
-        self._hist = np.zeros((self._bins.size - 1, self._bins.size - 1), dtype=float)
+        self._binning = np.linspace(*binrange, bins)
+        self._hist = np.zeros(
+            (self._binning.size - 1, self._binning.size - 1), dtype=float
+        )
         self._compression = dict(compression="gzip") if compress else {}
 
     def fill(self, *vals):
@@ -70,7 +77,10 @@ class EffHistogramdd(BaseHistogram):
             len(vals) == 2
         ), "EffHistogram only accepts 2 input params, h_pass and h_total"
         hist = np.array(
-            [np.histogramdd(data, bins=(self._bins, self._bins))[0] for data in vals]
+            [
+                np.histogramdd(data, bins=(self._binning, self._binning))[0]
+                for data in vals
+            ]
         )
         self._hist = self._hist + np.array(hist)
 
@@ -82,16 +92,18 @@ class EffHistogramdd(BaseHistogram):
 
     @property
     def edges(self):
-        return self._bins
+        return self._binning
 
 
 class Histogramddv2(Histogram):
     def __init__(self, name, binrange, bins=100, compress=True):
         self._name = name
-        self._bins = np.linspace(*binrange, bins)
-        self._hist = np.zeros((self._bins.size - 1, self._bins.size - 1), dtype=float)
+        self._binning = np.linspace(*binrange, bins)
+        self._hist = np.zeros(
+            (self._binning.size - 1, self._binning.size - 1), dtype=np.float64
+        )
         self._compression = dict(compression="gzip") if compress else {}
 
     def fill(self, vals):
-        hist = np.histogramdd(vals, bins=(self._bins, self._bins))[0]
+        hist = np.histogramdd(vals, bins=(self._binning, self._binning))[0]
         self._hist = self._hist + hist
