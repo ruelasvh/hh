@@ -67,7 +67,8 @@ def get_args():
 
 def main():
     args = get_args()
-    logger.setLevel(args.loglevel)
+    if args.loglevel:
+        logger.setLevel(args.loglevel)
     coloredlogs.install(level=logger.level, logger=logger)
     with open(args.input) as inputfile:
         input = json.load(inputfile)

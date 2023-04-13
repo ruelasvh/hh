@@ -2,28 +2,89 @@ import numpy as np
 import vector as p4
 import awkward as ak
 from .triggers import run3_all as triggers_run3_all
-from .utils import find_hist, find_all_hists, get_all_trigs_or, kin_vars
-from .selection import select_n_jets_events
+from .utils import find_hist, find_all_hists, get_all_trigs_or, kin_labels
+from .selection import (
+    select_n_jets_events,
+    select_n_bjets,
+    hh_reconstruct_mindeltar,
+    select_X_Wt_events,
+    select_hh_events,
+)
 from shared.utils import logger
+from src.nonresonantresolved.branches import (
+    get_jet_branch_alias_names,
+)
 
 
 def fill_hists(events, hists, luminosity_weight, args):
     """Fill histograms with data"""
 
-    fill_jet_kin_histograms(events, hists, luminosity_weight)
-    fill_leading_jets_histograms(events, hists)
-    fill_reco_mH_histograms(events, hists)
-    fill_reco_mH_2d_histograms(events, hists)
-    if args.signal:
-        fill_reco_mH_truth_pairing_histograms(events, hists)
-        fill_truth_matched_mjj_histograms(events, hists)
-        fill_truth_matched_mjj_passed_pairing_histograms(events, hists)
+    logger.info("Filling histograms")
+    logger.info("Events: %s", len(events))
+    baseline_events = select_n_jets_events(
+        events, jet_vars=get_jet_branch_alias_names(), pt_cut=20_000
+    )
+    logger.info(
+        "Events with >= 4 central jets and kinematic requirements: %s",
+        len(baseline_events),
+    )
+
+    fill_jet_kin_histograms(baseline_events, hists, luminosity_weight)
+    fill_leading_jets_histograms(baseline_events, hists)
+    leading_bjets, remaining_jets = select_n_bjets(
+        baseline_events,
+        jet_vars=get_jet_branch_alias_names(),
+        btag_cut="jet_btag_DL1dv01_70",
+    )
+    logger.info("Events with >= 4 b-tagged central jets: %s", len(leading_bjets))
+    # logger.info("Events with >= 6 central or forward jets", len(events_with_central_or_forward_jets))
+    h1_events, h2_events = hh_reconstruct_mindeltar(leading_bjets)
+    h1_events_with_deltaeta_cut, h2_events_with_deltaeta_cut = select_hh_events(
+        h1_events, h2_events, deltaeta_cut=1.5
+    )
+    logger.info(
+        "Events with |deltaEta_HH| < threshold: %s", len(h1_events_with_deltaeta_cut)
+    )
+    fill_hh_deltaeta_histograms(
+        h1_events, h2_events, hists=find_all_hists(hists, "hh_deltaeta_baseline")
+    )
+    top_vetod_events, _ = select_X_Wt_events((leading_bjets, remaining_jets))
+    logger.info(
+        "Events with top-veto discriminant > threshold: %s", len(top_vetod_events)
+    )
+    # hh_events_with_mass_discrim_cut = select_hh_events(h1_events_with_deltaeta_cut, h2_events_with_deltaeta_cut, mass_discriminant_cut=1.6)
+    # print("Events with mass discriminant < threshold: %s", len(hh_events_with_mass_discrim_cut))
+
+    fill_reco_mH_histograms(
+        mh1=h1_events_with_deltaeta_cut.m,
+        mh2=h2_events_with_deltaeta_cut.m,
+        hists=find_all_hists(hists, "mH[12]_baseline"),
+    )
+    fill_reco_mH_2d_histograms(
+        mh1=h1_events.m,
+        mh2=h2_events.m,
+        hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
+    )
+    fill_reco_mH_histograms(
+        mh1=events["reco_H1_m_DL1dv01_70"],
+        mh2=events["reco_H2_m_DL1dv01_70"],
+        hists=find_all_hists(hists, "mH[12]_framework"),
+    )
+    fill_reco_mH_2d_histograms(
+        mh1=events["reco_H1_m_DL1dv01_70"],
+        mh2=events["reco_H2_m_DL1dv01_70"],
+        hist=find_hist(hists, lambda h: "mH_plane_framework" in h.name),
+    )
+    # if args.signal:
+    #     fill_reco_mH_truth_pairing_histograms(events, hists)
+    #     fill_truth_matched_mjj_histograms(events, hists)
+    #     fill_truth_matched_mjj_passed_pairing_histograms(events, hists)
 
 
 def fill_jet_kin_histograms(events: dict, hists: list, lumi_weight: float) -> None:
     """Fill jet kinematics histograms"""
 
-    for jet_var in kin_vars.keys():
+    for jet_var in kin_labels.keys():
         hist = find_hist(hists, lambda h: f"jet_{jet_var}" in h.name)
         logger.debug(hist.name)
         jets = events[f"jet_{jet_var}"]
@@ -38,16 +99,7 @@ def fill_jet_kin_histograms(events: dict, hists: list, lumi_weight: float) -> No
 def fill_leading_jets_histograms(events: dict, hists: list) -> None:
     """Fill leading jets histograms"""
 
-    jet_vars = ["jet_pt", "jet_eta", "jet_phi", "jet_m"]
-    leading_jets_events = select_n_jets_events(
-        events,
-        pt_cut=20_000,
-        eta_cut=2.5,
-        njets=4,
-        jet_vars=jet_vars,
-    )
-    pt_var, *_ = jet_vars
-    jet_pt = leading_jets_events[pt_var]
+    jet_pt = events["jet_pt"]
 
     leading_jets_hists = find_all_hists(hists, "leading_jet_[1234]_pt")
     for ith_jet in [1, 2, 3, 4]:
@@ -62,7 +114,7 @@ def fill_leading_jets_histograms(events: dict, hists: list) -> None:
                 lambda h: f"leading_jet_{ith_jet}_pt_trigPassed_{trig}" in h.name,
             )
             logger.debug(hist.name)
-            trig_decisions = leading_jets_events[trig]
+            trig_decisions = events[trig]
             hist.fill(np.array(jet_pt[trig_decisions][:, ith_jet - 1]))
 
 
@@ -80,7 +132,7 @@ def fill_truth_matched_mjj_histograms(events: dict, hists: list) -> None:
         events,
         pt_cut=20_000,
         eta_cut=2.5,
-        njets=4,
+        njets_cut=4,
         jet_vars=jet_vars,
     )
     leading_jets_p4 = p4.zip(
@@ -136,56 +188,75 @@ def fill_truth_matched_mjj_passed_pairing_histograms(events: dict, hists: list) 
         hist.fill(mjj_p4.mass)
 
 
-def fill_reco_mH_histograms(events: dict, hists: list) -> None:
+def fill_reco_mH_histograms(mh1, mh2, hists: list) -> None:
     """Fill reconstructed H invariant mass 1D histograms"""
 
-    mH_hists = find_all_hists(hists, "mH[12]")
+    if len(hists) != 2:
+        raise ValueError("Expected 2 histograms, got", len(hists))
 
-    for ith_H in [1, 2]:
-        hist = find_hist(mH_hists, lambda h: f"mH{ith_H}" in h.name)
+    for hist, mH in zip(hists, [mh1, mh2]):
         logger.debug(hist.name)
-        branch_name = f"reco_H{ith_H}_m_DL1dv01_70"
-        hist.fill(np.array(events[branch_name]))
-        for trig in triggers_run3_all:
-            hist = find_hist(
-                mH_hists, lambda h: f"mH{ith_H}_trigPassed_{trig}" in h.name
-            )
-            logger.debug(hist.name)
-            trig_decisions = events[trig]
-            hist.fill(np.array(events[branch_name][trig_decisions]))
+        hist.fill(np.array(mH))
 
 
-def fill_reco_mH_2d_histograms(events: dict, hists: list) -> None:
+# def fill_reco_mH_histograms(events: dict, hists: list) -> None:
+#     """Fill reconstructed H invariant mass 1D histograms"""
+
+#     mH_hists = find_all_hists(hists, "mH[12]")
+#     print([mH_hists[i].name for i in range(len(mH_hists))])
+#     for ith_H in [1, 2]:
+#         hist = find_hist(mH_hists, lambda h: f"mH{ith_H}" in h.name)
+#         logger.debug(hist.name)
+#         branch_name = f"reco_H{ith_H}_m_DL1dv01_70"
+#         hist.fill(np.array(events[branch_name]))
+#         for trig in triggers_run3_all:
+#             hist = find_hist(
+#                 mH_hists, lambda h: f"mH{ith_H}_trigPassed_{trig}" in h.name
+#             )
+#             logger.debug(hist.name)
+#             trig_decisions = events[trig]
+#             hist.fill(np.array(events[branch_name][trig_decisions]))
+
+
+def fill_reco_mH_2d_histograms(mh1, mh2, hist: list) -> None:
     """Fill reconstructed H invariant mass 2D histograms"""
 
-    mH_plane_hists = find_all_hists(hists, "mH_plane")
-
-    mH1 = events["reco_H1_m_DL1dv01_70"]
-    mH2 = events["reco_H2_m_DL1dv01_70"]
-
-    hist = find_hist(mH_plane_hists, lambda h: "mH_plane" in h.name)
     logger.debug(hist.name)
-    hist.fill(np.column_stack((mH1, mH2)))
-    hist = find_hist(
-        mH_plane_hists, lambda h: "mH_plane_trigPassed_allTriggersOR" in h.name
-    )
-    trigs_OR_decisions = get_all_trigs_or(events, triggers_run3_all)
-    hist.fill(
-        np.column_stack(
-            (np.array(mH1[trigs_OR_decisions]), np.array(mH2[trigs_OR_decisions]))
-        )
-    )
-    for trig in triggers_run3_all:
-        hist = find_hist(
-            mH_plane_hists, lambda h: f"mH_plane_trigPassed_{trig}" in h.name
-        )
-        logger.debug(hist.name)
-        trig_decisions = events[trig]
-        hist.fill(
-            np.column_stack(
-                (np.array(mH1[trig_decisions]), np.array(mH2[trig_decisions]))
-            )
-        )
+    if len(mh1) != 0 and len(mh2) != 0:
+        hist.fill(np.column_stack((mh1, mh2)))
+
+
+# def fill_reco_mH_2d_histograms(events: dict, hists: list) -> None:
+#     """Fill reconstructed H invariant mass 2D histograms"""
+
+#     mH_plane_hists = find_all_hists(hists, "mH_plane")
+
+#     mH1 = events["reco_H1_m_DL1dv01_70"]
+#     mH2 = events["reco_H2_m_DL1dv01_70"]
+
+#     hist = find_hist(mH_plane_hists, lambda h: "mH_plane" in h.name)
+#     logger.debug(hist.name)
+#     hist.fill(np.column_stack((mH1, mH2)))
+#     hist = find_hist(
+#         mH_plane_hists, lambda h: "mH_plane_trigPassed_allTriggersOR" in h.name
+#     )
+#     trigs_OR_decisions = get_all_trigs_or(events, triggers_run3_all)
+#     hist.fill(
+#         np.column_stack(
+#             (np.array(mH1[trigs_OR_decisions]), np.array(mH2[trigs_OR_decisions]))
+#         )
+#     )
+#     for trig in triggers_run3_all:
+#         hist = find_hist(
+#             mH_plane_hists, lambda h: f"mH_plane_trigPassed_{trig}" in h.name
+#         )
+#         logger.debug(hist.name)
+#         trig_decisions = events[trig]
+#         hist.fill(
+#             np.column_stack(
+#                 (np.array(mH1[trig_decisions]), np.array(mH2[trig_decisions]))
+#             )
+#         )
 
 
 def fill_reco_mH_truth_pairing_histograms(events: dict, hists: list) -> None:
@@ -200,3 +271,13 @@ def fill_reco_mH_truth_pairing_histograms(events: dict, hists: list) -> None:
         mH = events[f"reco_H{ith_H}_m_DL1dv01_70"]
         pairing_decisions = events[f"reco_H{ith_H}_truth_paired"] == 1
         hist.fill(mH[pairing_decisions])
+
+
+def fill_hh_deltaeta_histograms(h1_events, h2_events, hists=list) -> None:
+    """Fill HH deltaeta histograms"""
+
+    hh_deltar = abs(h1_events.eta - h2_events.eta)
+    print("hh_deltar", hh_deltar)
+    for hist in hists:
+        logger.debug(hist.name)
+        hist.fill(np.array(hh_deltar))
