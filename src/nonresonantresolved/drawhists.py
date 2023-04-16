@@ -9,34 +9,54 @@ from shared.utils import logger
 plt.style.use(hep.style.ATLAS)
 
 
-def draw_hists(hists: list, sample_name: str, args: dict) -> None:
+def draw_hists(hists: list, inputs: dict, args: dict) -> None:
     """Draw all the histrograms"""
 
-    logger.info(f"Drawing hitograms for sample type: {sample_name}")
-    draw_jet_kin_hists(hists, sample_name)
-    draw_leading_jet_hists(hists, sample_name)
-    draw_mH_plane(
-        hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
-        sample_name=sample_name + "_baseline",
-    )
-    draw_mH_plane(
-        hist=find_hist(hists, lambda h: "mH_plane_framework" in h.name),
-        sample_name=sample_name + "_framework",
-    )
-    draw_mH_1D_hists(
-        find_all_hists(hists, "mH[12]_baseline"), sample_name + "_baseline"
-    )
-    draw_mH_1D_hists(
-        find_all_hists(hists, "mH[12]_framework"), sample_name + "_framework"
-    )
+    logger.info("Drawing hitograms")
+
     draw_hh_deltaeta_hists(
-        hists=find_all_hists(hists, "hh_deltaeta_baseline"),
-        sample_name=sample_name + "_baseline",
+        hists,
+        inputs,
     )
-    if args.signal:
-        draw_var_vs_eff_hists(hists, sample_name, "H")
-        # TODO: Fix efficiencies going above 1 in fillhists.py
-        # draw_var_vs_eff_hists(hists, sample_name, "jj")
+    draw_top_veto_hists(
+        hists,
+        inputs,
+    )
+
+    for sample_type in inputs.keys():
+        draw_jet_kin_hists(hists[sample_type], sample_type)
+        draw_leading_jet_hists(hists[sample_type], sample_type)
+        draw_mH_plane(
+            hist=find_hist(hists[sample_type], lambda h: "mH_plane_baseline" in h.name),
+            sample_name=sample_type + "_baseline",
+        )
+        draw_mH_1D_hists(
+            find_all_hists(hists[sample_type], "mH[12]_baseline"),
+            sample_name=sample_type + "_baseline",
+        )
+
+
+# def draw_hists(hists: list, sample_name: str, args: dict) -> None:
+#     """Draw all the histrograms"""
+
+#     logger.info(f"Drawing hitograms for sample type: {sample_name}")
+#     draw_jet_kin_hists(hists, sample_name)
+#     draw_leading_jet_hists(hists, sample_name)
+#     draw_mH_plane(
+#         hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
+#         sample_name=sample_name + "_baseline",
+#     )
+#     draw_mH_1D_hists(
+#         find_all_hists(hists, "mH[12]_baseline"), sample_name + "_baseline"
+#     )
+#     draw_hh_deltaeta_hists(
+#         hists=find_all_hists(hists, "hh_deltaeta_baseline"),
+#         sample_name=sample_name + "_baseline",
+#     )
+#     if args.signal:
+#         draw_var_vs_eff_hists(hists, sample_name, "H")
+#         # TODO: Fix efficiencies going above 1 in fillhists.py
+#         # draw_var_vs_eff_hists(hists, sample_name, "jj")
 
 
 def draw_jet_kin_hists(hists, sample_name):
@@ -140,19 +160,61 @@ def draw_mH_1D_hists(hists, sample_name):
     plt.close()
 
 
-def draw_hh_deltaeta_hists(hists, sample_name):
+# def draw_hh_deltaeta_hists(hists, sample_name):
+#     fig, ax = plt.subplots()
+#     logger.debug(hists[0].name)
+#     hep.histplot(
+#         hists[0].values,
+#         hists[0].edges,
+#         ax=ax,
+#         label="",
+#     )
+#     ax.set_xlabel("$\Delta\eta_{hh}$")
+#     ax.set_ylabel("Frequency")
+#     hep.atlas.label(loc=1, ax=ax, label=sample_name, rlabel="")
+#     fig.savefig(f"plots/hh_deltaeta_{sample_name}.png", bbox_inches="tight")
+#     plt.close()
+
+
+def draw_hh_deltaeta_hists(hists, inputs):
     fig, ax = plt.subplots()
-    logger.debug(hists[0].name)
-    hep.histplot(
-        hists[0].values,
-        hists[0].edges,
-        ax=ax,
-        label="",
-    )
-    ax.set_xlabel("$\Delta\eta_{hh}$")
+    hist_name = "hh_deltaeta_baseline"
+    for sample_type in inputs:
+        hist = find_hist(hists[sample_type], lambda h: hist_name in h.name)
+        logger.debug(hist.name)
+        hep.histplot(
+            hist.values,
+            hist.edges,
+            ax=ax,
+            label=sample_type,
+        )
+    ax.legend()
+    ax.set_xlabel("$\Delta\eta_{HH}$")
     ax.set_ylabel("Frequency")
-    hep.atlas.label(loc=1, ax=ax, label=sample_name, rlabel="")
-    fig.savefig(f"plots/hh_deltaeta_{sample_name}.png", bbox_inches="tight")
+    hep.atlas.label(
+        loc=1, ax=ax, label=", no $\mathrm{X}_{\mathrm{Wt}}$ cut", rlabel=""
+    )
+    fig.savefig(f"plots/{hist_name}.png", bbox_inches="tight")
+    plt.close()
+
+
+def draw_top_veto_hists(hists, inputs):
+    fig, ax = plt.subplots()
+    hist_name = "top_veto_baseline"
+    for sample_type in inputs:
+        hist = find_hist(hists[sample_type], lambda h: hist_name in h.name)
+        logger.debug(hist.name)
+        hep.histplot(
+            hist.values,
+            hist.edges,
+            ax=ax,
+            label=sample_type,
+        )
+    ax.legend()
+    ax.set_xlabel("$\mathrm{X}_{\mathrm{Wt}}$")
+    ax.set_ylabel("Frequency")
+    hep.atlas.label(loc=1, ax=ax, rlabel="")
+    fig.savefig(f"plots/{hist_name}.png", bbox_inches="tight")
     plt.close()
 
 

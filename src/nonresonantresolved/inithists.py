@@ -17,6 +17,7 @@ def init_hists(inputs: dict, args: dict) -> dict:
         hists_dict[sample_type] += init_reco_mH_histograms()
         hists_dict[sample_type] += init_reco_mH_2d_histograms()
         hists_dict[sample_type] += init_reco_hh_deltaeta_histograms()
+        hists_dict[sample_type] += init_reco_top_veto_histograms()
         if args.signal:
             hists_dict[sample_type] += init_reco_mH_truth_pairing_histograms()
             hists_dict[sample_type] += init_truth_matched_mjj_histograms()
@@ -102,13 +103,6 @@ def init_reco_mH_histograms(binrange=[0, 200_000], bins=100) -> list:
                 bins=bins,
             )
         ]
-        hists += [
-            Histogram(
-                f"mH{reco_h}_framework",
-                binrange=binrange,
-                bins=bins,
-            )
-        ]
         # hists += [
         #     Histogram(
         #         f"mH{reco_h}_trigPassed_{trigger}",
@@ -132,13 +126,6 @@ def init_reco_mH_2d_histograms(binrange=[0, 200_000], bins=50) -> list:
             bins=bins,
         )
     ]
-    hists += [
-        Histogramddv2(
-            "mH_plane_framework",
-            binrange=binrange,
-            bins=bins,
-        )
-    ]
     # hists += [
     #     Histogramddv2(
     #         f"mH_plane_trigPassed_allTriggersOR",
@@ -158,15 +145,30 @@ def init_reco_mH_2d_histograms(binrange=[0, 200_000], bins=50) -> list:
     return hists
 
 
-def init_reco_hh_deltaeta_histograms():
+def init_reco_hh_deltaeta_histograms(binrange=[0, 5], bins=200) -> list:
     """Initialize reconstructed hh deltaEta 1d histograms"""
 
     hists = []
     hists += [
         Histogram(
             "hh_deltaeta_baseline",
-            binrange=[0, 5],
-            bins=200,
+            binrange=binrange,
+            bins=bins,
+        )
+    ]
+
+    return hists
+
+
+def init_reco_top_veto_histograms(binrange=[0, 7.5], bins=200) -> list:
+    """Initialize top veto 1d histograms"""
+
+    hists = []
+    hists += [
+        Histogram(
+            "top_veto_baseline",
+            binrange=binrange,
+            bins=bins,
         )
     ]
 

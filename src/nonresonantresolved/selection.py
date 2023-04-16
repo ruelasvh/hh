@@ -133,7 +133,7 @@ def select_X_Wt_events(events, discriminant_cut=1.5):
 
     leading_four_bjets, remaining_jets = events
     if len(remaining_jets) == 0:
-        return events
+        return leading_four_bjets, remaining_jets, []
 
     leading_four_bjets_p4 = p4.zip(
         {
@@ -168,7 +168,7 @@ def select_X_Wt_events(events, discriminant_cut=1.5):
         t_candidates.m,
     )
     keep = ak.min(X_Wt_discriminant, axis=1) > discriminant_cut
-    return leading_four_bjets[keep], remaining_jets[keep]
+    return leading_four_bjets[keep], remaining_jets[keep], X_Wt_discriminant
 
 
 def hh_reconstruct_mindeltar(events):

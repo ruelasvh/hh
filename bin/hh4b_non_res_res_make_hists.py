@@ -32,7 +32,7 @@ np.seterr(divide="ignore", invalid="ignore")
 def get_args():
     parser = argparse.ArgumentParser(description=__doc__)
     defaults = dict(help="default: %(default)s")
-    parser.add_argument("input", type=Path)
+    parser.add_argument("config", type=Path)
     parser.add_argument(
         "-o",
         "--output",
@@ -70,15 +70,16 @@ def main():
     if args.loglevel:
         logger.setLevel(args.loglevel)
     coloredlogs.install(level=logger.level, logger=logger)
-    with open(args.input) as inputfile:
-        input = json.load(inputfile)
-    hists = init_hists(input, args)
+    with open(args.config) as cf:
+        config = json.load(cf)
+    hists = init_hists(config["inputs"], args)
     if logger.level == logging.DEBUG:
         starttime = time.time()
     branch_aliases = get_branch_aliases(args.signal)
     branch_names = branch_aliases.keys()
-    for sample_name, sample_path in input.items():
+    for sample_name, sample_path in config["inputs"].items():
         datasetname_query = ""
+        luminosity_weight = 1
         for events, report in uproot.iterate(
             f"{sample_path}*.root:AnalysisMiniTree",
             branch_names,
@@ -94,7 +95,10 @@ def main():
                 events.type.show()
 
             current_datasetname_query = get_datasetname_query(report.file_path)
-            if current_datasetname_query != datasetname_query:
+            sample_is_data = (
+                "data" in sample_name or "data" in current_datasetname_query
+            )
+            if current_datasetname_query != datasetname_query and not sample_is_data:
                 datasetname_query = current_datasetname_query
                 metadata = get_metadata(datasetname_query)
                 logger.debug(f"Metadata: {metadata}")
@@ -102,7 +106,7 @@ def main():
                     sample_path, report.file_path
                 )
                 luminosity_weight = get_luminosity_weight(metadata, sum_weights)
-                logger.debug(f"Luminosity weight: {luminosity_weight}")
+            logger.debug(f"Luminosity weight: {luminosity_weight}")
 
             # fill the histograms with batch
             fill_hists(
@@ -117,8 +121,7 @@ def main():
             f"Loading data & filling histograms execution time: {time.time() - starttime} seconds"
         )
 
-    for sample_name in input.keys():
-        draw_hists(hists[sample_name], sample_name, args)
+    draw_hists(hists, config["inputs"], args)
 
 
 if __name__ == "__main__":

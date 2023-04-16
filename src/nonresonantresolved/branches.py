@@ -7,12 +7,11 @@ BASE_ALIASES = {
     "jet_eta": "recojet_antikt4_NOSYS_eta",
     "jet_phi": "recojet_antikt4_NOSYS_phi",
     "jet_m": "recojet_antikt4_NOSYS_m",
-    "jet_btag_DL1dv01_70": "recojet_antikt4_NOSYS_DL1dv01_FixedCutBEff_70",
-    "jet_btag_DL1dv01_77": "recojet_antikt4_NOSYS_DL1dv01_FixedCutBEff_77",
-    "jet_btag_GN1_77": "recojet_antikt4_NOSYS_GN120220509_FixedCutBEff_77",
-    "reco_H1_m_DL1dv01_70": "resolved_DL1dv01_FixedCutBEff_70_h1_m",
-    "reco_H2_m_DL1dv01_70": "resolved_DL1dv01_FixedCutBEff_70_h2_m",
-    **{trig: f"trigPassed_{trig}" for trig in triggers_run3_all},
+    "jet_btag_DL1dv00_70": "recojet_antikt4_NOSYS_DL1dv00_FixedCutBEff_70",
+    "jet_btag_DL1dv00_77": "recojet_antikt4_NOSYS_DL1dv00_FixedCutBEff_77",
+    # "reco_H1_m_DL1dv00_70": "resolved_DL1dv00_FixedCutBEff_70_h1_m",
+    # "reco_H2_m_DL1dv00_70": "resolved_DL1dv00_FixedCutBEff_70_h2_m",
+    # **{trig: f"trigPassed_{trig}" for trig in triggers_run3_all},
 }
 
 SIGNAL_ALIASES = {

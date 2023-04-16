@@ -28,13 +28,12 @@ def fill_hists(events, hists, luminosity_weight, args):
         "Events with >= 4 central jets and kinematic requirements: %s",
         len(baseline_events),
     )
-
     fill_jet_kin_histograms(baseline_events, hists, luminosity_weight)
     fill_leading_jets_histograms(baseline_events, hists)
     leading_bjets, remaining_jets = select_n_bjets(
         baseline_events,
         jet_vars=get_jet_branch_alias_names(),
-        btag_cut="jet_btag_DL1dv01_70",
+        btag_cut="jet_btag_DL1dv00_70",
     )
     logger.info("Events with >= 4 b-tagged central jets: %s", len(leading_bjets))
     # logger.info("Events with >= 6 central or forward jets", len(events_with_central_or_forward_jets))
@@ -48,7 +47,12 @@ def fill_hists(events, hists, luminosity_weight, args):
     fill_hh_deltaeta_histograms(
         h1_events, h2_events, hists=find_all_hists(hists, "hh_deltaeta_baseline")
     )
-    top_vetod_events, _ = select_X_Wt_events((leading_bjets, remaining_jets))
+    top_vetod_events, _, top_veto_discrim = select_X_Wt_events(
+        (leading_bjets, remaining_jets)
+    )
+    fill_top_veto_histograms(
+        top_veto_discrim, hists=find_all_hists(hists, "top_veto_baseline")
+    )
     logger.info(
         "Events with top-veto discriminant > threshold: %s", len(top_vetod_events)
     )
@@ -65,16 +69,6 @@ def fill_hists(events, hists, luminosity_weight, args):
         mh2=h2_events.m,
         hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
     )
-    fill_reco_mH_histograms(
-        mh1=events["reco_H1_m_DL1dv01_70"],
-        mh2=events["reco_H2_m_DL1dv01_70"],
-        hists=find_all_hists(hists, "mH[12]_framework"),
-    )
-    fill_reco_mH_2d_histograms(
-        mh1=events["reco_H1_m_DL1dv01_70"],
-        mh2=events["reco_H2_m_DL1dv01_70"],
-        hist=find_hist(hists, lambda h: "mH_plane_framework" in h.name),
-    )
     # if args.signal:
     #     fill_reco_mH_truth_pairing_histograms(events, hists)
     #     fill_truth_matched_mjj_histograms(events, hists)
@@ -88,9 +82,9 @@ def fill_jet_kin_histograms(events: dict, hists: list, lumi_weight: float) -> No
         hist = find_hist(hists, lambda h: f"jet_{jet_var}" in h.name)
         logger.debug(hist.name)
         jets = events[f"jet_{jet_var}"]
-        mc_evt_weight_nom = events["mc_event_weight"][:, 0]
+        mc_evt_weight_nom = ak.ravel(events["mc_event_weight"][:, 0])
         mc_evt_weight_nom, _ = ak.broadcast_arrays(mc_evt_weight_nom, jets)
-        pileup_weight = events["pileup_weight"]
+        pileup_weight = ak.ravel(events["pileup_weight"])
         pileup_weight, _ = ak.broadcast_arrays(pileup_weight, jets)
         weights = mc_evt_weight_nom * pileup_weight * lumi_weight
         hist.fill(np.array(ak.flatten(jets)), np.array(ak.flatten(weights)))
@@ -108,14 +102,14 @@ def fill_leading_jets_histograms(events: dict, hists: list) -> None:
         )
         logger.debug(hist.name)
         hist.fill(np.array(jet_pt[:, ith_jet - 1]))
-        for trig in triggers_run3_all:
-            hist = find_hist(
-                leading_jets_hists,
-                lambda h: f"leading_jet_{ith_jet}_pt_trigPassed_{trig}" in h.name,
-            )
-            logger.debug(hist.name)
-            trig_decisions = events[trig]
-            hist.fill(np.array(jet_pt[trig_decisions][:, ith_jet - 1]))
+        # for trig in triggers_run3_all:
+        #     hist = find_hist(
+        #         leading_jets_hists,
+        #         lambda h: f"leading_jet_{ith_jet}_pt_trigPassed_{trig}" in h.name,
+        #     )
+        #     logger.debug(hist.name)
+        #     trig_decisions = events[trig]
+        #     hist.fill(np.array(jet_pt[trig_decisions][:, ith_jet - 1]))
 
 
 def fill_truth_matched_mjj_histograms(events: dict, hists: list) -> None:
@@ -277,7 +271,15 @@ def fill_hh_deltaeta_histograms(h1_events, h2_events, hists=list) -> None:
     """Fill HH deltaeta histograms"""
 
     hh_deltar = abs(h1_events.eta - h2_events.eta)
-    print("hh_deltar", hh_deltar)
     for hist in hists:
         logger.debug(hist.name)
         hist.fill(np.array(hh_deltar))
+
+
+def fill_top_veto_histograms(discriminant, hists: list) -> None:
+    """Fill top veto histograms"""
+
+    print("top veto", np.array(ak.flatten(discriminant)))
+    for hist in hists:
+        logger.debug(hist.name)
+        hist.fill(np.array(ak.flatten(discriminant)))
