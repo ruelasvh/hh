@@ -133,7 +133,7 @@ def select_X_Wt_events(events, discriminant_cut=1.5):
 
     leading_four_bjets, remaining_jets = events
     if len(remaining_jets) == 0:
-        return leading_four_bjets, remaining_jets, []
+        return leading_four_bjets, remaining_jets, [], []
 
     leading_four_bjets_p4 = p4.zip(
         {
@@ -168,7 +168,7 @@ def select_X_Wt_events(events, discriminant_cut=1.5):
         t_candidates.m,
     )
     keep = ak.min(X_Wt_discriminant, axis=1) > discriminant_cut
-    return leading_four_bjets[keep], remaining_jets[keep], X_Wt_discriminant
+    return leading_four_bjets[keep], remaining_jets[keep], X_Wt_discriminant, keep
 
 
 def hh_reconstruct_mindeltar(events):
@@ -209,13 +209,19 @@ def hh_reconstruct_mindeltar(events):
     return h1, h2
 
 
-def select_hh_events(h1, h2, deltaeta_cut=1.5, mass_discriminant_cut=1.6):
+def select_hh_events(h1, h2, deltaeta_cut=None, mass_discriminant_cut=None):
     """Selects events that pass the hh selection.
 
     Returns:
         Events that pass the hh selection
     """
 
-    delta_eta = abs(h1.eta - h2.eta)
-    keep = delta_eta < deltaeta_cut
-    return h1[keep], h2[keep]
+    keep = np.ones_like(h1.m, dtype=bool)
+    hh_var = np.array([])
+    if deltaeta_cut is not None:
+        hh_var = np.abs(ak.to_numpy(h1.eta) - ak.to_numpy(h2.eta))
+        keep = keep & (hh_var < deltaeta_cut)
+    if mass_discriminant_cut is not None:
+        hh_var = X_HH(ak.to_numpy(h1.m) / 1e3, ak.to_numpy(h2.m) / 1e3)
+        keep = keep & (hh_var < mass_discriminant_cut)
+    return h1[keep], h2[keep], hh_var, keep

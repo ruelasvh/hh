@@ -22,6 +22,10 @@ def draw_hists(hists: list, inputs: dict, args: dict) -> None:
         hists,
         inputs,
     )
+    draw_hh_mass_discrim_hists(
+        hists,
+        inputs,
+    )
 
     for sample_type in inputs.keys():
         draw_jet_kin_hists(hists[sample_type], sample_type)
@@ -160,22 +164,6 @@ def draw_mH_1D_hists(hists, sample_name):
     plt.close()
 
 
-# def draw_hh_deltaeta_hists(hists, sample_name):
-#     fig, ax = plt.subplots()
-#     logger.debug(hists[0].name)
-#     hep.histplot(
-#         hists[0].values,
-#         hists[0].edges,
-#         ax=ax,
-#         label="",
-#     )
-#     ax.set_xlabel("$\Delta\eta_{hh}$")
-#     ax.set_ylabel("Frequency")
-#     hep.atlas.label(loc=1, ax=ax, label=sample_name, rlabel="")
-#     fig.savefig(f"plots/hh_deltaeta_{sample_name}.png", bbox_inches="tight")
-#     plt.close()
-
-
 def draw_hh_deltaeta_hists(hists, inputs):
     fig, ax = plt.subplots()
     hist_name = "hh_deltaeta_baseline"
@@ -194,6 +182,26 @@ def draw_hh_deltaeta_hists(hists, inputs):
     hep.atlas.label(
         loc=1, ax=ax, label=", no $\mathrm{X}_{\mathrm{Wt}}$ cut", rlabel=""
     )
+    fig.savefig(f"plots/{hist_name}.png", bbox_inches="tight")
+    plt.close()
+
+
+def draw_hh_mass_discrim_hists(hists, inputs):
+    fig, ax = plt.subplots()
+    hist_name = "hh_mass_discrim_baseline"
+    for sample_type in inputs:
+        hist = find_hist(hists[sample_type], lambda h: hist_name in h.name)
+        logger.debug(hist.name)
+        hep.histplot(
+            hist.values,
+            hist.edges,
+            ax=ax,
+            label=sample_type,
+        )
+    ax.legend()
+    ax.set_xlabel("$\mathrm{X}_{HH}$")
+    ax.set_ylabel("Frequency")
+    hep.atlas.label(loc=1, ax=ax, rlabel="")
     fig.savefig(f"plots/{hist_name}.png", bbox_inches="tight")
     plt.close()
 

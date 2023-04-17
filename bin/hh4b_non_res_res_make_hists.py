@@ -113,6 +113,7 @@ def main():
                 events,
                 hists[sample_name],
                 luminosity_weight,
+                config,
                 args,
             )
 
