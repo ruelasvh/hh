@@ -3,6 +3,7 @@ import glob
 import re
 import logging
 
+
 logger = logging.getLogger("plot-hh4b-analysis")
 
 
@@ -57,3 +58,11 @@ def get_datasetname_query(filepath):
     dataset_query_parts = dataset_localname.split(".")[-3:]
     dataset_query = ".%".join([project_name, *dataset_query_parts])
     return dataset_query
+
+
+def write_hists(group, output):
+    for sample_name, sample_hists in group.items():
+        sample_out = output.create_group(sample_name)
+        sample_out.attrs["type"] = "sample_type"
+        for hist in sample_hists:
+            hist.write(sample_out, hist.name)

@@ -8,9 +8,9 @@ class BaseHistogram(ABC):
     def fill(self, vals):
         pass
 
-    # @abstractmethod
-    # def write(self, group):
-    #     pass
+    @abstractmethod
+    def write(self, group):
+        pass
 
 
 class Histogram(BaseHistogram):
@@ -26,7 +26,6 @@ class Histogram(BaseHistogram):
             self._binning,
             weights=weights,
         )
-        # self._hist += hist
         self._hist = self._hist + hist
 
     @property
@@ -40,6 +39,14 @@ class Histogram(BaseHistogram):
     @property
     def edges(self):
         return self._binning
+
+    def write(self, group, name=None):
+        hgroup = group.create_group(name or self._name)
+        hgroup.attrs["type"] = "float"
+        hist = hgroup.create_dataset("values", data=self._hist, **self._compression)
+        ax = hgroup.create_dataset("edges", data=self._binning, **self._compression)
+        ax.make_scale("edges")
+        hist.dims[0].attach_scale(ax)
 
 
 class Histogramdd(Histogram):

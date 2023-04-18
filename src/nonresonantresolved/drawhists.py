@@ -12,8 +12,6 @@ plt.style.use(hep.style.ATLAS)
 def draw_hists(hists: list, inputs: dict, args: dict) -> None:
     """Draw all the histrograms"""
 
-    logger.info("Drawing hitograms")
-
     draw_hh_deltaeta_hists(
         hists,
         inputs,

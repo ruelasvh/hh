@@ -11,6 +11,7 @@ import json
 import time
 import coloredlogs, logging
 from pathlib import Path
+from h5py import File
 import concurrent.futures
 
 # Package modules
@@ -23,6 +24,7 @@ from shared.utils import (
     concatenate_cutbookkeepers,
     get_luminosity_weight,
     get_datasetname_query,
+    write_hists,
 )
 from shared.api import get_metadata
 
@@ -122,7 +124,9 @@ def main():
             f"Loading data & filling histograms execution time: {time.time() - starttime} seconds"
         )
 
-    draw_hists(hists, config["inputs"], args)
+    logger.info("Saving histograms")
+    with File(args.output, "w") as hout:
+        write_hists(hists, hout)
 
 
 if __name__ == "__main__":
