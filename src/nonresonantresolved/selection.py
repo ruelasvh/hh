@@ -148,44 +148,44 @@ def get_top_candidate_indices(W_combinations, jet_index):
     return (j1_indices, j2_indices, j3_indices)
 
 
-# def select_X_Wt_events(events, discriminant_cut=1.5):
-#     """Selects events that pass the top-veto selection.
+def select_X_Wt_eventsv2(events, discriminant_cut=1.5):
+    """Selects events that pass the top-veto selection.
 
-#     Events are vetoed if the minimum X_Wt over all combinations is less than 1.5
+    Events are vetoed if the minimum X_Wt over all combinations is less than 1.5
 
-#     Returns:
-#         Events that pass the top-veto selection
-#     """
+    Returns:
+        Events that pass the top-veto selection
+    """
 
-#     jet_p4 = p4.zip(
-#         {
-#             "pt": events.jet_pt,
-#             "eta": events.jet_eta,
-#             "phi": events.jet_phi,
-#             "mass": events.jet_m,
-#         }
-#     )
-#     jet_indices = ak.local_index(jet_p4, axis=1)
-#     W_candidates_indices = ak.argcombinations(jet_p4, 2, axis=1)
-#     top_candidate_indices = ak.Array(
-#         [
-#             get_top_candidate_indices(W_combinations, jet_index)
-#             for W_combinations, jet_index in zip(W_candidates_indices, jet_indices)
-#         ]
-#     )
-#     top_j1_indices, top_j2_indices, top_j3_indices = ak.unzip(top_candidate_indices)
-#     btag_decisions = events["jet_btag_DL1dv00_70"] == 1
-#     btag_decisions = btag_decisions[top_j3_indices]
-#     top_j1_indices = top_j1_indices[btag_decisions]
-#     top_j2_indices = top_j2_indices[btag_decisions]
-#     top_j3_indices = top_j3_indices[btag_decisions]
-#     W_candidates = jet_p4[top_j1_indices] + jet_p4[top_j2_indices]
-#     top_candidates = W_candidates + jet_p4[top_j3_indices]
-#     X_Wt_discriminant = X_Wt(W_candidates.m * inv_GeV, top_candidates.m * inv_GeV)
-#     X_Wt_discriminant_mins = ak.min(X_Wt_discriminant, axis=1)
-#     keep = X_Wt_discriminant_mins > discriminant_cut
-#     X_Wt_discriminant_mins = ak.drop_none(X_Wt_discriminant_mins)
-#     return events[keep], None, X_Wt_discriminant_mins, keep
+    jet_p4 = p4.zip(
+        {
+            "pt": events.jet_pt,
+            "eta": events.jet_eta,
+            "phi": events.jet_phi,
+            "mass": events.jet_m,
+        }
+    )
+    jet_indices = ak.local_index(jet_p4, axis=1)
+    W_candidates_indices = ak.argcombinations(jet_p4, 2, axis=1)
+    top_candidate_indices = ak.Array(
+        [
+            get_top_candidate_indices(W_combinations, jet_index)
+            for W_combinations, jet_index in zip(W_candidates_indices, jet_indices)
+        ]
+    )
+    top_j1_indices, top_j2_indices, top_j3_indices = ak.unzip(top_candidate_indices)
+    btag_decisions = events["jet_btag_DL1dv00_70"] == 1
+    btag_decisions = btag_decisions[top_j3_indices]
+    top_j1_indices = top_j1_indices[btag_decisions]
+    top_j2_indices = top_j2_indices[btag_decisions]
+    top_j3_indices = top_j3_indices[btag_decisions]
+    W_candidates = jet_p4[top_j1_indices] + jet_p4[top_j2_indices]
+    top_candidates = W_candidates + jet_p4[top_j3_indices]
+    X_Wt_discriminant = X_Wt(W_candidates.m * inv_GeV, top_candidates.m * inv_GeV)
+    X_Wt_discriminant_mins = ak.min(X_Wt_discriminant, axis=1)
+    keep = X_Wt_discriminant_mins > discriminant_cut
+    X_Wt_discriminant_mins = ak.drop_none(X_Wt_discriminant_mins)
+    return events[keep], None, X_Wt_discriminant_mins, keep
 
 
 def select_X_Wt_events(events, discriminant_cut=1.5):
@@ -196,9 +196,6 @@ def select_X_Wt_events(events, discriminant_cut=1.5):
     """
 
     leading_four_bjets, remaining_jets = events
-    # if len(remaining_jets) == 0:
-    #     return leading_four_bjets, remaining_jets, [], []
-
     leading_four_bjets_p4 = p4.zip(
         {
             "pt": leading_four_bjets.jet_pt,
@@ -231,8 +228,10 @@ def select_X_Wt_events(events, discriminant_cut=1.5):
         t_candidates.m * inv_GeV,
     )
     X_Wt_discriminant = ak.min(X_Wt_discriminant, axis=1)
+    # For events with no valid combinations because there are exactly 4 bjets in the event,
+    # fill with 9999.0
+    X_Wt_discriminant = ak.fill_none(X_Wt_discriminant, 9999.0)
     keep = X_Wt_discriminant > discriminant_cut
-    X_Wt_discriminant = ak.drop_none(X_Wt_discriminant)
     return leading_four_bjets[keep], remaining_jets[keep], X_Wt_discriminant, keep
 
 

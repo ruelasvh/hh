@@ -75,7 +75,7 @@ def fill_hists(events, hists, luminosity_weight, config, args):
     #     _,
     #     top_veto_discrim,
     #     top_veto_events_keep_mask,
-    # ) = select_X_Wt_events(
+    # ) = select_X_Wt_eventsv2(
     #     ak.concatenate(
     #         [
     #             leading_bjet_events_with_hh_deltar_cut,
