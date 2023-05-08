@@ -12,7 +12,6 @@ import time
 import coloredlogs, logging
 from pathlib import Path
 from h5py import File
-import concurrent.futures
 
 # Package modules
 from src.nonresonantresolved.drawhists import draw_hists
@@ -51,7 +50,7 @@ def get_args():
     parser.add_argument(
         "-d",
         "--debug",
-        help="Print lots of debugging statements",
+        help="print lots of debugging statements",
         action="store_const",
         dest="loglevel",
         const=logging.DEBUG,
@@ -59,7 +58,7 @@ def get_args():
     parser.add_argument(
         "-v",
         "--verbose",
-        help="Be verbose",
+        help="print info statements",
         action="store_const",
         dest="loglevel",
         const=logging.INFO,
@@ -88,10 +87,9 @@ def main():
             aliases=branch_aliases,
             step_size="1 GB",
             report=True,
-            decompression_executor=concurrent.futures.ThreadPoolExecutor(8 * 32),
-            interpretation_executor=concurrent.futures.ThreadPoolExecutor(8 * 32),
         ):
             logger.info(f"Batch: {report}")
+
             if logger.level == logging.DEBUG:
                 logger.debug("Columns: /n")
                 events.type.show()
@@ -102,11 +100,11 @@ def main():
             )
             if current_datasetname_query != datasetname_query and not sample_is_data:
                 datasetname_query = current_datasetname_query
-                metadata = get_metadata(datasetname_query)
-                logger.debug(f"Metadata: {metadata}")
                 _, sum_weights, _ = concatenate_cutbookkeepers(
                     sample_path, report.file_path
                 )
+                metadata = get_metadata(datasetname_query)
+                logger.debug(f"Metadata: {metadata}")
                 luminosity_weight = get_luminosity_weight(metadata, sum_weights)
             logger.debug(f"Luminosity weight: {luminosity_weight}")
 
