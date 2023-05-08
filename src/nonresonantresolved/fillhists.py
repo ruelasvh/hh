@@ -38,6 +38,16 @@ def fill_hists(events, hists, luminosity_weight, config, args):
     logger.info("Events with >= 4 b-tagged central jets: %s", len(leading_bjets))
     # logger.info("Events with >= 6 central or forward jets", len(events_with_central_or_forward_jets))
     h1_events, h2_events = hh_reconstruct_mindeltar(leading_bjets)
+    fill_reco_mH_histograms(
+        mh1=h1_events.m,
+        mh2=h2_events.m,
+        hists=find_all_hists(hists, "mH[12]_baseline"),
+    )
+    fill_reco_mH_2d_histograms(
+        mh1=h1_events.m,
+        mh2=h2_events.m,
+        hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
+    )
     (
         h1_events_with_deltaeta_cut,
         h2_events_with_deltaeta_cut,
@@ -60,6 +70,20 @@ def fill_hists(events, hists, luminosity_weight, config, args):
         if len(hh_events_keep_mask) == 0
         else remaining_jets[hh_events_keep_mask]
     )
+    # (
+    #     top_veto_pass_events,
+    #     _,
+    #     top_veto_discrim,
+    #     top_veto_events_keep_mask,
+    # ) = select_X_Wt_events(
+    #     ak.concatenate(
+    #         [
+    #             leading_bjet_events_with_hh_deltar_cut,
+    #             remaining_jet_events_with_hh_deltar_cut,
+    #         ],
+    #         axis=1,
+    #     )
+    # )
     (
         top_veto_pass_events,
         _,
@@ -107,12 +131,12 @@ def fill_hists(events, hists, luminosity_weight, config, args):
     fill_reco_mH_histograms(
         mh1=h1_events_with_mass_discrim_cut.m,
         mh2=h2_events_with_mass_discrim_cut.m,
-        hists=find_all_hists(hists, "mH[12]_baseline"),
+        hists=find_all_hists(hists, "mH[12]_baseline_signal_region"),
     )
     fill_reco_mH_2d_histograms(
         mh1=h1_events_with_mass_discrim_cut.m,
         mh2=h2_events_with_mass_discrim_cut.m,
-        hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
+        hist=find_hist(hists, lambda h: "mH_plane_baseline_signal_region" in h.name),
     )
     # if args.signal:
     #     fill_reco_mH_truth_pairing_histograms(events, hists)
@@ -281,4 +305,4 @@ def fill_top_veto_histograms(discriminant, hists: list) -> None:
 
     for hist in hists:
         logger.debug(hist.name)
-        hist.fill(np.array(ak.flatten(discriminant)))
+        hist.fill(np.array(discriminant))

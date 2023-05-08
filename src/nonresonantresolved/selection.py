@@ -1,7 +1,7 @@
 import awkward as ak
 import numpy as np
 import vector as p4
-from src.nonresonantresolved.branches import get_jet_branch_alias_names
+from src.nonresonantresolved.utils import inv_GeV
 
 
 def select_n_jets_events(
@@ -86,10 +86,13 @@ def X_HH(m_H1, m_H2):
     )
     """
 
+    m_H1_center = 124
+    m_H2_center = 117
+
     first_term = np.zeros_like(m_H1)
-    np.divide(m_H1 - 124, 0.1 * m_H1, out=first_term, where=(m_H1 != 0))
+    np.divide(m_H1 - m_H1_center, 0.1 * m_H1, out=first_term, where=(m_H1 != 0))
     second_term = np.zeros_like(m_H2)
-    np.divide(m_H2 - 117, 0.1 * m_H2, out=second_term, where=(m_H2 != 0))
+    np.divide(m_H2 - m_H2_center, 0.1 * m_H2, out=second_term, where=(m_H2 != 0))
 
     return np.sqrt(first_term**2 + second_term**2)
 
@@ -102,7 +105,10 @@ def R_CR(m_H1, m_H2):
     )
     """
 
-    return np.sqrt((m_H1 - 1.05 * 124) ** 2 + (m_H2 - 1.05 * 117) ** 2)
+    m_H1_center = 124
+    m_H2_center = 117
+
+    return np.sqrt((m_H1 - 1.05 * m_H1_center) ** 2 + (m_H2 - 1.05 * m_H2_center) ** 2)
 
 
 def X_Wt(m_jj, m_jjb):
@@ -114,26 +120,84 @@ def X_Wt(m_jj, m_jjb):
     )
     """
 
-    m_W = 80.4 * 1e3
-    m_t = 172.5 * 1e3
+    m_W = 80.4
+    m_t = 172.5
 
     return np.sqrt(
         ((m_jj - m_W) / (0.1 * m_jj)) ** 2 + ((m_jjb - m_t) / (0.1 * m_jjb)) ** 2
     )
 
 
+def get_top_candidate_indices(W_combinations, jet_index):
+    """Get the indices of the jets that form the top candidate.
+
+    W_combinations = [(0, 1), (0, 2), (1, 2))]
+    jet_index = [0, 1, 2]
+    """
+
+    other_jets = [
+        [i for i in jet_index if i not in combo.tolist()] for combo in W_combinations
+    ]
+    # other_jets = [[2], [1], [0]]
+    top_candidate_indices = ak.zip([W_combinations, other_jets])
+    # top_candidate_indices = [[((0, 1), 2)], [((0, 2), 1)], [((1, 2), 0)]]
+    top_candidate_indices = ak.flatten(top_candidate_indices)
+    # top_candidate_indices = [((0, 1), 2), ((0, 2), 1), ((1, 2), 0)]
+    W_jj_candidate_indices, j3_indices = ak.unzip(top_candidate_indices)
+    j1_indices, j2_indices = ak.unzip(W_jj_candidate_indices)
+    return (j1_indices, j2_indices, j3_indices)
+
+
+# def select_X_Wt_events(events, discriminant_cut=1.5):
+#     """Selects events that pass the top-veto selection.
+
+#     Events are vetoed if the minimum X_Wt over all combinations is less than 1.5
+
+#     Returns:
+#         Events that pass the top-veto selection
+#     """
+
+#     jet_p4 = p4.zip(
+#         {
+#             "pt": events.jet_pt,
+#             "eta": events.jet_eta,
+#             "phi": events.jet_phi,
+#             "mass": events.jet_m,
+#         }
+#     )
+#     jet_indices = ak.local_index(jet_p4, axis=1)
+#     W_candidates_indices = ak.argcombinations(jet_p4, 2, axis=1)
+#     top_candidate_indices = ak.Array(
+#         [
+#             get_top_candidate_indices(W_combinations, jet_index)
+#             for W_combinations, jet_index in zip(W_candidates_indices, jet_indices)
+#         ]
+#     )
+#     top_j1_indices, top_j2_indices, top_j3_indices = ak.unzip(top_candidate_indices)
+#     btag_decisions = events["jet_btag_DL1dv00_70"] == 1
+#     btag_decisions = btag_decisions[top_j3_indices]
+#     top_j1_indices = top_j1_indices[btag_decisions]
+#     top_j2_indices = top_j2_indices[btag_decisions]
+#     top_j3_indices = top_j3_indices[btag_decisions]
+#     W_candidates = jet_p4[top_j1_indices] + jet_p4[top_j2_indices]
+#     top_candidates = W_candidates + jet_p4[top_j3_indices]
+#     X_Wt_discriminant = X_Wt(W_candidates.m * inv_GeV, top_candidates.m * inv_GeV)
+#     X_Wt_discriminant_mins = ak.min(X_Wt_discriminant, axis=1)
+#     keep = X_Wt_discriminant_mins > discriminant_cut
+#     X_Wt_discriminant_mins = ak.drop_none(X_Wt_discriminant_mins)
+#     return events[keep], None, X_Wt_discriminant_mins, keep
+
+
 def select_X_Wt_events(events, discriminant_cut=1.5):
     """Selects events that pass the top-veto selection.
-
     Events are vetoed if the minimum X_Wt over all combinations is less than 1.5
-
     Returns:
         Events that pass the top-veto selection
     """
 
     leading_four_bjets, remaining_jets = events
-    if len(remaining_jets) == 0:
-        return leading_four_bjets, remaining_jets, [], []
+    # if len(remaining_jets) == 0:
+    #     return leading_four_bjets, remaining_jets, [], []
 
     leading_four_bjets_p4 = p4.zip(
         {
@@ -151,7 +215,6 @@ def select_X_Wt_events(events, discriminant_cut=1.5):
             "mass": remaining_jets.jet_m,
         }
     )
-
     W_candidate_indices = ak.argcombinations(remaining_jets_p4, 2, axis=1)
     W_candidate_firsts, W_candidate_seconds = ak.unzip(W_candidate_indices)
     W_candidates = (
@@ -164,10 +227,12 @@ def select_X_Wt_events(events, discriminant_cut=1.5):
         + W_candidates[t_candidate_W_indices]
     )
     X_Wt_discriminant = X_Wt(
-        W_candidates[t_candidate_W_indices].m,
-        t_candidates.m,
+        W_candidates[t_candidate_W_indices].m * inv_GeV,
+        t_candidates.m * inv_GeV,
     )
-    keep = ak.min(X_Wt_discriminant, axis=1) > discriminant_cut
+    X_Wt_discriminant = ak.min(X_Wt_discriminant, axis=1)
+    keep = X_Wt_discriminant > discriminant_cut
+    X_Wt_discriminant = ak.drop_none(X_Wt_discriminant)
     return leading_four_bjets[keep], remaining_jets[keep], X_Wt_discriminant, keep
 
 
@@ -183,7 +248,7 @@ def hh_reconstruct_mindeltar(events):
             "pt": events.jet_pt,
             "eta": events.jet_eta,
             "phi": events.jet_phi,
-            "m": events.jet_m,
+            "mass": events.jet_m,
         }
     )
     if len(jets) == 0:
@@ -222,6 +287,6 @@ def select_hh_events(h1, h2, deltaeta_cut=None, mass_discriminant_cut=None):
         hh_var = np.abs(ak.to_numpy(h1.eta) - ak.to_numpy(h2.eta))
         keep = keep & (hh_var < deltaeta_cut)
     if mass_discriminant_cut is not None:
-        hh_var = X_HH(ak.to_numpy(h1.m) / 1e3, ak.to_numpy(h2.m) / 1e3)
+        hh_var = X_HH(ak.to_numpy(h1.m) * inv_GeV, ak.to_numpy(h2.m) * inv_GeV)
         keep = keep & (hh_var < mass_discriminant_cut)
     return h1[keep], h2[keep], hh_var, keep
