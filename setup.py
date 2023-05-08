@@ -25,6 +25,7 @@ setup(
     entry_points={
         "console_scripts": [
             "hh4b_non_res_res_make_hists = bin.hh4b_non_res_res_make_hists:main",
+            "hh4b_non_res_res_draw_hists = bin.hh4b_non_res_res_draw_hists:main",
         ]
     },
     zip_safe=False,
