@@ -4,7 +4,7 @@ from h5py import File
 import argparse
 import logging
 from pathlib import Path
-from src.nonresonantresolved.drawhistsv2 import draw_hists
+from src.nonresonantresolved.drawhists import draw_hists
 
 
 def get_args():

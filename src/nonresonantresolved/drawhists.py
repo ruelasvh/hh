@@ -1,115 +1,165 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import mplhep as hep
+import re
 from .utils import find_hist, find_all_hists, inv_GeV, nth, kin_labels
 from .selection import X_HH, R_CR
-from .error import get_efficiency_with_uncertainties
 from shared.utils import logger
 
 plt.style.use(hep.style.ATLAS)
 
 
-def draw_hists(hists: list, inputs: dict, args: dict) -> None:
+def find_hists(
+    iteratable,
+    pred=None,
+):
+    """Returns the found values in the iterable given pred.
+
+    If no true value is found, returns *default*
+
+    If *pred* is not None, returns the first item
+    for which pred(item) is true.
+
+    """
+    return list(filter(pred, iteratable))
+
+
+def draw_hists(hists_group) -> None:
     """Draw all the histrograms"""
 
-    draw_hh_deltaeta_hists(
-        hists,
-        inputs,
+    draw_1d_hists(
+        hists_group={key: value for key, value in hists_group.items() if "ggF" in key},
+        hist_prefix="hh_deltaeta_baseline",
+        xlabel="$\Delta\eta_{HH}$",
+        ylabel="Events",
+        label=", no $\mathrm{X}_{\mathrm{Wt}}$ cut",
+        xcut=1.5,
     )
-    draw_top_veto_hists(
-        hists,
-        inputs,
+    draw_1d_hists(
+        hists_group,
+        hist_prefix="top_veto_baseline",
+        xlabel="$\mathrm{X}_{\mathrm{Wt}}$",
+        ylabel="Events",
+        xcut=1.5,
     )
-    draw_hh_mass_discrim_hists(
-        hists,
-        inputs,
+    draw_1d_hists(
+        hists_group={key: value for key, value in hists_group.items() if "ggF" in key},
+        hist_prefix="hh_mass_discrim_baseline",
+        xlabel="$\mathrm{X}_{\mathrm{HH}}$",
+        ylabel="Events",
+        xcut=1.6,
     )
-
-    for sample_type in inputs.keys():
-        draw_jet_kin_hists(hists[sample_type], sample_type)
-        draw_leading_jet_hists(hists[sample_type], sample_type)
-        draw_mH_plane(
-            hist=find_hist(hists[sample_type], lambda h: "mH_plane_baseline" in h.name),
+    for sample_type, sample_hists in hists_group.items():
+        draw_jet_kin_hists(
+            sample_hists=sample_hists,
             sample_name=sample_type + "_baseline",
+            yscale="log",
         )
         draw_mH_1D_hists(
-            find_all_hists(hists[sample_type], "mH[12]_baseline"),
+            sample_hists=sample_hists,
             sample_name=sample_type + "_baseline",
+            hist_prefix="mH[12]_baseline$",
+            xlim=(90, 150),
+        )
+        draw_mH_plane_2D_hists(
+            sample_hists=sample_hists,
+            sample_name=sample_type + "_baseline",
+            hist_prefix="mH_plane_baseline$",
+        )
+        draw_mH_1D_hists(
+            sample_hists=sample_hists,
+            sample_name=sample_type + "_baseline_signal_region",
+            hist_prefix="mH[12]_baseline_signal_region$",
+        )
+        draw_mH_plane_2D_hists(
+            sample_hists=sample_hists,
+            sample_name=sample_type + "_baseline_signal_region",
+            hist_prefix="mH_plane_baseline_signal_region$",
+        )
+        draw_mH_1D_hists(
+            sample_hists=sample_hists,
+            sample_name=sample_type + "_baseline_control_region",
+            hist_prefix="mH[12]_baseline_control_region$",
+        )
+        draw_mH_plane_2D_hists(
+            sample_hists=sample_hists,
+            sample_name=sample_type + "_baseline_control_region",
+            hist_prefix="mH_plane_baseline_control_region$",
         )
 
 
-# def draw_hists(hists: list, sample_name: str, args: dict) -> None:
-#     """Draw all the histrograms"""
+def draw_1d_hists(
+    hists_group,
+    hist_prefix,
+    xlabel=None,
+    ylabel="Frequency",
+    label=None,
+    yscale="linear",
+    xcut=None,
+):
+    """Draw 1D histograms in one figure. The number of histograms in the figure is
+    determined by the number of samples in the hists_group dictionary. hist_prefix
+    is used to select the histograms to be drawn."""
 
-#     logger.info(f"Drawing hitograms for sample type: {sample_name}")
-#     draw_jet_kin_hists(hists, sample_name)
-#     draw_leading_jet_hists(hists, sample_name)
-#     draw_mH_plane(
-#         hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
-#         sample_name=sample_name + "_baseline",
-#     )
-#     draw_mH_1D_hists(
-#         find_all_hists(hists, "mH[12]_baseline"), sample_name + "_baseline"
-#     )
-#     draw_hh_deltaeta_hists(
-#         hists=find_all_hists(hists, "hh_deltaeta_baseline"),
-#         sample_name=sample_name + "_baseline",
-#     )
-#     if args.signal:
-#         draw_var_vs_eff_hists(hists, sample_name, "H")
-#         # TODO: Fix efficiencies going above 1 in fillhists.py
-#         # draw_var_vs_eff_hists(hists, sample_name, "jj")
-
-
-def draw_jet_kin_hists(hists, sample_name):
-    jet_vars = ["pt"]
-    for jet_var in jet_vars:
-        fig, ax = plt.subplots()
-        hist = find_hist(hists, lambda h: f"jet_{jet_var}" in h.name)
-        logger.debug(hist.name)
-        binsGeV = hist.edges * inv_GeV
-        hep.histplot(
-            hist.values,
-            binsGeV,
-            ax=ax,
-        )
-        ax.set_yscale("log")
-        ax.set_ylabel("Frequency")
-        ax.set_xlabel(f"jet {kin_labels[jet_var]} [GeV]")
-        fig.savefig(f"plots/jet_{jet_var}_{sample_name}.png", bbox_inches="tight")
-        plt.close()
-
-
-def draw_leading_jet_hists(hists, sample_name):
-    jet_vars = ["pt"]
-    for jet_var in jet_vars:
-        fig, ax = plt.subplots()
-        for ith_jet in range(1, 5):
-            hist = find_hist(
-                hists, lambda h: f"leading_jet_{ith_jet}_{jet_var}" in h.name
-            )
-            logger.debug(hist.name)
-            binsGeV = hist.edges * inv_GeV
-            hep.histplot(
-                hist.values,
-                binsGeV,
-                ax=ax,
-                label=f"{nth[ith_jet]} leading jet",
-            )
-        ax.legend()
-        ax.set_ylabel("Frequency")
-        ax.set_xlabel(f"jet {kin_labels[jet_var]} [GeV]")
-        fig.savefig(
-            f"plots/leading_jet_{jet_var}_{sample_name}.png", bbox_inches="tight"
-        )
-        plt.close()
-
-
-def draw_mH_plane(hist, sample_name):
     fig, ax = plt.subplots()
-    binsGeV = hist.edges * inv_GeV
+    for sample_type, sample_hists in hists_group.items():
+        hist_name = find_hist(sample_hists, lambda h: hist_prefix in h)
+        hist = sample_hists[hist_name]
+        hep.histplot(
+            hist["values"],
+            hist["edges"],
+            ax=ax,
+            label=sample_type,
+            linewidth=2.0,
+        )
+    if xcut:
+        ax.axvline(x=xcut, ymax=0.6, color="purple")
+    ax.legend()
+    ax.legend()
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_yscale(yscale)
+    ymin, ymax = ax.get_ylim()
+    ax.set_ylim(ymin=ymin, ymax=ymax * 1.5)
+    hep.atlas.label(loc=1, ax=ax, label=label, rlabel="")
+    fig.savefig(f"plots/{hist_prefix}.png", bbox_inches="tight")
+    plt.close()
+
+
+def draw_mH_1D_hists(sample_hists, sample_name, hist_prefix, xlim=None):
+    fig, axs = plt.subplots(2, constrained_layout=True)
+    axs = axs.flat
+    hists = find_hists(sample_hists, lambda h: re.match(hist_prefix, h))
+    for i in range(len(hists)):
+        ax = axs[i]
+        logger.debug(hists[i])
+        hist = sample_hists[hists[i]]
+        hep.histplot(
+            hist["values"][:],
+            hist["edges"][:] * inv_GeV,
+            histtype="fill",
+            stack=True,
+            ax=ax,
+            color="silver",
+            label=sample_name,
+        )
+        if xlim:
+            ax.set_xlim(*xlim)
+        ax.legend()
+        ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
+        ax.set_ylabel("Frequency")
+        hep.atlas.label(loc=1, ax=ax, rlabel="")
+    fig.savefig(f"plots/mH_{sample_name}.png", bbox_inches="tight")
+    plt.close()
+
+
+def draw_mH_plane_2D_hists(sample_hists, sample_name, hist_prefix):
+    fig, ax = plt.subplots()
+    hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
+    hist = sample_hists[hist_name]
+    binsGeV = hist["edges"][:] * inv_GeV
     hep.hist2dplot(
-        hist.values,
+        hist["values"],
         binsGeV,
         binsGeV,
         ax=ax,
@@ -131,7 +181,14 @@ def draw_mH_plane(hist, sample_name):
         linestyles=["solid", "dashed"],
     )
     R_CR_discrim = R_CR(X, Y)
-    ax.contour(X, Y, R_CR_discrim, levels=[45], colors=["black"], linestyles=["dashed"])
+    ax.contour(
+        X,
+        Y,
+        R_CR_discrim,
+        levels=[45],
+        colors=["black"],
+        linestyles=["dashed"],
+    )
     hep.atlas.label(loc=0, ax=ax, label=sample_name, com=13.6)
     fig.savefig(
         f"plots/mH_plane_{sample_name}.png",
@@ -140,135 +197,23 @@ def draw_mH_plane(hist, sample_name):
     plt.close()
 
 
-def draw_mH_1D_hists(hists, sample_name):
-    fig, axs = plt.subplots(2, constrained_layout=True)
-    axs = axs.flat
-    for i in range(len(hists)):
-        ax = axs[i]
-        logger.debug(hists[i].name)
+def draw_jet_kin_hists(sample_hists, sample_name, yscale="linear"):
+    jet_vars = ["pt"]
+    for jet_var in jet_vars:
+        fig, ax = plt.subplots()
+        hist_name = find_hist(sample_hists, lambda h: f"jet_{jet_var}" in h)
+        logger.debug(hist_name)
+        hist = sample_hists[hist_name]
         hep.histplot(
-            hists[i].values,
-            hists[i].edges * inv_GeV,
-            histtype="fill",
-            stack=True,
+            hist["values"][:],
+            hist["edges"][:] * inv_GeV,
             ax=ax,
-            color="silver",
-            label="",
+            label=sample_name,
         )
-        ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
+        ax.set_yscale("log")
         ax.set_ylabel("Frequency")
-        hep.atlas.label(loc=1, ax=ax, label=sample_name, rlabel="")
-    fig.savefig(f"plots/mH_{sample_name}.png", bbox_inches="tight")
-    plt.close()
-
-
-def draw_hh_deltaeta_hists(hists, inputs):
-    fig, ax = plt.subplots()
-    hist_name = "hh_deltaeta_baseline"
-    for sample_type in inputs:
-        hist = find_hist(hists[sample_type], lambda h: hist_name in h.name)
-        logger.debug(hist.name)
-        hep.histplot(
-            hist.values,
-            hist.edges,
-            ax=ax,
-            label=sample_type,
-        )
-    ax.legend()
-    ax.set_xlabel("$\Delta\eta_{HH}$")
-    ax.set_ylabel("Frequency")
-    hep.atlas.label(
-        loc=1, ax=ax, label=", no $\mathrm{X}_{\mathrm{Wt}}$ cut", rlabel=""
-    )
-    fig.savefig(f"plots/{hist_name}.png", bbox_inches="tight")
-    plt.close()
-
-
-def draw_hh_mass_discrim_hists(hists, inputs):
-    fig, ax = plt.subplots()
-    hist_name = "hh_mass_discrim_baseline"
-    for sample_type in inputs:
-        hist = find_hist(hists[sample_type], lambda h: hist_name in h.name)
-        logger.debug(hist.name)
-        hep.histplot(
-            hist.values,
-            hist.edges,
-            ax=ax,
-            label=sample_type,
-        )
-    ax.legend()
-    ax.set_xlabel("$\mathrm{X}_{HH}$")
-    ax.set_ylabel("Frequency")
-    hep.atlas.label(loc=1, ax=ax, rlabel="")
-    fig.savefig(f"plots/{hist_name}.png", bbox_inches="tight")
-    plt.close()
-
-
-def draw_top_veto_hists(hists, inputs):
-    fig, ax = plt.subplots()
-    hist_name = "top_veto_baseline"
-    for sample_type in inputs:
-        hist = find_hist(hists[sample_type], lambda h: hist_name in h.name)
-        logger.debug(hist.name)
-        hep.histplot(
-            hist.values,
-            hist.edges,
-            ax=ax,
-            label=sample_type,
-        )
-    ax.legend()
-    ax.set_xlabel("$\mathrm{X}_{\mathrm{Wt}}$")
-    ax.set_ylabel("Frequency")
-    hep.atlas.label(loc=1, ax=ax, rlabel="")
-    fig.savefig(f"plots/{hist_name}.png", bbox_inches="tight")
-    plt.close()
-
-
-def draw_var_vs_eff_hists(hists, sample_name, var_label):
-    fig, axs = plt.subplots(2, constrained_layout=True)
-    axs = axs.flat
-    for ith_var in [1, 2]:
-        hist_passed = find_hist(
-            hists, lambda h: f"m{var_label}{ith_var}_pairingPassedTruth" in h.name
-        )
-        hist_total = find_hist(hists, lambda h: f"m{var_label}{ith_var}" in h.name)
-        ax = axs[ith_var - 1]
-        bins = hist_total.edges * inv_GeV
-        total = hist_total.values
-        logger.debug(hist_total.name)
-        logger.debug(total)
-        passed = hist_passed.values
-        logger.debug(hist_passed.name)
-        logger.debug(passed)
-        eff, err = get_efficiency_with_uncertainties(passed, total)
-        total_eff = np.sum(passed) / np.sum(total)
-        total_eff = round(total_eff * 100)
-        # eff plot
-        hep.histplot(
-            eff,
-            bins,
-            ax=ax,
-            histtype="errorbar",
-            xerr=True,
-            yerr=err,
-            label="$\epsilon = " + f"{(total_eff)}$%",
-        )
-        # kinematic plot
-        hep.histplot(
-            (total / np.amax(total)),
-            bins,
-            histtype="fill",
-            stack=True,
-            ax=ax,
-            color="silver",
-            label="",
-        )
-        ax.set_ylim(ax.get_ylim()[0], 1.4)
-        ax.set_xlabel("$m_{" + var_label + str(ith_var) + "}$ [GeV]")
-        ax.set_ylabel("Pairing Efficiency")
-        ax.legend(loc="upper right")
-        hep.atlas.label(loc=1, ax=ax, label=sample_name, rlabel="")
-    fig.savefig(
-        f"plots/m{var_label}_vs_pairing_eff_{sample_name}.png", bbox_inches="tight"
-    )
-    plt.close()
+        ax.set_yscale(yscale)
+        ax.legend()
+        ax.set_xlabel(f"jet {kin_labels[jet_var]} [GeV]")
+        fig.savefig(f"plots/jet_{jet_var}_{sample_name}.png", bbox_inches="tight")
+        plt.close()
