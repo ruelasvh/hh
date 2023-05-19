@@ -39,7 +39,8 @@ def draw_hists(hists_group) -> None:
         hists_group,
         hist_prefix="top_veto_baseline",
         xlabel="$\mathrm{X}_{\mathrm{Wt}}$",
-        ylabel="Events",
+        ylabel="Events / 0.1",
+        ynorm=0.1,
         xcut=1.5,
     )
     draw_1d_hists(
@@ -95,6 +96,7 @@ def draw_1d_hists(
     ylabel="Frequency",
     label=None,
     yscale="linear",
+    ynorm=1.0,
     xcut=None,
 ):
     """Draw 1D histograms in one figure. The number of histograms in the figure is
@@ -106,17 +108,17 @@ def draw_1d_hists(
         hist_name = find_hist(sample_hists, lambda h: hist_prefix in h)
         hist = sample_hists[hist_name]
         hplt.histplot(
-            hist["values"],
-            hist["edges"],
+            hist["values"][:] * ynorm,
+            hist["edges"][:],
             ax=ax,
             label=sample_type,
             linewidth=2.0,
         )
+    ax.legend()
     if xcut:
         ax.axvline(x=xcut, ymax=0.6, color="purple")
-    ax.legend()
-    ax.legend()
-    ax.set_xlabel(xlabel)
+    if xlabel:
+        ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_yscale(yscale)
     ymin, ymax = ax.get_ylim()
