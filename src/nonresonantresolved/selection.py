@@ -62,6 +62,39 @@ def select_n_bjets(events, jet_vars=None, btag_cut=None, nbjets_cut=4):
     return leading_four_bjets, remaining_jets
 
 
+def select_hc_jets(events, jet_vars=None, btag_cut=None, nbjets_cut=2):
+    """Selects events by applying the cuts specified in the arguments.
+    The jet pT and eta column names should be the first and second
+    items in jet_vars. Assumes jets are already sorted by pT.
+
+    Always return 4 jets, 2 bjets and 2 non-bjets, for the default case.
+    The 2 bjets are the highest pT b-tagged jets.
+    The 2 non-bjets are the highest pT jets that are not b-tagged.
+    """
+
+    if jet_vars is None or btag_cut is None:
+        return events
+
+    hc_btagged_jets_mask = ak.sum(events[btag_cut], axis=1) >= nbjets_cut
+    hc_btagged_jets = events[hc_btagged_jets_mask]
+    if len(hc_btagged_jets) == 0:
+        return hc_btagged_jets, hc_btagged_jets
+    btag_decisions = hc_btagged_jets[btag_cut] == 1
+    btag_indices = ak.local_index(btag_decisions)
+    leading_bjets_indices = btag_indices[btag_decisions][:, :nbjets_cut]
+    remaining_bjets_indices = btag_indices[btag_decisions][:, nbjets_cut:]
+    remaining_jet_indices = ak.concatenate(
+        [btag_indices[~btag_decisions], remaining_bjets_indices], axis=1
+    )
+    hc_jets = hc_btagged_jets[jet_vars][leading_bjets_indices]
+    remaining_jets = hc_btagged_jets[jet_vars][remaining_jet_indices]
+    if nbjets_cut < 4:
+        n = 4 - nbjets_cut
+        hc_jets = ak.concatenate([hc_jets, remaining_jets[:, :n]], axis=1)
+        remaining_jets = remaining_jets[:, n:]
+    return hc_jets, remaining_jets
+
+
 def sort_jets_by_pt(events, jet_vars=None):
     """Sorts events by jet pT. The jet pT column name should be the first
     item in jet_vars."""
@@ -218,17 +251,24 @@ def select_X_Wt_events(events, discriminant_cut=1.5):
         }
     )
     # for one event with hc_jets with 4 jets, remaining_jets with 2 jets
-    W_candidate_indices = ak.argcombinations(remaining_jets_p4, 2, axis=1) # [[(0, 1)]]
-    hc_jets_indices = ak.local_index(hc_jets_p4, axis=1) # [[0, 1, 2, 3]]
+    W_candidate_indices = ak.argcombinations(remaining_jets_p4, 2, axis=1)  # [[(0, 1)]]
+    hc_jets_indices = ak.local_index(hc_jets_p4, axis=1)  # [[0, 1, 2, 3]]
     t_candidate_indices = ak.cartesian(
         [hc_jets_indices, W_candidate_indices], axis=1
-    ) # [[(0, (0, 1)), (1, (0, 1)), (2, (0, ...)), (3, (0, 1))]]
-    t_candidate_hc_jet_indices, t_candidate_W_indices = ak.unzip(t_candidate_indices) # [[0, 1, 2, 3]], [[(0, 1), (0, 1), (0, 1), (0, 1)]]
-    W_candidate_jet1, W_candidate_jet2 = ak.unzip(t_candidate_W_indices) # [[0, 0, 0, 0]], [[1, 1, 1, 1]]
-    W_candidates_p4 = (remaining_jets_p4[W_candidate_jet1] + remaining_jets_p4[W_candidate_jet2])
+    )  # [[(0, (0, 1)), (1, (0, 1)), (2, (0, ...)), (3, (0, 1))]]
+    t_candidate_hc_jet_indices, t_candidate_W_indices = ak.unzip(
+        t_candidate_indices
+    )  # [[0, 1, 2, 3]], [[(0, 1), (0, 1), (0, 1), (0, 1)]]
+    W_candidate_jet1, W_candidate_jet2 = ak.unzip(
+        t_candidate_W_indices
+    )  # [[0, 0, 0, 0]], [[1, 1, 1, 1]]
+    W_candidates_p4 = (
+        remaining_jets_p4[W_candidate_jet1] + remaining_jets_p4[W_candidate_jet2]
+    )
     t_candidates_p4 = (
-        remaining_jets_p4[W_candidate_jet1] + remaining_jets_p4[W_candidate_jet2] +
-        hc_jets_p4[t_candidate_hc_jet_indices]
+        remaining_jets_p4[W_candidate_jet1]
+        + remaining_jets_p4[W_candidate_jet2]
+        + hc_jets_p4[t_candidate_hc_jet_indices]
     )
     X_Wt_discriminant = X_Wt(
         W_candidates_p4.m * inv_GeV,

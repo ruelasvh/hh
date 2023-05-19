@@ -9,16 +9,17 @@
         "central_jets": {
             "min_pt": 40000,
             "max_eta": 2.5,
-            "min_nconstituents": 4
+            "min_count": 4
         },
         "btagging": {
             "model": "DL1dv00",
-            "efficiency": 0.7
+            "efficiency": 0.77,
+            "min_count": 4
         },
         "forward_jets": {
             "min_pt": 30000,
             "min_eta": 2.5,
-            "min_nconstituents": 6
+            "min_count": 6
         },
         "top_veto": {
             "ggF": {
@@ -32,7 +33,12 @@
         },
         "hh_mass_veto": {
             "ggF": {
-                "max_value": 1.6
+                "signal": {
+                    "max_value": 1.6
+                },
+                "control": {
+                    "max_value": 45
+                }
             }
         }
     }

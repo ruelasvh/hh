@@ -34,6 +34,14 @@ def get_all_trigs_or(events, trigs, skip_trig=None):
     )
 
 
+def format_btagger_model_name(model, eff):
+    # concatenate model and eff, e.g. "DL1dv00_77". eff could be a float or int
+    if isinstance(eff, float):
+        return f"{model}_{eff*100:.0f}"
+    else:
+        return f"{model}_{eff}"
+
+
 nth = {1: "first", 2: "second", 3: "third", 4: "fourth"}
 
 kin_labels = {"pt": "$p_T$", "eta": "$\eta$", "phi": "$\phi$", "m": "$m$"}

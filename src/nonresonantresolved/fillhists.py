@@ -2,10 +2,17 @@ import numpy as np
 import vector as p4
 import awkward as ak
 from .triggers import run3_all as triggers_run3_all
-from .utils import find_hist, find_all_hists, get_all_trigs_or, kin_labels
+from .utils import (
+    find_hist,
+    find_all_hists,
+    format_btagger_model_name,
+    kin_labels,
+    get_all_trigs_or,
+)
 from .selection import (
     select_n_jets_events,
     select_n_bjets,
+    select_hc_jets,
     select_hh_mindeltar,
     select_X_Wt_events,
     select_hh_events,
@@ -21,23 +28,49 @@ def fill_hists(events, hists, luminosity_weight, config, args):
 
     logger.info("Filling histograms")
     logger.info("Events: %s", len(events))
+
+    event_selection = config["event_selection"]
+    central_jets_selection = event_selection["central_jets"]
     baseline_events = select_n_jets_events(
-        events, jet_vars=get_jet_branch_alias_names(), pt_cut=20_000
+        events,
+        jet_vars=get_jet_branch_alias_names(),
+        pt_cut=central_jets_selection["min_pt"],
+        eta_cut=central_jets_selection["max_eta"],
+        njets_cut=central_jets_selection["min_count"],
     )
     logger.info(
-        "Events with >= 4 central jets and kinematic requirements: %s",
+        "Events with >= %s central jets and kinematic requirements pT > %s and |eta| < %s: %s",
+        central_jets_selection["min_count"],
+        central_jets_selection["min_pt"],
+        central_jets_selection["max_eta"],
         len(baseline_events),
     )
     fill_jet_kin_histograms(baseline_events, hists, luminosity_weight)
     fill_leading_jets_histograms(baseline_events, hists)
-    leading_bjets, remaining_jets = select_n_bjets(
+
+    btagging_selection = event_selection["btagging"]
+    btagger_model_name = format_btagger_model_name(
+        btagging_selection["model"], btagging_selection["efficiency"]
+    )
+    # hc_jets, remaining_jets = select_n_bjets(
+    #     baseline_events,
+    #     jet_vars=get_jet_branch_alias_names(),
+    #     btag_cut="jet_btag_DL1dv00_77",
+    # )
+    hc_jets, remaining_jets = select_hc_jets(
         baseline_events,
         jet_vars=get_jet_branch_alias_names(),
-        btag_cut="jet_btag_DL1dv00_77",
+        btag_cut=f"jet_btag_{btagger_model_name}",
+        nbjets_cut=btagging_selection["min_count"],
     )
-    logger.info("Events with >= 4 b-tagged central jets: %s", len(leading_bjets))
+    logger.info(
+        "Events with >= %s b-tagged central jets: %s",
+        btagging_selection["min_count"],
+        len(hc_jets),
+    )
     # logger.info("Events with >= 6 central or forward jets", len(events_with_central_or_forward_jets))
-    h1_events, h2_events = select_hh_mindeltar(leading_bjets)
+
+    h1_events, h2_events = select_hh_mindeltar(hc_jets)
     fill_reco_mH_histograms(
         mh1=h1_events.m,
         mh2=h2_events.m,
@@ -48,28 +81,34 @@ def fill_hists(events, hists, luminosity_weight, config, args):
         mh2=h2_events.m,
         hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
     )
+    hh_deltaeta_selection = event_selection["hh_deltaeta_veto"]["ggF"]
     (
         h1_events_with_deltaeta_cut,
         h2_events_with_deltaeta_cut,
         hh_deltar,
         hh_events_keep_mask,
-    ) = select_hh_events(h1_events, h2_events, deltaeta_cut=1.5)
+    ) = select_hh_events(
+        h1_events, h2_events, deltaeta_cut=hh_deltaeta_selection["max_value"]
+    )
     logger.info(
-        "Events with |deltaEta_HH| < threshold: %s", len(h1_events_with_deltaeta_cut)
+        "Events with |deltaEta_HH| < %s: %s",
+        hh_deltaeta_selection["max_value"],
+        len(h1_events_with_deltaeta_cut),
     )
     fill_hh_deltaeta_histograms(
         hh_deltar, hists=find_all_hists(hists, "hh_deltaeta_baseline")
     )
+
+    # calculate top veto discriminant
     leading_bjet_events_with_hh_deltar_cut = (
-        leading_bjets
-        if len(hh_events_keep_mask) == 0
-        else leading_bjets[hh_events_keep_mask]
+        hc_jets if len(hh_events_keep_mask) == 0 else hc_jets[hh_events_keep_mask]
     )
     remaining_jet_events_with_hh_deltar_cut = (
         remaining_jets
         if len(hh_events_keep_mask) == 0
         else remaining_jets[hh_events_keep_mask]
     )
+    top_veto_selection = event_selection["top_veto"]["ggF"]
     (
         top_veto_pass_events,
         _,
@@ -79,14 +118,19 @@ def fill_hists(events, hists, luminosity_weight, config, args):
         (
             leading_bjet_events_with_hh_deltar_cut,
             remaining_jet_events_with_hh_deltar_cut,
-        )
+        ),
+        discriminant_cut=top_veto_selection["min_value"],
     )
     fill_top_veto_histograms(
         top_veto_discrim, hists=find_all_hists(hists, "top_veto_baseline")
     )
     logger.info(
-        "Events with top-veto discriminant > threshold: %s", len(top_veto_pass_events)
+        "Events with top-veto discriminant > %s: %s",
+        top_veto_selection["min_value"],
+        len(top_veto_pass_events),
     )
+
+    # calculate mass discriminant
     h1_events_with_top_veto_cut = (
         h1_events_with_deltaeta_cut
         if len(h1_events_with_deltaeta_cut) == 0
@@ -98,6 +142,7 @@ def fill_hists(events, hists, luminosity_weight, config, args):
         else h2_events_with_deltaeta_cut[top_veto_events_keep_mask]
     )
     # signal region
+    hh_mass_selection = event_selection["hh_mass_veto"]["ggF"]
     (
         h1_events_with_mass_discrim_cut,
         h2_events_with_mass_discrim_cut,
@@ -106,10 +151,11 @@ def fill_hists(events, hists, luminosity_weight, config, args):
     ) = select_hh_events(
         h1_events_with_top_veto_cut,
         h2_events_with_top_veto_cut,
-        mass_discriminant_cut=1.6,
+        mass_discriminant_cut=hh_mass_selection["signal"]["max_value"],
     )
     logger.info(
-        "Signal events with mass discriminant < threshold: %s",
+        "Signal events with mass discriminant < %s: %s",
+        hh_mass_selection["signal"]["max_value"],
         len(h1_events_with_mass_discrim_cut),
     )
     fill_hh_mass_discrim_histograms(
@@ -126,10 +172,18 @@ def fill_hists(events, hists, luminosity_weight, config, args):
         hist=find_hist(hists, lambda h: "mH_plane_baseline_signal_region" in h.name),
     )
     # control region
-    (h1_events_control_region, h2_events_control_region, _, _,) = select_hh_events(
+    (
+        h1_events_control_region,
+        h2_events_control_region,
+        _,
+        _,
+    ) = select_hh_events(
         h1_events_with_top_veto_cut,
         h2_events_with_top_veto_cut,
-        mass_discriminant_cut=(1.6, 45),
+        mass_discriminant_cut=(
+            hh_mass_selection["signal"]["max_value"],
+            hh_mass_selection["control"]["max_value"],
+        ),
     )
     logger.info(
         "Control region events: %s",
