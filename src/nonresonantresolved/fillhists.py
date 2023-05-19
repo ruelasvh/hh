@@ -6,7 +6,7 @@ from .utils import find_hist, find_all_hists, get_all_trigs_or, kin_labels
 from .selection import (
     select_n_jets_events,
     select_n_bjets,
-    hh_reconstruct_mindeltar,
+    select_hh_mindeltar,
     select_X_Wt_events,
     select_hh_events,
 )
@@ -33,11 +33,11 @@ def fill_hists(events, hists, luminosity_weight, config, args):
     leading_bjets, remaining_jets = select_n_bjets(
         baseline_events,
         jet_vars=get_jet_branch_alias_names(),
-        btag_cut="jet_btag_DL1dv00_70",
+        btag_cut="jet_btag_DL1dv00_77",
     )
     logger.info("Events with >= 4 b-tagged central jets: %s", len(leading_bjets))
     # logger.info("Events with >= 6 central or forward jets", len(events_with_central_or_forward_jets))
-    h1_events, h2_events = hh_reconstruct_mindeltar(leading_bjets)
+    h1_events, h2_events = select_hh_mindeltar(leading_bjets)
     fill_reco_mH_histograms(
         mh1=h1_events.m,
         mh2=h2_events.m,
@@ -70,20 +70,6 @@ def fill_hists(events, hists, luminosity_weight, config, args):
         if len(hh_events_keep_mask) == 0
         else remaining_jets[hh_events_keep_mask]
     )
-    # (
-    #     top_veto_pass_events,
-    #     _,
-    #     top_veto_discrim,
-    #     top_veto_events_keep_mask,
-    # ) = select_X_Wt_eventsv2(
-    #     ak.concatenate(
-    #         [
-    #             leading_bjet_events_with_hh_deltar_cut,
-    #             remaining_jet_events_with_hh_deltar_cut,
-    #         ],
-    #         axis=1,
-    #     )
-    # )
     (
         top_veto_pass_events,
         _,
@@ -111,6 +97,7 @@ def fill_hists(events, hists, luminosity_weight, config, args):
         if len(h2_events_with_deltaeta_cut) == 0
         else h2_events_with_deltaeta_cut[top_veto_events_keep_mask]
     )
+    # signal region
     (
         h1_events_with_mass_discrim_cut,
         h2_events_with_mass_discrim_cut,
@@ -122,7 +109,7 @@ def fill_hists(events, hists, luminosity_weight, config, args):
         mass_discriminant_cut=1.6,
     )
     logger.info(
-        "Events with mass discriminant < threshold: %s",
+        "Signal events with mass discriminant < threshold: %s",
         len(h1_events_with_mass_discrim_cut),
     )
     fill_hh_mass_discrim_histograms(
@@ -137,6 +124,26 @@ def fill_hists(events, hists, luminosity_weight, config, args):
         mh1=h1_events_with_mass_discrim_cut.m,
         mh2=h2_events_with_mass_discrim_cut.m,
         hist=find_hist(hists, lambda h: "mH_plane_baseline_signal_region" in h.name),
+    )
+    # control region
+    (h1_events_control_region, h2_events_control_region, _, _,) = select_hh_events(
+        h1_events_with_top_veto_cut,
+        h2_events_with_top_veto_cut,
+        mass_discriminant_cut=(1.6, 45),
+    )
+    logger.info(
+        "Control region events: %s",
+        len(h1_events_control_region),
+    )
+    fill_reco_mH_histograms(
+        mh1=h1_events_control_region.m,
+        mh2=h2_events_control_region.m,
+        hists=find_all_hists(hists, "mH[12]_baseline_control_region"),
+    )
+    fill_reco_mH_2d_histograms(
+        mh1=h1_events_control_region.m,
+        mh2=h2_events_control_region.m,
+        hist=find_hist(hists, lambda h: "mH_plane_baseline_control_region" in h.name),
     )
     # if args.signal:
     #     fill_reco_mH_truth_pairing_histograms(events, hists)

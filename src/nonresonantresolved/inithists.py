@@ -15,7 +15,11 @@ def init_hists(inputs: dict, args: dict) -> dict:
         hists_dict[sample_type] += init_jet_kin_histograms()
         hists_dict[sample_type] += init_leading_jets_histograms()
         hists_dict[sample_type] += init_reco_mH_histograms()
+        hists_dict[sample_type] += init_reco_mH_histograms(postfix="_signal_region")
+        hists_dict[sample_type] += init_reco_mH_histograms(postfix="_control_region")
         hists_dict[sample_type] += init_reco_mH_2d_histograms()
+        hists_dict[sample_type] += init_reco_mH_2d_histograms(postfix="_signal_region")
+        hists_dict[sample_type] += init_reco_mH_2d_histograms(postfix="_control_region")
         hists_dict[sample_type] += init_reco_hh_deltaeta_histograms()
         hists_dict[sample_type] += init_reco_top_veto_histograms()
         hists_dict[sample_type] += init_reco_hh_mass_discrim_histograms()
@@ -92,14 +96,14 @@ def init_truth_matched_mjj_histograms(binrange=[0, 200_000], bins=100) -> list:
     return hists
 
 
-def init_reco_mH_histograms(binrange=[0, 200_000], bins=100) -> list:
+def init_reco_mH_histograms(binrange=[0, 200_000], bins=100, postfix=None) -> list:
     """Initialize reconstructed mH 1d histograms"""
 
     hists = []
     for reco_h in [1, 2]:
         hists += [
             Histogram(
-                f"mH{reco_h}_baseline",
+                f"mH{reco_h}_baseline{postfix if postfix else ''}",
                 binrange=binrange,
                 bins=bins,
             )
@@ -116,13 +120,13 @@ def init_reco_mH_histograms(binrange=[0, 200_000], bins=100) -> list:
     return hists
 
 
-def init_reco_mH_2d_histograms(binrange=[0, 200_000], bins=50) -> list:
+def init_reco_mH_2d_histograms(binrange=[0, 200_000], bins=50, postfix=None) -> list:
     """Initialize reconstructed mH 2d histograms"""
 
     hists = []
     hists += [
         Histogramddv2(
-            "mH_plane_baseline",
+            f"mH_plane_baseline{postfix if postfix else ''}",
             binrange=binrange,
             bins=bins,
         )

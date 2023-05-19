@@ -20,7 +20,7 @@ def find_hist(
 
 def find_all_hists(hists, delimeter):
     """Returns the list of hists that match the delimeter"""
-    prog = re.compile(delimeter)
+    prog = re.compile(delimeter + "$")
     return list(filter(lambda h: prog.match(h.name), hists))
 
 
@@ -38,4 +38,6 @@ nth = {1: "first", 2: "second", 3: "third", 4: "fourth"}
 
 kin_labels = {"pt": "$p_T$", "eta": "$\eta$", "phi": "$\phi$", "m": "$m$"}
 
-inv_GeV = 1 / 1_000
+GeV = 1_000
+
+inv_GeV = 1 / GeV

@@ -89,12 +89,16 @@ def X_HH(m_H1, m_H2):
     m_H1_center = 124
     m_H2_center = 117
 
-    first_term = np.zeros_like(m_H1)
-    np.divide(m_H1 - m_H1_center, 0.1 * m_H1, out=first_term, where=(m_H1 != 0))
-    second_term = np.zeros_like(m_H2)
-    np.divide(m_H2 - m_H2_center, 0.1 * m_H2, out=second_term, where=(m_H2 != 0))
+    # first_term = np.zeros_like(m_H1)
+    # np.divide(m_H1 - m_H1_center, 0.1 * m_H1, out=first_term, where=(m_H1 != 0))
+    # second_term = np.zeros_like(m_H2)
+    # np.divide(m_H2 - m_H2_center, 0.1 * m_H2, out=second_term, where=(m_H2 != 0))
+    # return np.sqrt(first_term**2 + second_term**2)
 
-    return np.sqrt(first_term**2 + second_term**2)
+    return np.sqrt(
+        ((m_H1 - m_H1_center) / (0.1 * m_H1)) ** 2
+        + ((m_H2 - m_H2_center) / (0.1 * m_H2)) ** 2
+    )
 
 
 def R_CR(m_H1, m_H2):
@@ -131,7 +135,7 @@ def X_Wt(m_jj, m_jjb):
 def get_top_candidate_indices(W_combinations, jet_index):
     """Get the indices of the jets that form the top candidate.
 
-    W_combinations = [(0, 1), (0, 2), (1, 2))]
+    W_combinations = [(0, 1), (0, 2), (1, 2)]
     jet_index = [0, 1, 2]
     """
 
@@ -148,7 +152,8 @@ def get_top_candidate_indices(W_combinations, jet_index):
     return (j1_indices, j2_indices, j3_indices)
 
 
-def select_X_Wt_eventsv2(events, discriminant_cut=1.5):
+# Very inefficient, not really works either. Keep for reference.
+def select_X_Wt_eventsv1(events, discriminant_cut=1.5):
     """Selects events that pass the top-veto selection.
 
     Events are vetoed if the minimum X_Wt over all combinations is less than 1.5
@@ -174,7 +179,7 @@ def select_X_Wt_eventsv2(events, discriminant_cut=1.5):
         ]
     )
     top_j1_indices, top_j2_indices, top_j3_indices = ak.unzip(top_candidate_indices)
-    btag_decisions = events["jet_btag_DL1dv00_70"] == 1
+    btag_decisions = events["jet_btag_DL1dv00_77"] == 1
     btag_decisions = btag_decisions[top_j3_indices]
     top_j1_indices = top_j1_indices[btag_decisions]
     top_j2_indices = top_j2_indices[btag_decisions]
@@ -195,13 +200,13 @@ def select_X_Wt_events(events, discriminant_cut=1.5):
         Events that pass the top-veto selection
     """
 
-    leading_four_bjets, remaining_jets = events
-    leading_four_bjets_p4 = p4.zip(
+    hc_jets, remaining_jets = events
+    hc_jets_p4 = p4.zip(
         {
-            "pt": leading_four_bjets.jet_pt,
-            "eta": leading_four_bjets.jet_eta,
-            "phi": leading_four_bjets.jet_phi,
-            "mass": leading_four_bjets.jet_m,
+            "pt": hc_jets.jet_pt,
+            "eta": hc_jets.jet_eta,
+            "phi": hc_jets.jet_phi,
+            "mass": hc_jets.jet_m,
         }
     )
     remaining_jets_p4 = p4.zip(
@@ -212,30 +217,32 @@ def select_X_Wt_events(events, discriminant_cut=1.5):
             "mass": remaining_jets.jet_m,
         }
     )
-    W_candidate_indices = ak.argcombinations(remaining_jets_p4, 2, axis=1)
-    W_candidate_firsts, W_candidate_seconds = ak.unzip(W_candidate_indices)
-    W_candidates = (
-        remaining_jets_p4[W_candidate_firsts] + remaining_jets_p4[W_candidate_seconds]
-    )
-    t_candidate_indices = ak.argcartesian([leading_four_bjets_p4, W_candidates], axis=1)
-    t_candidate_bjet_indices, t_candidate_W_indices = ak.unzip(t_candidate_indices)
-    t_candidates = (
-        leading_four_bjets_p4[t_candidate_bjet_indices]
-        + W_candidates[t_candidate_W_indices]
+    # for one event with hc_jets with 4 jets, remaining_jets with 2 jets
+    W_candidate_indices = ak.argcombinations(remaining_jets_p4, 2, axis=1) # [[(0, 1)]]
+    hc_jets_indices = ak.local_index(hc_jets_p4, axis=1) # [[0, 1, 2, 3]]
+    t_candidate_indices = ak.cartesian(
+        [hc_jets_indices, W_candidate_indices], axis=1
+    ) # [[(0, (0, 1)), (1, (0, 1)), (2, (0, ...)), (3, (0, 1))]]
+    t_candidate_hc_jet_indices, t_candidate_W_indices = ak.unzip(t_candidate_indices) # [[0, 1, 2, 3]], [[(0, 1), (0, 1), (0, 1), (0, 1)]]
+    W_candidate_jet1, W_candidate_jet2 = ak.unzip(t_candidate_W_indices) # [[0, 0, 0, 0]], [[1, 1, 1, 1]]
+    W_candidates_p4 = (remaining_jets_p4[W_candidate_jet1] + remaining_jets_p4[W_candidate_jet2])
+    t_candidates_p4 = (
+        remaining_jets_p4[W_candidate_jet1] + remaining_jets_p4[W_candidate_jet2] +
+        hc_jets_p4[t_candidate_hc_jet_indices]
     )
     X_Wt_discriminant = X_Wt(
-        W_candidates[t_candidate_W_indices].m * inv_GeV,
-        t_candidates.m * inv_GeV,
+        W_candidates_p4.m * inv_GeV,
+        t_candidates_p4.m * inv_GeV,
     )
     X_Wt_discriminant = ak.min(X_Wt_discriminant, axis=1)
     # For events with no valid combinations because there are exactly 4 bjets in the event,
     # fill with 9999.0
     X_Wt_discriminant = ak.fill_none(X_Wt_discriminant, 9999.0)
     keep = X_Wt_discriminant > discriminant_cut
-    return leading_four_bjets[keep], remaining_jets[keep], X_Wt_discriminant, keep
+    return hc_jets[keep], remaining_jets[keep], X_Wt_discriminant, keep
 
 
-def hh_reconstruct_mindeltar(events):
+def select_hh_mindeltarv2(events):
     """Pair 4 leading b-jets by minimum deltaR.
     Assumes b-jets are already sorted by jet pT and b-jets >= 4.
 
@@ -273,6 +280,52 @@ def hh_reconstruct_mindeltar(events):
     return h1, h2
 
 
+def select_hh_mindeltar(events):
+    """Pair 4 leading b-jets by minimum deltaR.
+    Assumes b-jets are already sorted by jet pT and b-jets >= 4.
+
+    Returns:
+        2 p4 objects"""
+
+    jet_p4 = p4.zip(
+        {
+            "pt": events.jet_pt,
+            "eta": events.jet_eta,
+            "phi": events.jet_phi,
+            "mass": events.jet_m,
+        }
+    )
+    if len(jet_p4) == 0:
+        return jet_p4, jet_p4
+    jet_indices = ak.local_index(jet_p4, axis=1)
+    leading_jets = jet_indices[:, :1]
+    subleading_jets = jet_indices[:, 1:]
+    jet_pairs = ak.cartesian([leading_jets, subleading_jets], axis=1)
+    leading_jet_indices, subleading_jet_indices = ak.unzip(jet_pairs)
+    deltar = jet_p4[leading_jet_indices].deltaR(jet_p4[subleading_jet_indices])
+    min_deltar = ak.argmin(deltar, axis=1, keepdims=True)
+    h1_leading_jet1_indices, h1_leading_jet2_indices = ak.unzip(jet_pairs[min_deltar])
+    h1_leading = ak.flatten(
+        jet_p4[h1_leading_jet1_indices] + jet_p4[h1_leading_jet2_indices]
+    )
+    # create one-hot mask for h1 leading jets
+    h1_leading_one_hot = ak.from_numpy(np.eye(4))[ak.flatten(h1_leading_jet1_indices)]
+    h1_leading_mask = h1_leading_one_hot == 1
+    # create one-hot mask for h1 subleading jets
+    h1_subleading_one_hot = ak.from_numpy(np.eye(4))[
+        ak.flatten(h1_leading_jet2_indices)
+    ]
+    h1_subleading_mask = h1_subleading_one_hot == 1
+    # create one-hot mask for h2 jets
+    h2_mask = ~(h1_leading_mask | h1_subleading_mask)
+    h2_subleading_jet_indices = jet_indices[h2_mask]
+    h2_subleading = (
+        jet_p4[h2_subleading_jet_indices][:, 0]
+        + jet_p4[h2_subleading_jet_indices][:, 1]
+    )
+    return h1_leading, h2_subleading
+
+
 def select_hh_events(h1, h2, deltaeta_cut=None, mass_discriminant_cut=None):
     """Selects events that pass the hh selection.
 
@@ -286,6 +339,15 @@ def select_hh_events(h1, h2, deltaeta_cut=None, mass_discriminant_cut=None):
         hh_var = np.abs(ak.to_numpy(h1.eta) - ak.to_numpy(h2.eta))
         keep = keep & (hh_var < deltaeta_cut)
     if mass_discriminant_cut is not None:
-        hh_var = X_HH(ak.to_numpy(h1.m) * inv_GeV, ak.to_numpy(h2.m) * inv_GeV)
-        keep = keep & (hh_var < mass_discriminant_cut)
+        if type(mass_discriminant_cut) is float:
+            hh_var = X_HH(ak.to_numpy(h1.m) * inv_GeV, ak.to_numpy(h2.m) * inv_GeV)
+            keep = keep & (hh_var < mass_discriminant_cut)
+        if type(mass_discriminant_cut) is tuple:
+            hh_low = X_HH(ak.to_numpy(h1.m) * inv_GeV, ak.to_numpy(h2.m) * inv_GeV)
+            hh_high = R_CR(ak.to_numpy(h1.m) * inv_GeV, ak.to_numpy(h2.m) * inv_GeV)
+            keep = (
+                keep
+                & (hh_low >= mass_discriminant_cut[0])
+                & (hh_high <= mass_discriminant_cut[1])
+            )
     return h1[keep], h2[keep], hh_var, keep
