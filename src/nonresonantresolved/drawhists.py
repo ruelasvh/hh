@@ -1,12 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import mplhep as hep
+import mplhep as hplt
 import re
 from .utils import find_hist, find_all_hists, inv_GeV, nth, kin_labels
 from .selection import X_HH, R_CR
 from shared.utils import logger
 
-plt.style.use(hep.style.ATLAS)
+plt.style.use(hplt.style.ATLAS)
 
 
 def find_hists(
@@ -105,7 +105,7 @@ def draw_1d_hists(
     for sample_type, sample_hists in hists_group.items():
         hist_name = find_hist(sample_hists, lambda h: hist_prefix in h)
         hist = sample_hists[hist_name]
-        hep.histplot(
+        hplt.histplot(
             hist["values"],
             hist["edges"],
             ax=ax,
@@ -121,7 +121,7 @@ def draw_1d_hists(
     ax.set_yscale(yscale)
     ymin, ymax = ax.get_ylim()
     ax.set_ylim(ymin=ymin, ymax=ymax * 1.5)
-    hep.atlas.label(loc=1, ax=ax, label=label, rlabel="")
+    hplt.atlas.label(loc=1, ax=ax, label=label, rlabel="")
     fig.savefig(f"plots/{hist_prefix}.png", bbox_inches="tight")
     plt.close()
 
@@ -134,7 +134,7 @@ def draw_mH_1D_hists(sample_hists, sample_name, hist_prefix, xlim=None):
         ax = axs[i]
         logger.debug(hists[i])
         hist = sample_hists[hists[i]]
-        hep.histplot(
+        hplt.histplot(
             hist["values"][:],
             hist["edges"][:] * inv_GeV,
             histtype="fill",
@@ -148,7 +148,7 @@ def draw_mH_1D_hists(sample_hists, sample_name, hist_prefix, xlim=None):
         ax.legend()
         ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
         ax.set_ylabel("Frequency")
-        hep.atlas.label(loc=1, ax=ax, rlabel="")
+        hplt.atlas.label(loc=1, ax=ax, rlabel="")
     fig.savefig(f"plots/mH_{sample_name}.png", bbox_inches="tight")
     plt.close()
 
@@ -158,7 +158,7 @@ def draw_mH_plane_2D_hists(sample_hists, sample_name, hist_prefix):
     hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
     hist = sample_hists[hist_name]
     binsGeV = hist["edges"][:] * inv_GeV
-    hep.hist2dplot(
+    hplt.hist2dplot(
         hist["values"],
         binsGeV,
         binsGeV,
@@ -189,7 +189,7 @@ def draw_mH_plane_2D_hists(sample_hists, sample_name, hist_prefix):
         colors=["black"],
         linestyles=["dashed"],
     )
-    hep.atlas.label(loc=0, ax=ax, label=sample_name, com=13.6)
+    hplt.atlas.label(loc=0, ax=ax, label=sample_name, com=13.6)
     fig.savefig(
         f"plots/mH_plane_{sample_name}.png",
         bbox_inches="tight",
@@ -204,7 +204,7 @@ def draw_jet_kin_hists(sample_hists, sample_name, yscale="linear"):
         hist_name = find_hist(sample_hists, lambda h: f"jet_{jet_var}" in h)
         logger.debug(hist_name)
         hist = sample_hists[hist_name]
-        hep.histplot(
+        hplt.histplot(
             hist["values"][:],
             hist["edges"][:] * inv_GeV,
             ax=ax,
