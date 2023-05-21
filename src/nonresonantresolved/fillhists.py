@@ -13,7 +13,7 @@ from .selection import (
     select_n_jets_events,
     select_n_bjets,
     select_hc_jets,
-    select_hh_mindeltar,
+    reconstruct_hh_mindeltar,
     select_X_Wt_events,
     select_hh_events,
 )
@@ -57,8 +57,13 @@ def fill_hists(events, hists, luminosity_weight, config, args):
     #     jet_vars=get_jet_branch_alias_names(),
     #     btag_cut="jet_btag_DL1dv00_77",
     # )
-    hc_jets, remaining_jets = select_hc_jets(
+    signal_events = select_n_bjets(
         baseline_events,
+        btag_cut="jet_btag_DL1dv00_77",
+        nbjets_cut=4,
+    )
+    hc_jets, hc_jets_indices = select_hc_jets(
+        signal_events,
         jet_vars=get_jet_branch_alias_names(),
         btag_cut=f"jet_btag_{btagger_model_name}",
         nbjets_cut=btagging_selection["min_count"],
@@ -68,17 +73,18 @@ def fill_hists(events, hists, luminosity_weight, config, args):
         btagging_selection["min_count"],
         len(hc_jets),
     )
+
     # logger.info("Events with >= 6 central or forward jets", len(events_with_central_or_forward_jets))
 
-    h1_events, h2_events = select_hh_mindeltar(hc_jets)
+    h_leading, h_subleading = reconstruct_hh_mindeltar(hc_jets)
     fill_reco_mH_histograms(
-        mh1=h1_events.m,
-        mh2=h2_events.m,
+        mh1=h_leading.m,
+        mh2=h_subleading.m,
         hists=find_all_hists(hists, "mH[12]_baseline"),
     )
     fill_reco_mH_2d_histograms(
-        mh1=h1_events.m,
-        mh2=h2_events.m,
+        mh1=h_leading.m,
+        mh2=h_subleading.m,
         hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
     )
     hh_deltaeta_selection = event_selection["hh_deltaeta_veto"]["ggF"]
@@ -86,9 +92,9 @@ def fill_hists(events, hists, luminosity_weight, config, args):
         h1_events_with_deltaeta_cut,
         h2_events_with_deltaeta_cut,
         hh_deltar,
-        hh_events_keep_mask,
+        hh_events_deltaeta_cut_keep_mask,
     ) = select_hh_events(
-        h1_events, h2_events, deltaeta_cut=hh_deltaeta_selection["max_value"]
+        h_leading, h_subleading, deltaeta_cut=hh_deltaeta_selection["max_value"]
     )
     logger.info(
         "Events with |deltaEta_HH| < %s: %s",
@@ -100,25 +106,38 @@ def fill_hists(events, hists, luminosity_weight, config, args):
     )
 
     # calculate top veto discriminant
-    leading_bjet_events_with_hh_deltar_cut = (
-        hc_jets if len(hh_events_keep_mask) == 0 else hc_jets[hh_events_keep_mask]
-    )
-    remaining_jet_events_with_hh_deltar_cut = (
-        remaining_jets
-        if len(hh_events_keep_mask) == 0
-        else remaining_jets[hh_events_keep_mask]
-    )
     top_veto_selection = event_selection["top_veto"]["ggF"]
+    # leading_bjet_events_with_hh_deltar_cut = (
+    #     hc_jets if len(hh_events_deltaeta_cut_keep_mask) == 0 else hc_jets[hh_events_deltaeta_cut_keep_mask]
+    # )
+    # remaining_jet_events_with_hh_deltar_cut = (
+    #     remaining_jets
+    #     if len(hh_events_deltaeta_cut_keep_mask) == 0
+    #     else remaining_jets[hh_events_deltaeta_cut_keep_mask]
+    # )
+    # (
+    #     top_veto_pass_events,
+    #     _,
+    #     top_veto_discrim,
+    #     top_veto_events_keep_mask,
+    # ) = select_X_Wt_events(
+    #     (
+    #         leading_bjet_events_with_hh_deltar_cut,
+    #         remaining_jet_events_with_hh_deltar_cut,
+    #     ),
+    #     discriminant_cut=top_veto_selection["min_value"],
+    # )
+    hc_jets_with_hh_deltar_cut_indices = hc_jets_indices[
+        hh_events_deltaeta_cut_keep_mask
+    ]
+    events_with_hh_deltar_cut = signal_events[hh_events_deltaeta_cut_keep_mask]
     (
         top_veto_pass_events,
-        _,
         top_veto_discrim,
         top_veto_events_keep_mask,
     ) = select_X_Wt_events(
-        (
-            leading_bjet_events_with_hh_deltar_cut,
-            remaining_jet_events_with_hh_deltar_cut,
-        ),
+        events_with_hh_deltar_cut,
+        hc_jets_with_hh_deltar_cut_indices,
         discriminant_cut=top_veto_selection["min_value"],
     )
     fill_top_veto_histograms(
