@@ -185,68 +185,7 @@ def X_Wt(m_jj, m_jjb):
     )
 
 
-def get_top_candidate_indices(W_combinations, jet_index):
-    """Get the indices of the jets that form the top candidate.
-
-    W_combinations = [(0, 1), (0, 2), (1, 2)]
-    jet_index = [0, 1, 2]
-    """
-
-    other_jets = [
-        [i for i in jet_index if i not in combo.tolist()] for combo in W_combinations
-    ]
-    # other_jets = [[2], [1], [0]]
-    top_candidate_indices = ak.zip([W_combinations, other_jets])
-    # top_candidate_indices = [[((0, 1), 2)], [((0, 2), 1)], [((1, 2), 0)]]
-    top_candidate_indices = ak.flatten(top_candidate_indices)
-    # top_candidate_indices = [((0, 1), 2), ((0, 2), 1), ((1, 2), 0)]
-    W_jj_candidate_indices, j3_indices = ak.unzip(top_candidate_indices)
-    j1_indices, j2_indices = ak.unzip(W_jj_candidate_indices)
-    return (j1_indices, j2_indices, j3_indices)
-
-
-# Very inefficient, not really works either. Keep for reference.
 def select_X_Wt_eventsv1(events, discriminant_cut=1.5):
-    """Selects events that pass the top-veto selection.
-
-    Events are vetoed if the minimum X_Wt over all combinations is less than 1.5
-
-    Returns:
-        Events that pass the top-veto selection
-    """
-
-    jet_p4 = p4.zip(
-        {
-            "pt": events.jet_pt,
-            "eta": events.jet_eta,
-            "phi": events.jet_phi,
-            "mass": events.jet_m,
-        }
-    )
-    jet_indices = ak.local_index(jet_p4, axis=1)
-    W_candidates_indices = ak.argcombinations(jet_p4, 2, axis=1)
-    top_candidate_indices = ak.Array(
-        [
-            get_top_candidate_indices(W_combinations, jet_index)
-            for W_combinations, jet_index in zip(W_candidates_indices, jet_indices)
-        ]
-    )
-    top_j1_indices, top_j2_indices, top_j3_indices = ak.unzip(top_candidate_indices)
-    btag_decisions = events["jet_btag_DL1dv00_77"] == 1
-    btag_decisions = btag_decisions[top_j3_indices]
-    top_j1_indices = top_j1_indices[btag_decisions]
-    top_j2_indices = top_j2_indices[btag_decisions]
-    top_j3_indices = top_j3_indices[btag_decisions]
-    W_candidates = jet_p4[top_j1_indices] + jet_p4[top_j2_indices]
-    top_candidates = W_candidates + jet_p4[top_j3_indices]
-    X_Wt_discriminant = X_Wt(W_candidates.m * inv_GeV, top_candidates.m * inv_GeV)
-    X_Wt_discriminant_mins = ak.min(X_Wt_discriminant, axis=1)
-    keep = X_Wt_discriminant_mins > discriminant_cut
-    X_Wt_discriminant_mins = ak.drop_none(X_Wt_discriminant_mins)
-    return events[keep], None, X_Wt_discriminant_mins, keep
-
-
-def select_X_Wt_eventsv2(events, discriminant_cut=1.5):
     """Selects events that pass the top-veto selection.
     Events are vetoed if the minimum X_Wt over all combinations is less than 1.5
     Returns:
@@ -302,7 +241,7 @@ def select_X_Wt_eventsv2(events, discriminant_cut=1.5):
     return hc_jets[keep], remaining_jets[keep], X_Wt_discriminant, keep
 
 
-def select_X_Wt_events(events, hc_indices, discriminant_cut=1.5):
+def select_X_Wt_events(events, hc_jet_indices, discriminant_cut=1.5):
     """Selects events that pass the top-veto selection.
     Events are vetoed if the minimum X_Wt over all combinations is less than 1.5
     Returns:
@@ -317,78 +256,43 @@ def select_X_Wt_events(events, hc_indices, discriminant_cut=1.5):
             "mass": events.jet_m,
         }
     )
-    # jet_indices = ak.local_index(jet_p4, axis=1)  # [[0, 1, 2, 3, 4, 5], ...]
-    # hc_indices # [[0, 2, 3, 5], ...]
-    # for one event with hc_jets with 4 jets, remaining_jets with 2 jets
+    # for one event with hc_jet_indices with 4 jets, remaining_jets with 2 jets
+    # jet_indices -> [[0, 1, 2, 3, 4, 5], ...]
+    # hc_jet_indices -> [[0, 2, 3, 5], ...]
     jet_pair_combinations_indices = ak.argcombinations(
         jet_p4, 2, axis=1
     )  # [[(0, 1), (0, 2), (0, 3), (0, 4), (...), ..., (2, 5), (3, 4), (3, 5), (4, 5)], ...]
     top_candidate_indices = ak.cartesian(
-        [hc_indices, jet_pair_combinations_indices], axis=1
+        [hc_jet_indices, jet_pair_combinations_indices], axis=1
     )  # [[(0, (0, 1)), (0, (0, 2)), (0, (0, 3)), (0, (0, 4)), (0, (0, 5)), (0, (1, 2)), (0, (1, 3)), (0, (1, 4)), (0, (1, 5)), (0, (2, 3)), (0, (2, 4)), (0, (2, 5)), (0, (3, 4)), (0, (3, 5)), (0, (4, 5))], ...]
-    top_jet3, top_jet12 = ak.unzip(
+    top_jet3_indices, top_jet12_indices = ak.unzip(
         top_candidate_indices
     )  # [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...]], [[(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (1, 2), ...]]
-    top_jet1, top_jet2 = ak.unzip(
-        top_jet12
+    top_jet1_indices, top_jet2_indices = ak.unzip(
+        top_jet12_indices
     )  # [[0, 0, 0, 0, 0, 1, 1, 1, 1, 2, ...]], [[1, 2, 3, 4, 5, 2, 3, 4, 5, 3, ...]]
-    valid_top_candidate_mask = (top_jet3 != top_jet2) & (
-        top_jet3 != top_jet1
+    valid_top_candidate_mask = (top_jet3_indices != top_jet2_indices) & (
+        top_jet3_indices != top_jet1_indices
     )  # [[False, False, False, False, False, True, True, True, True, True, ...]]
-    top_jet1 = ak.mask(top_jet1, valid_top_candidate_mask)
-    top_jet2 = ak.mask(top_jet2, valid_top_candidate_mask)
-    top_jet3 = ak.mask(top_jet3, valid_top_candidate_mask)
-    W_candidates_p4 = jet_p4[top_jet2] + jet_p4[top_jet1]
-    t_candidates_p4 = jet_p4[top_jet2] + jet_p4[top_jet1] + jet_p4[top_jet3]
+    top_jet1_indices = top_jet1_indices[valid_top_candidate_mask]
+    top_jet2_indices = top_jet2_indices[valid_top_candidate_mask]
+    top_jet3_indices = top_jet3_indices[valid_top_candidate_mask]
+    W_candidates_p4 = jet_p4[top_jet1_indices] + jet_p4[top_jet2_indices]
+    top_candidates_p4 = (
+        jet_p4[top_jet1_indices] + jet_p4[top_jet2_indices] + jet_p4[top_jet3_indices]
+    )
     # calculate X_Wt discriminant
     X_Wt_discriminant = X_Wt(
         W_candidates_p4.m * inv_GeV,
-        t_candidates_p4.m * inv_GeV,
+        top_candidates_p4.m * inv_GeV,
     )
+    # select only the minimum X_Wt for each event
     X_Wt_discriminant = ak.min(X_Wt_discriminant, axis=1)
-    keep = X_Wt_discriminant > discriminant_cut
-    return events[keep], X_Wt_discriminant, keep
+    passed_top_veto_mask = X_Wt_discriminant > discriminant_cut
+    return events[passed_top_veto_mask], X_Wt_discriminant, passed_top_veto_mask
 
 
-def reconstruct_hh_mindeltarv2(events):
-    """Pair 4 leading b-jets by minimum deltaR.
-    Assumes b-jets are already sorted by jet pT and b-jets >= 4.
-
-    Returns:
-        2 p4 objects"""
-
-    jets = p4.zip(
-        {
-            "pt": events.jet_pt,
-            "eta": events.jet_eta,
-            "phi": events.jet_phi,
-            "mass": events.jet_m,
-        }
-    )
-    if len(jets) == 0:
-        return jets, jets
-    njets = 4
-    four_leading_bjets = jets[:, :njets]
-    # Calculate h1
-    h1_j1_one_hot = np.eye(njets)[ak.local_index(four_leading_bjets, axis=1)[:, 0]]
-    h1_j1_mask = h1_j1_one_hot == 1
-    h1_leading_jet = four_leading_bjets[h1_j1_mask]
-    deltar = four_leading_bjets[:, 1:].deltaR(h1_leading_jet)
-    # Add 1 to offset the first jet
-    h1_subleading_jet_index = ak.argmin(deltar, axis=1, keepdims=True) + 1
-    h1_j2_one_hot = np.eye(njets)[ak.flatten(h1_subleading_jet_index)]
-    h1_j2_mask = h1_j2_one_hot == 1
-    h1_subleading_jet = four_leading_bjets[h1_j2_mask]
-    h1 = h1_leading_jet + h1_subleading_jet
-    # Calculate h2
-    h2_j12_indices_mask = ~h1_j1_mask & ~h1_j2_mask
-    h2_j12 = four_leading_bjets[h2_j12_indices_mask.tolist()]
-    h2_j1, h2_j2 = h2_j12[:, 0], h2_j12[:, 1]
-    h2 = h2_j1 + h2_j2
-    return h1, h2
-
-
-def reconstruct_hh_mindeltar(events):
+def reconstruct_hh_mindeltar(events, signal=False):
     """Pair 4 leading b-jets by minimum deltaR.
     Assumes b-jets are already sorted by jet pT and b-jets >= 4.
 
@@ -412,26 +316,29 @@ def reconstruct_hh_mindeltar(events):
     leading_jet_indices, subleading_jet_indices = ak.unzip(jet_pairs)
     deltar = jet_p4[leading_jet_indices].deltaR(jet_p4[subleading_jet_indices])
     min_deltar = ak.argmin(deltar, axis=1, keepdims=True)
-    h1_leading_jet1_indices, h1_leading_jet2_indices = ak.unzip(jet_pairs[min_deltar])
-    h1_leading = ak.flatten(
-        jet_p4[h1_leading_jet1_indices] + jet_p4[h1_leading_jet2_indices]
+    leading_h_jet_indices = jet_pairs[min_deltar]
+    leading_h_jet1_indices, leading_h_jet2_indices = ak.unzip(leading_h_jet_indices)
+    leading_h_p4 = ak.flatten(
+        jet_p4[leading_h_jet1_indices] + jet_p4[leading_h_jet2_indices]
     )
-    # create one-hot mask for h1 leading jets
-    h1_leading_one_hot = ak.from_numpy(np.eye(4))[ak.flatten(h1_leading_jet1_indices)]
-    h1_leading_mask = h1_leading_one_hot == 1
-    # create one-hot mask for h1 subleading jets
-    h1_subleading_one_hot = ak.from_numpy(np.eye(4))[
-        ak.flatten(h1_leading_jet2_indices)
-    ]
-    h1_subleading_mask = h1_subleading_one_hot == 1
+    # create one-hot mask for h leading jets
+    leading_h_one_hot = ak.from_numpy(np.eye(4))[ak.flatten(leading_h_jet1_indices)]
+    leading_h_mask = leading_h_one_hot == 1
+    # create one-hot mask for h subleading jets
+    subleading_h_one_hot = ak.from_numpy(np.eye(4))[ak.flatten(leading_h_jet2_indices)]
+    subleading_h_mask = subleading_h_one_hot == 1
     # create one-hot mask for h2 jets
-    h2_mask = ~(h1_leading_mask | h1_subleading_mask)
-    h2_subleading_jet_indices = jet_indices[h2_mask]
-    h2_subleading = (
-        jet_p4[h2_subleading_jet_indices][:, 0]
-        + jet_p4[h2_subleading_jet_indices][:, 1]
+    subleading_h_mask = ~(leading_h_mask | subleading_h_mask)
+    subleading_h_jet_indices = jet_indices[subleading_h_mask]
+    subleading_h_p4 = (
+        jet_p4[subleading_h_jet_indices][:, 0] + jet_p4[subleading_h_jet_indices][:, 1]
     )
-    return h1_leading, h2_subleading
+    return (
+        leading_h_p4,
+        subleading_h_p4,
+        leading_h_jet_indices,
+        subleading_h_jet_indices,
+    )
 
 
 def select_hh_events(h1, h2, deltaeta_cut=None, mass_discriminant_cut=None):
@@ -459,3 +366,37 @@ def select_hh_events(h1, h2, deltaeta_cut=None, mass_discriminant_cut=None):
                 & (hh_high <= mass_discriminant_cut[1])
             )
     return h1[keep], h2[keep], hh_var, keep
+
+
+def select_correct_hh_pair_events(
+    events, leading_h_jet_indices, subleading_h_jet_indices, signal=False
+):
+    if not signal:
+        return events, ak.Array([])
+    jets_truth_matched_to_hh = events["jet_truth_H_parents"]
+    # leading_h_jet1_indices, leading_h_jet2_indices = ak.unzip(leading_h_jet_indices)
+    leading_h_jet1_indices = leading_h_jet_indices[
+        :, "0"
+    ]  # "0" because it's a record array
+    leading_h_jet2_indices = leading_h_jet_indices[
+        :, "1"
+    ]  # "1" because it's a record array
+    leading_h_jet1_truth_matched = jets_truth_matched_to_hh[leading_h_jet1_indices]
+    leading_h_jet2_truth_matched = jets_truth_matched_to_hh[leading_h_jet2_indices]
+    leading_h_jets_have_same_parent_mask = (
+        leading_h_jet1_truth_matched == leading_h_jet2_truth_matched
+    )
+    subleading_h_truth_matched = jets_truth_matched_to_hh[subleading_h_jet_indices]
+    subleading_h_jet1_truth_matched = subleading_h_truth_matched[:, 0]
+    subleading_h_jet2_truth_matched = subleading_h_truth_matched[:, 1]
+    subleading_h_jets_have_same_parent_mask = (
+        subleading_h_jet1_truth_matched == subleading_h_jet2_truth_matched
+    )
+    correct_hh_pairs_mask = (
+        leading_h_jets_have_same_parent_mask & subleading_h_jets_have_same_parent_mask
+    )
+    correct_hh_pairs_events = events[correct_hh_pairs_mask]
+    return (
+        correct_hh_pairs_events,
+        correct_hh_pairs_mask,
+    )

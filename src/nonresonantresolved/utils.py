@@ -44,7 +44,7 @@ def format_btagger_model_name(model, eff):
 
 nth = {1: "first", 2: "second", 3: "third", 4: "fourth"}
 
-kin_labels = {"pt": "$p_T$", "eta": "$\eta$", "phi": "$\phi$", "m": "$m$"}
+kin_labels = {"pt": r"$p_T$", "eta": r"$\eta$", "phi": r"$\phi$", "m": r"$m$"}
 
 GeV = 1_000
 

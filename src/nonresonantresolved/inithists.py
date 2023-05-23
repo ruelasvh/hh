@@ -1,15 +1,15 @@
-from collections import defaultdict
+from argparse import Namespace
 from .utils import kin_labels
 from .hist import Histogram, Histogramddv2
 from .triggers import run3_all as triggers_run3_all
 from shared.utils import logger
 
 
-def init_hists(inputs: dict, args: dict) -> dict:
+def init_hists(inputs: dict, args: Namespace) -> dict:
     """Initialize histograms for the different studies using the shape of inputs."""
 
     logger.info("Initializing hisotgrams")
-    hists_dict = defaultdict(lambda: defaultdict(int))
+    hists_dict = {}
     for sample_type in inputs.keys():
         hists_dict[sample_type] = []
         hists_dict[sample_type] += init_jet_kin_histograms()
@@ -23,9 +23,9 @@ def init_hists(inputs: dict, args: dict) -> dict:
         hists_dict[sample_type] += init_reco_hh_deltaeta_histograms()
         hists_dict[sample_type] += init_reco_top_veto_histograms()
         hists_dict[sample_type] += init_reco_hh_mass_discrim_histograms()
-        if args.signal:
-            hists_dict[sample_type] += init_reco_mH_truth_pairing_histograms()
-            hists_dict[sample_type] += init_truth_matched_mjj_histograms()
+        # if args.signal:
+        #     hists_dict[sample_type] += init_reco_mH_truth_pairing_histograms()
+        #     hists_dict[sample_type] += init_truth_matched_mjj_histograms()
 
     return hists_dict
 

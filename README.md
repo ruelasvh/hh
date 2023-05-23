@@ -24,16 +24,17 @@ For example, `config.json`
         "central_jets": {
             "min_pt": 40000,
             "max_eta": 2.5,
-            "min_nconstituents": 4
+            "min_count": 4
         },
         "btagging": {
             "model": "DL1dv00",
-            "efficiency": 0.7
+            "efficiency": 0.77,
+            "min_count": 4
         },
         "forward_jets": {
             "min_pt": 30000,
             "min_eta": 2.5,
-            "min_nconstituents": 6
+            "min_count": 6
         },
         "top_veto": {
             "ggF": {
@@ -47,9 +48,22 @@ For example, `config.json`
         },
         "hh_mass_veto": {
             "ggF": {
-                "max_value": 1.6
+                "signal": {
+                    "max_value": 1.6
+                },
+                "control": {
+                    "max_value": 45
+                }
             }
         }
     }
 }
+```
+
+The `input` paths need to be nested in a folder with the name of the project (e.g. `mc21_13p6TeV.hh4b.ggF`) and the sample name (e.g. `user.viruelas.HH4b.2023_04_21.601479.PhPy8EG_HH4b_cHHH01d0.e8472_s3873_r13829_p5631_TREE`) to be able to fetch metadata from AMI. So the full path to the input files would be `path/to/k01inputsdir/mc21_13p6TeV.hh4b.ggF/user.viruelas.HH4b.2023_04_21.601479.PhPy8EG_HH4b_cHHH01d0.e8472_s3873_r13829_p5631_TREE/`.
+
+The output will be an `h5` file. To make the actual plots, in the root directory of the project run:
+
+```bash
+hh4b_non_res_res_draw_plots hists.h5
 ```

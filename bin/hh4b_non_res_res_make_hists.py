@@ -14,9 +14,8 @@ from pathlib import Path
 from h5py import File
 
 # Package modules
-from src.nonresonantresolved.drawhists import draw_hists
 from src.nonresonantresolved.inithists import init_hists
-from src.nonresonantresolved.fillhists import fill_hists
+from src.nonresonantresolved.cutflow import cut_flow
 from src.nonresonantresolved.branches import get_branch_aliases
 from shared.utils import (
     logger,
@@ -67,17 +66,20 @@ def get_args():
 
 
 def main():
+    starttime = time.time()
+
     args = get_args()
     if args.loglevel:
         logger.setLevel(args.loglevel)
-    coloredlogs.install(level=logger.level, logger=logger)
+        coloredlogs.install(level=logger.level, logger=logger)
+
     with open(args.config) as cf:
         config = json.load(cf)
+
     hists = init_hists(config["inputs"], args)
-    if logger.level == logging.DEBUG:
-        starttime = time.time()
     branch_aliases = get_branch_aliases(args.signal)
     branch_names = branch_aliases.keys()
+
     for sample_name, sample_path in config["inputs"].items():
         datasetname_query = ""
         luminosity_weight = 1
@@ -108,8 +110,8 @@ def main():
                 luminosity_weight = get_luminosity_weight(metadata, sum_weights)
             logger.debug(f"Luminosity weight: {luminosity_weight}")
 
-            # fill the histograms with batch
-            fill_hists(
+            # select events and fill the histograms with batch
+            cut_flow(
                 events,
                 hists[sample_name],
                 luminosity_weight,
