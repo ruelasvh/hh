@@ -1,10 +1,20 @@
 {
-    "inputs": {
-        "ggF_k01": "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.hh4b.ggF/output/user.viruelas.HH4b.ggF.2022_12_15.601479.PhPy8EG_HH4b_cHHH01d0.e8472_s3873_r13829_p5440_TREE/",
-        "ggF_k10": "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.hh4b.ggF/output/user.viruelas.HH4b.ggF.2022_12_15.601480.PhPy8EG_HH4b_cHHH10d0.e8472_s3873_r13829_p5440_TREE/",
-        "dijets_JZ1_9": "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.HH4b.v2*.8011*.Py8EG_A14NNPDF23LO_jj_JZ[1-9]*.e8453_s3873_r13829_p5440_TREE/",
-        "ttbar_mc20a": "/lustre/fs24/group/atlas/dbattulga/ntup_SH_Feb2023/MC/user.dabattul.ntup_bkg_24022023.410471.PhPy8EG_A14_ttbar_hdamp258p75_allhad.e6337_s3681_r13167_p5511_TREE/"
-    },
+    "inputs": [
+        {
+            "logical_dataset_names": [
+                "mc21_13p6TeV.601479.PhPy8EG_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8472_s3873_r13829_p5631"
+            ],
+            "path": "/lustre/fs22/group/atlas/ruelasv/projects/plot-hh4b-analysis/src/nonresonantresolved/tests/test-data/analysis-variables-mc21-ggF-k01",
+            "label": "mc21_ggF_k01"
+        },
+        {
+            "logical_dataset_names": [
+                "mc21_13p6TeV.601480.PhPy8EG_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8472_s3873_r13829_p5631"
+            ],
+            "path": "/lustre/fs22/group/atlas/ruelasv/projects/plot-hh4b-analysis/src/nonresonantresolved/tests/test-data/analysis-variables-mc21-ggF-k10",
+            "label": "mc21_ggF_k10"
+        }
+    ],
     "event_selection": {
         "central_jets": {
             "min_pt": 40000,
@@ -12,7 +22,7 @@
             "min_count": 4
         },
         "btagging": {
-            "model": "DL1dv00",
+            "model": "DL1dv01",
             "efficiency": 0.77,
             "min_count": 4
         },

@@ -15,6 +15,7 @@ from .selection import (
     select_X_Wt_events,
     select_hh_events,
     select_correct_hh_pair_events,
+    sort_jets_by_pt,
 )
 from src.nonresonantresolved.branches import (
     get_jet_branch_alias_names,
@@ -33,8 +34,8 @@ from src.nonresonantresolved.fillhists import (
 def cut_flow(events, hists, luminosity_weight, config, args) -> None:
     """Fill histograms with data"""
 
-    # print("Jets with truth H parents decorations")
-    # events["jet_truth_H_parents"].show()
+    jet_vars = get_jet_branch_alias_names(ak.fields(events))
+    events = sort_jets_by_pt(events, jet_vars)
 
     logger.info("Filling histograms")
     logger.info("Initial Events: %s", len(events))
@@ -49,7 +50,6 @@ def cut_flow(events, hists, luminosity_weight, config, args) -> None:
     central_jets_selection = event_selection["central_jets"]
     baseline_events = select_n_jets_events(
         passed_trigs_or_events,
-        jet_vars=get_jet_branch_alias_names(args.signal),
         pt_cut=central_jets_selection["min_pt"],
         eta_cut=central_jets_selection["max_eta"],
         njets_cut=central_jets_selection["min_count"],
@@ -65,18 +65,13 @@ def cut_flow(events, hists, luminosity_weight, config, args) -> None:
     fill_leading_jets_histograms(baseline_events, hists)
 
     btagging_selection = event_selection["btagging"]
-    btagger_model_name = format_btagger_model_name(
-        btagging_selection["model"], btagging_selection["efficiency"]
-    )
     signal_events = select_n_bjets(
         baseline_events,
-        btag_cut="jet_btag_DL1dv01_77",
         nbjets_cut=4,
     )
     hc_jets, hc_jets_indices = select_hc_jets(
         signal_events,
-        jet_vars=get_jet_branch_alias_names(args.signal),
-        btag_cut=f"jet_btag_{btagger_model_name}",
+        jet_vars=jet_vars,
         nbjets_cut=btagging_selection["min_count"],
     )
     logger.info(
@@ -87,6 +82,31 @@ def cut_flow(events, hists, luminosity_weight, config, args) -> None:
 
     # logger.info("Events with >= 6 central or forward jets", len(events_with_central_or_forward_jets))
 
+    # calculate top veto discriminant
+    top_veto_selection = event_selection["top_veto"]["ggF"]
+    (
+        top_veto_pass_events,
+        top_veto_discrim,
+        top_veto_events_keep_mask,
+    ) = select_X_Wt_events(
+        signal_events,
+        hc_jets_indices,
+        discriminant_cut=top_veto_selection["min_value"],
+    )
+    fill_top_veto_histograms(
+        top_veto_discrim, hists=find_all_hists(hists, "top_veto_baseline")
+    )
+    logger.info(
+        "Events with top-veto discriminant > %s: %s",
+        top_veto_selection["min_value"],
+        len(top_veto_pass_events),
+    )
+
+    # calculate hh delta eta
+    hc_jets, hc_jets_indices = (
+        hc_jets[top_veto_events_keep_mask],
+        hc_jets_indices[top_veto_events_keep_mask],
+    )
     (
         h_leading,
         h_subleading,
@@ -131,41 +151,7 @@ def cut_flow(events, hists, luminosity_weight, config, args) -> None:
         hh_deltar, hists=find_all_hists(hists, "hh_deltaeta_baseline")
     )
 
-    # calculate top veto discriminant
-    top_veto_selection = event_selection["top_veto"]["ggF"]
-    hc_jets_with_hh_deltar_cut_indices = hc_jets_indices[
-        hh_events_deltaeta_cut_keep_mask
-    ]
-    events_with_hh_deltar_cut = signal_events[hh_events_deltaeta_cut_keep_mask]
-    (
-        top_veto_pass_events,
-        top_veto_discrim,
-        top_veto_events_keep_mask,
-    ) = select_X_Wt_events(
-        events_with_hh_deltar_cut,
-        hc_jets_with_hh_deltar_cut_indices,
-        discriminant_cut=top_veto_selection["min_value"],
-    )
-    fill_top_veto_histograms(
-        top_veto_discrim, hists=find_all_hists(hists, "top_veto_baseline")
-    )
-    logger.info(
-        "Events with top-veto discriminant > %s: %s",
-        top_veto_selection["min_value"],
-        len(top_veto_pass_events),
-    )
-
-    # calculate mass discriminant
-    h1_events_with_top_veto_cut = (
-        h1_events_with_deltaeta_cut
-        if len(h1_events_with_deltaeta_cut) == 0
-        else h1_events_with_deltaeta_cut[top_veto_events_keep_mask]
-    )
-    h2_events_with_top_veto_cut = (
-        h2_events_with_deltaeta_cut
-        if len(h2_events_with_deltaeta_cut) == 0
-        else h2_events_with_deltaeta_cut[top_veto_events_keep_mask]
-    )
+    # calculate mass discriminant for signal and control regions
     # signal region
     hh_mass_selection = event_selection["hh_mass_veto"]["ggF"]
     (
@@ -174,8 +160,8 @@ def cut_flow(events, hists, luminosity_weight, config, args) -> None:
         hh_mass_discrim,
         hh_events_keep_mask,
     ) = select_hh_events(
-        h1_events_with_top_veto_cut,
-        h2_events_with_top_veto_cut,
+        h1_events_with_deltaeta_cut,
+        h2_events_with_deltaeta_cut,
         mass_discriminant_cut=hh_mass_selection["signal"]["max_value"],
     )
     logger.info(
@@ -203,8 +189,8 @@ def cut_flow(events, hists, luminosity_weight, config, args) -> None:
         _,
         _,
     ) = select_hh_events(
-        h1_events_with_top_veto_cut,
-        h2_events_with_top_veto_cut,
+        h1_events_with_deltaeta_cut,
+        h2_events_with_deltaeta_cut,
         mass_discriminant_cut=(
             hh_mass_selection["signal"]["max_value"],
             hh_mass_selection["control"]["max_value"],

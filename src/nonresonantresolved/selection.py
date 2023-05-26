@@ -6,7 +6,6 @@ from src.nonresonantresolved.utils import inv_GeV
 
 def select_n_jets_events(
     events,
-    jet_vars=None,
     pt_cut=40_000,
     eta_cut=2.5,
     njets_cut=4,
@@ -15,11 +14,8 @@ def select_n_jets_events(
     The jet pT and eta column names should be the first and second
     items in jet_vars."""
 
-    if jet_vars is None:
-        return events
-    sorted_events = sort_jets_by_pt(events, jet_vars)
-    jet_pt = sorted_events[jet_vars[0]]
-    jet_eta = sorted_events[jet_vars[1]]
+    jet_pt = events.jet_pt
+    jet_eta = events.jet_eta
     if pt_cut and eta_cut:
         valid_events = (jet_pt > pt_cut) & (np.abs(jet_eta) < eta_cut)
     elif pt_cut and not eta_cut:
@@ -33,46 +29,20 @@ def select_n_jets_events(
     else:
         valid_events = ak.num(jet_pt) >= njets_cut
 
-    return sorted_events[valid_events]
+    return events[valid_events]
 
 
-def select_n_bjetsv0(events, jet_vars=None, btag_cut=None, nbjets_cut=4):
+def select_n_bjets(events, nbjets_cut):
     """Selects events by applying the cuts specified in the arguments.
     The jet pT and eta column names should be the first and second
     items in jet_vars. Assumes jets are already sorted by pT."""
 
-    if jet_vars is None or btag_cut is None:
-        return events
-
-    four_plus_btags = ak.sum(events[btag_cut], axis=1) >= nbjets_cut
-    events_with_four_plus_btags = events[four_plus_btags]
-    if len(events_with_four_plus_btags) == 0:
-        return events_with_four_plus_btags, events_with_four_plus_btags
-    btag_decisions = events_with_four_plus_btags[btag_cut] == 1
-    btag_indices = ak.local_index(btag_decisions)
-    leading_four_bjet_indices = btag_indices[btag_decisions][:, :nbjets_cut]
-    remaining_btag_indices = btag_indices[btag_decisions][:, nbjets_cut:]
-    remaining_jet_indices = ak.concatenate(
-        [btag_indices[~btag_decisions], remaining_btag_indices], axis=1
-    )
-    leading_four_bjets = events_with_four_plus_btags[jet_vars][
-        leading_four_bjet_indices
-    ]
-    remaining_jets = events_with_four_plus_btags[jet_vars][remaining_jet_indices]
-    return leading_four_bjets, remaining_jets
-
-
-def select_n_bjets(events, btag_cut, nbjets_cut):
-    """Selects events by applying the cuts specified in the arguments.
-    The jet pT and eta column names should be the first and second
-    items in jet_vars. Assumes jets are already sorted by pT."""
-
-    n_plus_btags = ak.sum(events[btag_cut], axis=1) >= nbjets_cut
+    n_plus_btags = ak.sum(events.jet_btag_default, axis=1) >= nbjets_cut
     events_with_n_plus_btags = events[n_plus_btags]
     return events_with_n_plus_btags
 
 
-def select_hc_jets(events, jet_vars=None, btag_cut=None, nbjets_cut=2):
+def select_hc_jets(events, jet_vars=None, nbjets_cut=2):
     """Selects events by applying the cuts specified in the arguments.
     The HH system is reconstructed from two Higgs candidates, which are
     themselves reconstructed from two jets each (four Higgs candidate jets in total).
@@ -84,13 +54,10 @@ def select_hc_jets(events, jet_vars=None, btag_cut=None, nbjets_cut=2):
     Returns the 4 Higgs candidate jets in each event.
     """
 
-    if jet_vars is None or btag_cut is None:
-        return events
-
     # btag_decisions is a boolean array of shape (n_events, n_jets)
-    btag_decisions = events[
-        btag_cut
-    ]  # [[1, 1, 1, 1], [0, 1, 1, 0], [0, 0, 1, 1, 1], ...]
+    btag_decisions = (
+        events.jet_btag_default
+    )  # [[1, 1, 1, 1], [0, 1, 1, 0], [0, 0, 1, 1, 1], ...]
     jet_indices = ak.local_index(
         btag_decisions
     )  # [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3, 4], ...]
@@ -121,14 +88,14 @@ def sort_jets_by_pt(events, jet_vars=None):
 
     if jet_vars is None:
         return events
-    sorted_index = ak.argsort(events[jet_vars[0]], ascending=False)
-    sorted_jets = events[
+    pt_sorted_jets_idx = ak.argsort(events.jet_pt, ascending=False)
+    pt_sorted_jets = events[
         jet_vars,
-        sorted_index,
+        pt_sorted_jets_idx,
     ]
-    for var in jet_vars:
-        sorted_events_by_jet_pt = ak.with_field(events, sorted_jets[var], var)
-    return sorted_events_by_jet_pt
+    for jet_var in jet_vars:
+        events = ak.with_field(events, pt_sorted_jets[jet_var], jet_var)
+    return events
 
 
 def X_HH(m_H1, m_H2):
@@ -239,6 +206,63 @@ def select_X_Wt_eventsv1(events, discriminant_cut=1.5):
     X_Wt_discriminant = ak.fill_none(X_Wt_discriminant, 9999.0)
     keep = X_Wt_discriminant > discriminant_cut
     return hc_jets[keep], remaining_jets[keep], X_Wt_discriminant, keep
+
+
+def select_X_Wt_events_nicole(events, idx, discriminant_cut=1.5):
+    """
+    Calculate the X_wt variable for the event.
+
+    Note: consistent w/ RR, only considers the HC jets (the first 4 jets in idx) for the
+    b-tagged b-jets in the top-candidate.
+
+    Input:
+    - jarr: awkward array of jet features
+    - ps: awkward array of 4-vectors for the jets
+    - idx: ordering for the jets (first 4 jets are the HC jets in the eveny)
+
+    Output:
+    - Xwt: The Xwt minimized over all of the valid 3-jet combinations
+    """
+
+    ps = p4.zip(
+        {
+            "pt": events.jet_pt,
+            "eta": events.jet_eta,
+            "phi": events.jet_phi,
+            "mass": events.jet_m,
+        }
+    )
+
+    btag = events.jet_btag_DL1dv01_77[idx]
+
+    bjet = ps[:, :4][btag[:, :4] == 1]
+    bidx = ak.Array([range(nb) for nb in ak.num(bjet)])
+    # bidx = idx
+
+    # # add a dim across the last entry
+    bjet = bjet[:, :, np.newaxis]
+    bidx = bidx[:, :, np.newaxis]
+
+    w_jet_pairs = ak.combinations(ps, 2)
+    w_idx_pairs = ak.argcombinations(ps, 2)
+
+    wjet1, wjet2 = ak.unzip(w_jet_pairs[:, np.newaxis, :])
+    widx1, widx2 = ak.unzip(w_idx_pairs[:, np.newaxis, :])
+
+    # Get the corresponding combinations
+
+    WC = wjet1 + wjet2
+    tC = bjet + WC
+
+    Xwt_combs = X_Wt(WC.mass * inv_GeV, tC.mass * inv_GeV)
+
+    # Set as "invalid" the entries where the b-jet overlaps w/ one of the w-jets
+    Xwt_mask = ak.where((bidx == widx1) | (bidx == widx2), np.inf, Xwt_combs)
+
+    # Minimize over the possible combinations
+    min_discrim = ak.min(ak.min(Xwt_mask, axis=-1), axis=-1)
+    keep = min_discrim > discriminant_cut
+    return events[keep], min_discrim, keep
 
 
 def select_X_Wt_events(events, hc_jet_indices, discriminant_cut=1.5):

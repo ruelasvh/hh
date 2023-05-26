@@ -1,4 +1,5 @@
-from .triggers import run3_all as triggers_run3_all
+from src.nonresonantresolved.triggers import run3_all as triggers_run3_all
+from src.nonresonantresolved.utils import format_btagger_model_name
 
 BASE_ALIASES = {
     "mc_event_weight": "mcEventWeights",
@@ -17,23 +18,6 @@ JET_ALIASES = {
 
 SIGNAL_ALIASES = {"jet_truth_H_parents": "recojet_antikt4_NOSYS_parentHiggsParentsMask"}
 
-# SIGNAL_ALIASES = {
-#     "H1_pt": "truth_H1_pt",
-#     "H1_eta": "truth_H1_eta",
-#     "H1_phi": "truth_H1_phi",
-#     "H1_m": "truth_H1_m",
-#     "H2_pt": "truth_H2_pt",
-#     "H2_eta": "truth_H2_eta",
-#     "H2_phi": "truth_H2_phi",
-#     "H2_m": "truth_H2_m",
-#     "reco_H1_truth_paired": "resolved_DL1dv01_FixedCutBEff_70_h1_closestTruthBsHaveSameInitialParticle",
-#     "reco_H2_truth_paired": "resolved_DL1dv01_FixedCutBEff_70_h2_closestTruthBsHaveSameInitialParticle",
-#     "resolved_truth_mached_jet_pt": "resolved_truthMatched_DL1dv01_FixedCutBEff_70_pt",
-#     "resolved_truth_mached_jet_eta": "resolved_truthMatched_DL1dv01_FixedCutBEff_70_eta",
-#     "resolved_truth_mached_jet_phi": "resolved_truthMatched_DL1dv01_FixedCutBEff_70_phi",
-#     "resolved_truth_mached_jet_m": "resolved_truthMatched_DL1dv01_FixedCutBEff_70_m",
-# }
-
 
 def get_branch_aliases(signal=False):
     aliases = {**BASE_ALIASES}
@@ -43,7 +27,15 @@ def get_branch_aliases(signal=False):
     return aliases
 
 
-def get_jet_branch_alias_names(signal=False):
-    alias_names = get_branch_aliases(signal).keys()
-    jet_alias_names = list(filter(lambda alias: "jet_" in alias, alias_names))
+def get_jet_branch_alias_names(aliases):
+    jet_alias_names = list(filter(lambda alias: "jet_" in alias, aliases))
     return jet_alias_names
+
+
+def add_default_branches_from_config(branch_aliases, config):
+    btagging = config["btagging"]
+    btagger = format_btagger_model_name(btagging["model"], btagging["efficiency"])
+    branch_names = list(branch_aliases.keys())
+    btag_branch = [branch for branch in branch_names if btagger in branch][0]
+    branch_aliases["jet_btag_default"] = branch_aliases[btag_branch]
+    return branch_aliases

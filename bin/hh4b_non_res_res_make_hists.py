@@ -16,7 +16,10 @@ from h5py import File
 # Package modules
 from src.nonresonantresolved.inithists import init_hists
 from src.nonresonantresolved.cutflow import cut_flow
-from src.nonresonantresolved.branches import get_branch_aliases
+from src.nonresonantresolved.branches import (
+    get_branch_aliases,
+    add_default_branches_from_config,
+)
 from shared.utils import (
     logger,
     concatenate_cutbookkeepers,
@@ -78,14 +81,17 @@ def main():
 
     hists = init_hists(config["inputs"], args)
     branch_aliases = get_branch_aliases(args.signal)
-    branch_names = branch_aliases.keys()
+    branch_aliases = add_default_branches_from_config(
+        branch_aliases, config["event_selection"]
+    )
 
-    for sample_name, sample_path in config["inputs"].items():
+    for input in config["inputs"]:
+        sample_label, sample_path = input["label"], input["path"]
         datasetname_query = ""
         luminosity_weight = 1
         for events, report in uproot.iterate(
             f"{sample_path}*.root:AnalysisMiniTree",
-            branch_names,
+            expressions=branch_aliases.keys(),
             aliases=branch_aliases,
             step_size="1 GB",
             report=True,
@@ -98,7 +104,7 @@ def main():
 
             current_datasetname_query = get_datasetname_query(report.file_path)
             sample_is_data = (
-                "data" in sample_name or "data" in current_datasetname_query
+                "data" in sample_label or "data" in current_datasetname_query
             )
             if current_datasetname_query != datasetname_query and not sample_is_data:
                 datasetname_query = current_datasetname_query
@@ -113,7 +119,7 @@ def main():
             # select events and fill the histograms with batch
             cut_flow(
                 events,
-                hists[sample_name],
+                hists[sample_label],
                 luminosity_weight,
                 config,
                 args,
