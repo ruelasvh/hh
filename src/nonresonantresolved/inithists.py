@@ -10,7 +10,8 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
 
     logger.info("Initializing hisotgrams")
     hists_dict = {}
-    for sample_type in inputs.keys():
+    for sample in inputs:
+        sample_type = sample["label"]
         hists_dict[sample_type] = []
         hists_dict[sample_type] += init_jet_kin_histograms()
         hists_dict[sample_type] += init_leading_jets_histograms()
@@ -150,7 +151,7 @@ def init_reco_mH_2d_histograms(binrange=[0, 200_000], bins=50, postfix=None) -> 
     return hists
 
 
-def init_reco_hh_deltaeta_histograms(binrange=[0, 5], bins=200) -> list:
+def init_reco_hh_deltaeta_histograms(binrange=[0, 5], bins=50) -> list:
     """Initialize reconstructed hh deltaEta 1d histograms"""
 
     hists = []
@@ -165,7 +166,7 @@ def init_reco_hh_deltaeta_histograms(binrange=[0, 5], bins=200) -> list:
     return hists
 
 
-def init_reco_hh_mass_discrim_histograms(binrange=[0, 5], bins=200) -> list:
+def init_reco_hh_mass_discrim_histograms(binrange=[0, 10], bins=21) -> list:
     """Initialize reconstructed hh mass discriminant 1d histograms"""
 
     hists = []
@@ -180,7 +181,7 @@ def init_reco_hh_mass_discrim_histograms(binrange=[0, 5], bins=200) -> list:
     return hists
 
 
-def init_reco_top_veto_histograms(binrange=[0, 7.5], bins=200) -> list:
+def init_reco_top_veto_histograms(binrange=[0, 7.5], bins=75) -> list:
     """Initialize top veto 1d histograms"""
 
     hists = []

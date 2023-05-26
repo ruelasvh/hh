@@ -32,15 +32,16 @@ def draw_hists(hists_group) -> None:
         hist_prefix="hh_deltaeta_baseline",
         xlabel="$\Delta\eta_{HH}$",
         ylabel="Events",
-        label=", no $\mathrm{X}_{\mathrm{Wt}}$ cut",
+        ynorm_binwidth=True,
         xcut=1.5,
+        label=", no $\mathrm{X}_{\mathrm{Wt}}$ cut",
     )
     draw_1d_hists(
         hists_group,
         hist_prefix="top_veto_baseline",
         xlabel="$\mathrm{X}_{\mathrm{Wt}}$",
-        ylabel="Events / 0.1",
-        ynorm=0.1,
+        ylabel="Events",
+        ynorm_binwidth=True,
         xcut=1.5,
     )
     draw_1d_hists(
@@ -48,6 +49,7 @@ def draw_hists(hists_group) -> None:
         hist_prefix="hh_mass_discrim_baseline",
         xlabel="$\mathrm{X}_{\mathrm{HH}}$",
         ylabel="Events",
+        ynorm_binwidth=True,
         xcut=1.6,
     )
     for sample_type, sample_hists in hists_group.items():
@@ -96,7 +98,8 @@ def draw_1d_hists(
     ylabel="Frequency",
     label=None,
     yscale="linear",
-    ynorm=1.0,
+    ynorm_unity=False,
+    ynorm_binwidth=False,
     xcut=None,
 ):
     """Draw 1D histograms in one figure. The number of histograms in the figure is
@@ -104,12 +107,16 @@ def draw_1d_hists(
     is used to select the histograms to be drawn."""
 
     fig, ax = plt.subplots()
+    bin_width = 1
     for sample_type, sample_hists in hists_group.items():
         hist_name = find_hist(sample_hists, lambda h: hist_prefix in h)
         hist = sample_hists[hist_name]
+        hist_values = hist["values"][:]
+        hist_edges = hist["edges"][:]
+        bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else bin_width
         hplt.histplot(
-            hist["values"][:] * ynorm,
-            hist["edges"][:],
+            hist_values * bin_width,
+            hist_edges,
             ax=ax,
             label=sample_type,
             linewidth=2.0,
@@ -119,7 +126,7 @@ def draw_1d_hists(
         ax.axvline(x=xcut, ymax=0.6, color="purple")
     if xlabel:
         ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_ylabel(ylabel + " / %.2g" % bin_width if ynorm_binwidth else ylabel)
     ax.set_yscale(yscale)
     ymin, ymax = ax.get_ylim()
     ax.set_ylim(ymin=ymin, ymax=ymax * 1.5)
