@@ -21,6 +21,7 @@ setup(
         "pyAMI-core==5.1.2",
         "pyAMI_atlas==5.1.0.1",
         "coloredlogs>=15.0.1",
+        "h5py>=3.8.0",
     ],
     entry_points={
         "console_scripts": [
