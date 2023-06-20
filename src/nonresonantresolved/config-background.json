@@ -1,0 +1,80 @@
+{
+    "inputs": [
+        {
+            "logical_dataset_names": [
+                "mc21_13p6TeV.601479.PhPy8EG_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8472_s3873_r13829_p5631"
+            ],
+            "path": "/lustre/fs22/group/atlas/ruelasv/projects/plot-hh4b-analysis/src/nonresonantresolved/tests/test-data/analysis-variables-mc21-ggF-k01",
+            "label": "mc21_ggF_k01"
+        },
+        {
+            "logical_dataset_names": [
+                "mc21_13p6TeV.601480.PhPy8EG_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8472_s3873_r13829_p5631"
+            ],
+            "path": "/lustre/fs22/group/atlas/ruelasv/projects/plot-hh4b-analysis/src/nonresonantresolved/tests/test-data/analysis-variables-mc21-ggF-k10",
+            "label": "mc21_ggF_k10"
+        }
+    ],
+    "event_selection": {
+        "central_jets": {
+            "pt": {
+                "operator": ">",
+                "value": 40000
+            },
+            "eta": {
+                "operator": "<",
+                "value": 2.5
+            },
+            "count": {
+                "operator": ">=",
+                "value": 4
+            }
+        },
+        "btagging": {
+            "model": "DL1dv01",
+            "efficiency": 0.77,
+            "count": {
+                "operator": "==",
+                "value": 2
+            }
+        },
+        "forward_jets": {
+            "pt": {
+                "operator": ">",
+                "value": 30000
+            },
+            "eta": {
+                "operator": ">",
+                "value": 2.5
+            },
+            "count": {
+                "operator": ">=",
+                "value": 6
+            }
+        },
+        "top_veto": {
+            "operator": ">",
+            "value": 1.5
+        },
+        "hh_deltaeta_veto": {
+            "operator": "<",
+            "value": 1.5
+        },
+        "hh_mass_veto": {
+            "signal": {
+                "operator": "<",
+                "value": 1.6
+            },
+            "control": {
+                "inner_boundry": {
+                    "operator": "==",
+                    "value": 1.5
+                },
+                "outer_boundry": {
+                    "operator": "==",
+                    "value": 45
+                }
+            }
+        }
+    }
+}

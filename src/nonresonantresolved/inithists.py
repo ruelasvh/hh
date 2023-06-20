@@ -192,6 +192,7 @@ def init_reco_top_veto_histograms(binrange=[0, 7.5], bins=75) -> list:
             bins=bins,
         )
     ]
+    hists += [Histogram("top_veto_n_btags", binrange=[0, 7], bins=8)]
 
     return hists
 

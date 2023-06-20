@@ -1,9 +1,10 @@
 import awkward as ak
+import pandas as pd
 from shared.utils import logger
 from .triggers import run3_all as triggers_run3_all
 from .utils import (
     find_hist,
-    find_all_hists,
+    find_hists_by_name,
     format_btagger_model_name,
     get_all_trigs_or,
 )
@@ -31,7 +32,7 @@ from src.nonresonantresolved.fillhists import (
 )
 
 
-def cut_flow(events, hists, luminosity_weight, config, args) -> None:
+def cut_flow(events: pd.DataFrame, hists, luminosity_weight, config, args) -> None:
     """Fill histograms with data"""
 
     jet_vars = get_jet_branch_alias_names(ak.fields(events))
@@ -93,8 +94,15 @@ def cut_flow(events, hists, luminosity_weight, config, args) -> None:
         hc_jets_indices,
         discriminant_cut=top_veto_selection["min_value"],
     )
+    weights = (
+        luminosity_weight
+        * signal_events["mc_event_weight"][:, 0]
+        * signal_events["pileup_weight"]
+    )
     fill_top_veto_histograms(
-        top_veto_discrim, hists=find_all_hists(hists, "top_veto_baseline")
+        top_veto_discrim,
+        hists=find_hists_by_name(hists, "top_veto_baseline"),
+        weights=weights,
     )
     logger.info(
         "Events with top-veto discriminant > %s: %s",
@@ -117,7 +125,7 @@ def cut_flow(events, hists, luminosity_weight, config, args) -> None:
     fill_reco_mH_histograms(
         mh1=h_leading.m,
         mh2=h_subleading.m,
-        hists=find_all_hists(hists, "mH[12]_baseline"),
+        hists=find_hists_by_name(hists, "mH[12]_baseline"),
     )
     fill_reco_mH_2d_histograms(
         mh1=h_leading.m,
@@ -148,7 +156,7 @@ def cut_flow(events, hists, luminosity_weight, config, args) -> None:
         len(h1_events_with_deltaeta_cut),
     )
     fill_hh_deltaeta_histograms(
-        hh_deltar, hists=find_all_hists(hists, "hh_deltaeta_baseline")
+        hh_deltar, hists=find_hists_by_name(hists, "hh_deltaeta_baseline")
     )
 
     # calculate mass discriminant for signal and control regions
@@ -170,12 +178,12 @@ def cut_flow(events, hists, luminosity_weight, config, args) -> None:
         len(h1_events_with_mass_discrim_cut),
     )
     fill_hh_mass_discrim_histograms(
-        hh_mass_discrim, hists=find_all_hists(hists, "hh_mass_discrim_baseline")
+        hh_mass_discrim, hists=find_hists_by_name(hists, "hh_mass_discrim_baseline")
     )
     fill_reco_mH_histograms(
         mh1=h1_events_with_mass_discrim_cut.m,
         mh2=h2_events_with_mass_discrim_cut.m,
-        hists=find_all_hists(hists, "mH[12]_baseline_signal_region"),
+        hists=find_hists_by_name(hists, "mH[12]_baseline_signal_region"),
     )
     fill_reco_mH_2d_histograms(
         mh1=h1_events_with_mass_discrim_cut.m,
@@ -203,7 +211,7 @@ def cut_flow(events, hists, luminosity_weight, config, args) -> None:
     fill_reco_mH_histograms(
         mh1=h1_events_control_region.m,
         mh2=h2_events_control_region.m,
-        hists=find_all_hists(hists, "mH[12]_baseline_control_region"),
+        hists=find_hists_by_name(hists, "mH[12]_baseline_control_region"),
     )
     fill_reco_mH_2d_histograms(
         mh1=h1_events_control_region.m,

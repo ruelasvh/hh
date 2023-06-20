@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import mplhep as hep
-from .utils import find_hist, find_all_hists, inv_GeV, nth, kin_labels
+from shared.utils import logger
+from .utils import find_hist, find_hists_by_name, inv_GeV, nth, kin_labels
 from .selection import X_HH, R_CR
 from .error import get_efficiency_with_uncertainties
-from shared.utils import logger
 
 plt.style.use(hep.style.ATLAS)
 
@@ -33,7 +33,7 @@ def draw_hists(hists: list, inputs: dict, args: dict) -> None:
             sample_name=sample_type + "_baseline",
         )
         draw_mH_1D_hists(
-            find_all_hists(hists[sample_type], "mH[12]_baseline"),
+            find_hists_by_name(hists[sample_type], "mH[12]_baseline"),
             sample_name=sample_type + "_baseline",
         )
 
@@ -49,10 +49,10 @@ def draw_hists(hists: list, inputs: dict, args: dict) -> None:
 #         sample_name=sample_name + "_baseline",
 #     )
 #     draw_mH_1D_hists(
-#         find_all_hists(hists, "mH[12]_baseline"), sample_name + "_baseline"
+#         find_hists_by_name(hists, "mH[12]_baseline"), sample_name + "_baseline"
 #     )
 #     draw_hh_deltaeta_hists(
-#         hists=find_all_hists(hists, "hh_deltaeta_baseline"),
+#         hists=find_hists_by_name(hists, "hh_deltaeta_baseline"),
 #         sample_name=sample_name + "_baseline",
 #     )
 #     if args.signal:

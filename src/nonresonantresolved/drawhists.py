@@ -2,26 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mplhep as hplt
 import re
-from .utils import find_hist, find_all_hists, inv_GeV, nth, kin_labels
+from .utils import find_hist, find_hists, inv_GeV, nth, kin_labels
 from .selection import X_HH, R_CR
 from shared.utils import logger
 
 plt.style.use(hplt.style.ATLAS)
-
-
-def find_hists(
-    iteratable,
-    pred=None,
-):
-    """Returns the found values in the iterable given pred.
-
-    If no true value is found, returns *default*
-
-    If *pred* is not None, returns the first item
-    for which pred(item) is true.
-
-    """
-    return list(filter(pred, iteratable))
 
 
 def draw_hists(hists_group) -> None:
@@ -43,6 +28,12 @@ def draw_hists(hists_group) -> None:
         ylabel="Events",
         ynorm_binwidth=True,
         xcut=1.5,
+    )
+    draw_1d_hists(
+        hists_group,
+        hist_prefix="top_veto_n_btags",
+        xlabel="$\mathrm{X}_{\mathrm{Wt}}$ btags",
+        ylabel="Events",
     )
     draw_1d_hists(
         hists_group={key: value for key, value in hists_group.items() if "ggF" in key},

@@ -15,10 +15,8 @@ from h5py import File
 
 # Package modules
 from src.nonresonantresolved.inithists import init_hists
-from src.nonresonantresolved.cutflow import cut_flow
 from src.nonresonantresolved.branches import (
     get_branch_aliases,
-    add_default_branches_from_config,
 )
 from shared.utils import (
     logger,
@@ -28,6 +26,10 @@ from shared.utils import (
     write_hists,
 )
 from shared.api import get_metadata
+from src.nonresonantresolved.process_batches import (
+    extract_and_append_analysis_regions_info,
+)
+from src.nonresonantresolved.fillhistsv2 import fill_analysis_regions_histograms
 
 np.seterr(divide="ignore", invalid="ignore")
 
@@ -42,12 +44,6 @@ def get_args():
         type=Path,
         default=Path("hists.h5"),
         **defaults,
-    )
-    parser.add_argument(
-        "-s",
-        "--signal",
-        action="store_true",
-        help="sample is signal, process truth info",
     )
     parser.add_argument(
         "-d",
@@ -80,49 +76,51 @@ def main():
         config = json.load(cf)
 
     hists = init_hists(config["inputs"], args)
-    branch_aliases = get_branch_aliases(args.signal)
-    branch_aliases = add_default_branches_from_config(
-        branch_aliases, config["event_selection"]
-    )
-
     for input in config["inputs"]:
         sample_label, sample_path = input["label"], input["path"]
-        datasetname_query = ""
+        is_mc = "data" not in sample_label
+        branch_aliases = get_branch_aliases(is_mc)
         luminosity_weight = 1
-        for events, report in uproot.iterate(
+        datasetname_query = ""
+        for batch_events, batch_report in uproot.iterate(
             f"{sample_path}*.root:AnalysisMiniTree",
             expressions=branch_aliases.keys(),
             aliases=branch_aliases,
             step_size="1 GB",
             report=True,
+            library="pd",
         ):
-            logger.info(f"Batch: {report}")
+            logger.info(f"batch_events: {batch_report}")
 
             if logger.level == logging.DEBUG:
                 logger.debug("Columns: /n")
-                events.type.show()
+                batch_events.type.show()
 
-            current_datasetname_query = get_datasetname_query(report.file_path)
+            current_datasetname_query = get_datasetname_query(batch_report.file_path)
             sample_is_data = (
                 "data" in sample_label or "data" in current_datasetname_query
             )
             if current_datasetname_query != datasetname_query and not sample_is_data:
                 datasetname_query = current_datasetname_query
                 _, sum_weights, _ = concatenate_cutbookkeepers(
-                    sample_path, report.file_path
+                    sample_path, batch_report.file_path
                 )
                 metadata = get_metadata(datasetname_query)
                 logger.debug(f"Metadata: {metadata}")
                 luminosity_weight = get_luminosity_weight(metadata, sum_weights)
             logger.debug(f"Luminosity weight: {luminosity_weight}")
 
-            # select events and fill the histograms with batch
-            cut_flow(
-                events,
-                hists[sample_label],
+            # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
+            processed_batch_events = extract_and_append_analysis_regions_info(
+                batch_events,
                 luminosity_weight,
                 config,
-                args,
+                is_mc,
+            )
+            fill_analysis_regions_histograms(
+                processed_batch_events,
+                hists[sample_label],
+                luminosity_weight,
             )
 
     if logger.level == logging.DEBUG:

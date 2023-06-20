@@ -2,6 +2,21 @@ import re
 from functools import reduce
 
 
+def find_hists(
+    iteratable,
+    pred=None,
+):
+    """Returns the found values in the iterable given pred.
+
+    If no true value is found, returns *default*
+
+    If *pred* is not None, returns the first item
+    for which pred(item) is true.
+
+    """
+    return list(filter(pred, iteratable))
+
+
 def find_hist(
     iteratable,
     pred=None,
@@ -18,7 +33,7 @@ def find_hist(
     return next(filter(pred, iteratable), default)
 
 
-def find_all_hists(hists, delimeter):
+def find_hists_by_name(hists, delimeter):
     """Returns the list of hists that match the delimeter"""
     prog = re.compile(delimeter + "$")
     return list(filter(lambda h: prog.match(h.name), hists))

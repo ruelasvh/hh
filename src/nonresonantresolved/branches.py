@@ -2,7 +2,7 @@ from src.nonresonantresolved.triggers import run3_all as triggers_run3_all
 from src.nonresonantresolved.utils import format_btagger_model_name
 
 BASE_ALIASES = {
-    "mc_event_weight": "mcEventWeights",
+    "mc_event_weights": "mcEventWeights",
     "pileup_weight": "PileupWeight_NOSYS",
     **{trig: f"trigPassed_{trig}" for trig in triggers_run3_all},
 }
@@ -12,6 +12,7 @@ JET_ALIASES = {
     "jet_eta": "recojet_antikt4_NOSYS_eta",
     "jet_phi": "recojet_antikt4_NOSYS_phi",
     "jet_m": "recojet_antikt4_NOSYS_m",
+    "jet_NNJvt": "recojet_antikt4_NOSYS_NNJvt",
     "jet_btag_DL1dv01_70": "recojet_antikt4_NOSYS_ftag_select_DL1dv01_FixedCutBEff_70",
     "jet_btag_DL1dv01_77": "recojet_antikt4_NOSYS_ftag_select_DL1dv01_FixedCutBEff_77",
 }
@@ -19,10 +20,10 @@ JET_ALIASES = {
 SIGNAL_ALIASES = {"jet_truth_H_parents": "recojet_antikt4_NOSYS_parentHiggsParentsMask"}
 
 
-def get_branch_aliases(signal=False):
+def get_branch_aliases(is_mc=False):
     aliases = {**BASE_ALIASES}
     aliases |= JET_ALIASES
-    if signal:
+    if is_mc:
         aliases |= SIGNAL_ALIASES
     return aliases
 

@@ -2,6 +2,7 @@ import uproot
 import glob
 import re
 import logging
+import operator
 
 
 logger = logging.getLogger("plot-hh4b-analysis")
@@ -66,3 +67,14 @@ def write_hists(group, output):
         sample_out.attrs["type"] = "sample_type"
         for hist in sample_hists:
             hist.write(sample_out, hist.name)
+
+
+def get_op(op):
+    return {
+        ">": operator.gt,
+        "<": operator.lt,
+        ">=": operator.ge,
+        "<=": operator.le,
+        "==": operator.eq,
+        "!=": operator.ne,
+    }[op]
