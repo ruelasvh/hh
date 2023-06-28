@@ -3,9 +3,19 @@ import glob
 import re
 import logging
 import operator
+from functools import reduce
+import pandas as pd
 
 
 logger = logging.getLogger("plot-hh4b-analysis")
+
+nth = {1: "first", 2: "second", 3: "third", 4: "fourth"}
+
+kin_labels = {"pt": r"$p_T$", "eta": r"$\eta$", "phi": r"$\phi$", "mass": r"$m$"}
+
+GeV = 1_000
+
+inv_GeV = 1 / GeV
 
 
 def concatenate_cutbookkeepers(files, file_delimeter=None):
@@ -13,7 +23,11 @@ def concatenate_cutbookkeepers(files, file_delimeter=None):
         _files = files
     else:
         _dirs = glob.glob(files)
-        _dir = list(filter(lambda _dir: _dir in file_delimeter, _dirs))[0]
+        _dir = (
+            files
+            if not _dirs
+            else list(filter(lambda _dir: _dir in file_delimeter, _dirs))[0]
+        )
         _files = glob.glob(f"{_dir}/*.root")
 
     cutbookkeepers = {}
@@ -78,3 +92,58 @@ def get_op(op):
         "==": operator.eq,
         "!=": operator.ne,
     }[op]
+
+
+def find_hists(
+    iteratable,
+    pred=None,
+):
+    """Returns the found values in the iterable given pred.
+
+    If no true value is found, returns *default*
+
+    If *pred* is not None, returns the first item
+    for which pred(item) is true.
+
+    """
+    return list(filter(pred, iteratable))
+
+
+def find_hist(
+    iteratable,
+    pred=None,
+    default=False,
+):
+    """Returns the first true value in the iterable.
+
+    If no true value is found, returns *default*
+
+    If *pred* is not None, returns the first item
+    for which pred(item) is true.
+
+    """
+    return next(filter(pred, iteratable), default)
+
+
+def find_hists_by_name(hists, delimeter):
+    """Returns the list of hists that match the delimeter"""
+    prog = re.compile(delimeter + "$")
+    return list(filter(lambda h: prog.match(h.name), hists))
+
+
+def get_all_trigs_or(events, trigs, skip_trig=None):
+    """Returns the OR decision of all trigs except skip_trig"""
+    trigs = list(filter(lambda trig: trig != skip_trig, trigs))
+    return reduce(
+        lambda acc, it: acc | events[it],
+        trigs,
+        events[trigs[0]],
+    )
+
+
+def format_btagger_model_name(model, eff):
+    # concatenate model and eff, e.g. "DL1dv00_77". eff could be a float or int
+    if isinstance(eff, float):
+        return f"{model}_{eff*100:.0f}"
+    else:
+        return f"{model}_{eff}"

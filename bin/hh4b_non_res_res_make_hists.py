@@ -26,12 +26,13 @@ from shared.utils import (
     write_hists,
 )
 from shared.api import get_metadata
-from src.nonresonantresolved.process_batches import (
-    extract_and_append_analysis_regions_info,
+from nonresonantresolved.processbatches import (
+    process_batch,
 )
-from src.nonresonantresolved.fillhistsv2 import fill_analysis_regions_histograms
+from nonresonantresolved.fillhists import fill_hists
 
-np.seterr(divide="ignore", invalid="ignore")
+from src.baseline.analysis import pairAndProcess
+from src.baseline.fillhists import fillhists
 
 
 def get_args():
@@ -76,8 +77,30 @@ def main():
         config = json.load(cf)
 
     hists = init_hists(config["inputs"], args)
+    # ###
+    # # Baseline implementation
+    # ###
+    # for input in config["inputs"]:
+    #     print(input)
+    #     sample_label, sample_path = input["label"], input["path"]
+    #     df = pairAndProcess(
+    #         sample_path + ".root",
+    #         ntag=4,
+    #         tagger="DL1d",
+    #         pairing="min_dR",
+    #         physicsSample=sample_label,
+    #         year=2016,
+    #     )
+    #     # fillhists(df, hists[sample_label])
+
+    ###
+    # New implementation
+    ###
     for input in config["inputs"]:
-        sample_label, sample_path = input["label"], input["path"]
+        sample_label, sample_path = (
+            input["label"],
+            input["path"],
+        )
         is_mc = "data" not in sample_label
         branch_aliases = get_branch_aliases(is_mc)
         luminosity_weight = 1
@@ -88,9 +111,8 @@ def main():
             aliases=branch_aliases,
             step_size="1 GB",
             report=True,
-            library="pd",
         ):
-            logger.info(f"batch_events: {batch_report}")
+            logger.info(f"Processing batch: {batch_report}")
 
             if logger.level == logging.DEBUG:
                 logger.debug("Columns: /n")
@@ -111,13 +133,12 @@ def main():
             logger.debug(f"Luminosity weight: {luminosity_weight}")
 
             # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
-            processed_batch_events = extract_and_append_analysis_regions_info(
+            processed_batch_events = process_batch(
                 batch_events,
-                luminosity_weight,
                 config,
                 is_mc,
             )
-            fill_analysis_regions_histograms(
+            fill_hists(
                 processed_batch_events,
                 hists[sample_label],
                 luminosity_weight,

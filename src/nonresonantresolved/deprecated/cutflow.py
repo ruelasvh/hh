@@ -1,14 +1,14 @@
 import awkward as ak
 import pandas as pd
 from shared.utils import logger
-from .triggers import run3_all as triggers_run3_all
-from .utils import (
+from ..triggers import run3_all as triggers_run3_all
+from ..utils import (
     find_hist,
     find_hists_by_name,
     format_btagger_model_name,
     get_all_trigs_or,
 )
-from .selection import (
+from ..selection import (
     select_n_jets_events,
     select_n_bjets,
     select_hc_jets,
@@ -21,7 +21,7 @@ from .selection import (
 from src.nonresonantresolved.branches import (
     get_jet_branch_alias_names,
 )
-from src.nonresonantresolved.fillhists import (
+from nonresonantresolved.deprecated.fillhists import (
     fill_jet_kin_histograms,
     fill_leading_jets_histograms,
     fill_reco_mH_histograms,

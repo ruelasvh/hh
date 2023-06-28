@@ -1,5 +1,5 @@
 from src.nonresonantresolved.triggers import run3_all as triggers_run3_all
-from src.nonresonantresolved.utils import format_btagger_model_name
+from shared.utils import format_btagger_model_name
 
 BASE_ALIASES = {
     "mc_event_weights": "mcEventWeights",
@@ -11,8 +11,9 @@ JET_ALIASES = {
     "jet_pt": "recojet_antikt4_NOSYS_pt",
     "jet_eta": "recojet_antikt4_NOSYS_eta",
     "jet_phi": "recojet_antikt4_NOSYS_phi",
-    "jet_m": "recojet_antikt4_NOSYS_m",
+    "jet_mass": "recojet_antikt4_NOSYS_m",
     "jet_NNJvt": "recojet_antikt4_NOSYS_NNJvt",
+    "jet_jvttag": "recojet_antikt4_NOSYS_NNJvtPass",
     "jet_btag_DL1dv01_70": "recojet_antikt4_NOSYS_ftag_select_DL1dv01_FixedCutBEff_70",
     "jet_btag_DL1dv01_77": "recojet_antikt4_NOSYS_ftag_select_DL1dv01_FixedCutBEff_77",
 }

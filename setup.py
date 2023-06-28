@@ -11,7 +11,7 @@ setup(
     package_dir={"": "src"},
     python_requires=">=3.7",
     install_requires=[
-        "awkward>=2.0.4",
+        "awkward>=2.2.4",
         "matplotlib>=3.6.2",
         "mplhep>=0.3.26",
         "numpy>=1.24.0",

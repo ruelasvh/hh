@@ -1,101 +1,28 @@
 import numpy as np
 import vector as p4
 import awkward as ak
-import pandas as pd
 from shared.utils import logger
-from .triggers import run3_all as triggers_run3_all
-from .utils import (
+from ..triggers import run3_all as triggers_run3_all
+from ..utils import (
     find_hist,
-    find_hists,
     find_hists_by_name,
     kin_labels,
 )
-from .selection import (
+from ..selection import (
     select_n_jets_events,
 )
 
 
-def fill_analysis_regions_histograms(
-    events: pd.DataFrame, hists: list, lumi_weight: float
-) -> None:
-    """Fill histograms for analysis regions"""
-    fill_jet_kin_histograms(events, hists, lumi_weight)
-    events_with_hc_jets = events.loc[
-        events.passed_triggers & events.with_n_central_bjets
-    ]
-    fill_top_veto_histograms(
-        events_with_hc_jets,
-        hists=find_hists(hists, lambda h: "top_veto" in h.name),
-    )
-    fill_hh_deltaeta_histograms(
-        events.hh_deltaeta_discriminant,
-        hists=find_hists_by_name(hists, "hh_deltaeta_baseline"),
-    )
-    fill_hh_mass_discrim_histograms(
-        events.hh_mass_discriminant_signal,
-        hists=find_hists_by_name(hists, "hh_mass_discrim_baseline"),
-    )
-    leading_h_jets_idx = events.leading_h_jets_idx.ak.array
-    subleading_h_jets_idx = events.subleading_h_jets_idx.ak.array
-    jet_p4 = events.jet_p4.ak.array
-    h1 = (
-        jet_p4[leading_h_jets_idx[:, 0, np.newaxis]]
-        + jet_p4[leading_h_jets_idx[:, 1, np.newaxis]]
-    )
-    h2 = (
-        jet_p4[subleading_h_jets_idx[:, 0, np.newaxis]]
-        + jet_p4[subleading_h_jets_idx[:, 1, np.newaxis]]
-    )
-    fill_reco_mH_histograms(
-        mh1=np.squeeze(h1.mass),
-        mh2=np.squeeze(h2.mass),
-        hists=find_hists_by_name(hists, "mH[12]_baseline"),
-    )
-    fill_reco_mH_2d_histograms(
-        mh1=np.squeeze(h1.mass),
-        mh2=np.squeeze(h2.mass),
-        hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
-    )
-    signal_event = events.signal_event.to_numpy()
-    signal_mh1 = np.squeeze(h1.mass)[signal_event]
-    signal_mh2 = np.squeeze(h2.mass)[signal_event]
-    fill_reco_mH_histograms(
-        mh1=signal_mh1,
-        mh2=signal_mh2,
-        hists=find_hists_by_name(hists, "mH[12]_baseline_signal_region"),
-    )
-    fill_reco_mH_2d_histograms(
-        mh1=signal_mh1,
-        mh2=signal_mh2,
-        hist=find_hist(hists, lambda h: "mH_plane_baseline_signal_region" in h.name),
-    )
-    control_event = events.control_event.to_numpy()
-    control_mh1 = np.squeeze(h1.mass)[control_event]
-    control_mh2 = np.squeeze(h2.mass)[control_event]
-    fill_reco_mH_histograms(
-        mh1=control_mh1,
-        mh2=control_mh2,
-        hists=find_hists_by_name(hists, "mH[12]_baseline_control_region"),
-    )
-    fill_reco_mH_2d_histograms(
-        mh1=control_mh1,
-        mh2=control_mh2,
-        hist=find_hist(hists, lambda h: "mH_plane_baseline_control_region" in h.name),
-    )
-
-
-def fill_jet_kin_histograms(
-    events: pd.DataFrame, hists: list, lumi_weight: float
-) -> None:
+def fill_jet_kin_histograms(events: dict, hists: list, lumi_weight: float) -> None:
     """Fill jet kinematics histograms"""
 
     for jet_var in kin_labels.keys():
         hist = find_hist(hists, lambda h: f"jet_{jet_var}" in h.name)
         logger.debug(hist.name)
-        jets = events[f"jet_{jet_var}"].ak.array
-        mc_evt_weight_nom = events.mc_event_weight.values[:, np.newaxis]
+        jets = events[f"jet_{jet_var}"]
+        mc_evt_weight_nom = ak.ravel(events["mc_event_weight"][:, 0])
         mc_evt_weight_nom, _ = ak.broadcast_arrays(mc_evt_weight_nom, jets)
-        pileup_weight = events.pileup_weight.values[:, np.newaxis]
+        pileup_weight = ak.ravel(events["pileup_weight"])
         pileup_weight, _ = ak.broadcast_arrays(pileup_weight, jets)
         weights = mc_evt_weight_nom * pileup_weight * lumi_weight
         hist.fill(np.array(ak.flatten(jets)), weights=np.array(ak.flatten(weights)))
@@ -242,11 +169,9 @@ def fill_hh_mass_discrim_histograms(hh_mass_discrim, hists: list) -> None:
         hist.fill(np.array(hh_mass_discrim))
 
 
-def fill_top_veto_histograms(events: pd.DataFrame, hists: list) -> None:
+def fill_top_veto_histograms(discriminant, hists: list, weights: list) -> None:
     """Fill top veto histograms"""
 
-    top_veto_discrim_hist = find_hist(hists, lambda h: "top_veto_baseline" in h.name)
-    top_veto_discrim_hist.fill(np.array(events.X_Wt_discriminant_min))
-
-    top_veto_nbtags_hist = find_hist(hists, lambda h: "top_veto_n_btags" in h.name)
-    top_veto_nbtags_hist.fill(np.array(events.btag_num))
+    for hist in hists:
+        logger.debug(hist.name)
+        hist.fill(np.array(discriminant), weights=weights)

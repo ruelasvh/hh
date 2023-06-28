@@ -1,18 +1,20 @@
 {
     "inputs": [
         {
-            "logical_dataset_names": [
-                "mc21_13p6TeV.601479.PhPy8EG_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8472_s3873_r13829_p5631"
-            ],
-            "path": "/lustre/fs22/group/atlas/ruelasv/projects/plot-hh4b-analysis/src/nonresonantresolved/tests/test-data/analysis-variables-mc21-ggF-k01",
+            "path": "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2023_05_30.601479.PhPy8EG_HH4b_cHHH01d0.e8472_s3873_r13829_p5631_TREE/",
             "label": "mc21_ggF_k01"
         },
         {
-            "logical_dataset_names": [
-                "mc21_13p6TeV.601480.PhPy8EG_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8472_s3873_r13829_p5631"
-            ],
-            "path": "/lustre/fs22/group/atlas/ruelasv/projects/plot-hh4b-analysis/src/nonresonantresolved/tests/test-data/analysis-variables-mc21-ggF-k10",
+            "path": "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2023_05_30.601480.PhPy8EG_HH4b_cHHH10d0.e8472_s3873_r13829_p5631_TREE/",
             "label": "mc21_ggF_k10"
+        },
+        {
+            "path": "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.8011*.Py8EG_A14NNPDF23LO_jj_JZ[1-9]*.e8453_s3873_r13829_p5631_TREE/",
+            "label": "mc21_dijets_JZ1_9"
+        },
+        {
+            "path": "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.ttbar/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.601237.PhPy8EG_A14_ttbar_hdamp258p75_allhad.e8453_s3873_r13829_p5631_TREE/",
+            "label": "mc21_ttbar"
         }
     ],
     "event_selection": {
@@ -62,16 +64,18 @@
         },
         "hh_mass_veto": {
             "signal": {
-                "operator": "<",
-                "value": 1.6
+                "inner_boundry": {
+                    "operator": "<",
+                    "value": 1.6
+                }
             },
             "control": {
                 "inner_boundry": {
-                    "operator": "==",
-                    "value": 1.5
+                    "operator": ">=",
+                    "value": 1.6
                 },
                 "outer_boundry": {
-                    "operator": "==",
+                    "operator": "<=",
                     "value": 45
                 }
             }

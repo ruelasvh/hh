@@ -2,9 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mplhep as hplt
 import re
-from .utils import find_hist, find_hists, inv_GeV, nth, kin_labels
+from shared.utils import logger, find_hist, find_hists, inv_GeV, nth, kin_labels
 from .selection import X_HH, R_CR
-from shared.utils import logger
+
+np.seterr(divide="ignore", invalid="ignore")
 
 plt.style.use(hplt.style.ATLAS)
 
@@ -158,6 +159,9 @@ def draw_mH_plane_2D_hists(sample_hists, sample_name, hist_prefix):
     hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
     hist = sample_hists[hist_name]
     binsGeV = hist["edges"][:] * inv_GeV
+    print(sample_name)
+    print(hist_name)
+    print(np.sum(hist["values"][:]))
     hplt.hist2dplot(
         hist["values"],
         binsGeV,

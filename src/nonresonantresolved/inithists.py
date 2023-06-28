@@ -1,8 +1,7 @@
 from argparse import Namespace
-from .utils import kin_labels
+from shared.utils import logger, kin_labels
 from .hist import Histogram, Histogramddv2
 from .triggers import run3_all as triggers_run3_all
-from shared.utils import logger
 
 
 def init_hists(inputs: dict, args: Namespace) -> dict:
@@ -32,7 +31,12 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
 
 
 def init_jet_kin_histograms(
-    binrange={"pt": [0, 1_300_000], "eta": [-5, 5], "phi": [-3, 3], "m": [0, 20_000]},
+    binrange={
+        "pt": [0, 1_300_000],
+        "eta": [-5, 5],
+        "phi": [-3, 3],
+        "mass": [0, 20_000],
+    },
     bins=100,
 ):
     hists = []

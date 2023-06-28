@@ -1,10 +1,11 @@
 import numpy as np
 import vector as p4
 import awkward as ak
-from shared.utils import logger
 from .triggers import run3_all as triggers_run3_all
-from .utils import (
+from shared.utils import (
+    logger,
     find_hist,
+    find_hists,
     find_hists_by_name,
     kin_labels,
 )
@@ -13,22 +14,89 @@ from .selection import (
 )
 
 
-def fill_jet_kin_histograms(events: dict, hists: list, lumi_weight: float) -> None:
+def fill_hists(events: ak.Record, hists: list, lumi_weight: float) -> None:
+    """Fill histograms for analysis regions"""
+    fill_jet_kin_histograms(events, hists, lumi_weight)
+    # events = ak.mask(events, events.passed_triggers)
+    fill_top_veto_histograms(
+        events,
+        hists=find_hists(hists, lambda h: "top_veto" in h.name),
+    )
+    fill_hh_deltaeta_histograms(
+        events.hh_deltaeta_discriminant,
+        hists=find_hists_by_name(hists, "hh_deltaeta_baseline"),
+    )
+    fill_hh_mass_discrim_histograms(
+        events.hh_mass_discriminant_signal,
+        hists=find_hists_by_name(hists, "hh_mass_discrim_baseline"),
+    )
+    leading_h_jet_idx = events.leading_h_jet_idx
+    subleading_h_jet_idx = events.subleading_h_jet_idx
+    jet_p4 = p4.zip(
+        {var: events[f"jet_{var}"] for var in kin_labels.keys()},
+    )
+    h1 = (
+        jet_p4[leading_h_jet_idx[:, 0, np.newaxis]]
+        + jet_p4[leading_h_jet_idx[:, 1, np.newaxis]]
+    )
+    h2 = (
+        jet_p4[subleading_h_jet_idx[:, 0, np.newaxis]]
+        + jet_p4[subleading_h_jet_idx[:, 1, np.newaxis]]
+    )
+    fill_reco_mH_histograms(
+        mh1=np.squeeze(h1.mass),
+        mh2=np.squeeze(h2.mass),
+        hists=find_hists_by_name(hists, "mH[12]_baseline"),
+    )
+    fill_reco_mH_2d_histograms(
+        mh1=np.squeeze(h1.mass),
+        mh2=np.squeeze(h2.mass),
+        hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
+    )
+    signal_event = events.signal_event
+    signal_mh1 = np.squeeze(h1.mass)[signal_event]
+    signal_mh2 = np.squeeze(h2.mass)[signal_event]
+    fill_reco_mH_histograms(
+        mh1=signal_mh1,
+        mh2=signal_mh2,
+        hists=find_hists_by_name(hists, "mH[12]_baseline_signal_region"),
+    )
+    fill_reco_mH_2d_histograms(
+        mh1=signal_mh1,
+        mh2=signal_mh2,
+        hist=find_hist(hists, lambda h: "mH_plane_baseline_signal_region" in h.name),
+    )
+    control_event = events.control_event
+    control_mh1 = np.squeeze(h1.mass)[control_event]
+    control_mh2 = np.squeeze(h2.mass)[control_event]
+    fill_reco_mH_histograms(
+        mh1=control_mh1,
+        mh2=control_mh2,
+        hists=find_hists_by_name(hists, "mH[12]_baseline_control_region"),
+    )
+    fill_reco_mH_2d_histograms(
+        mh1=control_mh1,
+        mh2=control_mh2,
+        hist=find_hist(hists, lambda h: "mH_plane_baseline_control_region" in h.name),
+    )
+
+
+def fill_jet_kin_histograms(events, hists: list, lumi_weight: float) -> None:
     """Fill jet kinematics histograms"""
 
     for jet_var in kin_labels.keys():
         hist = find_hist(hists, lambda h: f"jet_{jet_var}" in h.name)
         logger.debug(hist.name)
         jets = events[f"jet_{jet_var}"]
-        mc_evt_weight_nom = ak.ravel(events["mc_event_weight"][:, 0])
+        mc_evt_weight_nom = events.mc_event_weight[:, np.newaxis]
         mc_evt_weight_nom, _ = ak.broadcast_arrays(mc_evt_weight_nom, jets)
-        pileup_weight = ak.ravel(events["pileup_weight"])
+        pileup_weight = events.pileup_weight[:, np.newaxis]
         pileup_weight, _ = ak.broadcast_arrays(pileup_weight, jets)
         weights = mc_evt_weight_nom * pileup_weight * lumi_weight
         hist.fill(np.array(ak.flatten(jets)), weights=np.array(ak.flatten(weights)))
 
 
-def fill_leading_jets_histograms(events: dict, hists: list) -> None:
+def fill_leading_jets_histograms(events, hists: list) -> None:
     """Fill leading jets histograms"""
 
     jet_pt = events["jet_pt"]
@@ -50,7 +118,7 @@ def fill_leading_jets_histograms(events: dict, hists: list) -> None:
         #     hist.fill(np.array(jet_pt[trig_decisions][:, ith_jet - 1]))
 
 
-def fill_truth_matched_mjj_histograms(events: dict, hists: list) -> None:
+def fill_truth_matched_mjj_histograms(events, hists: list) -> None:
     """Fill reconstructed mjj invariant mass 1D histograms"""
 
     jet_vars = [
@@ -87,7 +155,7 @@ def fill_truth_matched_mjj_histograms(events: dict, hists: list) -> None:
         hist.fill(mjj_p4.mass)
 
 
-def fill_truth_matched_mjj_passed_pairing_histograms(events: dict, hists: list) -> None:
+def fill_truth_matched_mjj_passed_pairing_histograms(events, hists: list) -> None:
     """Fill reconstructed mjj invariant mass 1D histograms"""
 
     jet_vars = [
@@ -139,7 +207,7 @@ def fill_reco_mH_2d_histograms(mh1, mh2, hist: list) -> None:
         hist.fill(np.column_stack((mh1, mh2)))
 
 
-def fill_reco_mH_truth_pairing_histograms(events: dict, hists: list) -> None:
+def fill_reco_mH_truth_pairing_histograms(events, hists: list) -> None:
     """Fill reconstructed H have same bb children that originated from the truth H histograms"""
 
     H_pairing_hists = find_hists_by_name(hists, "mH[12]_pairingPassedTruth")
@@ -158,7 +226,7 @@ def fill_hh_deltaeta_histograms(hh_deltar, hists: list) -> None:
 
     for hist in hists:
         logger.debug(hist.name)
-        hist.fill(np.array(hh_deltar))
+        hist.fill(np.array(ak.drop_none(hh_deltar)))
 
 
 def fill_hh_mass_discrim_histograms(hh_mass_discrim, hists: list) -> None:
@@ -166,12 +234,15 @@ def fill_hh_mass_discrim_histograms(hh_mass_discrim, hists: list) -> None:
 
     for hist in hists:
         logger.debug(hist.name)
-        hist.fill(np.array(hh_mass_discrim))
+        hist.fill(np.array(ak.drop_none(hh_mass_discrim)))
 
 
-def fill_top_veto_histograms(discriminant, hists: list, weights: list) -> None:
+def fill_top_veto_histograms(events, hists: list) -> None:
     """Fill top veto histograms"""
 
-    for hist in hists:
-        logger.debug(hist.name)
-        hist.fill(np.array(discriminant), weights=weights)
+    top_veto_discrim_hist = find_hist(hists, lambda h: "top_veto_baseline" in h.name)
+    top_veto_discrim_hist.fill(np.array(ak.drop_none(events.X_Wt_discriminant_min)))
+
+    top_veto_nbtags_hist = find_hist(hists, lambda h: "top_veto_n_btags" in h.name)
+    top_veto_nbtags = events.btag_num[~ak.is_none(events.n_central_bjets)]
+    top_veto_nbtags_hist.fill(np.array(top_veto_nbtags))
