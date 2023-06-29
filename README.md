@@ -12,53 +12,7 @@ pip install -e .
 hh4b_non_res_res_make_hists config.json
 ```
 
-For example, `config.json`
-```json
-{
-    "inputs": {
-        "k01": "path/to/k01inputsdir/",
-        "k10": "path/to/k10inputsdir/",
-        "dijets": "..."
-    },
-    "event_selection": {
-        "central_jets": {
-            "min_pt": 40000,
-            "max_eta": 2.5,
-            "min_count": 4
-        },
-        "btagging": {
-            "model": "DL1dv00",
-            "efficiency": 0.77,
-            "min_count": 4
-        },
-        "forward_jets": {
-            "min_pt": 30000,
-            "min_eta": 2.5,
-            "min_count": 6
-        },
-        "top_veto": {
-            "ggF": {
-                "min_value": 1.5
-            }
-        },
-        "hh_deltaeta_veto": {
-            "ggF": {
-                "max_value": 1.5
-            }
-        },
-        "hh_mass_veto": {
-            "ggF": {
-                "signal": {
-                    "max_value": 1.6
-                },
-                "control": {
-                    "max_value": 45
-                }
-            }
-        }
-    }
-}
-```
+For example, have a look in [this config file](src/nonresonantresolved/config-test.json).
 
 The `input` paths need to be nested in a folder with the name of the project (e.g. `mc21_13p6TeV.hh4b.ggF`) and the sample name (e.g. `user.viruelas.HH4b.2023_04_21.601479.PhPy8EG_HH4b_cHHH01d0.e8472_s3873_r13829_p5631_TREE`) to be able to fetch metadata from AMI. So the full path to the input files would be `path/to/k01inputsdir/mc21_13p6TeV.hh4b.ggF/user.viruelas.HH4b.2023_04_21.601479.PhPy8EG_HH4b_cHHH01d0.e8472_s3873_r13829_p5631_TREE/`.
 
