@@ -19,5 +19,5 @@ The `input` paths need to be nested in a folder with the name of the project (e.
 The output will be an `h5` file. To make the actual plots, in the root directory of the project run:
 
 ```bash
-hh4b_non_res_res_draw_plots hists.h5
+hh4b_non_res_res_draw_hists hists.h5
 ```
