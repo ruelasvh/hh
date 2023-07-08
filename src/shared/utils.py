@@ -28,7 +28,8 @@ def concatenate_cutbookkeepers(files, file_delimeter=None):
             if not _dirs
             else list(filter(lambda _dir: _dir in file_delimeter, _dirs))[0]
         )
-        _files = glob.glob(f"{_dir}/*.root")
+        # _files = glob.glob(f"{_dir}/*.root")
+        _files = glob.glob(f"{_dir}*.root")
 
     cutbookkeepers = {}
     cutbookkeepers["initial_events"] = 0
@@ -42,22 +43,15 @@ def concatenate_cutbookkeepers(files, file_delimeter=None):
                     cutbookkeepers["initial_events"] += cbk[0][0]
                     cutbookkeepers["initial_sum_of_weights"] += cbk[0][1]
                     cutbookkeepers["initial_sum_of_weights_squared"] += cbk[0][2]
-    return (
-        cutbookkeepers["initial_events"],
-        cutbookkeepers["initial_sum_of_weights"],
-        cutbookkeepers["initial_sum_of_weights_squared"],
-    )
+    return cutbookkeepers
 
 
-def get_luminosity_weight(metadata, sum_weights=1.0):
+def get_total_weight(metadata, sum_weights=1.0):
     filter_efficiency = float(metadata["genFiltEff"])
     k_factor = float(metadata["kFactor"])
     cross_section = float(metadata["crossSection"]) * 1e6
     luminosity = float(metadata["luminosity"])
-
-    return (
-        sum_weights**-1 * filter_efficiency * k_factor * (cross_section) * luminosity
-    )
+    return filter_efficiency * k_factor * cross_section * luminosity * sum_weights**-1
 
 
 def get_datasetname_query(filepath):

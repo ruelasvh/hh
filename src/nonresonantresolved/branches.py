@@ -1,10 +1,11 @@
-from src.nonresonantresolved.triggers import run3_all as triggers_run3_all
-from shared.utils import format_btagger_model_name
+from src.nonresonantresolved.triggers import (
+    run3_main_stream as trigs_run3_main,
+    run2_reoptimized as trigs_run2_reoptimized,
+)
 
 BASE_ALIASES = {
-    "mc_event_weights": "mcEventWeights",
-    "pileup_weight": "PileupWeight_NOSYS",
-    **{trig: f"trigPassed_{trig}" for trig in triggers_run3_all},
+    "event_number": "eventNumber",
+    "run_number": "runNumber",
 }
 
 JET_ALIASES = {
@@ -18,26 +19,33 @@ JET_ALIASES = {
     "jet_btag_DL1dv01_77": "recojet_antikt4_NOSYS_ftag_select_DL1dv01_FixedCutBEff_77",
 }
 
-SIGNAL_ALIASES = {"jet_truth_H_parents": "recojet_antikt4_NOSYS_parentHiggsParentsMask"}
+MC_ALIASES = {
+    "mc_event_weights": "mcEventWeights",
+    "pileup_weight": "PileupWeight_NOSYS",
+    "jet_truth_H_parents": "recojet_antikt4_NOSYS_parentHiggsParentsMask",
+    # "jet_btag_sf_DL1dv01_70": "recojet_antikt4_NOSYS_ftag_effSF_DL1dv01_FixedCutBEff_70",
+    # "jet_btag_sf_DL1dv01_77": "recojet_antikt4_NOSYS_ftag_effSF_DL1dv01_FixedCutBEff_77",
+}
 
 
-def get_branch_aliases(is_mc=False):
+def get_branch_aliases(is_mc=False, run=2):
     aliases = {**BASE_ALIASES}
     aliases |= JET_ALIASES
+    if run == 2:
+        aliases |= {
+            f"trig_passed_{trig_short}": f"trigPassed_{trig_long}"
+            for trig_long, trig_short, _ in trigs_run2_reoptimized
+        }
+    elif run == 3:
+        aliases |= {
+            f"trig_passed_{trig_short}": f"trigPassed_{trig_long}"
+            for trig_long, trig_short, _ in trigs_run3_main
+        }
     if is_mc:
-        aliases |= SIGNAL_ALIASES
+        aliases |= MC_ALIASES
     return aliases
 
 
 def get_jet_branch_alias_names(aliases):
     jet_alias_names = list(filter(lambda alias: "jet_" in alias, aliases))
     return jet_alias_names
-
-
-def add_default_branches_from_config(branch_aliases, config):
-    btagging = config["btagging"]
-    btagger = format_btagger_model_name(btagging["model"], btagging["efficiency"])
-    branch_names = list(branch_aliases.keys())
-    btag_branch = [branch for branch in branch_names if btagger in branch][0]
-    branch_aliases["jet_btag_default"] = branch_aliases[btag_branch]
-    return branch_aliases

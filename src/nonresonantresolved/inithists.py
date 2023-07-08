@@ -1,7 +1,7 @@
 from argparse import Namespace
 from shared.utils import logger, kin_labels
 from .hist import Histogram, Histogramddv2
-from .triggers import run3_all as triggers_run3_all
+from .triggers import run3_main_stream as triggers_run3_all
 
 
 def init_hists(inputs: dict, args: Namespace) -> dict:

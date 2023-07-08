@@ -5,7 +5,6 @@ build plots of everything
 """
 
 import uproot
-import numpy as np
 import argparse
 import json
 import time
@@ -21,18 +20,13 @@ from src.nonresonantresolved.branches import (
 from shared.utils import (
     logger,
     concatenate_cutbookkeepers,
-    get_luminosity_weight,
-    get_datasetname_query,
+    get_total_weight,
     write_hists,
 )
-from shared.api import get_metadata
 from nonresonantresolved.processbatches import (
     process_batch,
 )
-from nonresonantresolved.fillhists import fill_hists
-
-from src.baseline.analysis import pairAndProcess
-from src.baseline.fillhists import fillhists
+from src.nonresonantresolved.fillhists import fill_hists
 
 
 def get_args():
@@ -44,6 +38,21 @@ def get_args():
         "--output",
         type=Path,
         default=Path("hists.h5"),
+        **defaults,
+    )
+    parser.add_argument(
+        "-r",
+        "--run",
+        type=int,
+        default=2,
+        choices=[2, 3],
+        **defaults,
+    )
+    parser.add_argument(
+        "-b",
+        "--batch-size",
+        type=str,
+        default="1 GB",
         **defaults,
     )
     parser.add_argument(
@@ -76,73 +85,48 @@ def main():
     with open(args.config) as cf:
         config = json.load(cf)
 
-    hists = init_hists(config["inputs"], args)
-    # ###
-    # # Baseline implementation
-    # ###
-    # for input in config["inputs"]:
-    #     print(input)
-    #     sample_label, sample_path = input["label"], input["path"]
-    #     df = pairAndProcess(
-    #         sample_path + ".root",
-    #         ntag=4,
-    #         tagger="DL1d",
-    #         pairing="min_dR",
-    #         physicsSample=sample_label,
-    #         year=2016,
-    #     )
-    #     # fillhists(df, hists[sample_label])
-
-    ###
-    # New implementation
-    ###
-    for input in config["inputs"]:
-        sample_label, sample_path = (
-            input["label"],
-            input["path"],
+    hists = init_hists(config["samples"], args)
+    for sample in config["samples"]:
+        sample_label, sample_paths, sample_metadata = (
+            sample["label"],
+            sample["paths"],
+            sample["metadata"],
         )
         is_mc = "data" not in sample_label
-        branch_aliases = get_branch_aliases(is_mc)
-        luminosity_weight = 1
-        datasetname_query = ""
-        for batch_events, batch_report in uproot.iterate(
-            f"{sample_path}*.root:AnalysisMiniTree",
-            expressions=branch_aliases.keys(),
-            aliases=branch_aliases,
-            step_size="1 GB",
-            report=True,
-        ):
-            logger.info(f"Processing batch: {batch_report}")
-
-            if logger.level == logging.DEBUG:
-                logger.debug("Columns: /n")
-                batch_events.type.show()
-
-            current_datasetname_query = get_datasetname_query(batch_report.file_path)
-            sample_is_data = (
-                "data" in sample_label or "data" in current_datasetname_query
-            )
-            if current_datasetname_query != datasetname_query and not sample_is_data:
-                datasetname_query = current_datasetname_query
-                _, sum_weights, _ = concatenate_cutbookkeepers(
-                    sample_path, batch_report.file_path
+        branch_aliases = get_branch_aliases(is_mc, args.run)
+        total_weight = 1.0
+        current_file_path = ""
+        for idx, sample_path in enumerate(sample_paths):
+            for batch_events, batch_report in uproot.iterate(
+                f"{sample_path}*.root:AnalysisMiniTree",
+                expressions=branch_aliases.keys(),
+                aliases=branch_aliases,
+                step_size=args.batch_size,
+                report=True,
+            ):
+                logger.info(f"Processing batch: {batch_report}")
+                logger.debug(f"Columns: {batch_events.fields}")
+                if (current_file_path != batch_report.file_path) and is_mc:
+                    current_file_path = batch_report.file_path
+                    # concatenate cutbookkeepers for each sample
+                    cbk = concatenate_cutbookkeepers(
+                        sample_path, batch_report.file_path
+                    )
+                    metadata = sample_metadata[idx]
+                    logger.debug(f"Metadata: {metadata}")
+                    total_weight = get_total_weight(
+                        metadata, cbk["initial_sum_of_weights"]
+                    )
+                logger.debug(f"Total weight: {total_weight}")
+                # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
+                processed_batch = process_batch(
+                    batch_events,
+                    config,
+                    hists[sample_label],
+                    total_weight,
+                    is_mc,
                 )
-                metadata = get_metadata(datasetname_query)
-                logger.debug(f"Metadata: {metadata}")
-                luminosity_weight = get_luminosity_weight(metadata, sum_weights)
-            logger.debug(f"Luminosity weight: {luminosity_weight}")
-
-            # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
-            processed_batch_events = process_batch(
-                batch_events,
-                config,
-                is_mc,
-            )
-            fill_hists(
-                processed_batch_events,
-                hists[sample_label],
-                luminosity_weight,
-            )
+                fill_hists(processed_batch, hists[sample_label], is_mc)
 
     if logger.level == logging.DEBUG:
         logger.debug(

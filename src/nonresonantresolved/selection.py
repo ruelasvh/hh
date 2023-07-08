@@ -105,9 +105,10 @@ def reconstruct_hh_mindeltar(events):
     )
 
 
-def select_events_passing_all_triggers_OR(events, triggers):
-    all_trigs_or_decicions = get_all_trigs_or(events, triggers)
-    return all_trigs_or_decicions
+def select_events_passing_all_triggers_OR(events):
+    triggers = list(filter(lambda x: "trig_passed_" in x, events.fields))
+    passed_all_trigs_OR_mask = get_all_trigs_or(events, triggers)
+    return passed_all_trigs_OR_mask
 
 
 def select_n_jets_events(events, selection, do_jvt=True):
@@ -289,3 +290,24 @@ def select_correct_hh_pair_events(events, signal=False):
     )
     return correct_hh_pairs_mask
     return correct_hh_pairs_mask
+
+
+def select_buckets(events, leading_jet_pt_cut=170, third_jet_pt_cut=70):
+    jet_pt = events.jet_pt[events.n_central_bjets]
+    leading_jet_pt = jet_pt[:, 0]
+    third_jet_pt = jet_pt[:, 2]
+    passed_king_cut = (leading_jet_pt > leading_jet_pt_cut) & (
+        third_jet_pt > third_jet_pt_cut
+    )
+
+
+def calculate_scale_factors(events):
+    """Calculates the scale factors for each event.
+
+    Returns:
+        The scale factors for each event
+    """
+    # jsfs = t.arrays('sf', aliases=jalias, cut=f'(pt > {pT_min}) & (abs(eta) < {eta_max}) & {jvtCut}')
+    # mc_sf = ak.prod(jsfs.sf[:,:,0],axis=-1).to_numpy()
+    sf = np.ones_like(events.event_number)
+    return sf

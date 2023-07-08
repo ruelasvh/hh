@@ -111,6 +111,8 @@ class Histogramddv2(Histogram):
         )
         self._compression = dict(compression="gzip") if compress else {}
 
-    def fill(self, vals):
-        hist = np.histogramdd(vals, bins=(self._binning, self._binning))[0]
+    def fill(self, vals, weights=None):
+        hist = np.histogramdd(
+            vals, bins=(self._binning, self._binning), weights=weights
+        )[0]
         self._hist = self._hist + hist
