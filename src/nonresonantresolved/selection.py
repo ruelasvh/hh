@@ -248,19 +248,19 @@ def select_hh_events(events, deltaeta_sel=None, mass_sel=None):
     )
     h1 = jet_p4[h1_jet1_idx] + jet_p4[h1_jet2_idx]
     h2 = jet_p4[h2_jet1_idx] + jet_p4[h2_jet2_idx]
-    keep = np.ones_like(np.squeeze(h1.mass), dtype=bool)
+    keep = np.ones_like(events.event_number, dtype=bool)
     hh_var = np.array([])
     if deltaeta_sel is not None:
-        hh_var = np.abs(np.squeeze(h1.eta) - np.squeeze(h2.eta))
+        hh_var = np.abs(ak.firsts(h1.eta) - ak.firsts(h2.eta))
         keep = keep & get_op(deltaeta_sel["operator"])(hh_var, deltaeta_sel["value"])
     if mass_sel is not None:
         if mass_sel.get("inner_boundry"):
-            hh_var = X_HH(np.squeeze(h1.m) * inv_GeV, np.squeeze(h2.m) * inv_GeV)
+            hh_var = X_HH(ak.firsts(h1.m) * inv_GeV, ak.firsts(h2.m) * inv_GeV)
             keep = keep & get_op(mass_sel["inner_boundry"]["operator"])(
                 hh_var, mass_sel["inner_boundry"]["value"]
             )
         if mass_sel.get("outer_boundry"):
-            hh_var = R_CR(np.squeeze(h1.m) * inv_GeV, np.squeeze(h2.m) * inv_GeV)
+            hh_var = R_CR(ak.firsts(h1.m) * inv_GeV, ak.firsts(h2.m) * inv_GeV)
             keep = keep & get_op(mass_sel["outer_boundry"]["operator"])(
                 hh_var, mass_sel["outer_boundry"]["value"]
             )

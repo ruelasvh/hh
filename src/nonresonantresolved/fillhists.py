@@ -56,31 +56,33 @@ def fill_hists(events: ak.Record, hists: list, is_mc: bool = True) -> None:
     signal_event = events.signal_event
     signal_mh1 = np.squeeze(h1.mass)[signal_event]
     signal_mh2 = np.squeeze(h2.mass)[signal_event]
+    signal_event_weight = events.event_weight[signal_event]
     fill_reco_mH_histograms(
         mh1=signal_mh1,
         mh2=signal_mh2,
-        weights=events.event_weight[signal_event],
+        weights=signal_event_weight,
         hists=find_hists_by_name(hists, "mH[12]_baseline_signal_region"),
     )
     fill_reco_mH_2d_histograms(
         mh1=signal_mh1,
         mh2=signal_mh2,
-        weights=events.event_weight[signal_event],
+        weights=signal_event_weight,
         hist=find_hist(hists, lambda h: "mH_plane_baseline_signal_region" in h.name),
     )
     control_event = events.control_event
     control_mh1 = np.squeeze(h1.mass)[control_event]
     control_mh2 = np.squeeze(h2.mass)[control_event]
+    control_event_weight = events.event_weight[control_event]
     fill_reco_mH_histograms(
         mh1=control_mh1,
         mh2=control_mh2,
-        weights=events.event_weight[control_event],
+        weights=control_event_weight,
         hists=find_hists_by_name(hists, "mH[12]_baseline_control_region"),
     )
     fill_reco_mH_2d_histograms(
         mh1=control_mh1,
         mh2=control_mh2,
-        weights=events.event_weight[control_event],
+        weights=control_event_weight,
         hist=find_hist(hists, lambda h: "mH_plane_baseline_control_region" in h.name),
     )
 
@@ -197,17 +199,18 @@ def fill_reco_mH_histograms(mh1, mh2, weights, hists: list) -> None:
     if len(hists) != 2:
         raise ValueError("Expected 2 histograms, got", len(hists))
 
-    for hist, mH in zip(hists, [mh1, mh2]):
-        logger.debug(hist.name)
-        hist.fill(ak.to_numpy(mH), weights=ak.to_numpy(weights))
+    if ak.count(mh1) != 0 and ak.count(mh2) != 0:
+        for hist, mH in zip(hists, [mh1, mh2]):
+            logger.debug(hist.name)
+            hist.fill(ak.to_numpy(mH), weights=ak.to_numpy(weights))
 
 
 def fill_reco_mH_2d_histograms(mh1, mh2, weights, hist: list) -> None:
     """Fill reconstructed H invariant mass 2D histograms"""
 
     logger.debug(hist.name)
-    if len(mh1) != 0 and len(mh2) != 0:
-        hist.fill(np.column_stack((mh1, mh2)), weights=weights)
+    if ak.count(mh1) != 0 and ak.count(mh2) != 0:
+        hist.fill(np.column_stack((mh1, mh2)), weights=ak.to_numpy(weights))
 
 
 def fill_reco_mH_truth_pairing_histograms(events, hists: list) -> None:
@@ -227,37 +230,42 @@ def fill_reco_mH_truth_pairing_histograms(events, hists: list) -> None:
 def fill_hh_deltaeta_histograms(events, hists: list) -> None:
     """Fill HH deltaeta histograms"""
     hh_deltar = events.hh_deltaeta_discriminant
-    valid_events = ~ak.is_none(hh_deltar)
-    hist = find_hist(hists, lambda h: "hh_deltaeta_baseline" in h.name)
-    logger.debug(hist.name)
-    hist.fill(
-        np.array(hh_deltar[valid_events]),
-        weights=np.array(events.event_weight[valid_events]),
-    )
+    if ak.count(hh_deltar) != 0:
+        valid_events = ~ak.is_none(hh_deltar)
+        hist = find_hist(hists, lambda h: "hh_deltaeta_baseline" in h.name)
+        logger.debug(hist.name)
+        hist.fill(
+            np.array(hh_deltar[valid_events]),
+            weights=np.array(events.event_weight[valid_events]),
+        )
 
 
 def fill_hh_mass_discrim_histograms(events, hists: list) -> None:
     """Fill HH mass discriminant histograms"""
     hh_mass_discrim = events.hh_mass_discriminant_signal
-    valid_events = ~ak.is_none(hh_mass_discrim)
-    hist = find_hist(hists, lambda h: "hh_mass_discrim_baseline" in h.name)
-    logger.debug(hist.name)
-    hist.fill(
-        np.array(hh_mass_discrim[valid_events]),
-        weights=np.array(events.event_weight[valid_events]),
-    )
+    if ak.count(hh_mass_discrim) != 0:
+        valid_events = ~ak.is_none(hh_mass_discrim)
+        hist = find_hist(hists, lambda h: "hh_mass_discrim_baseline" in h.name)
+        logger.debug(hist.name)
+        hist.fill(
+            np.array(hh_mass_discrim[valid_events]),
+            weights=np.array(events.event_weight[valid_events]),
+        )
 
 
 def fill_top_veto_histograms(events, hists: list) -> None:
     """Fill top veto histograms"""
 
-    top_veto_discrim_hist = find_hist(hists, lambda h: "top_veto_baseline" in h.name)
     X_Wt_discrim = events.X_Wt_discriminant_min
-    valid_events = ~ak.is_none(X_Wt_discrim)
-    top_veto_discrim_hist.fill(
-        np.array(X_Wt_discrim[valid_events]),
-        weights=np.array(events.event_weight[valid_events]),
-    )
+    if ak.count(X_Wt_discrim) != 0:
+        valid_events = ~ak.is_none(X_Wt_discrim)
+        top_veto_discrim_hist = find_hist(
+            hists, lambda h: "top_veto_baseline" in h.name
+        )
+        top_veto_discrim_hist.fill(
+            np.array(X_Wt_discrim[valid_events]),
+            weights=np.array(events.event_weight[valid_events]),
+        )
 
-    top_veto_nbtags_hist = find_hist(hists, lambda h: "top_veto_n_btags" in h.name)
-    top_veto_nbtags_hist.fill(np.array(events.btag_num[valid_events]))
+        top_veto_nbtags_hist = find_hist(hists, lambda h: "top_veto_n_btags" in h.name)
+        top_veto_nbtags_hist.fill(np.array(events.btag_num[valid_events]))
