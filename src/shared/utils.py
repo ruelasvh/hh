@@ -18,6 +18,14 @@ GeV = 1_000
 inv_GeV = 1 / GeV
 
 
+def get_com_lumi_label(lumi, com=13.6):
+    com_label = r"$\sqrt{s} = \mathrm{" + str(com) + "\ TeV}"
+    lumi_label = (
+        ",\ " + str(format(lumi, ".1f")) + r"\ \mathrm{fb}^{-1}$" if lumi else "$"
+    )
+    return com_label + lumi_label
+
+
 def concatenate_cutbookkeepers(files, file_delimeter=None):
     if isinstance(files, list):
         _files = files

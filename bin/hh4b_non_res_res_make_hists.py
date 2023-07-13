@@ -102,6 +102,7 @@ def main():
                 expressions=branch_aliases.keys(),
                 aliases=branch_aliases,
                 step_size=args.batch_size,
+                allow_missing=True,
                 report=True,
             ):
                 logger.info(f"Processing batch: {batch_report}")
@@ -127,15 +128,14 @@ def main():
                     is_mc,
                 )
                 fill_hists(processed_batch, hists[sample_label], is_mc)
+                logger.info("Saving histograms")
+                with File(args.output, "w") as hout:
+                    write_hists(hists, hout)
 
     if logger.level == logging.DEBUG:
         logger.debug(
             f"Loading data & filling histograms execution time: {time.time() - starttime} seconds"
         )
-
-    logger.info("Saving histograms")
-    with File(args.output, "w") as hout:
-        write_hists(hists, hout)
 
 
 if __name__ == "__main__":

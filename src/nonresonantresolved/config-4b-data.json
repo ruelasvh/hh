@@ -1,0 +1,75 @@
+{
+    "samples": [
+        {
+            "label": "data22",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/data22_13p6TeV/output/user.viruelas.EJ_2023_07_02.data22_13p6TeV.periodAllYear_TREE/"
+            ],
+            "metadata": []
+        }
+    ],
+    "event_selection": {
+        "central_jets": {
+            "pt": {
+                "operator": ">",
+                "value": 40000
+            },
+            "eta": {
+                "operator": "<",
+                "value": 2.5
+            },
+            "count": {
+                "operator": ">=",
+                "value": 4
+            }
+        },
+        "btagging": {
+            "model": "DL1dv01",
+            "efficiency": 0.77,
+            "count": {
+                "operator": ">=",
+                "value": 4
+            }
+        },
+        "forward_jets": {
+            "pt": {
+                "operator": ">",
+                "value": 30000
+            },
+            "eta": {
+                "operator": ">",
+                "value": 2.5
+            },
+            "count": {
+                "operator": ">=",
+                "value": 6
+            }
+        },
+        "top_veto": {
+            "operator": ">",
+            "value": 1.5
+        },
+        "hh_deltaeta_veto": {
+            "operator": "<",
+            "value": 1.5
+        },
+        "hh_mass_veto": {
+            "signal": {
+                "inner_boundry": {
+                    "operator": "<",
+                    "value": 1.6
+                }
+            },
+            "control": {
+                "inner_boundry": {
+                    "operator": ">=",
+                    "value": 1.6
+                },
+                "outer_boundry": {
+                    "operator": "<=",
+                    "value": 45
+                }
+            }
+        }
+    }
+}
