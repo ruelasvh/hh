@@ -14,8 +14,13 @@ from .selection import (
 )
 
 
-def fill_hists(events: ak.Record, hists: list, is_mc: bool = True) -> None:
+def fill_hists(
+    events: ak.Record,
+    hists: list,
+    is_mc: bool = True,
+) -> list:  # hists:
     """Fill histograms for analysis regions"""
+    fill_jet_kin_histograms(events, hists)
     fill_top_veto_histograms(
         events,
         hists=find_hists(hists, lambda h: "top_veto" in h.name),
@@ -85,6 +90,8 @@ def fill_hists(events: ak.Record, hists: list, is_mc: bool = True) -> None:
         weights=control_event_weight,
         hist=find_hist(hists, lambda h: "mH_plane_baseline_control_region" in h.name),
     )
+
+    return hists
 
 
 def fill_jet_kin_histograms(events, hists: list) -> None:
@@ -205,12 +212,12 @@ def fill_reco_mH_histograms(mh1, mh2, weights, hists: list) -> None:
             hist.fill(ak.to_numpy(mH), weights=ak.to_numpy(weights))
 
 
-def fill_reco_mH_2d_histograms(mh1, mh2, weights, hist: list) -> None:
+def fill_reco_mH_2d_histograms(mh1, mh2, weights, hist) -> None:
     """Fill reconstructed H invariant mass 2D histograms"""
 
-    logger.debug(hist.name)
     if ak.count(mh1) != 0 and ak.count(mh2) != 0:
-        hist.fill(np.column_stack((mh1, mh2)), weights=ak.to_numpy(weights))
+        mHH = np.column_stack((mh1, mh2))
+        hist.fill(ak.to_numpy(mHH), weights=ak.to_numpy(weights))
 
 
 def fill_reco_mH_truth_pairing_histograms(events, hists: list) -> None:

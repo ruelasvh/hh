@@ -11,6 +11,8 @@ import time
 import coloredlogs, logging
 from pathlib import Path
 from h5py import File
+import multiprocessing
+import os
 
 # Package modules
 from src.nonresonantresolved.inithists import init_hists
@@ -51,9 +53,16 @@ def get_args():
     parser.add_argument(
         "-b",
         "--batch-size",
-        type=str,
-        default="1 GB",
+        type=lambda x: int(x) if x.isdigit() else x,
+        default="100 MB",
         **defaults,
+    )
+    parser.add_argument(
+        "-j",
+        "--jobs",
+        default=1,
+        type=lambda x: min(os.cpu_count(), max(1, int(x))),
+        help=f"Number of jobs to run in parallel (default: 1, max: {os.cpu_count()})",
     )
     parser.add_argument(
         "-d",
@@ -74,10 +83,63 @@ def get_args():
     return parser.parse_args()
 
 
+def process_sample_worker(
+    sample_path: Path,
+    sample_metadata: list,
+    sample_label: str,
+    event_selection: dict,
+    hists: list,
+    args: argparse.Namespace,
+) -> None:
+    is_mc = "data" not in sample_label
+    branch_aliases = get_branch_aliases(is_mc, args.run)
+    total_weight = 1.0
+    current_file_path = ""
+    for batch_events, batch_report in uproot.iterate(
+        f"{sample_path}*.root:AnalysisMiniTree",
+        expressions=branch_aliases.keys(),
+        aliases=branch_aliases,
+        num_workers=args.jobs * 2,
+        step_size=args.batch_size,
+        allow_missing=True,
+        report=True,
+    ):
+        logger.info(f"Processing batch: {batch_report}")
+        logger.debug(f"Columns: {batch_events.fields}")
+        if (current_file_path != batch_report.file_path) and is_mc:
+            current_file_path = batch_report.file_path
+            # concatenate cutbookkeepers for each sample
+            cbk = concatenate_cutbookkeepers(sample_path, batch_report.file_path)
+            logger.debug(f"Metadata: {sample_metadata}")
+            total_weight = get_total_weight(
+                sample_metadata, cbk["initial_sum_of_weights"]
+            )
+        logger.debug(f"Total weight: {total_weight}")
+        # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
+        processed_batch = process_batch(
+            batch_events,
+            event_selection,
+            total_weight,
+            is_mc,
+        )
+        with multiprocessing.Lock():
+            sample_hists = hists[sample_label]
+            sample_hists = fill_hists(processed_batch, sample_hists, is_mc)
+            # NOTE: important: copy the hists back (otherwise parent process won't see the changes)
+            hists[sample_label] = sample_hists
+            output_file = args.output.with_name(
+                f"{args.output.stem}_{os.getpgid(os.getpid())}.h5"
+            )
+            with File(output_file, "w") as hout:
+                logger.info(f"Saving histograms to file: {output_file}")
+                write_hists(hists, hout)
+
+
 def main():
     starttime = time.time()
 
     args = get_args()
+
     if args.loglevel:
         logger.setLevel(args.loglevel)
         coloredlogs.install(level=logger.level, logger=logger)
@@ -85,52 +147,23 @@ def main():
     with open(args.config) as cf:
         config = json.load(cf)
 
-    hists = init_hists(config["samples"], args)
-    for sample in config["samples"]:
-        sample_label, sample_paths, sample_metadata = (
+    samples, event_selection = config["samples"], config["event_selection"]
+    manager = multiprocessing.Manager()
+    hists = manager.dict(init_hists(samples, args))
+    worker_items = [
+        (
+            sample_path,
+            sample["metadata"][idx],
             sample["label"],
-            sample["paths"],
-            sample["metadata"],
+            event_selection,
+            hists,
+            args,
         )
-        is_mc = "data" not in sample_label
-        branch_aliases = get_branch_aliases(is_mc, args.run)
-        total_weight = 1.0
-        current_file_path = ""
-        for idx, sample_path in enumerate(sample_paths):
-            for batch_events, batch_report in uproot.iterate(
-                f"{sample_path}*.root:AnalysisMiniTree",
-                expressions=branch_aliases.keys(),
-                aliases=branch_aliases,
-                step_size=args.batch_size,
-                allow_missing=True,
-                report=True,
-            ):
-                logger.info(f"Processing batch: {batch_report}")
-                logger.debug(f"Columns: {batch_events.fields}")
-                if (current_file_path != batch_report.file_path) and is_mc:
-                    current_file_path = batch_report.file_path
-                    # concatenate cutbookkeepers for each sample
-                    cbk = concatenate_cutbookkeepers(
-                        sample_path, batch_report.file_path
-                    )
-                    metadata = sample_metadata[idx]
-                    logger.debug(f"Metadata: {metadata}")
-                    total_weight = get_total_weight(
-                        metadata, cbk["initial_sum_of_weights"]
-                    )
-                logger.debug(f"Total weight: {total_weight}")
-                # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
-                processed_batch = process_batch(
-                    batch_events,
-                    config,
-                    hists[sample_label],
-                    total_weight,
-                    is_mc,
-                )
-                fill_hists(processed_batch, hists[sample_label], is_mc)
-                logger.info("Saving histograms")
-                with File(args.output, "w") as hout:
-                    write_hists(hists, hout)
+        for sample in samples
+        for idx, sample_path in enumerate(sample["paths"])
+    ]
+    with multiprocessing.Pool(args.jobs) as pool:
+        pool.starmap(process_sample_worker, worker_items)
 
     if logger.level == logging.DEBUG:
         logger.debug(

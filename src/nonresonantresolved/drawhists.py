@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mplhep as hplt
 import re
+from pathlib import Path
 from shared.utils import (
     logger,
     find_hist,
@@ -17,8 +18,19 @@ np.seterr(divide="ignore", invalid="ignore")
 plt.style.use(hplt.style.ATLAS)
 
 
-def draw_hists(hists_group, luminosity, btag, plots_postfix) -> None:
+def draw_hists(
+    hists_group: dict,
+    luminosity: float,
+    btag: str,
+    plots_postfix: str,
+    output_dir: Path,
+) -> None:
     """Draw all the histrograms"""
+
+    # check if output_dir exists, if not create it
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
+
     draw_1d_hists(
         hists_group={
             key: value
@@ -34,6 +46,7 @@ def draw_hists(hists_group, luminosity, btag, plots_postfix) -> None:
         third_exp_label="\n" + btag + ", no $\mathrm{X}_{\mathrm{Wt}}$ cut",
         ggFk01_factor=500,
         ggFk10_factor=50,
+        output_dir=output_dir,
     )
     draw_1d_hists(
         hists_group={
@@ -49,6 +62,7 @@ def draw_hists(hists_group, luminosity, btag, plots_postfix) -> None:
         luminosity=luminosity,
         ggFk01_factor=50,
         xcut=1.5,
+        output_dir=output_dir,
     )
     draw_1d_hists(
         hists_group={
@@ -61,6 +75,7 @@ def draw_hists(hists_group, luminosity, btag, plots_postfix) -> None:
         ylabel="Events",
         third_exp_label=f"\n{btag}",
         luminosity=luminosity,
+        output_dir=output_dir,
     )
     draw_1d_hists(
         hists_group,
@@ -71,6 +86,7 @@ def draw_hists(hists_group, luminosity, btag, plots_postfix) -> None:
         luminosity=luminosity,
         third_exp_label=f"\n{btag}",
         xcut=1.6,
+        output_dir=output_dir,
     )
     draw_mH_1D_hists_v2(
         hists_group,
@@ -80,6 +96,7 @@ def draw_hists(hists_group, luminosity, btag, plots_postfix) -> None:
         ylabel="Events",
         xlims=(60, 200),
         third_exp_label=f"\n{btag} Signal Region",
+        output_dir=output_dir,
     )
     draw_mH_1D_hists_v2(
         hists_group,
@@ -89,6 +106,7 @@ def draw_hists(hists_group, luminosity, btag, plots_postfix) -> None:
         ylabel="Events",
         xlims=(60, 200),
         third_exp_label=f"\n{btag} Control Region",
+        output_dir=output_dir,
     )
     for sample_type, sample_hists in hists_group.items():
         draw_jet_kin_hists(
@@ -96,41 +114,48 @@ def draw_hists(hists_group, luminosity, btag, plots_postfix) -> None:
             sample_name=sample_type,
             luminosity=luminosity,
             yscale="log",
+            output_dir=output_dir,
         )
         draw_mH_1D_hists(
             sample_hists=sample_hists,
             sample_name=sample_type,
             hist_prefix="mH[12]_baseline$",
             xlim=(90, 150),
+            output_dir=output_dir,
         )
         draw_mH_plane_2D_hists(
             sample_hists=sample_hists,
             sample_name=sample_type,
             hist_prefix="mH_plane_baseline$",
+            output_dir=output_dir,
         )
         draw_mH_1D_hists(
             sample_hists=sample_hists,
             sample_name=sample_type,
             region="SR",
             hist_prefix="mH[12]_baseline_signal_region$",
+            output_dir=output_dir,
         )
         draw_mH_plane_2D_hists(
             sample_hists=sample_hists,
             sample_name=sample_type,
             region="SR",
             hist_prefix="mH_plane_baseline_signal_region$",
+            output_dir=output_dir,
         )
         draw_mH_1D_hists(
             sample_hists=sample_hists,
             sample_name=sample_type,
             region="CR",
             hist_prefix="mH[12]_baseline_control_region$",
+            output_dir=output_dir,
         )
         draw_mH_plane_2D_hists(
             sample_hists=sample_hists,
             sample_name=sample_type,
             region="CR",
             hist_prefix="mH_plane_baseline_control_region$",
+            output_dir=output_dir,
         )
 
 
@@ -146,6 +171,7 @@ def draw_1d_hists(
     xcut=None,
     ggFk01_factor=None,
     ggFk10_factor=None,
+    output_dir=Path("plots"),
 ):
     """Draw 1D histograms in one figure. The number of histograms in the figure is
     determined by the number of samples in the hists_group dictionary. hist_prefix
@@ -200,7 +226,7 @@ def draw_1d_hists(
         ax=ax,
         pad=0.01,
     )
-    fig.savefig(f"plots/{hist_prefix}.png", bbox_inches="tight")
+    fig.savefig(f"{output_dir}/{hist_prefix}.png", bbox_inches="tight")
     plt.close()
 
 
@@ -217,6 +243,7 @@ def draw_mH_1D_hists_v2(
     ttbar_factor=None,
     ggFk01_factor=None,
     ggFk10_factor=None,
+    output_dir=Path("plots"),
 ):
     fig, axs = plt.subplots(2, constrained_layout=True, figsize=(8, 10))
     axs = axs.flat
@@ -266,11 +293,18 @@ def draw_mH_1D_hists_v2(
                 pad=0.01,
             )
     plot_postfix = "_" + region if region else ""
-    fig.savefig(f"plots/mH1_mH2{plot_postfix}.png", bbox_inches="tight")
+    fig.savefig(f"{output_dir}/mH1_mH2{plot_postfix}.png", bbox_inches="tight")
     plt.close()
 
 
-def draw_mH_1D_hists(sample_hists, sample_name, hist_prefix, xlim=None, region=None):
+def draw_mH_1D_hists(
+    sample_hists,
+    sample_name,
+    hist_prefix,
+    xlim=None,
+    region=None,
+    output_dir=Path("plots"),
+):
     fig, axs = plt.subplots(2, constrained_layout=True)
     axs = axs.flat
     hists = find_hists(sample_hists, lambda h: re.match(hist_prefix, h))
@@ -294,11 +328,17 @@ def draw_mH_1D_hists(sample_hists, sample_name, hist_prefix, xlim=None, region=N
         ax.set_ylabel("Frequency")
         hplt.atlas.label(loc=1, ax=ax, rlabel="")
     plot_postfix = sample_name + ("_" + region if region else "")
-    fig.savefig(f"plots/mH_{plot_postfix}.png", bbox_inches="tight")
+    fig.savefig(f"{output_dir}/mH_{plot_postfix}.png", bbox_inches="tight")
     plt.close()
 
 
-def draw_mH_plane_2D_hists(sample_hists, sample_name, hist_prefix, region=None):
+def draw_mH_plane_2D_hists(
+    sample_hists,
+    sample_name,
+    hist_prefix,
+    region=None,
+    output_dir=Path("plots"),
+):
     fig, ax = plt.subplots()
     hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
     hist = sample_hists[hist_name]
@@ -340,14 +380,19 @@ def draw_mH_plane_2D_hists(sample_hists, sample_name, hist_prefix, region=None):
     hplt.atlas.label(loc=0, ax=ax, label=sample_name, com=13.6)
     plot_postfix = sample_name + ("_" + region if region else "")
     fig.savefig(
-        f"plots/mH_plane_{plot_postfix}.png",
+        f"{output_dir}/mH_plane_{plot_postfix}.png",
         bbox_inches="tight",
     )
     plt.close()
 
 
 def draw_jet_kin_hists(
-    sample_hists, sample_name, luminosity=None, yscale="linear", third_exp_label=""
+    sample_hists,
+    sample_name,
+    luminosity=None,
+    yscale="linear",
+    third_exp_label="",
+    output_dir=Path("plots"),
 ):
     jet_vars = ["pt"]
     is_data = "data" in sample_name
@@ -373,5 +418,7 @@ def draw_jet_kin_hists(
         ax.set_yscale(yscale)
         ax.legend()
         ax.set_xlabel(f"jet {kin_labels[jet_var]} [GeV]")
-        fig.savefig(f"plots/jet_{jet_var}_{sample_name}.png", bbox_inches="tight")
+        fig.savefig(
+            f"{output_dir}/jet_{jet_var}_{sample_name}.png", bbox_inches="tight"
+        )
         plt.close()

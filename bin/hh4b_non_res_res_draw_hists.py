@@ -11,6 +11,13 @@ def get_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("hists_files", type=Path, nargs="+", help="Input files")
     parser.add_argument(
+        "-o",
+        "--output_dir",
+        type=Path,
+        default="plots",
+        help="Output directory (default: %(default)s)",
+    )
+    parser.add_argument(
         "-b",
         "--btag",
         help="btag category",
@@ -51,22 +58,28 @@ def get_args():
     return parser.parse_args()
 
 
+# def main():
+#     args = get_args()
+#     hists = {}
+#     for file in args.hists_files:
+#         # append hists from each file to hists
+#         with h5py.File(file, "r") as hists_file:
+#             hists = {**hists, **hists_file}
+
+#     draw_hists(hists, args.luminosity, args.btag, args.plots_postfix, args.output_dir)
+
+
 def main():
     args = get_args()
-    if len(args.hists_files) == 1:
-        for file in args.hists_files:
-            with h5py.File(file, "a") as hists:
-                del hists["source"]
-                draw_hists(hists, args.luminosity, args.btag, args.plots_postfix)
-    elif len(args.hists_files) == 2:
-        with h5py.File(args.hists_files[0], "r") as hists1, h5py.File(
-            args.hists_files[1], "r"
-        ) as hists2:
-            hists = {**hists1, **hists2}
-            draw_hists(hists, args.luminosity, args.btag, args.plots_postfix)
-    else:
-        print("Can only take at most two hists files")
-        exit(1)
+    for file in args.hists_files:
+        with h5py.File(file, "r") as hists:
+            draw_hists(
+                hists,
+                args.luminosity,
+                args.btag,
+                args.plots_postfix,
+                args.output_dir.with_name(f"{args.output_dir.stem}_{file.stem}"),
+            )
 
 
 if __name__ == "__main__":
