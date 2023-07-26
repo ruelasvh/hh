@@ -1,7 +1,6 @@
 from argparse import Namespace
 from shared.utils import logger, kin_labels
 from .hist import Histogram, Histogramddv2
-from .triggers import run3_main_stream as triggers_run3_all
 
 
 def init_hists(inputs: dict, args: Namespace) -> dict:
@@ -20,9 +19,12 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_type] += init_reco_mH_2d_histograms()
         hists_dict[sample_type] += init_reco_mH_2d_histograms(postfix="_signal_region")
         hists_dict[sample_type] += init_reco_mH_2d_histograms(postfix="_control_region")
-        hists_dict[sample_type] += init_reco_hh_deltaeta_histograms()
+        hists_dict[sample_type] += init_reco_HH_histograms()
+        hists_dict[sample_type] += init_reco_HH_histograms(postfix="_signal_region")
+        hists_dict[sample_type] += init_reco_HH_histograms(postfix="_control_region")
+        hists_dict[sample_type] += init_reco_HH_deltaeta_histograms()
         hists_dict[sample_type] += init_reco_top_veto_histograms()
-        hists_dict[sample_type] += init_reco_hh_mass_discrim_histograms()
+        hists_dict[sample_type] += init_reco_HH_mass_discrim_histograms()
         # if args.signal:
         #     hists_dict[sample_type] += init_reco_mH_truth_pairing_histograms()
         #     hists_dict[sample_type] += init_truth_matched_mjj_histograms()
@@ -58,14 +60,6 @@ def init_leading_jets_histograms(binrange=[0, 1_300_000], bins=100) -> list:
                 bins=bins,
             )
         ]
-        hists += [
-            Histogram(
-                f"leading_jet_{leading_jet}_pt_trigPassed_{trigger}",
-                binrange=binrange,
-                bins=bins,
-            )
-            for trigger in triggers_run3_all
-        ]
 
     return hists
 
@@ -89,14 +83,6 @@ def init_truth_matched_mjj_histograms(binrange=[0, 200_000], bins=100) -> list:
                 bins=bins,
             )
         ]
-        hists += [
-            Histogram(
-                f"mjj{reco_h}_pairingPassedTruth_trigPassed_{trigger}",
-                binrange=binrange,
-                bins=bins,
-            )
-            for trigger in triggers_run3_all
-        ]
 
     return hists
 
@@ -113,14 +99,31 @@ def init_reco_mH_histograms(binrange=[0, 200_000], bins=100, postfix=None) -> li
                 bins=bins,
             )
         ]
-        # hists += [
-        #     Histogram(
-        #         f"mH{reco_h}_trigPassed_{trigger}",
-        #         binrange=binrange,
-        #         bins=bins,
-        #     )
-        #     for trigger in triggers_run3_all
-        # ]
+
+    return hists
+
+
+def init_reco_HH_histograms(
+    binrange={
+        "pt": [0, 500_000],
+        "eta": [-5, 5],
+        "phi": [-3, 3],
+        "mass": [0, 200_000],
+    },
+    bins=100,
+    postfix=None,
+) -> list:
+    """Initialize reconstructed HH 1d histograms"""
+
+    hists = []
+    for hh_var in kin_labels.keys():
+        hists += [
+            Histogram(
+                f"hh_{hh_var}_baseline{postfix if postfix else ''}",
+                binrange[hh_var],
+                bins,
+            )
+        ]
 
     return hists
 
@@ -136,26 +139,11 @@ def init_reco_mH_2d_histograms(binrange=[0, 200_000], bins=50, postfix=None) -> 
             bins=bins,
         )
     ]
-    # hists += [
-    #     Histogramddv2(
-    #         f"mH_plane_trigPassed_allTriggersOR",
-    #         binrange=binrange,
-    #         bins=bins,
-    #     )
-    # ]
-    # hists += [
-    #     Histogramddv2(
-    #         f"mH_plane_trigPassed_{trigger}",
-    #         binrange=binrange,
-    #         bins=bins,
-    #     )
-    #     for trigger in triggers_run3_all
-    # ]
 
     return hists
 
 
-def init_reco_hh_deltaeta_histograms(binrange=[0, 5], bins=50) -> list:
+def init_reco_HH_deltaeta_histograms(binrange=[0, 5], bins=50) -> list:
     """Initialize reconstructed hh deltaEta 1d histograms"""
 
     hists = []
@@ -170,7 +158,7 @@ def init_reco_hh_deltaeta_histograms(binrange=[0, 5], bins=50) -> list:
     return hists
 
 
-def init_reco_hh_mass_discrim_histograms(binrange=[0, 10], bins=21) -> list:
+def init_reco_HH_mass_discrim_histograms(binrange=[0, 10], bins=21) -> list:
     """Initialize reconstructed hh mass discriminant 1d histograms"""
 
     hists = []

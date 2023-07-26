@@ -42,25 +42,33 @@ def fill_hists(
         jet_p4[leading_h_jet_idx[:, 0, np.newaxis]]
         + jet_p4[leading_h_jet_idx[:, 1, np.newaxis]]
     )
+    h1 = h1[:, 0]  # remove the extra dimension
     h2 = (
         jet_p4[subleading_h_jet_idx[:, 0, np.newaxis]]
         + jet_p4[subleading_h_jet_idx[:, 1, np.newaxis]]
     )
+    h2 = h2[:, 0]  # remove the extra dimension
+    hh = h1 + h2
     fill_reco_mH_histograms(
-        mh1=np.squeeze(h1.mass),
-        mh2=np.squeeze(h2.mass),
+        mh1=h1.mass,
+        mh2=h2.mass,
         weights=events.event_weight,
         hists=find_hists_by_name(hists, "mH[12]_baseline"),
     )
     fill_reco_mH_2d_histograms(
-        mh1=np.squeeze(h1.mass),
-        mh2=np.squeeze(h2.mass),
+        mh1=h1.mass,
+        mh2=h2.mass,
         weights=events.event_weight,
         hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
     )
+    fill_reco_HH_histograms(
+        hh=hh,
+        weights=events.event_weight,
+        hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_baseline"),
+    )
     signal_event = events.signal_event
-    signal_mh1 = np.squeeze(h1.mass)[signal_event]
-    signal_mh2 = np.squeeze(h2.mass)[signal_event]
+    signal_mh1 = h1.mass[signal_event]
+    signal_mh2 = h2.mass[signal_event]
     signal_event_weight = events.event_weight[signal_event]
     fill_reco_mH_histograms(
         mh1=signal_mh1,
@@ -74,9 +82,14 @@ def fill_hists(
         weights=signal_event_weight,
         hist=find_hist(hists, lambda h: "mH_plane_baseline_signal_region" in h.name),
     )
+    fill_reco_HH_histograms(
+        hh=hh[signal_event],
+        weights=events.event_weight[signal_event],
+        hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_baseline_signal_region"),
+    )
     control_event = events.control_event
-    control_mh1 = np.squeeze(h1.mass)[control_event]
-    control_mh2 = np.squeeze(h2.mass)[control_event]
+    control_mh1 = h1.mass[control_event]
+    control_mh2 = h2.mass[control_event]
     control_event_weight = events.event_weight[control_event]
     fill_reco_mH_histograms(
         mh1=control_mh1,
@@ -89,6 +102,11 @@ def fill_hists(
         mh2=control_mh2,
         weights=control_event_weight,
         hist=find_hist(hists, lambda h: "mH_plane_baseline_control_region" in h.name),
+    )
+    fill_reco_HH_histograms(
+        hh=hh[control_event],
+        weights=events.event_weight[control_event],
+        hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_baseline_control_region"),
     )
 
     return hists
@@ -120,14 +138,6 @@ def fill_leading_jets_histograms(events, hists: list) -> None:
         )
         logger.debug(hist.name)
         hist.fill(np.array(jet_pt[:, ith_jet - 1]))
-        # for trig in triggers_run3_all:
-        #     hist = find_hist(
-        #         leading_jets_hists,
-        #         lambda h: f"leading_jet_{ith_jet}_pt_trigPassed_{trig}" in h.name,
-        #     )
-        #     logger.debug(hist.name)
-        #     trig_decisions = events[trig]
-        #     hist.fill(np.array(jet_pt[trig_decisions][:, ith_jet - 1]))
 
 
 def fill_truth_matched_mjj_histograms(events, hists: list) -> None:
@@ -215,9 +225,27 @@ def fill_reco_mH_histograms(mh1, mh2, weights, hists: list) -> None:
 def fill_reco_mH_2d_histograms(mh1, mh2, weights, hist) -> None:
     """Fill reconstructed H invariant mass 2D histograms"""
 
+    logger.debug(hist.name)
     if ak.count(mh1) != 0 and ak.count(mh2) != 0:
         mHH = np.column_stack((mh1, mh2))
         hist.fill(ak.to_numpy(mHH), weights=ak.to_numpy(weights))
+
+
+def fill_reco_HH_histograms(hh, weights, hists: list) -> None:
+    """Fill diHiggs (HH) kinematics histograms"""
+
+    if ak.count(hh, axis=0) != 0:
+        for kin_var in kin_labels.keys():
+            hist = find_hist(hists, lambda h: f"hh_{kin_var}" in h.name)
+            logger.debug(hist.name)
+            if kin_var == "pt":
+                hist.fill(ak.to_numpy(hh.pt), weights=ak.to_numpy(weights))
+            elif kin_var == "eta":
+                hist.fill(ak.to_numpy(hh.eta), weights=ak.to_numpy(weights))
+            elif kin_var == "phi":
+                hist.fill(ak.to_numpy(hh.phi), weights=ak.to_numpy(weights))
+            elif kin_var == "mass":
+                hist.fill(ak.to_numpy(hh.mass), weights=ak.to_numpy(weights))
 
 
 def fill_reco_mH_truth_pairing_histograms(events, hists: list) -> None:

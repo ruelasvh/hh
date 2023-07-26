@@ -84,14 +84,14 @@ def get_args():
 
 
 def process_sample_worker(
+    sample_name: str,
     sample_path: Path,
     sample_metadata: list,
-    sample_label: str,
     event_selection: dict,
     hists: list,
     args: argparse.Namespace,
 ) -> None:
-    is_mc = "data" not in sample_label
+    is_mc = "data" not in sample_name
     branch_aliases = get_branch_aliases(is_mc, args.run)
     total_weight = 1.0
     current_file_path = ""
@@ -122,17 +122,25 @@ def process_sample_worker(
             total_weight,
             is_mc,
         )
-        with multiprocessing.Lock():
-            sample_hists = hists[sample_label]
-            sample_hists = fill_hists(processed_batch, sample_hists, is_mc)
-            # NOTE: important: copy the hists back (otherwise parent process won't see the changes)
-            hists[sample_label] = sample_hists
-            output_file = args.output.with_name(
-                f"{args.output.stem}_{os.getpgid(os.getpid())}.h5"
-            )
-            with File(output_file, "w") as hout:
-                logger.info(f"Saving histograms to file: {output_file}")
-                write_hists(hists, hout)
+        # check if in multiprocessing context
+        if args.jobs > 1:
+            with multiprocessing.Lock():
+                # NOTE: important: copy the hists back (otherwise parent process won't see the changes)
+                hists[sample_name] = fill_hists(
+                    processed_batch, hists[sample_name], is_mc
+                )
+                output_name = args.output.with_name(
+                    f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
+                )
+                with File(output_name, "w") as output_file:
+                    logger.info(f"Saving histograms to file: {output_name}")
+                    write_hists(hists[sample_name], sample_name, output_file)
+        else:
+            hists[sample_name] = fill_hists(processed_batch, hists[sample_name], is_mc)
+            output_name = args.output.with_name(f"{args.output.stem}_{sample_name}.h5")
+            with File(output_name, "w") as output_file:
+                logger.info(f"Saving histograms to file: {output_name}")
+                write_hists(hists[sample_name], sample_name, output_file)
 
 
 def main():
@@ -152,9 +160,9 @@ def main():
     hists = manager.dict(init_hists(samples, args))
     worker_items = [
         (
-            sample_path,
-            sample["metadata"][idx],
             sample["label"],
+            sample_path,
+            sample["metadata"][idx] if "metadata" in sample else None,
             event_selection,
             hists,
             args,
@@ -162,8 +170,12 @@ def main():
         for sample in samples
         for idx, sample_path in enumerate(sample["paths"])
     ]
-    with multiprocessing.Pool(args.jobs) as pool:
-        pool.starmap(process_sample_worker, worker_items)
+    if args.jobs > 1:
+        with multiprocessing.Pool(args.jobs) as pool:
+            pool.starmap(process_sample_worker, worker_items)
+    else:
+        for worker_item in worker_items:
+            process_sample_worker(*worker_item)
 
     if logger.level == logging.DEBUG:
         logger.debug(

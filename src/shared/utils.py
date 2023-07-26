@@ -77,12 +77,11 @@ def get_datasetname_query(filepath):
     return dataset_query
 
 
-def write_hists(group, output):
-    for sample_name, sample_hists in group.items():
-        sample_out = output.create_group(sample_name)
-        sample_out.attrs["type"] = "sample_type"
-        for hist in sample_hists:
-            hist.write(sample_out, hist.name)
+def write_hists(sample_hists, sample_name, output):
+    sample_out = output.create_group(sample_name)
+    sample_out.attrs["type"] = "sample_type"
+    for hist in sample_hists:
+        hist.write(sample_out, hist.name)
 
 
 def get_op(op):
