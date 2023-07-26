@@ -17,6 +17,7 @@ JET_ALIASES = {
     "jet_jvttag": "recojet_antikt4_NOSYS_NNJvtPass",
     "jet_btag_DL1dv01_70": "recojet_antikt4_NOSYS_ftag_select_DL1dv01_FixedCutBEff_70",
     "jet_btag_DL1dv01_77": "recojet_antikt4_NOSYS_ftag_select_DL1dv01_FixedCutBEff_77",
+    "jet_btag_DL1dv01_85": "recojet_antikt4_NOSYS_ftag_select_DL1dv01_FixedCutBEff_85",
 }
 
 MC_ALIASES = {
@@ -25,12 +26,18 @@ MC_ALIASES = {
     "jet_truth_H_parents": "recojet_antikt4_NOSYS_parentHiggsParentsMask",
     # "jet_btag_sf_DL1dv01_70": "recojet_antikt4_NOSYS_ftag_effSF_DL1dv01_FixedCutBEff_70",
     # "jet_btag_sf_DL1dv01_77": "recojet_antikt4_NOSYS_ftag_effSF_DL1dv01_FixedCutBEff_77",
+    # "jet_btag_sf_DL1dv01_85": "recojet_antikt4_NOSYS_ftag_effSF_DL1dv01_FixedCutBEff_85",
 }
 
 
 def get_branch_aliases(is_mc=False, run=2):
     aliases = {**BASE_ALIASES}
-    aliases |= JET_ALIASES
+    aliases |= {
+        key: value if is_mc else value.replace("antikt4", "antikt4PFlow")
+        for key, value in JET_ALIASES.items()
+    }
+    if is_mc:
+        aliases |= MC_ALIASES
     if run == 2:
         aliases |= {
             f"trig_passed_{trig_short}": f"trigPassed_{trig_long}"
@@ -41,8 +48,6 @@ def get_branch_aliases(is_mc=False, run=2):
             f"trig_passed_{trig_short}": f"trigPassed_{trig_long}"
             for trig_long, trig_short, _ in trigs_run3_main
         }
-    if is_mc:
-        aliases |= MC_ALIASES
     return aliases
 
 

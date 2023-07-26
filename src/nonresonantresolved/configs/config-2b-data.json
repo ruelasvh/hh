@@ -4,8 +4,7 @@
             "label": "data22",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/data22_13p6TeV/output/user.viruelas.EJ_2023_07_02.data22_13p6TeV.periodAllYear_TREE/"
-            ],
-            "metadata": []
+            ]
         }
     ],
     "event_selection": {
@@ -25,10 +24,10 @@
         },
         "btagging": {
             "model": "DL1dv01",
-            "efficiency": 0.77,
+            "efficiency": 0.85,
             "count": {
-                "operator": ">=",
-                "value": 4
+                "operator": "==",
+                "value": 2
             }
         },
         "forward_jets": {
