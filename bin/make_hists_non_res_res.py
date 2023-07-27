@@ -10,25 +10,24 @@ import json
 import time
 import coloredlogs, logging
 from pathlib import Path
-from h5py import File
+import h5py
 import multiprocessing
 import os
 
-# Package modules
 from src.nonresonantresolved.inithists import init_hists
 from src.nonresonantresolved.branches import (
     get_branch_aliases,
 )
-from shared.utils import (
+from src.nonresonantresolved.processbatches import (
+    process_batch,
+)
+from src.nonresonantresolved.fillhists import fill_hists
+from src.shared.utils import (
     logger,
     concatenate_cutbookkeepers,
     get_total_weight,
     write_hists,
 )
-from nonresonantresolved.processbatches import (
-    process_batch,
-)
-from src.nonresonantresolved.fillhists import fill_hists
 
 
 def get_args():
@@ -132,13 +131,13 @@ def process_sample_worker(
                 output_name = args.output.with_name(
                     f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
                 )
-                with File(output_name, "w") as output_file:
+                with h5py.File(output_name, "w") as output_file:
                     logger.info(f"Saving histograms to file: {output_name}")
                     write_hists(hists[sample_name], sample_name, output_file)
         else:
             hists[sample_name] = fill_hists(processed_batch, hists[sample_name], is_mc)
             output_name = args.output.with_name(f"{args.output.stem}_{sample_name}.h5")
-            with File(output_name, "w") as output_file:
+            with h5py.File(output_name, "w") as output_file:
                 logger.info(f"Saving histograms to file: {output_name}")
                 write_hists(hists[sample_name], sample_name, output_file)
 

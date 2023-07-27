@@ -1,8 +1,7 @@
 import numpy as np
 import vector as p4
 import awkward as ak
-from .triggers import run3_main_stream as triggers_run3_all
-from shared.utils import (
+from src.shared.utils import (
     logger,
     find_hist,
     find_hists,
@@ -49,11 +48,11 @@ def fill_hists(
     )
     h2 = h2[:, 0]  # remove the extra dimension
     hh = h1 + h2
-    fill_reco_mH_histograms(
-        mh1=h1.mass,
-        mh2=h2.mass,
+    fill_reco_H_histograms(
+        h1=h1,
+        h2=h2,
         weights=events.event_weight,
-        hists=find_hists_by_name(hists, "mH[12]_baseline"),
+        hists=find_hists_by_name(hists, "h[12]_(pt|eta|phi|mass)_baseline"),
     )
     fill_reco_mH_2d_histograms(
         mh1=h1.mass,
@@ -67,18 +66,20 @@ def fill_hists(
         hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_baseline"),
     )
     signal_event = events.signal_event
-    signal_mh1 = h1.mass[signal_event]
-    signal_mh2 = h2.mass[signal_event]
+    signal_h1 = h1[signal_event]
+    signal_h2 = h2[signal_event]
     signal_event_weight = events.event_weight[signal_event]
-    fill_reco_mH_histograms(
-        mh1=signal_mh1,
-        mh2=signal_mh2,
+    fill_reco_H_histograms(
+        h1=signal_h1,
+        h2=signal_h2,
         weights=signal_event_weight,
-        hists=find_hists_by_name(hists, "mH[12]_baseline_signal_region"),
+        hists=find_hists_by_name(
+            hists, "h[12]_(pt|eta|phi|mass)_baseline_signal_region"
+        ),
     )
     fill_reco_mH_2d_histograms(
-        mh1=signal_mh1,
-        mh2=signal_mh2,
+        mh1=signal_h1.mass,
+        mh2=signal_h2.mass,
         weights=signal_event_weight,
         hist=find_hist(hists, lambda h: "mH_plane_baseline_signal_region" in h.name),
     )
@@ -88,18 +89,20 @@ def fill_hists(
         hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_baseline_signal_region"),
     )
     control_event = events.control_event
-    control_mh1 = h1.mass[control_event]
-    control_mh2 = h2.mass[control_event]
+    control_h1 = h1[control_event]
+    control_h2 = h2[control_event]
     control_event_weight = events.event_weight[control_event]
-    fill_reco_mH_histograms(
-        mh1=control_mh1,
-        mh2=control_mh2,
+    fill_reco_H_histograms(
+        h1=control_h1,
+        h2=control_h2,
         weights=control_event_weight,
-        hists=find_hists_by_name(hists, "mH[12]_baseline_control_region"),
+        hists=find_hists_by_name(
+            hists, "h[12]_(pt|eta|phi|mass)_baseline_control_region"
+        ),
     )
     fill_reco_mH_2d_histograms(
-        mh1=control_mh1,
-        mh2=control_mh2,
+        mh1=control_h1.mass,
+        mh2=control_h2.mass,
         weights=control_event_weight,
         hist=find_hist(hists, lambda h: "mH_plane_baseline_control_region" in h.name),
     )
@@ -115,10 +118,10 @@ def fill_hists(
 def fill_jet_kin_histograms(events, hists: list) -> None:
     """Fill jet kinematics histograms"""
 
-    for jet_var in kin_labels.keys():
-        hist = find_hist(hists, lambda h: f"jet_{jet_var}" in h.name)
+    for kin_var in kin_labels.keys():
+        hist = find_hist(hists, lambda h: f"jet_{kin_var}" in h.name)
         logger.debug(hist.name)
-        jets = events[f"jet_{jet_var}"]
+        jets = events[f"jet_{kin_var}"]
         event_weight = events.event_weight[:, np.newaxis]
         event_weight, _ = ak.broadcast_arrays(event_weight, jets)
         hist.fill(
@@ -210,16 +213,22 @@ def fill_truth_matched_mjj_passed_pairing_histograms(events, hists: list) -> Non
         hist.fill(mjj_p4.mass)
 
 
-def fill_reco_mH_histograms(mh1, mh2, weights, hists: list) -> None:
-    """Fill reconstructed H invariant mass 1D histograms"""
+def fill_reco_H_histograms(h1, h2, weights, hists: list) -> None:
+    """Fill reconstructed H1 and H2 kinematics 1D histograms"""
 
-    if len(hists) != 2:
-        raise ValueError("Expected 2 histograms, got", len(hists))
-
-    if ak.count(mh1) != 0 and ak.count(mh2) != 0:
-        for hist, mH in zip(hists, [mh1, mh2]):
-            logger.debug(hist.name)
-            hist.fill(ak.to_numpy(mH), weights=ak.to_numpy(weights))
+    if ak.count(h1) != 0 and ak.count(h2) != 0:
+        for h_i, h in zip(["1", "2"], [h1, h2]):
+            for kin_var in kin_labels.keys():
+                hist = find_hist(hists, lambda h: f"h{h_i}_{kin_var}" in h.name)
+                logger.debug(hist.name)
+                if kin_var == "pt":
+                    hist.fill(ak.to_numpy(h.pt), weights=ak.to_numpy(weights))
+                elif kin_var == "eta":
+                    hist.fill(ak.to_numpy(h.eta), weights=ak.to_numpy(weights))
+                elif kin_var == "phi":
+                    hist.fill(ak.to_numpy(h.phi), weights=ak.to_numpy(weights))
+                elif kin_var == "mass":
+                    hist.fill(ak.to_numpy(h.mass), weights=ak.to_numpy(weights))
 
 
 def fill_reco_mH_2d_histograms(mh1, mh2, weights, hist) -> None:

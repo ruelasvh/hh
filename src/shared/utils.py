@@ -4,7 +4,6 @@ import re
 import logging
 import operator
 from functools import reduce
-import pandas as pd
 
 
 logger = logging.getLogger("plot-hh4b-analysis")

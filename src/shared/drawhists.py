@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import mplhep as hplt
 import re
 from pathlib import Path
-from shared.utils import (
+from .utils import (
     logger,
     find_hist,
     find_hists,
@@ -18,147 +18,6 @@ np.seterr(divide="ignore", invalid="ignore")
 plt.style.use(hplt.style.ATLAS)
 
 
-def draw_hists(
-    hists_group: dict,
-    luminosity: float,
-    btag: str,
-    plots_postfix: str,
-    output_dir: Path,
-) -> None:
-    """Draw all the histrograms"""
-
-    # check if output_dir exists, if not create it
-    if not output_dir.exists():
-        output_dir.mkdir(parents=True)
-
-    draw_1d_hists(
-        hists_group={
-            key: value
-            for key, value in hists_group.items()
-            if "ggF" in key or "data" in key
-        },
-        hist_prefix="hh_deltaeta",
-        xlabel="$\Delta\eta_{HH}$",
-        ylabel="Events",
-        luminosity=luminosity,
-        ynorm_binwidth=True,
-        xcut=1.5,
-        third_exp_label="\n" + btag + ", no $\mathrm{X}_{\mathrm{Wt}}$ cut",
-        ggFk01_factor=500,
-        ggFk10_factor=50,
-        output_dir=output_dir,
-    )
-    draw_1d_hists(
-        hists_group={
-            key: value
-            for key, value in hists_group.items()
-            if "ggF_k01" in key or "ttbar" in key
-        },
-        hist_prefix="top_veto",
-        xlabel="$\mathrm{X}_{\mathrm{Wt}}$",
-        ylabel="Events",
-        third_exp_label=f"\n{btag}",
-        ynorm_binwidth=True,
-        luminosity=luminosity,
-        ggFk01_factor=50,
-        xcut=1.5,
-        output_dir=output_dir,
-    )
-    draw_1d_hists(
-        hists_group={
-            key: value
-            for key, value in hists_group.items()
-            if "ggF_k01" in key or "ttbar" in key
-        },
-        hist_prefix="top_veto_n_btags",
-        xlabel="$\mathrm{X}_{\mathrm{Wt}}$ btags",
-        ylabel="Events",
-        third_exp_label=f"\n{btag}",
-        luminosity=luminosity,
-        output_dir=output_dir,
-    )
-    draw_1d_hists(
-        hists_group,
-        hist_prefix="hh_mass_discrim",
-        xlabel="$\mathrm{X}_{\mathrm{HH}}$",
-        ylabel="Events",
-        ynorm_binwidth=True,
-        luminosity=luminosity,
-        third_exp_label=f"\n{btag}",
-        xcut=1.6,
-        output_dir=output_dir,
-    )
-    draw_mH_1D_hists_v2(
-        hists_group,
-        hist_prefix="mH[12]_baseline_signal_region$",
-        region="SR",
-        luminosity=luminosity,
-        ylabel="Events",
-        xlims=(60, 200),
-        third_exp_label=f"\n{btag} Signal Region",
-        output_dir=output_dir,
-    )
-    draw_mH_1D_hists_v2(
-        hists_group,
-        hist_prefix="mH[12]_baseline_control_region$",
-        region="CR",
-        luminosity=luminosity,
-        ylabel="Events",
-        xlims=(60, 200),
-        third_exp_label=f"\n{btag} Control Region",
-        output_dir=output_dir,
-    )
-    for sample_type, sample_hists in hists_group.items():
-        draw_jet_kin_hists(
-            sample_hists=sample_hists,
-            sample_name=sample_type,
-            luminosity=luminosity,
-            yscale="log",
-            output_dir=output_dir,
-        )
-        draw_mH_1D_hists(
-            sample_hists=sample_hists,
-            sample_name=sample_type,
-            hist_prefix="mH[12]_baseline$",
-            xlim=(90, 150),
-            output_dir=output_dir,
-        )
-        draw_mH_plane_2D_hists(
-            sample_hists=sample_hists,
-            sample_name=sample_type,
-            hist_prefix="mH_plane_baseline$",
-            output_dir=output_dir,
-        )
-        draw_mH_1D_hists(
-            sample_hists=sample_hists,
-            sample_name=sample_type,
-            region="SR",
-            hist_prefix="mH[12]_baseline_signal_region$",
-            output_dir=output_dir,
-        )
-        draw_mH_plane_2D_hists(
-            sample_hists=sample_hists,
-            sample_name=sample_type,
-            region="SR",
-            hist_prefix="mH_plane_baseline_signal_region$",
-            output_dir=output_dir,
-        )
-        draw_mH_1D_hists(
-            sample_hists=sample_hists,
-            sample_name=sample_type,
-            region="CR",
-            hist_prefix="mH[12]_baseline_control_region$",
-            output_dir=output_dir,
-        )
-        draw_mH_plane_2D_hists(
-            sample_hists=sample_hists,
-            sample_name=sample_type,
-            region="CR",
-            hist_prefix="mH_plane_baseline_control_region$",
-            output_dir=output_dir,
-        )
-
-
 def draw_1d_hists(
     hists_group,
     hist_prefix,
@@ -169,8 +28,11 @@ def draw_1d_hists(
     yscale="linear",
     ynorm_binwidth=False,
     xcut=None,
+    density=False,
     ggFk01_factor=None,
     ggFk10_factor=None,
+    data2b_factor=None,
+    postfix=None,
     output_dir=Path("plots"),
 ):
     """Draw 1D histograms in one figure. The number of histograms in the figure is
@@ -182,24 +44,33 @@ def draw_1d_hists(
         hist_name = find_hist(sample_hists, lambda h: hist_prefix in h)
         is_data = "data" in sample_type
         hist = sample_hists[hist_name]
-        hist_values = hist["values"][:]
+        hist_values = (
+            hist["values"][:] * luminosity
+            if luminosity and not is_data
+            else hist["values"][:]
+        )
         hist_edges = hist["edges"][:]
+        hist_edges = (
+            hist_edges * inv_GeV
+            if xlabel is not None and "GeV" in xlabel
+            else hist_edges
+        )
         bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
         scale_factor = 1
         if ggFk01_factor and "ggF_k01" in sample_type:
             scale_factor = ggFk01_factor
         if ggFk10_factor and "ggF_k10" in sample_type:
             scale_factor = ggFk10_factor
+        if data2b_factor and "data22_2b" in sample_type:
+            scale_factor = data2b_factor
         hplt.histplot(
-            hist_values
-            * bin_width
-            * scale_factor
-            * (luminosity if luminosity and not is_data else 1.0),
+            hist_values * bin_width * scale_factor,
             hist_edges,
             ax=ax,
             label=(str(scale_factor) + r"$\times$" if scale_factor != 1 else "")
             + sample_type,
             linewidth=2.0,
+            density=density,
         )
         ax.set_ylabel(ylabel + " / %.2g" % bin_width if ynorm_binwidth else ylabel)
     ax.legend()
@@ -226,7 +97,8 @@ def draw_1d_hists(
         ax=ax,
         pad=0.01,
     )
-    fig.savefig(f"{output_dir}/{hist_prefix}.png", bbox_inches="tight")
+    filename = output_dir / f"{hist_prefix}{'_' + postfix if postfix else ''}.png"
+    fig.savefig(filename, bbox_inches="tight")
     plt.close()
 
 
@@ -235,12 +107,12 @@ def draw_mH_1D_hists_v2(
     hist_prefix,
     luminosity=None,
     xlims=None,
+    ylims=None,
     third_exp_label="",
     ylabel="Frequency",
     ynorm_binwidth=False,
+    yscale="linear",
     region=None,
-    multijet_factor=None,
-    ttbar_factor=None,
     ggFk01_factor=None,
     ggFk10_factor=None,
     output_dir=Path("plots"),
@@ -255,19 +127,20 @@ def draw_mH_1D_hists_v2(
         for i in range(len(hists)):
             ax = axs[i]
             hist = sample_hists[hists[i]]
-            hist_values = hist["values"][:]
+            hist_values = (
+                hist["values"][:] * luminosity
+                if luminosity and not is_data
+                else hist["values"][:]
+            )
             hist_edges = hist["edges"][:]
-            bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
+            bin_width = (hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0) / 1.0
             scale_factor = 1
             if ggFk01_factor and "ggF_k01" in sample_type:
                 scale_factor = ggFk01_factor
             if ggFk10_factor and "ggF_k10" in sample_type:
                 scale_factor = ggFk10_factor
             hplt.histplot(
-                hist_values
-                * bin_width
-                * scale_factor
-                * (luminosity if luminosity and not is_data else 1.0),
+                hist_values * bin_width * scale_factor,
                 hist_edges * inv_GeV,
                 # histtype="step"
                 # if "ggF_k01" in sample_type or "ggF_k10" in sample_type
@@ -279,10 +152,14 @@ def draw_mH_1D_hists_v2(
                 stack=False,
                 ax=ax,
                 label=sample_type,
+                # yerr=True,
             )
+            ax.set_yscale(yscale)
             if xlims:
                 ax.set_xlim(*xlims)
-            ax.set_ylim(ax.get_ylim()[0], ax.get_ylim()[1] * 1.1)
+            if ylims is None:
+                ylims = ax.get_ylim()
+            ax.set_ylim(ylims[0], ylims[1] * 1.1)
             ax.legend()
             ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
             ax.set_ylabel(ylabel + " / %.2g" % bin_width if ynorm_binwidth else ylabel)
@@ -301,20 +178,29 @@ def draw_mH_1D_hists(
     sample_hists,
     sample_name,
     hist_prefix,
-    xlim=None,
+    luminosity=None,
     region=None,
+    xlim=None,
+    third_exp_label="",
     output_dir=Path("plots"),
 ):
     fig, axs = plt.subplots(2, constrained_layout=True)
     axs = axs.flat
     hists = find_hists(sample_hists, lambda h: re.match(hist_prefix, h))
+    is_data = "data" in sample_name
     for i in range(len(hists)):
         ax = axs[i]
         logger.debug(hists[i])
         hist = sample_hists[hists[i]]
+        hist_values = (
+            hist["values"][:] * luminosity
+            if luminosity and not is_data
+            else hist["values"][:]
+        )
+        hist_bins_GeV = hist["edges"][:] * inv_GeV
         hplt.histplot(
-            hist["values"][:],
-            hist["edges"][:] * inv_GeV,
+            hist_values,
+            hist_bins_GeV,
             histtype="fill",
             stack=True,
             ax=ax,
@@ -326,7 +212,9 @@ def draw_mH_1D_hists(
         ax.legend()
         ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
         ax.set_ylabel("Frequency")
-        hplt.atlas.label(loc=1, ax=ax, rlabel="")
+        hplt.atlas.label(
+            rlabel=get_com_lumi_label(luminosity) + third_exp_label, loc=4, ax=ax
+        )
     plot_postfix = sample_name + ("_" + region if region else "")
     fig.savefig(f"{output_dir}/mH_{plot_postfix}.png", bbox_inches="tight")
     plt.close()
@@ -337,19 +225,26 @@ def draw_mH_plane_2D_hists(
     sample_name,
     hist_prefix,
     region=None,
+    luminosity=None,
     output_dir=Path("plots"),
 ):
     fig, ax = plt.subplots()
     hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
     hist = sample_hists[hist_name]
-    binsGeV = hist["edges"][:] * inv_GeV
-    print(sample_name)
-    print(hist_name)
-    print(np.sum(hist["values"][:]))
+    bins_GeV = hist["edges"][:] * inv_GeV
+    is_data = "data" in sample_name
+    hist_values = (
+        hist["values"][:] * luminosity
+        if luminosity and not is_data
+        else hist["values"][:]
+    )
+    logger.info(
+        f"{region} {sample_name} {hist_name} counts: {np.sum(hist['values'][:])}"
+    )
     hplt.hist2dplot(
-        hist["values"],
-        binsGeV,
-        binsGeV,
+        hist_values,
+        bins_GeV,
+        bins_GeV,
         ax=ax,
         cbarpad=0.15,
         cbarsize="5%",
@@ -358,26 +253,35 @@ def draw_mH_plane_2D_hists(
     ax.set_xlabel(r"$m_{H1}$ [GeV]")
     ax.set_ylim(50, 200)
     ax.set_xlim(50, 200)
-    X, Y = np.meshgrid(binsGeV, binsGeV)
-    X_HH_discrim = X_HH(X, Y)
+    X, Y = np.meshgrid(bins_GeV, bins_GeV)
+    signal_region = X_HH(X, Y)
     ax.contour(
         X,
         Y,
-        X_HH_discrim,
+        signal_region,
         levels=[1.55, 1.6],
         colors=["red", "black"],
         linestyles=["solid", "dashed"],
     )
-    R_CR_discrim = R_CR(X, Y)
+    if is_data:
+        ax.contourf(
+            X,
+            Y,
+            signal_region,
+            levels=[0, 1.54],
+            colors=["black", "white"],
+            extend="min",
+        )
+    congrol_region = R_CR(X, Y)
     ax.contour(
         X,
         Y,
-        R_CR_discrim,
+        congrol_region,
         levels=[45],
         colors=["black"],
         linestyles=["dashed"],
     )
-    hplt.atlas.label(loc=0, ax=ax, label=sample_name, com=13.6)
+    hplt.atlas.label(loc=0, ax=ax, label=sample_name, com=13.6, lumi=luminosity)
     plot_postfix = sample_name + ("_" + region if region else "")
     fig.savefig(
         f"{output_dir}/mH_plane_{plot_postfix}.png",
@@ -386,24 +290,38 @@ def draw_mH_plane_2D_hists(
     plt.close()
 
 
-def draw_jet_kin_hists(
+def draw_kin_hists(
     sample_hists,
     sample_name,
+    object="jet",
     luminosity=None,
+    ylabel="Events",
     yscale="linear",
+    ynorm_binwidth=False,
     third_exp_label="",
     output_dir=Path("plots"),
 ):
-    jet_vars = ["pt"]
+    kin_vars = kin_labels.keys()
     is_data = "data" in sample_name
-    for jet_var in jet_vars:
+    for kin_var in kin_vars:
         fig, ax = plt.subplots()
-        hist_name = find_hist(sample_hists, lambda h: f"jet_{jet_var}" in h)
+        hist_name = find_hist(sample_hists, lambda h: f"{object}_{kin_var}" in h)
         logger.debug(hist_name)
         hist = sample_hists[hist_name]
+        hist_values = (
+            hist["values"][:] * luminosity
+            if luminosity and not is_data
+            else hist["values"][:]
+        )
+        hist_edges = (
+            hist["edges"][:] * inv_GeV
+            if kin_var in ["pt", "mass"]
+            else hist["edges"][:]
+        )
+        bin_width = (hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0) / 1.0
         hplt.histplot(
-            hist["values"][:] * (luminosity if luminosity and not is_data else 1.0),
-            hist["edges"][:] * inv_GeV,
+            hist_values * bin_width,
+            hist_edges,
             ax=ax,
             label=sample_name,
         )
@@ -413,12 +331,12 @@ def draw_jet_kin_hists(
             ax=ax,
             pad=0.01,
         )
-        ax.set_yscale("log")
-        ax.set_ylabel("Frequency")
+        ax.set_ylabel(ylabel)
         ax.set_yscale(yscale)
         ax.legend()
-        ax.set_xlabel(f"jet {kin_labels[jet_var]} [GeV]")
+        unit = "[GeV]" if kin_var in ["pt", "mass"] else ""
+        ax.set_xlabel(f"{object} {kin_labels[kin_var]} {unit}".rstrip())
         fig.savefig(
-            f"{output_dir}/jet_{jet_var}_{sample_name}.png", bbox_inches="tight"
+            f"{output_dir}/{object}_{kin_var}_{sample_name}.png", bbox_inches="tight"
         )
         plt.close()

@@ -1,6 +1,6 @@
 import awkward as ak
 import numpy as np
-from shared.utils import (
+from src.shared.utils import (
     logger,
     format_btagger_model_name,
 )

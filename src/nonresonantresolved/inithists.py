@@ -1,5 +1,5 @@
 from argparse import Namespace
-from shared.utils import logger, kin_labels
+from src.shared.utils import logger, kin_labels
 from .hist import Histogram, Histogramddv2
 
 
@@ -13,9 +13,9 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_type] = []
         hists_dict[sample_type] += init_jet_kin_histograms()
         hists_dict[sample_type] += init_leading_jets_histograms()
-        hists_dict[sample_type] += init_reco_mH_histograms()
-        hists_dict[sample_type] += init_reco_mH_histograms(postfix="_signal_region")
-        hists_dict[sample_type] += init_reco_mH_histograms(postfix="_control_region")
+        hists_dict[sample_type] += init_reco_H_histograms()
+        hists_dict[sample_type] += init_reco_H_histograms(postfix="_signal_region")
+        hists_dict[sample_type] += init_reco_H_histograms(postfix="_control_region")
         hists_dict[sample_type] += init_reco_mH_2d_histograms()
         hists_dict[sample_type] += init_reco_mH_2d_histograms(postfix="_signal_region")
         hists_dict[sample_type] += init_reco_mH_2d_histograms(postfix="_control_region")
@@ -87,18 +87,28 @@ def init_truth_matched_mjj_histograms(binrange=[0, 200_000], bins=100) -> list:
     return hists
 
 
-def init_reco_mH_histograms(binrange=[0, 200_000], bins=100, postfix=None) -> list:
-    """Initialize reconstructed mH 1d histograms"""
+def init_reco_H_histograms(
+    binrange={
+        "pt": [0, 800_000],
+        "eta": [-5, 5],
+        "phi": [-3, 3],
+        "mass": [0, 400_000],
+    },
+    bins=100,
+    postfix=None,
+) -> list:
+    """Initialize reconstructed H1 and H2 kinematics 1d histograms"""
 
     hists = []
     for reco_h in [1, 2]:
-        hists += [
-            Histogram(
-                f"mH{reco_h}_baseline{postfix if postfix else ''}",
-                binrange=binrange,
-                bins=bins,
-            )
-        ]
+        for kin_var in kin_labels.keys():
+            hists += [
+                Histogram(
+                    f"h{reco_h}_{kin_var}_baseline{postfix if postfix else ''}",
+                    binrange[kin_var],
+                    bins,
+                )
+            ]
 
     return hists
 
@@ -108,19 +118,19 @@ def init_reco_HH_histograms(
         "pt": [0, 500_000],
         "eta": [-5, 5],
         "phi": [-3, 3],
-        "mass": [0, 200_000],
+        "mass": [0, 1_300_000],
     },
     bins=100,
     postfix=None,
 ) -> list:
-    """Initialize reconstructed HH 1d histograms"""
+    """Initialize reconstructed HH kinematics 1d histograms"""
 
     hists = []
-    for hh_var in kin_labels.keys():
+    for kin_var in kin_labels.keys():
         hists += [
             Histogram(
-                f"hh_{hh_var}_baseline{postfix if postfix else ''}",
-                binrange[hh_var],
+                f"hh_{kin_var}_baseline{postfix if postfix else ''}",
+                binrange[kin_var],
                 bins,
             )
         ]

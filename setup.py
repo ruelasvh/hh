@@ -22,11 +22,13 @@ setup(
         "pyAMI_atlas==5.1.0.1",
         "coloredlogs>=15.0.1",
         "h5py>=3.8.0",
+        "htcondor>=10.6.0",
     ],
     entry_points={
         "console_scripts": [
-            "hh4b_non_res_res_make_hists = bin.hh4b_non_res_res_make_hists:main",
-            "hh4b_non_res_res_draw_hists = bin.hh4b_non_res_res_draw_hists:main",
+            "hh4b_non_res_res_make_hists = bin.make_hists_non_res_res:main",
+            "hh4b_non_res_res_draw_hists = bin.draw_hists_non_res_res:main",
+            "hh4b_submit_jobs = bin.submit_jobs:main",
         ]
     },
     zip_safe=False,

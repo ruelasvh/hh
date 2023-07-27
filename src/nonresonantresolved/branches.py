@@ -1,4 +1,4 @@
-from src.nonresonantresolved.triggers import (
+from .triggers import (
     run3_main_stream as trigs_run3_main,
     run2_reoptimized as trigs_run2_reoptimized,
 )
