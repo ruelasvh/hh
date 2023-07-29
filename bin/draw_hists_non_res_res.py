@@ -63,12 +63,20 @@ def get_args():
     return parser.parse_args()
 
 
-def merge_sample_files(files):
-    hists = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: np.array([]))))
+def merge_sample_files(inputs, hists=None):
+    _hists = (
+        hists
+        if hists is not None
+        else defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: np.array([]))))
+    )
     # checks if JZ0-9 is in the sample name
     jz_regex = re.compile(r"JZ[0-9]")
-    for file in files:
-        with h5py.File(file, "r") as hists_file:
+    for input in inputs:
+        if input.is_dir():
+            files_in_dir = input.glob("*.h5")
+            merge_sample_files(files_in_dir, _hists)
+            continue
+        with h5py.File(input, "r") as hists_file:
             for sample_name in hists_file:
                 if jz_regex.search(sample_name):
                     merged_sample_name = (
@@ -78,16 +86,16 @@ def merge_sample_files(files):
                     merged_sample_name = sample_name
                 for hist_name in hists_file[sample_name]:
                     hist_edges = hists_file[sample_name][hist_name]["edges"][:]
-                    hists[merged_sample_name][hist_name]["edges"] = hist_edges
                     hist_values = hists_file[sample_name][hist_name]["values"][:]
+                    _hists[merged_sample_name][hist_name]["edges"] = hist_edges
                     if (
                         hist_values.shape
-                        != hists[merged_sample_name][hist_name]["values"].shape
+                        != _hists[merged_sample_name][hist_name]["values"].shape
                     ):
-                        hists[merged_sample_name][hist_name]["values"] = hist_values
+                        _hists[merged_sample_name][hist_name]["values"] = hist_values
                     else:
-                        hists[merged_sample_name][hist_name]["values"] += hist_values
-    return hists
+                        _hists[merged_sample_name][hist_name]["values"] += hist_values
+    return _hists
 
 
 def main():

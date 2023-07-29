@@ -84,7 +84,7 @@ def main():
             "output": f"/lustre/fs22/group/atlas/ruelasv/tmp/condor/output/{args.executable.stem}-$(ClusterId).$(ProcId).out",
             "error": f"/lustre/fs22/group/atlas/ruelasv/tmp/condor/error/{args.executable.stem}-$(ClusterId).$(ProcId).err",
             "log": f"/lustre/fs22/group/atlas/ruelasv/tmp/condor/log/{args.executable.stem}-$(ClusterId).$(ProcId).log",
-            "request_memory": "2 GB",
+            "request_memory": "6 GB",
             "request_cpus": "2",
             "request_disk": "2 GB",
         }

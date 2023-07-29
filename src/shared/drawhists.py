@@ -57,14 +57,14 @@ def draw_1d_hists(
         )
         bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
         scale_factor = 1
-        if ggFk01_factor and "ggF_k01" in sample_type:
+        if ggFk01_factor and "ggF" in sample_type and "k01" in sample_type:
             scale_factor = ggFk01_factor
-        if ggFk10_factor and "ggF_k10" in sample_type:
+        if ggFk10_factor and "ggF" in sample_type and "k10" in sample_type:
             scale_factor = ggFk10_factor
-        if data2b_factor and "data22_2b" in sample_type:
+        if data2b_factor and "data" in sample_type and "2b" in sample_type:
             scale_factor = data2b_factor
         hplt.histplot(
-            hist_values * bin_width * scale_factor,
+            hist_values * scale_factor * 1.0 / bin_width,
             hist_edges,
             ax=ax,
             label=(str(scale_factor) + r"$\times$" if scale_factor != 1 else "")
@@ -133,21 +133,15 @@ def draw_mH_1D_hists_v2(
                 else hist["values"][:]
             )
             hist_edges = hist["edges"][:]
-            bin_width = (hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0) / 1.0
+            bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
             scale_factor = 1
-            if ggFk01_factor and "ggF_k01" in sample_type:
+            if ggFk01_factor and "ggF" in sample_type and "k01" in sample_type:
                 scale_factor = ggFk01_factor
-            if ggFk10_factor and "ggF_k10" in sample_type:
+            if ggFk10_factor and "ggF" in sample_type and "k10" in sample_type:
                 scale_factor = ggFk10_factor
             hplt.histplot(
-                hist_values * bin_width * scale_factor,
+                hist_values * scale_factor * 1.0 / bin_width,
                 hist_edges * inv_GeV,
-                # histtype="step"
-                # if "ggF_k01" in sample_type or "ggF_k10" in sample_type
-                # else "fill",
-                # stack=False
-                # if "ggF_k01" in sample_type or "ggF_k10" in sample_type
-                # else True,
                 histtype="step",
                 stack=False,
                 ax=ax,
@@ -318,9 +312,9 @@ def draw_kin_hists(
             if kin_var in ["pt", "mass"]
             else hist["edges"][:]
         )
-        bin_width = (hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0) / 1.0
+        bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
         hplt.histplot(
-            hist_values * bin_width,
+            hist_values * 1.0 / bin_width,
             hist_edges,
             ax=ax,
             label=sample_name,

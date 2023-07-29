@@ -59,7 +59,7 @@ def draw_hists(
             for key, value in hists_group.items()
             if "ggF_k01" in key or "data" in key
         },
-        hist_prefix="mH1_baseline_control_region",
+        hist_prefix="h1_mass_baseline_control_region",
         xlabel="$\mathrm{m}_{\mathrm{H1}}$ [GeV]",
         ylabel="Events",
         third_exp_label=f"\n Control Region",
@@ -75,7 +75,7 @@ def draw_hists(
             for key, value in hists_group.items()
             if "ggF_k01" in key or "data" in key
         },
-        hist_prefix="mH1_baseline_control_region",
+        hist_prefix="h1_mass_baseline_control_region",
         xlabel="$\mathrm{m}_{\mathrm{H1}}$ [GeV]",
         ylabel="Events",
         third_exp_label=f"\n Control Region",
@@ -91,7 +91,7 @@ def draw_hists(
             for key, value in hists_group.items()
             if "ggF_k01" in key or "data" in key
         },
-        hist_prefix="mH2_baseline_control_region",
+        hist_prefix="h2_mass_baseline_control_region",
         xlabel="$\mathrm{m}_{\mathrm{H2}}$ [GeV]",
         ylabel="Events",
         third_exp_label=f"\n Control Region",
@@ -107,7 +107,7 @@ def draw_hists(
             for key, value in hists_group.items()
             if "ggF_k01" in key or "data" in key
         },
-        hist_prefix="mH2_baseline_control_region",
+        hist_prefix="h2_mass_baseline_control_region",
         xlabel="$\mathrm{m}_{\mathrm{H2}}$ [GeV]",
         ylabel="Events",
         third_exp_label=f"\n Control Region",

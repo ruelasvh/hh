@@ -1,7 +1,7 @@
 {
     "samples": [
         {
-            "label": "data22",
+            "label": "4b_data22",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/data22_13p6TeV/output/user.viruelas.EJ_2023_07_02.data22_13p6TeV.periodAllYear_TREE/"
             ]
