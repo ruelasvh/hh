@@ -4,7 +4,7 @@
 ```bash
 git clone https://github.com/ruelasvh/plot-hh4b-analysis.git
 cd plot-hh4b-analysis
-pip install -e .
+python3 -m pip install -e .
 ```
 
 ## Usage
