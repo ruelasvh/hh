@@ -19,6 +19,7 @@ def fill_hists(
     is_mc: bool = True,
 ) -> list:  # hists:
     """Fill histograms for analysis regions"""
+    fill_event_no_histograms(events, hists)
     fill_jet_kin_histograms(events, hists)
     fill_top_veto_histograms(
         events,
@@ -113,6 +114,14 @@ def fill_hists(
     )
 
     return hists
+
+
+def fill_event_no_histograms(events, hists: list) -> None:
+    """Fill event number histograms"""
+
+    hist = find_hist(hists, lambda h: "event_number" in h.name)
+    logger.debug(hist.name)
+    hist.fill(events.event_number.to_numpy())
 
 
 def fill_jet_kin_histograms(events, hists: list) -> None:
