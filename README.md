@@ -2,8 +2,8 @@
 
 ## Installation
 ```bash
-git clone https://github.com/ruelasvh/plot-hh4b-analysis.git
-cd plot-hh4b-analysis
+git clone https://github.com/ruelasvh/hh.git
+cd hh
 python3 -m pip install -e .
 ```
 
