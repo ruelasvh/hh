@@ -1,0 +1,28 @@
+{
+    "features": [
+        "jet_px",
+        "jet_py",
+        "jet_pz",
+        "jet_btag"
+    ],
+    "event_selection": {
+        "jets": {
+            "pt": {
+                "operator": ">",
+                "value": 40000
+            },
+            "count": {
+                "operator": ">=",
+                "value": 4
+            },
+            "btag": {
+                "model": "DL1dv01",
+                "efficiency": 0.85,
+                "count": {
+                    "operator": ">=",
+                    "value": 4
+                }
+            }
+        }
+    }
+}
