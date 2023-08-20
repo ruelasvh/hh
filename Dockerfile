@@ -1,5 +1,6 @@
 # base image
-FROM python:3.9-slim-bookworm
+#FROM python:3.9-slim-bookworm
+FROM htcondor/mini:10.0-ubu20.04 
 
 # local and envs
 ENV LANG C.UTF-8
@@ -13,10 +14,10 @@ WORKDIR /home
 RUN apt-get update && apt-get install -y git git-lfs h5utils wget vim build-essential
 
 # update python pip
-RUN python -m pip install --upgrade pip
-RUN python --version
-RUN python -m pip --version
+RUN python3 -m pip install --upgrade pip
+RUN python3 --version
+RUN python3 -m pip --version
 
 # copy and install package
 COPY . /hh
-RUN python -m pip install --no-cache-dir --no-deps -e /hh
+RUN python3 -m pip install --no-cache-dir -e /hh
