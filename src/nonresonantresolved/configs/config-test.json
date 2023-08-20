@@ -3,7 +3,7 @@
         {
             "label": "4b_mc21_ggF_k01",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/projects/plot-hh4b-analysis/src/nonresonantresolved/tests/test-data/mc21ggF-k01/"
+                "hh/src/nonresonantresolved/tests/test-data/mc21ggF-k01/"
             ],
             "metadata": [
                 {
@@ -18,7 +18,7 @@
         {
             "label": "4b_mc21_ggF_k10",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/projects/plot-hh4b-analysis/src/nonresonantresolved/tests/test-data/mc21ggF-k10/"
+                "hh/src/nonresonantresolved/tests/test-data/mc21ggF-k10/"
             ],
             "metadata": [
                 {
@@ -33,7 +33,7 @@
         {
             "label": "4b_data22",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/projects/plot-hh4b-analysis/src/nonresonantresolved/tests/test-data/data22/"
+                "hh/src/nonresonantresolved/tests/test-data/data22/"
             ]
         }
     ],

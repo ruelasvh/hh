@@ -94,6 +94,9 @@ def process_sample_worker(
     branch_aliases = get_branch_aliases(is_mc, args.run)
     total_weight = 1.0
     current_file_path = ""
+    if sample_path.startswith("hh/"):
+        sample_path = f"{sample_path.replace('hh', str(Path(__file__).parent.parent))}"
+
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
