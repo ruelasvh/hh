@@ -8,7 +8,7 @@ setup(
     author="Victor Ruelas",
     author_email="victor.hugo.ruelas.rivera@cern.ch",
     license="MIT",
-    package_dir={"": "src"},
+    packages=["bin", "src"],
     python_requires=">=3.7",
     install_requires=[
         "awkward>=2.2.4",
