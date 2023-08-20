@@ -32,22 +32,22 @@ MC_ALIASES = {
 
 def get_branch_aliases(is_mc=False, run=2):
     aliases = {**BASE_ALIASES}
-    aliases |= {
+    aliases.update({
         key: value if is_mc else value.replace("antikt4", "antikt4PFlow")
         for key, value in JET_ALIASES.items()
-    }
+    })
     if is_mc:
-        aliases |= MC_ALIASES
+        aliases.update(MC_ALIASES)
     if run == 2:
-        aliases |= {
+        aliases.update({
             f"trig_passed_{trig_short}": f"trigPassed_{trig_long}"
             for trig_long, trig_short, _ in trigs_run2_reoptimized
-        }
+        })
     elif run == 3:
-        aliases |= {
+        aliases.update({
             f"trig_passed_{trig_short}": f"trigPassed_{trig_long}"
             for trig_long, trig_short, _ in trigs_run3_main
-        }
+        })
     return aliases
 
 
