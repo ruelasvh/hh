@@ -13,12 +13,14 @@ from pathlib import Path
 import h5py
 import multiprocessing
 import os
+import contextlib
+import awkward as ak
 
 from src.nonresonantresolved.inithists import init_hists
 from src.nonresonantresolved.branches import (
     get_branch_aliases,
 )
-from src.nonresonantresolved.processbatches import (
+from src.dump.processbatches import (
     process_batch,
 )
 from src.nonresonantresolved.fillhists import fill_hists
@@ -26,7 +28,9 @@ from src.shared.utils import (
     logger,
     concatenate_cutbookkeepers,
     get_total_weight,
-    write_hists,
+    resolve_project_paths,
+    concatenate_datasets,
+    write_out,
 )
 
 
@@ -38,7 +42,7 @@ def get_args():
         "-o",
         "--output",
         type=Path,
-        default=Path("dataset.root"),
+        default=Path("train.root"),
         **defaults,
     )
     parser.add_argument(
@@ -86,8 +90,10 @@ def process_sample_worker(
     sample_name: str,
     sample_path: Path,
     sample_metadata: list,
-    event_selection: dict,
-    hists: list,
+    selections: dict,
+    class_label: str,
+    features: dict,
+    output: dict,
     args: argparse.Namespace,
 ) -> None:
     is_mc = "data" not in sample_name
@@ -117,29 +123,23 @@ def process_sample_worker(
         # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
         processed_batch = process_batch(
             batch_events,
-            event_selection,
+            selections,
+            features,
+            class_label,
             total_weight,
             is_mc,
         )
-        # check if in multiprocessing context
-        if args.jobs > 1:
-            with multiprocessing.Lock():
-                # NOTE: important: copy the hists back (otherwise parent process won't see the changes)
-                hists[sample_name] = fill_hists(
-                    processed_batch, hists[sample_name], is_mc
-                )
-                output_name = args.output.with_name(
-                    f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
-                )
-                with h5py.File(output_name, "w") as output_file:
-                    logger.info(f"Saving histograms to file: {output_name}")
-                    write_hists(hists[sample_name], sample_name, output_file)
-        else:
-            hists[sample_name] = fill_hists(processed_batch, hists[sample_name], is_mc)
-            output_name = args.output.with_name(f"{args.output.stem}_{sample_name}.h5")
-            with h5py.File(output_name, "w") as output_file:
-                logger.info(f"Saving histograms to file: {output_name}")
-                write_hists(hists[sample_name], sample_name, output_file)
+        with multiprocessing.Lock() if args.jobs > 1 else contextlib.nullcontext():
+            logger.info(f"Merging batches for sample: {sample_name}")
+            # NOTE: important: copy the out back (otherwise parent process won't see the changes)
+            output[sample_name] = concatenate_datasets(
+                processed_batch, output[sample_name], is_mc
+            )
+            output_name = args.output.with_name(
+                f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.root"
+            )
+            logger.info(f"Writing {sample_name} to {output_name}")
+            write_out(output[sample_name], sample_name, output_name)
 
 
 def main():
@@ -152,22 +152,30 @@ def main():
         coloredlogs.install(level=logger.level, logger=logger)
 
     with open(args.config) as cf:
-        config = json.load(cf)
+        config = resolve_project_paths(config=json.load(cf))
 
-    samples, event_selection = config["samples"], config["event_selection"]
-    manager = multiprocessing.Manager()
-    hists = manager.dict(init_hists(samples, args))
+    if "path" in config["features"]:
+        with open(config["features"]["path"]) as ff:
+            config["features"] = json.load(ff)
+
+    samples, features = config["samples"], config["features"]
+    with multiprocessing.Manager() if args.jobs > 1 else contextlib.nullcontext() as manager:
+        output = {sample["label"]: ak.Array([]) for sample in samples}
+        output = manager.dict(output) if manager else output
+
     worker_items = [
         (
             sample["label"],
             sample_path,
             sample["metadata"][idx] if "metadata" in sample else None,
-            event_selection,
-            hists,
+            sample["selections"] if "selections" in sample else None,
+            sample["class_label"] if "class_label" in sample else None,
+            features,
+            output,
             args,
         )
         for sample in samples
-        for idx, sample_path in enumerate(sample["paths"])
+        for idx, sample_path in enumerate(sample["path"])
     ]
     if args.jobs > 1:
         with multiprocessing.Pool(args.jobs) as pool:
@@ -178,7 +186,7 @@ def main():
 
     if logger.level == logging.DEBUG:
         logger.debug(
-            f"Loading data & filling histograms execution time: {time.time() - starttime} seconds"
+            f"Loading data & processing events execution time: {time.time() - starttime} seconds"
         )
 
 

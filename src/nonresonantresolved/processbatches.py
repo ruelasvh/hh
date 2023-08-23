@@ -49,7 +49,13 @@ def process_batch(
     # select and save events with >= n central jets
     central_jets_sel = event_selection["central_jets"]
     n_central_jets_mask, with_n_central_jets = select_n_jets_events(
-        events,
+        jets=ak.zip(
+            {
+                "pt": events.jet_pt,
+                "eta": events.jet_eta,
+                "jvttag": events.jet_jvttag,
+            }
+        ),
         selection=central_jets_sel,
     )
     events["n_central_jets"] = n_central_jets_mask
@@ -69,7 +75,7 @@ def process_batch(
     # select and save events with >= n central b-jets
     bjets_sel = event_selection["btagging"]
     n_central_bjets_mask, with_n_central_bjets = select_n_bjets_events(
-        events,
+        jets=ak.zip({"btags": events.jet_btag, "valid": n_central_jets_mask}),
         selection=bjets_sel,
     )
     events["n_central_bjets"] = n_central_bjets_mask

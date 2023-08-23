@@ -1,0 +1,47 @@
+{
+    "features": {"path": "src/dump/configs/features.json"},
+    "samples": [
+        {
+            "label": "4b_mc21_ggF_k01",
+            "class_label": "label_HH",
+            "selections": {
+                "events": {
+                    "count": {
+                        "operator": "==",
+                        "value": 100000
+                    }
+                },
+                "jets": {
+                    "pt": {
+                        "operator": ">",
+                        "value": 40000
+                    },
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    },
+                    "btagging": {
+                        "model": "DL1dv01",
+                        "efficiency": 0.77,
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        }
+                    }
+                }
+            },
+            "path": [
+                "src/nonresonantresolved/tests/test-data/mc21ggF-k01/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.601479.PhPy8EG_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8472_s3873_r13829_p5631",
+                    "genFiltEff": 1,
+                    "crossSection": 0.000030836,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        }
+    ]
+}

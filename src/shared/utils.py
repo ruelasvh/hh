@@ -3,7 +3,9 @@ import glob
 import re
 import logging
 import operator
+from pathlib import Path
 from functools import reduce
+import awkward as ak
 
 
 logger = logging.getLogger("plot-hh4b-analysis")
@@ -147,3 +149,49 @@ def format_btagger_model_name(model, eff):
         return f"{model}_{eff*100:.0f}"
     else:
         return f"{model}_{eff}"
+
+
+# write function that 1: gets this projects root path, 2: lists directories under it,  3: gets path as argument, 4: returns path arg using root path as base
+def get_root_path():
+    return Path(__file__).parent.parent.parent
+
+
+def get_dirs(root_path):
+    return [d for d in root_path.iterdir() if d.is_dir()]
+
+
+def resolve_project_path(path, root_path=None):
+    project_root_path = root_path if root_path else get_root_path()
+    project_dirs = get_dirs(project_root_path)
+    if isinstance(path, list):
+        return [resolve_project_path(p, project_root_path) for p in path]
+    # check if path starts with any of the dirs in project_dirs
+    # if it does return path prepended with project_root_path else return path
+    for project_dir in project_dirs:
+        if path.startswith(project_dir.name):
+            return f"{project_root_path}/{path}"
+    return path
+
+
+# write function that takes a dictionary as a parameter and through recursion goes through all the values and if they are strings, it checks if they start with any of the dirs in project_dirs and if they do, it prepends the project_root_path to it
+def resolve_project_paths(config, path_delimiter="path"):
+    for key, value in config.items():
+        if path_delimiter in key:
+            config[key] = resolve_project_path(value)
+        if isinstance(value, dict):
+            resolve_project_paths(value)
+        elif isinstance(value, list):
+            for c in value:
+                if isinstance(c, dict):
+                    resolve_project_paths(c)
+    return config
+
+
+def concatenate_datasets(processed_batch, out, is_mc):
+    # concatenate datasets. Processed batch is an Akward array of events. Each event in an Awkward record. Second argument is also an Awkward array of events. Each event is an Awkward record. Concatenate the two arrays and return the concatenated array
+    return ak.concatenate([processed_batch, out])
+
+
+def write_out(sample_output, sample_name, output_name):
+    with uproot.recreate(output_name) as f:
+        f[sample_name] = {field: sample_output[field] for field in sample_output.fields}

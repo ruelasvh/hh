@@ -3,7 +3,7 @@
         {
             "label": "4b_mc21_ggF_k01",
             "paths": [
-                "hh/src/nonresonantresolved/tests/test-data/mc21ggF-k01/"
+                "src/nonresonantresolved/tests/test-data/mc21ggF-k01/"
             ],
             "metadata": [
                 {
@@ -18,7 +18,7 @@
         {
             "label": "4b_mc21_ggF_k10",
             "paths": [
-                "hh/src/nonresonantresolved/tests/test-data/mc21ggF-k10/"
+                "src/nonresonantresolved/tests/test-data/mc21ggF-k10/"
             ],
             "metadata": [
                 {
@@ -33,7 +33,7 @@
         {
             "label": "4b_data22",
             "paths": [
-                "hh/src/nonresonantresolved/tests/test-data/data22/"
+                "src/nonresonantresolved/tests/test-data/data22/"
             ]
         }
     ],

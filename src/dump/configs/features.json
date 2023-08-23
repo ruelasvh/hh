@@ -1,28 +1,11 @@
 {
-    "features": [
-        "jet_px",
-        "jet_py",
-        "jet_pz",
-        "jet_btag"
+    "out": [
+        "jet_x",
+        "jet_y",
+        "jet_z",
+        "jet_num",
+        "jet_btag",
+        "event_weight"
     ],
-    "event_selection": {
-        "jets": {
-            "pt": {
-                "operator": ">",
-                "value": 40000
-            },
-            "count": {
-                "operator": ">=",
-                "value": 4
-            },
-            "btag": {
-                "model": "DL1dv01",
-                "efficiency": 0.85,
-                "count": {
-                    "operator": ">=",
-                    "value": 4
-                }
-            }
-        }
-    }
+    "classes": ["label_HH", "label_ttbar", "label_QCD"]
 }

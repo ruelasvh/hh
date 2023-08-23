@@ -65,38 +65,53 @@ def select_events_passing_all_triggers_OR(events):
     return passed_all_trigs_OR_mask
 
 
-def select_n_jets_events(events, selection, do_jvt=True):
+def select_n_jets_events(jets, selection, do_jvt=True):
     """Selects events by applying the cuts specified in the selection."""
 
-    pt_cut = selection["pt"]
-    eta_cut = selection["eta"]
-    njets_cut = selection["count"]
-    pt = events.jet_pt
-    eta = events.jet_eta
-    valid_central_jets_mask = (
-        get_op(pt_cut["operator"])(pt, pt_cut["value"])
-    ) & get_op(eta_cut["operator"])(np.abs(eta), eta_cut["value"])
+    pt_cut = selection["pt"] if "pt" in selection else None
+    eta_cut = selection["eta"] if "eta" in selection else None
+    njets_cut = selection["count"] if "count" in selection else None
+    # mask array for valid jets
+    valid_jets_mask = np.ones_like(jets.pt, dtype=bool)
+    if pt_cut:
+        valid_jets_mask = valid_jets_mask & get_op(pt_cut["operator"])(
+            jets.pt, pt_cut["value"]
+        )
+    if eta_cut:
+        valid_jets_mask = valid_jets_mask & get_op(eta_cut["operator"])(
+            np.abs(jets.eta), eta_cut["value"]
+        )
     if do_jvt:
-        jvttag = events.jet_jvttag == 1
-        valid_central_jets_mask = valid_central_jets_mask & jvttag
-    valid_events_mask = get_op(njets_cut["operator"])(
-        ak.num(valid_central_jets_mask), njets_cut["value"]
-    )
-    valid_n_central_jets_mask = ak.mask(valid_central_jets_mask, valid_events_mask)
-    return valid_n_central_jets_mask, valid_events_mask
+        jvttag_mask = jets.jvttag == 1
+        valid_jets_mask = valid_jets_mask & jvttag_mask
+    # mask array for valid events
+    valid_events_mask = np.ones(len(jets.pt), dtype=bool)
+    if njets_cut:
+        n_jets = ak.sum(valid_jets_mask, axis=1)
+        valid_events_mask = valid_events_mask & get_op(njets_cut["operator"])(
+            n_jets, njets_cut["value"]
+        )
+    # jets mask for valid events (mantains original size of events array)
+    valid_n_jets_mask = ak.where(valid_events_mask, valid_jets_mask, False)
+    return valid_n_jets_mask, valid_events_mask
 
 
 def select_n_bjets_events(
-    events,
+    jets,
     selection,
 ):
     """Selects events by applying the cuts specified in the selection."""
 
-    n_btags_cut = selection["count"]
-    n_btags = ak.sum(events.jet_btag[events.n_central_jets], axis=1)
-    valid_events_mask = get_op(n_btags_cut["operator"])(n_btags, n_btags_cut["value"])
-    valid_n_central_bjets_mask = ak.mask(events.n_central_jets, valid_events_mask)
-    return valid_n_central_bjets_mask, valid_events_mask
+    n_btags_cut = selection["count"] if "count" in selection else None
+    valid_events_mask = np.ones(len(jets.btags), dtype=bool)
+    if n_btags_cut:
+        n_btags = ak.sum(jets.btags[jets.valid], axis=1)
+        valid_events_mask = valid_events_mask & get_op(n_btags_cut["operator"])(
+            n_btags, n_btags_cut["value"]
+        )
+    # jets mask for valid events (mantains original size of events array)
+    valid_n_bjets_mask = ak.where(valid_events_mask, jets.valid, False)
+    return valid_n_bjets_mask, valid_events_mask
 
 
 def select_hc_jets(events, nbjets_cut=4):
