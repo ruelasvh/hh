@@ -13,6 +13,7 @@ from pathlib import Path
 import h5py
 import multiprocessing
 import os
+import contextlib
 
 from src.nonresonantresolved.inithists import init_hists
 from src.nonresonantresolved.branches import (
@@ -27,6 +28,7 @@ from src.shared.utils import (
     concatenate_cutbookkeepers,
     get_total_weight,
     write_hists,
+    resolve_project_paths,
 )
 
 
@@ -94,9 +96,6 @@ def process_sample_worker(
     branch_aliases = get_branch_aliases(is_mc, args.run)
     total_weight = 1.0
     current_file_path = ""
-    if sample_path.startswith("hh/"):
-        sample_path = f"{sample_path.replace('hh', str(Path(__file__).parent.parent))}"
-
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
@@ -124,22 +123,12 @@ def process_sample_worker(
             total_weight,
             is_mc,
         )
-        # check if in multiprocessing context
-        if args.jobs > 1:
-            with multiprocessing.Lock():
-                # NOTE: important: copy the hists back (otherwise parent process won't see the changes)
-                hists[sample_name] = fill_hists(
-                    processed_batch, hists[sample_name], is_mc
-                )
-                output_name = args.output.with_name(
-                    f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
-                )
-                with h5py.File(output_name, "w") as output_file:
-                    logger.info(f"Saving histograms to file: {output_name}")
-                    write_hists(hists[sample_name], sample_name, output_file)
-        else:
+        with multiprocessing.Lock() if args.jobs > 1 else contextlib.nullcontext():
+            # NOTE: important: copy the hists back (otherwise parent process won't see the changes)
             hists[sample_name] = fill_hists(processed_batch, hists[sample_name], is_mc)
-            output_name = args.output.with_name(f"{args.output.stem}_{sample_name}.h5")
+            output_name = args.output.with_name(
+                f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
+            )
             with h5py.File(output_name, "w") as output_file:
                 logger.info(f"Saving histograms to file: {output_name}")
                 write_hists(hists[sample_name], sample_name, output_file)
@@ -155,11 +144,16 @@ def main():
         coloredlogs.install(level=logger.level, logger=logger)
 
     with open(args.config) as cf:
-        config = json.load(cf)
+        config = resolve_project_paths(config=json.load(cf))
 
     samples, event_selection = config["samples"], config["event_selection"]
-    manager = multiprocessing.Manager()
-    hists = manager.dict(init_hists(samples, args))
+    with multiprocessing.Manager() if args.jobs > 1 else contextlib.nullcontext() as manager:
+        hists = (
+            manager.dict(init_hists(samples, args))
+            if manager
+            else init_hists(samples, args)
+        )
+
     worker_items = [
         (
             sample["label"],
