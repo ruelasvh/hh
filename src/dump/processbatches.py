@@ -5,7 +5,9 @@ from src.shared.utils import (
     logger,
     format_btagger_model_name,
 )
+from src.dump.output import Features, Labels
 from src.nonresonantresolved.selection import (
+    select_events_passing_all_triggers_OR,
     select_n_jets_events,
     select_n_bjets_events,
     select_hc_jets,
@@ -13,7 +15,6 @@ from src.nonresonantresolved.selection import (
     select_X_Wt_events,
     select_hh_events,
     select_correct_hh_pair_events,
-    select_events_passing_all_triggers_OR,
 )
 
 
@@ -28,25 +29,30 @@ def process_batch(
     """Apply analysis regions selection and append info to events."""
 
     logger.info("Initial Events: %s", len(events))
-    # set some default columns
+
+    # get features and class names to be saved
     features_out = features["out"]
     class_names = features["classes"]
+
+    # get jet and b-jet selections
     jet_selection = selections["jets"]
     bjet_selection = jet_selection["btagging"]
     btagger = format_btagger_model_name(
         bjet_selection["model"], bjet_selection["efficiency"]
     )
-    events["jet_btag"] = events[f"jet_btag_{btagger}"]
-    events["btag_num"] = ak.sum(events.jet_btag, axis=1)
-    events["jet_num"] = ak.num(events.jet_pt)
-    events["event_weight"] = np.ones_like(events.event_number)
+
+    # start setting data to be saved
+    events[Features.JET_NUM.value] = ak.num(events.jet_pt, axis=1)
+    events[Features.JET_BTAG.value] = events[f"jet_btag_{btagger}"]
+    events[Features.JET_NBTAGS.value] = ak.sum(events.jet_btag, axis=1)
     if is_mc:
-        events["mc_event_weight"] = ak.firsts(events.mc_event_weights, axis=1)
-        # events["ftag_sf"] = calculate_scale_factors(events)
-        events["event_weight"] = (
-            np.prod([events.mc_event_weight, events.pileup_weight], axis=0)
-            * total_weight
+        events[Features.EVENT_MCWEIGHT.value] = events.mc_event_weights[:, 0]
+        events[Features.EVENT_PUWEIGHT.value] = events.pileup_weight
+        events[Features.EVENT_XWEIGHT.value] = (
+            np.ones(len(events), dtype=float) * total_weight
         )
+        # events["ftag_sf"] = calculate_scale_factors(events)
+
     # select and save events passing the OR of all triggers
     passed_trigs_mask = select_events_passing_all_triggers_OR(events)
     events["valid_event"] = passed_trigs_mask
@@ -60,17 +66,26 @@ def process_batch(
             "mass": events.jet_mass,
         }
     )
-    jets_xyz = {"jet": ak.zip({"x": jets_p4.x, "y": jets_p4.y, "z": jets_p4.z})}
-    for obj, var in jets_xyz.items():
-        for coord in var.fields:
-            events[f"{obj}_{coord}"] = var[coord]
+    jets_xyz = ak.zip(
+        {
+            Features.JET_X.value: jets_p4.x,
+            Features.JET_Y.value: jets_p4.y,
+            Features.JET_Z.value: jets_p4.z,
+        }
+    )
+    for f in jets_xyz.fields:
+        events[Features(f).value] = jets_xyz[f]
 
     # append class_names to events and set them to 0 or 1
     for class_name in class_names:
         if class_name == class_label:
-            events[class_name] = np.ones_like(events.event_number)
+            events[Labels(class_name).value] = np.ones_like(
+                events.event_number, dtype=int
+            )
         else:
-            events[class_name] = np.zeros_like(events.event_number)
+            events[Labels(class_name).value] = np.zeros_like(
+                events.event_number, dtype=int
+            )
 
     # select and save jet selections
     n_jets_mask, n_jets_event_mask = select_n_jets_events(
@@ -91,7 +106,7 @@ def process_batch(
 
     # select and save b-jet selections
     n_bjets_mask, n_bjets_event_mask = select_n_bjets_events(
-        jets=ak.zip({"btags": events.jet_btag, "valid": n_jets_mask}),
+        jets=ak.zip({"btags": events[f"jet_btag_{btagger}"], "valid": n_jets_mask}),
         selection=bjet_selection,
     )
     events["valid_event"] = events.valid_event & n_bjets_event_mask
