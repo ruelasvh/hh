@@ -1,29 +1,27 @@
 #!/usr/bin/env python3
 
 """
-build plots of everything
+Dumps the analysis variables from the ntuples.
 """
 
-import uproot
-import argparse
+import os
 import json
 import time
-import coloredlogs, logging
-from pathlib import Path
-import h5py
-import multiprocessing
-import os
+import uproot
+import argparse
 import contextlib
+import multiprocessing
 import awkward as ak
+from pathlib import Path
+import coloredlogs, logging
 
-from src.nonresonantresolved.inithists import init_hists
-from src.nonresonantresolved.branches import (
-    get_branch_aliases,
-)
 from src.dump.processbatches import (
     process_batch,
 )
-from src.nonresonantresolved.fillhists import fill_hists
+from src.dump.output import Features, Labels
+from src.nonresonantresolved.branches import (
+    get_branch_aliases,
+)
 from src.shared.utils import (
     logger,
     concatenate_cutbookkeepers,
@@ -117,7 +115,7 @@ def process_sample_worker(
             cbk = concatenate_cutbookkeepers(sample_path, batch_report.file_path)
             logger.debug(f"Metadata: {sample_metadata}")
             total_weight = get_total_weight(
-                sample_metadata, cbk["initial_sum_of_weights"]
+                sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
             )
         logger.debug(f"Total weight: {total_weight}")
         # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
@@ -157,6 +155,14 @@ def main():
     if "path" in config["features"]:
         with open(config["features"]["path"]) as ff:
             config["features"] = json.load(ff)
+
+    assert Features.contains_all(
+        config["features"]["out"]
+    ), f"Valid features: {Features.get_all()}"
+
+    assert Labels.contains_all(
+        config["features"]["classes"]
+    ), f"Valid labels: {Labels.get_all()}"
 
     samples, features = config["samples"], config["features"]
     with multiprocessing.Manager() if args.jobs > 1 else contextlib.nullcontext() as manager:

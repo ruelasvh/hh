@@ -5,7 +5,10 @@
         "jet_z",
         "jet_num",
         "jet_btag",
-        "event_weight"
+        "jet_nbtags",
+        "event_mcweight",
+        "event_puweight",
+        "event_xweight"
     ],
     "classes": ["label_HH", "label_ttbar", "label_QCD"]
 }
