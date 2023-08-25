@@ -3,6 +3,7 @@ import numpy as np
 import vector as p4
 from src.shared.utils import (
     logger,
+    inv_GeV,
     format_btagger_model_name,
 )
 from src.dump.output import Features, Labels
@@ -60,10 +61,10 @@ def process_batch(
     # convert jets to cartesian coordinates
     jets_p4 = p4.zip(
         {
-            "pt": events.jet_pt,
+            "pt": events.jet_pt * inv_GeV,
             "eta": events.jet_eta,
             "phi": events.jet_phi,
-            "mass": events.jet_mass,
+            "mass": events.jet_mass * inv_GeV,
         }
     )
     jets_xyz = ak.zip(

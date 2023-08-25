@@ -1,5 +1,7 @@
 {
-    "features": {"path": "src/dump/configs/features.json"},
+    "features": {
+        "path": "src/dump/configs/features.json"
+    },
     "samples": [
         {
             "label": "4b_mc21_ggF_k01",
@@ -30,7 +32,7 @@
                     }
                 }
             },
-            "path": [
+            "paths": [
                 "src/nonresonantresolved/tests/test-data/mc21ggF-k01/"
             ],
             "metadata": [

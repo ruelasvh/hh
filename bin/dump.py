@@ -181,7 +181,7 @@ def main():
             args,
         )
         for sample in samples
-        for idx, sample_path in enumerate(sample["path"])
+        for idx, sample_path in enumerate(sample["paths"])
     ]
     if args.jobs > 1:
         with multiprocessing.Pool(args.jobs) as pool:
