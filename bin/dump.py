@@ -9,11 +9,11 @@ import json
 import time
 import uproot
 import argparse
-import contextlib
 import multiprocessing
 import awkward as ak
 from pathlib import Path
 import coloredlogs, logging
+from contextlib import nullcontext
 
 from src.dump.processbatches import (
     process_batch,
@@ -127,7 +127,7 @@ def process_sample_worker(
             total_weight,
             is_mc,
         )
-        with multiprocessing.Lock() if args.jobs > 1 else contextlib.nullcontext():
+        with multiprocessing.Lock() if args.jobs > 1 else nullcontext():
             logger.info(f"Merging batches for sample: {sample_name}")
             # NOTE: important: copy the out back (otherwise parent process won't see the changes)
             output[sample_name] = concatenate_datasets(
@@ -165,8 +165,10 @@ def main():
     ), f"Valid labels: {Labels.get_all()}"
 
     samples, features = config["samples"], config["features"]
-    with multiprocessing.Manager() if args.jobs > 1 else contextlib.nullcontext() as manager:
-        output = {sample["label"]: ak.Array([]) for sample in samples}
+    output = {sample["label"]: ak.Array([]) for sample in samples}
+
+    manager = multiprocessing.Manager()
+    if args.jobs > 1:
         output = manager.dict(output) if manager else output
 
     worker_items = [
@@ -183,12 +185,15 @@ def main():
         for sample in samples
         for idx, sample_path in enumerate(sample["paths"])
     ]
+
     if args.jobs > 1:
         with multiprocessing.Pool(args.jobs) as pool:
             pool.starmap(process_sample_worker, worker_items)
     else:
         for worker_item in worker_items:
             process_sample_worker(*worker_item)
+
+    manager.shutdown()
 
     if logger.level == logging.DEBUG:
         logger.debug(

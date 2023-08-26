@@ -20,6 +20,13 @@ def get_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("config", type=Path)
     parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        default=Path("output"),
+        help="Output file name postfix",
+    )
+    parser.add_argument(
         "-e",
         "--executable",
         type=Path,
@@ -32,6 +39,11 @@ def get_args():
 
 
 def main():
+    CONFIG_DIR = Path("/lustre/fs22/group/atlas/ruelasv/tmp/condor/configs")
+    OUTPUT_DIR = Path("/lustre/fs22/group/atlas/ruelasv/tmp/condor/output")
+    ERROR_DIR = Path("/lustre/fs22/group/atlas/ruelasv/tmp/condor/error")
+    LOG_DIR = Path("/lustre/fs22/group/atlas/ruelasv/tmp/condor/log")
+
     args = get_args()
     with open(args.config) as f:
         config = json.load(f)
@@ -41,15 +53,15 @@ def main():
     for sample in config["samples"]:
         for path in sample["paths"]:
             # 'path' is a directory, so get all files in that directory
-            if Path(path).is_dir():
-                files = list(Path(path).glob("*.root"))
+            # if Path(path).is_dir():
+            if path:
                 # remove .root ext from files
-                files = [str(file).replace(".root", "") for file in files]
+                files = [f.parent / f.stem for f in Path(path).glob("*.root")]
                 # iterate over each file and create a config file for it as described in the docstring
                 for file in files:
                     # create a config file for each file
-                    config_file = Path(
-                        f"/lustre/fs22/group/atlas/ruelasv/tmp/condor/configs/config-{sample['label']}-{file.split('/')[-1]}.json"
+                    config_file = (
+                        CONFIG_DIR / f"config-{sample['label']}-{file.stem}.json"
                     )
                     # add the config file to the list of configs
                     configs.append({"config_file": config_file.as_posix()})
@@ -58,8 +70,8 @@ def main():
                         # write the sample and event_selection objects to the new config file
                         json.dump(
                             {
-                                "samples": [{**sample, "paths": [file]}],
-                                "event_selection": config["event_selection"],
+                                **config,
+                                "samples": [{**sample, "paths": [file.as_posix()]}],
                             },
                             f,
                             indent=4,
@@ -80,10 +92,10 @@ def main():
             "executable": f"{args.executable}",
             "should_transfer_files": "no",
             "my.sendcredential": "true",
-            "arguments": "$(config_file) -o hists_$(ClusterId)_$(ProcId).h5 -j 2 -v",
-            "output": f"/lustre/fs22/group/atlas/ruelasv/tmp/condor/output/{args.executable.stem}-$(ClusterId).$(ProcId).out",
-            "error": f"/lustre/fs22/group/atlas/ruelasv/tmp/condor/error/{args.executable.stem}-$(ClusterId).$(ProcId).err",
-            "log": f"/lustre/fs22/group/atlas/ruelasv/tmp/condor/log/{args.executable.stem}-$(ClusterId).$(ProcId).log",
+            "arguments": f"$(config_file) -o {args.output.stem}_$(ClusterId)_$(ProcId) -j 2 -v",
+            "output": f"{OUTPUT_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).out",
+            "error": f"{ERROR_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).err",
+            "log": f"{LOG_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).log",
             "request_memory": "6 GB",
             "request_cpus": "2",
             "request_disk": "2 GB",

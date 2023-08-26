@@ -147,12 +147,11 @@ def main():
         config = resolve_project_paths(config=json.load(cf))
 
     samples, event_selection = config["samples"], config["event_selection"]
-    with multiprocessing.Manager() if args.jobs > 1 else contextlib.nullcontext() as manager:
-        hists = (
-            manager.dict(init_hists(samples, args))
-            if manager
-            else init_hists(samples, args)
-        )
+    hists = init_hists(samples, args)
+
+    manager = multiprocessing.Manager()
+    if args.jobs > 1:
+        hists = manager.dict(hists)
 
     worker_items = [
         (
@@ -172,6 +171,8 @@ def main():
     else:
         for worker_item in worker_items:
             process_sample_worker(*worker_item)
+
+    manager.shutdown()
 
     if logger.level == logging.DEBUG:
         logger.debug(

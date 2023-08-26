@@ -28,7 +28,7 @@ setup(
         "console_scripts": [
             "hh4b_non_res_res_make_hists = bin.make_hists_non_res_res:main",
             "hh4b_non_res_res_draw_hists = bin.draw_hists_non_res_res:main",
-            "hh4b_submit_jobs = bin.submit_jobs:main",
+            "hh_submit_jobs = bin.submit_jobs:main",
             "hh_dump = bin.dump:main",
         ]
     },
