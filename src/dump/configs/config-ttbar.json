@@ -18,11 +18,7 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.77,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
+                        "efficiency": 0.77
                     }
                 }
             },

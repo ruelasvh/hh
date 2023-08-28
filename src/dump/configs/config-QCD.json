@@ -18,11 +18,7 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.77,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
+                        "efficiency": 0.77
                     }
                 }
             },
@@ -41,6 +37,23 @@
         },
         {
             "label": "4b_mc21_dijets_JZ2",
+            "class_label": "label_QCD",
+            "selections": {
+                "jets": {
+                    "pt": {
+                        "operator": ">",
+                        "value": 40000
+                    },
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    },
+                    "btagging": {
+                        "model": "DL1dv01",
+                        "efficiency": 0.77
+                    }
+                }
+            },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801167.Py8EG_A14NNPDF23LO_jj_JZ2.e8453_s3873_r13829_p5631_TREE/"
             ],
@@ -56,6 +69,23 @@
         },
         {
             "label": "4b_mc21_dijets_JZ3",
+            "class_label": "label_QCD",
+            "selections": {
+                "jets": {
+                    "pt": {
+                        "operator": ">",
+                        "value": 40000
+                    },
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    },
+                    "btagging": {
+                        "model": "DL1dv01",
+                        "efficiency": 0.77
+                    }
+                }
+            },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801168.Py8EG_A14NNPDF23LO_jj_JZ3.e8453_s3873_r13829_p5631_TREE/"
             ],
@@ -71,6 +101,23 @@
         },
         {
             "label": "4b_mc21_dijets_JZ4",
+            "class_label": "label_QCD",
+            "selections": {
+                "jets": {
+                    "pt": {
+                        "operator": ">",
+                        "value": 40000
+                    },
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    },
+                    "btagging": {
+                        "model": "DL1dv01",
+                        "efficiency": 0.77
+                    }
+                }
+            },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801169.Py8EG_A14NNPDF23LO_jj_JZ4.e8453_s3873_r13829_p5631_TREE/"
             ],
@@ -86,6 +133,23 @@
         },
         {
             "label": "4b_mc21_dijets_JZ5",
+            "class_label": "label_QCD",
+            "selections": {
+                "jets": {
+                    "pt": {
+                        "operator": ">",
+                        "value": 40000
+                    },
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    },
+                    "btagging": {
+                        "model": "DL1dv01",
+                        "efficiency": 0.77
+                    }
+                }
+            },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801170.Py8EG_A14NNPDF23LO_jj_JZ5.e8453_s3873_r13829_p5631_TREE/"
             ],
@@ -101,6 +165,23 @@
         },
         {
             "label": "4b_mc21_dijets_JZ6",
+            "class_label": "label_QCD",
+            "selections": {
+                "jets": {
+                    "pt": {
+                        "operator": ">",
+                        "value": 40000
+                    },
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    },
+                    "btagging": {
+                        "model": "DL1dv01",
+                        "efficiency": 0.77
+                    }
+                }
+            },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801171.Py8EG_A14NNPDF23LO_jj_JZ6.e8453_s3873_r13829_p5631_TREE/"
             ],
@@ -116,6 +197,23 @@
         },
         {
             "label": "4b_mc21_dijets_JZ7",
+            "class_label": "label_QCD",
+            "selections": {
+                "jets": {
+                    "pt": {
+                        "operator": ">",
+                        "value": 40000
+                    },
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    },
+                    "btagging": {
+                        "model": "DL1dv01",
+                        "efficiency": 0.77
+                    }
+                }
+            },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801172.Py8EG_A14NNPDF23LO_jj_JZ7.e8453_s3873_r13829_p5631_TREE/"
             ],
@@ -131,6 +229,23 @@
         },
         {
             "label": "4b_mc21_dijets_JZ8",
+            "class_label": "label_QCD",
+            "selections": {
+                "jets": {
+                    "pt": {
+                        "operator": ">",
+                        "value": 40000
+                    },
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    },
+                    "btagging": {
+                        "model": "DL1dv01",
+                        "efficiency": 0.77
+                    }
+                }
+            },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801173.Py8EG_A14NNPDF23LO_jj_JZ8.e8453_s3873_r13829_p5631_TREE/"
             ],
@@ -146,6 +261,23 @@
         },
         {
             "label": "4b_mc21_dijets_JZ9",
+            "class_label": "label_QCD",
+            "selections": {
+                "jets": {
+                    "pt": {
+                        "operator": ">",
+                        "value": 40000
+                    },
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    },
+                    "btagging": {
+                        "model": "DL1dv01",
+                        "efficiency": 0.77
+                    }
+                }
+            },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801174.Py8EG_A14NNPDF23LO_jj_JZ9incl.e8453_s3873_r13829_p5631_TREE/"
             ],

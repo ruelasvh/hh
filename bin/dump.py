@@ -127,6 +127,9 @@ def process_sample_worker(
             total_weight,
             is_mc,
         )
+        if len(processed_batch) == 0:
+            continue
+
         with multiprocessing.Lock() if args.jobs > 1 else nullcontext():
             logger.info(f"Merging batches for sample: {sample_name}")
             # NOTE: important: copy the out back (otherwise parent process won't see the changes)
@@ -175,9 +178,9 @@ def main():
         (
             sample["label"],
             sample_path,
-            sample["metadata"][idx] if "metadata" in sample else None,
-            sample["selections"] if "selections" in sample else None,
-            sample["class_label"] if "class_label" in sample else None,
+            sample["metadata"][idx],
+            sample["selections"],
+            sample["class_label"],
             features,
             output,
             args,
