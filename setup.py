@@ -8,7 +8,7 @@ setup(
     author="Victor Ruelas",
     author_email="victor.hugo.ruelas.rivera@cern.ch",
     license="MIT",
-    packages=["bin", "src"],
+    packages=["cli", "src"],
     python_requires=">=3.7",
     install_requires=[
         "awkward>=2.2.4",
@@ -18,18 +18,18 @@ setup(
         "scipy>=1.9.3",
         "uproot>=5.0.2",
         "vector>=0.11.0",
-        "pyAMI-core==5.1.2",
-        "pyAMI_atlas==5.1.0.1",
+        "pyAMI-core>=5.1.4",
+        "pyAMI-atlas>=5.1.4",
         "coloredlogs>=15.0.1",
         "h5py>=3.8.0",
         "htcondor>=10.6.0",
     ],
     entry_points={
         "console_scripts": [
-            "hh4b_non_res_res_make_hists = bin.make_hists_non_res_res:main",
-            "hh4b_non_res_res_draw_hists = bin.draw_hists_non_res_res:main",
-            "hh_submit_jobs = bin.submit_jobs:main",
-            "hh_dump = bin.dump:main",
+            "hh4b_non_res_res_make_hists = cli.make_hists_non_res_res:main",
+            "hh4b_non_res_res_draw_hists = cli.draw_hists_non_res_res:main",
+            "hh_submit_jobs = cli.submit_jobs:main",
+            "hh_dump = cli.dump:main",
         ]
     },
     zip_safe=False,
