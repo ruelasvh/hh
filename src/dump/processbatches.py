@@ -46,7 +46,7 @@ def process_batch(
     class_names = features["classes"]
 
     # set event wide selections variables
-    event_selection = selections["events"]
+    event_selection = selections.get("events")
     # get jet and b-jet selections
     jet_selection = selections["jets"]
     bjet_selection = jet_selection["btagging"]
@@ -57,7 +57,7 @@ def process_batch(
     # set overall event filter
     events["valid_event"] = np.ones(len(events), dtype=bool)
 
-    if event_selection.get("trigs"):
+    if event_selection and event_selection.get("trigs"):
         # select and save events passing the OR of all triggers
         passed_trigs_mask = select_events_passing_all_triggers_OR(events)
         # keep track of valid events
