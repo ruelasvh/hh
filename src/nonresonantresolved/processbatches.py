@@ -75,7 +75,7 @@ def process_batch(
     # select and save events with >= n central b-jets
     bjets_sel = event_selection["btagging"]
     n_central_bjets_mask, with_n_central_bjets = select_n_bjets_events(
-        jets=ak.zip({"btags": events.jet_btag, "valid": n_central_jets_mask}),
+        jets=ak.zip({"btag": events.jet_btag, "valid": n_central_jets_mask}),
         selection=bjets_sel,
     )
     events["n_central_bjets"] = n_central_bjets_mask
@@ -92,7 +92,15 @@ def process_batch(
     )
     # # logger.info("Events with >= 6 central or forward jets", len(events_with_central_or_forward_jets))
     # get the higgs candidate jets indices
-    hc_jet_idx, non_hc_jet_idx = select_hc_jets(events)
+    hc_jet_idx, non_hc_jet_idx = select_hc_jets(
+        jets=ak.zip(
+            {
+                "valid": n_central_bjets_mask,
+                "pt": events.jet_pt,
+                "btag": events.jet_btag,
+            }
+        )
+    )
     events["hc_jet_idx"] = hc_jet_idx
     events["non_hc_jet_idx"] = non_hc_jet_idx
     # calculate hh delta eta

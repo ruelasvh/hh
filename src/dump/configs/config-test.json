@@ -11,12 +11,28 @@
                     "count": {
                         "operator": "==",
                         "value": 100000
+                    },
+                    "trigs": {
+                        "operator": "run",
+                        "value": 2
+                    },
+                    "hh_deltaeta_veto": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "top_veto": {
+                        "operator": ">",
+                        "value": 1.5
                     }
                 },
                 "jets": {
                     "pt": {
                         "operator": ">",
                         "value": 40000
+                    },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
                     },
                     "count": {
                         "operator": ">=",

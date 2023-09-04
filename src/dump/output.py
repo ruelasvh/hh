@@ -2,6 +2,10 @@ from enum import Enum
 
 
 class Features(Enum):
+    JET_PT = "jet_pt"
+    JET_ETA = "jet_eta"
+    JET_PHI = "jet_phi"
+    JET_MASS = "jet_mass"
     JET_X = "jet_x"
     JET_Y = "jet_y"
     JET_Z = "jet_z"

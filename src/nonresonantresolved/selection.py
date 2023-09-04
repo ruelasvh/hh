@@ -5,7 +5,7 @@ from src.shared.utils import get_op, get_all_trigs_or, kin_labels, inv_GeV
 from src.shared.selection import X_HH, R_CR, X_Wt
 
 
-def reconstruct_hh_mindeltar(events):
+def reconstruct_hh_mindeltar(jets):
     """Pair 4 Higgs candidate jets by pT and minimum deltaR.
 
     Three possible pairing permutations of 4 jets into the two Higgs candidates:
@@ -22,9 +22,13 @@ def reconstruct_hh_mindeltar(events):
     """
 
     # get the higgs candidate jets
-    hc_jet_idx = events.hc_jet_idx
+    # hc_jet_idx = events.hc_jet_idx
+    # jet_p4 = p4.zip(
+    #     {var: events[f"jet_{var}"][hc_jet_idx] for var in kin_labels.keys()},
+    # )
+    hc_jet_idx = jets.hc_idx
     jet_p4 = p4.zip(
-        {var: events[f"jet_{var}"][hc_jet_idx] for var in kin_labels.keys()},
+        {var: jets[f"{var}"][hc_jet_idx] for var in kin_labels.keys()},
     )
     jet_sorted_idx = ak.argsort(jet_p4.pt, axis=1, ascending=False)
     jet_p4_sorted = jet_p4[jet_sorted_idx]
@@ -103,9 +107,9 @@ def select_n_bjets_events(
     """Selects events by applying the cuts specified in the selection."""
 
     n_btags_cut = selection["count"] if "count" in selection else None
-    valid_events_mask = np.ones(len(jets.btags), dtype=bool)
+    valid_events_mask = np.ones(len(jets.btag), dtype=bool)
     if n_btags_cut:
-        n_btags = ak.sum(jets.btags[jets.valid], axis=1)
+        n_btags = ak.sum(jets.btag[jets.valid], axis=1)
         valid_events_mask = valid_events_mask & get_op(n_btags_cut["operator"])(
             n_btags, n_btags_cut["value"]
         )
@@ -114,7 +118,7 @@ def select_n_bjets_events(
     return valid_n_bjets_mask, valid_events_mask
 
 
-def select_hc_jets(events, nbjets_cut=4):
+def select_hc_jets(jets, nbjets_cut=4):
     """Selects events by applying the cuts specified in the arguments.
     The HH system is reconstructed from two Higgs candidates, which are
     themselves reconstructed from two jets each (four Higgs candidate jets in total).
@@ -125,10 +129,9 @@ def select_hc_jets(events, nbjets_cut=4):
 
     Returns the 4 Higgs candidate jets in each event.
     """
-    valid_jets = events.n_central_bjets
-    jet_pt = ak.mask(events.jet_pt, valid_jets)
-    jet_btag = ak.mask(events.jet_btag, valid_jets)
-    jet_idx = ak.mask(ak.local_index(jet_pt), valid_jets)
+    jet_pt = ak.mask(jets.pt, jets.valid)
+    jet_btag = ak.mask(jets.btag, jets.valid)
+    jet_idx = ak.mask(ak.local_index(jet_pt), jets.valid)
     pt_sort_idx = ak.argsort(jet_pt, ascending=False)
     jet_btag = jet_btag[pt_sort_idx]
     jet_idx = jet_idx[pt_sort_idx]

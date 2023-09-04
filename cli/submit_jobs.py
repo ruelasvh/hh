@@ -98,6 +98,7 @@ def main():
             "log": f"{LOG_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).log",
             "request_memory": f"{cpus * 5} GB",
             "request_cpus": f"{cpus}",
+            "getenv": "PYTHONPATH",
         }
     )
 

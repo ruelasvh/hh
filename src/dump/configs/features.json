@@ -1,5 +1,9 @@
 {
     "out": [
+        "jet_pt",
+        "jet_eta",
+        "jet_phi",
+        "jet_mass",
         "jet_x",
         "jet_y",
         "jet_z",
@@ -10,5 +14,9 @@
         "event_puweight",
         "event_xweight"
     ],
-    "classes": ["label_HH", "label_ttbar", "label_QCD"]
+    "classes": [
+        "label_HH",
+        "label_ttbar",
+        "label_QCD"
+    ]
 }

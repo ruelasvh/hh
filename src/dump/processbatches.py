@@ -8,6 +8,7 @@ from src.shared.utils import (
 )
 from src.dump.output import Features, Labels
 from src.nonresonantresolved.selection import (
+    select_events_passing_all_triggers_OR,
     select_n_jets_events,
     select_n_bjets_events,
     select_hc_jets,
@@ -30,8 +31,10 @@ def process_batch(
 
     # check that required configs else exit
     required_configs = ["jets", "btagging"]
-    provided_configs = list(selections.keys()) + list([k for k in selections.keys()])
-    remaining_configs = list(set(required_configs) - set(provided_configs.keys()))
+    provided_configs = list(selections.keys()) + list(
+        [k for v in selections.values() for k in v.keys()]
+    )
+    remaining_configs = list(set(required_configs) - set(provided_configs))
     assert (
         not remaining_configs
     ), f"Missing configs: {remaining_configs}. Required configs: {required_configs}"
@@ -42,6 +45,8 @@ def process_batch(
     features_out = features["out"]
     class_names = features["classes"]
 
+    # set event wide selections variables
+    event_selection = selections["events"]
     # get jet and b-jet selections
     jet_selection = selections["jets"]
     bjet_selection = jet_selection["btagging"]
@@ -49,8 +54,17 @@ def process_batch(
         bjet_selection["model"], bjet_selection["efficiency"]
     )
 
-    # set event filter
+    # set overall event filter
     events["valid_event"] = np.ones(len(events), dtype=bool)
+
+    if event_selection.get("trigs"):
+        # select and save events passing the OR of all triggers
+        passed_trigs_mask = select_events_passing_all_triggers_OR(events)
+        # keep track of valid events
+        events["valid_event"] = events.valid_event & passed_trigs_mask
+        logger.info(
+            "Events passing the OR of all triggers: %s", ak.sum(events.valid_event)
+        )
 
     # start setting data to be saved
     events[Features.JET_NUM.value] = ak.num(events.jet_pt, axis=1)
@@ -63,15 +77,16 @@ def process_batch(
             np.ones(len(events), dtype=float) * total_weight
         )
         # events["ftag_sf"] = calculate_scale_factors(events)
-    # convert jets to cartesian coordinates and save them
+
     jets_p4 = p4.zip(
         {
-            "pt": events.jet_pt * inv_GeV,
+            "pt": events.jet_pt,
             "eta": events.jet_eta,
             "phi": events.jet_phi,
-            "mass": events.jet_mass * inv_GeV,
+            "mass": events.jet_mass,
         }
     )
+    # convert jets to cartesian coordinates and save them
     jets_xyz = ak.zip(
         {
             Features.JET_X.value: jets_p4.x,
@@ -104,6 +119,7 @@ def process_batch(
         ),
         selection=jet_selection,
     )
+
     events["valid_event"] = events.valid_event & n_jets_event_mask
     logger.info(
         "Events passing previous cuts and jets selection: %s",
@@ -117,13 +133,26 @@ def process_batch(
         and bjet_selection["count"]["value"] > 0
     ):
         n_bjets_mask, n_bjets_event_mask = select_n_bjets_events(
-            jets=ak.zip({"btags": events[f"jet_btag_{btagger}"], "valid": n_jets_mask}),
+            jets=ak.zip(
+                {"btag": events[Features.JET_BTAG.value], "valid": n_jets_mask}
+            ),
             selection=bjet_selection,
         )
         events["valid_event"] = events.valid_event & n_bjets_event_mask
         logger.info(
             "Events passing previous cuts and b-jets selection: %s",
             ak.sum(events.valid_event),
+        )
+
+        # select and save hc jets
+        hc_jet_idx, non_hc_jet_idx = select_hc_jets(
+            jets=ak.zip(
+                {
+                    "valid": n_bjets_mask,
+                    "pt": events.jet_pt,
+                    "btag": events[Features.JET_BTAG.value],
+                }
+            )
         )
 
     return events[events.valid_event][[*features_out, *class_names]]
