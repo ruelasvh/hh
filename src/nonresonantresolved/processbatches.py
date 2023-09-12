@@ -104,12 +104,24 @@ def process_batch(
     events["hc_jet_idx"] = hc_jet_idx
     events["non_hc_jet_idx"] = non_hc_jet_idx
     # calculate hh delta eta
-    leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(events)
+    leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
+        jets=ak.zip(
+            {
+                "pt": events.jet_pt,
+                "eta": events.jet_eta,
+                "phi": events.jet_phi,
+                "mass": events.jet_mass,
+            }
+        ),
+        hc_jet_idx=hc_jet_idx,
+    )
     events["leading_h_jet_idx"] = leading_h_jet_idx
     events["subleading_h_jet_idx"] = subleading_h_jet_idx
     # correctly paired Higgs bosons
     if is_mc:
-        correct_hh_pairs_from_truth = select_correct_hh_pair_events(events)
+        correct_hh_pairs_from_truth = select_correct_hh_pair_events(
+            events["jet_truth_H_parents"], leading_h_jet_idx, subleading_h_jet_idx
+        )
         logger.info(
             "Events with correct HH pairs: %s",
             ak.sum(correct_hh_pairs_from_truth),

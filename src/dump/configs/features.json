@@ -10,6 +10,9 @@
         "jet_num",
         "jet_btag",
         "jet_nbtags",
+        "m_4b",
+        "dR_4b",
+        "dEta_4b",
         "event_mcweight",
         "event_puweight",
         "event_xweight"

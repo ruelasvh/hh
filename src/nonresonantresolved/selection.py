@@ -5,7 +5,7 @@ from src.shared.utils import get_op, get_all_trigs_or, kin_labels, inv_GeV
 from src.shared.selection import X_HH, R_CR, X_Wt
 
 
-def reconstruct_hh_mindeltar(jets):
+def reconstruct_hh_mindeltar(jets, hc_jet_idx):
     """Pair 4 Higgs candidate jets by pT and minimum deltaR.
 
     Three possible pairing permutations of 4 jets into the two Higgs candidates:
@@ -21,12 +21,6 @@ def reconstruct_hh_mindeltar(jets):
         leading and subleading b-jet indices
     """
 
-    # get the higgs candidate jets
-    # hc_jet_idx = events.hc_jet_idx
-    # jet_p4 = p4.zip(
-    #     {var: events[f"jet_{var}"][hc_jet_idx] for var in kin_labels.keys()},
-    # )
-    hc_jet_idx = jets.hc_idx
     jet_p4 = p4.zip(
         {var: jets[f"{var}"][hc_jet_idx] for var in kin_labels.keys()},
     )
@@ -106,8 +100,8 @@ def select_n_bjets_events(
 ):
     """Selects events by applying the cuts specified in the selection."""
 
-    n_btags_cut = selection["count"] if "count" in selection else None
     valid_events_mask = np.ones(len(jets.btag), dtype=bool)
+    n_btags_cut = selection.get("count")
     if n_btags_cut:
         n_btags = ak.sum(jets.btag[jets.valid], axis=1)
         valid_events_mask = valid_events_mask & get_op(n_btags_cut["operator"])(
@@ -239,29 +233,53 @@ def select_hh_events(events, deltaeta_sel=None, mass_sel=None):
     return keep, hh_var
 
 
-def select_correct_hh_pair_events(events, signal=False):
-    # if not signal:
-    #     return events, ak.Array([])
-    jets_truth_matched_to_hh = events["jet_truth_H_parents"]
-    leading_h_jet_indices = events["leading_h_jet_idx"]
-    leading_h_truth_matched = jets_truth_matched_to_hh[leading_h_jet_indices]
+def select_correct_hh_pair_events(
+    jets_truth_matched_to_hh, leading_h_jet_idx, subleading_h_jet_idx
+):
+    leading_h_truth_matched = jets_truth_matched_to_hh[leading_h_jet_idx]
     leading_h_jet1_truth_matched = leading_h_truth_matched[:, 0, np.newaxis]
     leading_h_jet2_truth_matched = leading_h_truth_matched[:, 1, np.newaxis]
     leading_h_jets_have_same_parent_mask = (
         leading_h_jet1_truth_matched == leading_h_jet2_truth_matched
     )
-    subleading_h_jet_indices = events["subleading_h_jet_idx"]
-    subleading_h_truth_matched = jets_truth_matched_to_hh[subleading_h_jet_indices]
+    subleading_h_truth_matched = jets_truth_matched_to_hh[subleading_h_jet_idx]
     subleading_h_jet1_truth_matched = subleading_h_truth_matched[:, 0, np.newaxis]
     subleading_h_jet2_truth_matched = subleading_h_truth_matched[:, 1, np.newaxis]
     subleading_h_jets_have_same_parent_mask = (
         subleading_h_jet1_truth_matched == subleading_h_jet2_truth_matched
     )
-    correct_hh_pairs_mask = (
+    correct_hh_pairs_mask = ak.firsts(
         leading_h_jets_have_same_parent_mask & subleading_h_jets_have_same_parent_mask
     )
+    # convert to numpy array and replace None with False
+    correct_hh_pairs_mask = ak.fill_none(correct_hh_pairs_mask, False).to_numpy()
     return correct_hh_pairs_mask
-    return correct_hh_pairs_mask
+
+
+def get_hh_p4(jets, leading_h_jet_idx, subleading_h_jet_idx):
+    """
+    Gets the 4-momentum of the HH system from the 4 Higgs candidate jets.
+
+    Returns:
+        The 4-momentum of the HH system
+    """
+    jet_p4 = p4.zip(
+        {var: jets[var].tolist() for var in kin_labels.keys()},
+    )
+    h1_jets_idx = leading_h_jet_idx
+    h1_jet1_idx, h1_jet2_idx = (
+        h1_jets_idx[:, 0, np.newaxis],
+        h1_jets_idx[:, 1, np.newaxis],
+    )
+    h2_jets_idx = subleading_h_jet_idx
+    h2_jet1_idx, h2_jet2_idx = (
+        h2_jets_idx[:, 0, np.newaxis],
+        h2_jets_idx[:, 1, np.newaxis],
+    )
+    h1 = jet_p4[h1_jet1_idx] + jet_p4[h1_jet2_idx]
+    h2 = jet_p4[h2_jet1_idx] + jet_p4[h2_jet2_idx]
+
+    return h1[:, 0], h2[:, 0]
 
 
 def select_buckets(events, leading_jet_pt_cut=170, third_jet_pt_cut=70):

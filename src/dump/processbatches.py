@@ -13,9 +13,8 @@ from src.nonresonantresolved.selection import (
     select_n_bjets_events,
     select_hc_jets,
     reconstruct_hh_mindeltar,
-    select_X_Wt_events,
-    select_hh_events,
     select_correct_hh_pair_events,
+    get_hh_p4,
 )
 
 
@@ -100,13 +99,9 @@ def process_batch(
     # append class_names to events and set them to 0 or 1
     for class_name in class_names:
         if class_name == class_label:
-            events[Labels(class_name).value] = np.ones_like(
-                events.event_number, dtype=int
-            )
+            events[Labels(class_name).value] = np.ones(len(events))
         else:
-            events[Labels(class_name).value] = np.zeros_like(
-                events.event_number, dtype=int
-            )
+            events[Labels(class_name).value] = np.zeros(len(events))
 
     # select and save jet selections
     n_jets_mask, n_jets_event_mask = select_n_jets_events(
@@ -127,11 +122,7 @@ def process_batch(
     )
 
     # select and save b-jet selections
-    if (
-        bjet_selection
-        and bjet_selection.get("count")
-        and bjet_selection["count"]["value"] > 0
-    ):
+    if bjet_selection:
         n_bjets_mask, n_bjets_event_mask = select_n_bjets_events(
             jets=ak.zip(
                 {"btag": events[Features.JET_BTAG.value], "valid": n_jets_mask}
@@ -143,7 +134,6 @@ def process_batch(
             "Events passing previous cuts and b-jets selection: %s",
             ak.sum(events.valid_event),
         )
-
         # select and save hc jets
         hc_jet_idx, non_hc_jet_idx = select_hc_jets(
             jets=ak.zip(
@@ -153,6 +143,45 @@ def process_batch(
                     "btag": events[Features.JET_BTAG.value],
                 }
             )
+        )
+        leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
+            jets=ak.zip(
+                {
+                    "pt": events.jet_pt,
+                    "eta": events.jet_eta,
+                    "phi": events.jet_phi,
+                    "mass": events.jet_mass,
+                }
+            ),
+            hc_jet_idx=hc_jet_idx,
+        )
+        # correctly paired Higgs bosons
+        if is_mc:
+            correct_hh_pairs_from_truth = select_correct_hh_pair_events(
+                events["jet_truth_H_parents"], leading_h_jet_idx, subleading_h_jet_idx
+            )
+            logger.info(
+                "Events with correct HH pairs: %s",
+                ak.sum(correct_hh_pairs_from_truth),
+            )
+            events["valid_event"] = events.valid_event & correct_hh_pairs_from_truth
+
+        h1, h2 = get_hh_p4(
+            jets=ak.zip(
+                {
+                    "pt": events.jet_pt,
+                    "eta": events.jet_eta,
+                    "phi": events.jet_phi,
+                    "mass": events.jet_mass,
+                }
+            ),
+            leading_h_jet_idx=leading_h_jet_idx,
+            subleading_h_jet_idx=subleading_h_jet_idx,
+        )
+        events[Features.EVENT_M_4B.value] = np.array(h1.mass + h2.mass, dtype=float)
+        events[Features.EVENT_DR_4B.value] = np.array(h1.deltaR(h2), dtype=float)
+        events[Features.EVENT_DETA_4B.value] = np.array(
+            abs(h1.eta - h2.eta), dtype=float
         )
 
     return events[events.valid_event][[*features_out, *class_names]]
