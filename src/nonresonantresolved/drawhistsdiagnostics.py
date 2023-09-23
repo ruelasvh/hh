@@ -20,6 +20,20 @@ def draw_hists(
 
     draw_1d_hists(
         hists_group={
+            "ggF (signal)": hists_group["mc21_ggF_k01"],
+            "QCD": hists_group["mc21_multijet"],
+            "ttbar": hists_group["mc21_ttbar"],
+        },
+        hist_prefix="jet_pt",
+        xlabel="jet $p_{\mathrm{T}}$ [GeV]",
+        ylabel="Events",
+        luminosity=luminosity,
+        yscale="log",
+        output_dir=output_dir,
+    )
+
+    draw_1d_hists(
+        hists_group={
             key: value
             for key, value in hists_group.items()
             if "ggF" in key or "data" in key

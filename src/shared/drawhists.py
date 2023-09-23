@@ -92,6 +92,7 @@ def draw_1d_hists(
     ymin, ymax = ax.get_ylim()
     ax.set_ylim(ymin=ymin, ymax=ymax * 1.5)
     hplt.atlas.label(
+        label="Work In Progress",
         rlabel=get_com_lumi_label(luminosity) + third_exp_label,
         loc=4,
         ax=ax,
