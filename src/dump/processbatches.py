@@ -3,7 +3,7 @@ import numpy as np
 import vector as p4
 from src.shared.utils import (
     logger,
-    inv_GeV,
+    make_4jet_comb_array,
     format_btagger_model_name,
 )
 from src.dump.output import Features, Labels
@@ -144,19 +144,36 @@ def process_batch(
                 }
             )
         )
-        leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
-            jets=ak.zip(
-                {
-                    "pt": events.jet_pt,
-                    "eta": events.jet_eta,
-                    "phi": events.jet_phi,
-                    "mass": events.jet_mass,
-                }
-            ),
-            hc_jet_idx=hc_jet_idx,
+        four_bjets_p4 = ak.mask(jets_p4[hc_jet_idx], events.valid_event)
+        events[Features.EVENT_M_4B.value] = (
+            four_bjets_p4[:, 0]
+            + four_bjets_p4[:, 1]
+            + four_bjets_p4[:, 2]
+            + four_bjets_p4[:, 3]
+        ).mass
+        events[Features.EVENT_BB_RMH.value] = (
+            make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass) / 125.0
         )
-        # correctly paired Higgs bosons
+        events[Features.EVENT_BB_DR.value] = make_4jet_comb_array(
+            four_bjets_p4, lambda x, y: x.deltaR(y)
+        )
+        events[Features.EVENT_BB_DETA.value] = make_4jet_comb_array(
+            four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
+        )
+        breakpoint()
+        # correctly paired Higgs bosons to further clean up labels
         if is_mc:
+            leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
+                jets=ak.zip(
+                    {
+                        "pt": events.jet_pt,
+                        "eta": events.jet_eta,
+                        "phi": events.jet_phi,
+                        "mass": events.jet_mass,
+                    }
+                ),
+                hc_jet_idx=hc_jet_idx,
+            )
             correct_hh_pairs_from_truth = select_correct_hh_pair_events(
                 events["jet_truth_H_parents"], leading_h_jet_idx, subleading_h_jet_idx
             )
@@ -165,23 +182,5 @@ def process_batch(
                 ak.sum(correct_hh_pairs_from_truth),
             )
             events["valid_event"] = events.valid_event & correct_hh_pairs_from_truth
-
-        h1, h2 = get_hh_p4(
-            jets=ak.zip(
-                {
-                    "pt": events.jet_pt,
-                    "eta": events.jet_eta,
-                    "phi": events.jet_phi,
-                    "mass": events.jet_mass,
-                }
-            ),
-            leading_h_jet_idx=leading_h_jet_idx,
-            subleading_h_jet_idx=subleading_h_jet_idx,
-        )
-        events[Features.EVENT_M_4B.value] = np.array(h1.mass + h2.mass, dtype=float)
-        events[Features.EVENT_DR_4B.value] = np.array(h1.deltaR(h2), dtype=float)
-        events[Features.EVENT_DETA_4B.value] = np.array(
-            abs(h1.eta - h2.eta), dtype=float
-        )
 
     return events[events.valid_event][[*features_out, *class_names]]

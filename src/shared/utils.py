@@ -3,6 +3,8 @@ import glob
 import re
 import logging
 import operator
+import itertools
+import numpy as np
 from pathlib import Path
 from functools import reduce
 import awkward as ak
@@ -195,3 +197,8 @@ def concatenate_datasets(processed_batch, out, is_mc):
 def write_out(sample_output, sample_name, output_name):
     with uproot.recreate(output_name) as f:
         f[sample_name] = {field: sample_output[field] for field in sample_output.fields}
+
+
+def make_4jet_comb_array(a, op):
+    fourpairs = list(itertools.combinations(range(4), 2))
+    return np.transpose(ak.Array(op(a[:, i], a[:, j]) for i, j in fourpairs))

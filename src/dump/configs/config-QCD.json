@@ -18,7 +18,11 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.77
+                        "efficiency": 0.85,
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        }
                     }
                 }
             },
@@ -50,7 +54,11 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.77
+                        "efficiency": 0.85,
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        }
                     }
                 }
             },
@@ -82,7 +90,11 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.77
+                        "efficiency": 0.85,
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        }
                     }
                 }
             },
@@ -114,7 +126,11 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.77
+                        "efficiency": 0.85,
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        }
                     }
                 }
             },
@@ -146,7 +162,11 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.77
+                        "efficiency": 0.85,
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        }
                     }
                 }
             },
@@ -178,7 +198,11 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.77
+                        "efficiency": 0.85,
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        }
                     }
                 }
             },
@@ -210,7 +234,11 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.77
+                        "efficiency": 0.85,
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        }
                     }
                 }
             },
@@ -242,7 +270,11 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.77
+                        "efficiency": 0.85,
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        }
                     }
                 }
             },
@@ -274,7 +306,11 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.77
+                        "efficiency": 0.85,
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        }
                     }
                 }
             },
