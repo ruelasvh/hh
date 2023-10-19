@@ -8,6 +8,7 @@ import numpy as np
 from pathlib import Path
 from functools import reduce
 import awkward as ak
+from src.dump.output import Features, Labels
 
 
 logger = logging.getLogger("plot-hh4b-analysis")
@@ -196,7 +197,35 @@ def concatenate_datasets(processed_batch, out, is_mc):
 
 def write_out(sample_output, sample_name, output_name):
     with uproot.recreate(output_name) as f:
-        f[sample_name] = {field: sample_output[field] for field in sample_output.fields}
+        # Declare all branches
+        f.mktree(
+            sample_name,
+            {
+                Features.JET_NUM.value: "i4",
+                Features.JET_NBTAGS.value: "i4",
+                Features.JET_BTAG.value: "var * int8",
+                Features.JET_PT.value: "var * float32",
+                Features.JET_ETA.value: "var * float32",
+                Features.JET_PHI.value: "var * float32",
+                Features.JET_MASS.value: "var * float32",
+                Features.JET_X.value: "var * float32",
+                Features.JET_Y.value: "var * float32",
+                Features.JET_Z.value: "var * float32",
+                Features.EVENT_M_4B.value: "f4",
+                Features.EVENT_BB_RMH.value: ("f8", 6),
+                Features.EVENT_BB_DR.value: ("f8", 6),
+                Features.EVENT_BB_DETA.value: ("f8", 6),
+                Features.EVENT_MCWEIGHT.value: "float32",
+                Features.EVENT_PUWEIGHT.value: "float32",
+                Features.EVENT_XWEIGHT.value: "float32",
+                Labels.LABEL_HH.value: "i4",
+                Labels.LABEL_TTBAR.value: "i4",
+                Labels.LABEL_QCD.value: "i4",
+            },
+        )
+        f[sample_name].extend(
+            {field: sample_output[field] for field in sample_output.fields}
+        )
 
 
 def make_4jet_comb_array(a, op):

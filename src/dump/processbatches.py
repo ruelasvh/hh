@@ -14,7 +14,6 @@ from src.nonresonantresolved.selection import (
     select_hc_jets,
     reconstruct_hh_mindeltar,
     select_correct_hh_pair_events,
-    get_hh_p4,
 )
 
 
@@ -151,6 +150,17 @@ def process_batch(
             + four_bjets_p4[:, 2]
             + four_bjets_p4[:, 3]
         ).mass
+        # four_bjet_combs = ak.combinations(hc_jet_idx, 2, axis=1)
+        # left_bjet, right_bjet = ak.unzip(four_bjet_combs)
+        # events[Features.EVENT_BB_RMH.value] = (
+        #     jets_p4[left_bjet] + jets_p4[right_bjet]
+        # ).mass / 125.0
+        # events[Features.EVENT_BB_DR.value] = jets_p4[left_bjet].deltaR(
+        #     jets_p4[right_bjet]
+        # )
+        # events[Features.EVENT_BB_DETA.value] = abs(
+        #     jets_p4[left_bjet].eta - jets_p4[right_bjet].eta
+        # )
         events[Features.EVENT_BB_RMH.value] = (
             make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass) / 125.0
         )
@@ -160,7 +170,6 @@ def process_batch(
         events[Features.EVENT_BB_DETA.value] = make_4jet_comb_array(
             four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
         )
-        breakpoint()
         # correctly paired Higgs bosons to further clean up labels
         if is_mc:
             leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
