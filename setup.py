@@ -18,8 +18,6 @@ setup(
         "scipy>=1.9.3",
         "uproot>=5.0.2",
         "vector>=0.11.0",
-        "pyAMI-core>=5.1.4",
-        "pyAMI-atlas>=5.1.4",
         "coloredlogs>=15.0.1",
         "h5py>=3.8.0",
         "htcondor>=10.6.0",
