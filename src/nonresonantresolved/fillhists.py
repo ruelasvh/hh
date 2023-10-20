@@ -20,6 +20,7 @@ def fill_hists(
 ) -> list:  # hists:
     """Fill histograms for analysis regions"""
     fill_event_no_histograms(events, hists)
+    fill_jet_kin_histograms(events, hists)
     # fill_leading_jets_histograms(events, hists)
     fill_top_veto_histograms(
         events,
