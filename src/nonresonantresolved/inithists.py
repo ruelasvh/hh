@@ -68,6 +68,7 @@ def init_leading_jets_histograms(binrange=[0, 1_300_000], bins=100) -> list:
 
     hists = []
     for leading_jet in [1, 2, 3, 4]:
+
         hists += [
             Histogram(
                 f"leading_jet_{leading_jet}_pt",

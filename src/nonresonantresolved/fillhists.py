@@ -20,7 +20,7 @@ def fill_hists(
 ) -> list:  # hists:
     """Fill histograms for analysis regions"""
     fill_event_no_histograms(events, hists)
-    fill_jet_kin_histograms(events, hists)
+    # fill_leading_jets_histograms(events, hists)
     fill_top_veto_histograms(
         events,
         hists=find_hists(hists, lambda h: "top_veto" in h.name),
@@ -145,6 +145,7 @@ def fill_leading_jets_histograms(events, hists: list) -> None:
 
     leading_jets_hists = find_hists_by_name(hists, "leading_jet_[1234]_pt")
     for ith_jet in [1, 2, 3, 4]:
+
         hist = find_hist(
             leading_jets_hists, lambda h: f"leading_jet_{ith_jet}_pt" in h.name
         )

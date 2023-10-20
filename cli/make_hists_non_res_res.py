@@ -55,7 +55,7 @@ def get_args():
         "-b",
         "--batch-size",
         type=lambda x: int(x) if x.isdigit() else x,
-        default="100 MB",
+        default="1000 MB",
         **defaults,
     )
     parser.add_argument(
