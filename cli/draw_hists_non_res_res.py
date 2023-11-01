@@ -7,9 +7,9 @@ import numpy as np
 from pathlib import Path
 import logging, coloredlogs
 from collections import defaultdict
-from src.shared.utils import logger
-from src.nonresonantresolved import drawhistsdiagnostics
-from src.nonresonantresolved import drawhistsbkgest
+from hh.shared.utils import logger
+from hh.nonresonantresolved import drawhistsdiagnostics
+from hh.nonresonantresolved import drawhistsbkgest
 
 
 def get_args():

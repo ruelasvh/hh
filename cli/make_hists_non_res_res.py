@@ -15,15 +15,15 @@ import multiprocessing
 import os
 import contextlib
 
-from src.nonresonantresolved.inithists import init_hists
-from src.nonresonantresolved.branches import (
+from hh.nonresonantresolved.inithists import init_hists
+from hh.nonresonantresolved.branches import (
     get_branch_aliases,
 )
-from src.nonresonantresolved.processbatches import (
+from hh.nonresonantresolved.processbatches import (
     process_batch,
 )
-from src.nonresonantresolved.fillhists import fill_hists
-from src.shared.utils import (
+from hh.nonresonantresolved.fillhists import fill_hists
+from hh.shared.utils import (
     logger,
     concatenate_cutbookkeepers,
     get_total_weight,

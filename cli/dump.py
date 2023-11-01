@@ -15,14 +15,14 @@ from pathlib import Path
 import coloredlogs, logging
 from contextlib import nullcontext
 
-from src.dump.processbatches import (
+from hh.dump.processbatches import (
     process_batch,
 )
-from src.dump.output import Features, Labels
-from src.nonresonantresolved.branches import (
+from hh.dump.output import Features, Labels
+from hh.nonresonantresolved.branches import (
     get_branch_aliases,
 )
-from src.shared.utils import (
+from hh.shared.utils import (
     logger,
     concatenate_cutbookkeepers,
     get_total_weight,

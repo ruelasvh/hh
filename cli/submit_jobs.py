@@ -14,7 +14,7 @@ import json
 import argparse
 import htcondor
 from pathlib import Path
-from src.shared.utils import resolve_project_paths
+from hh.shared.utils import resolve_project_paths
 
 
 def get_args():

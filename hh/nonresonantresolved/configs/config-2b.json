@@ -1,0 +1,248 @@
+{
+    "samples": [
+        {
+            "label": "2b_mc21_ggF_k01",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2023_05_30.601479.PhPy8EG_HH4b_cHHH01d0.e8472_s3873_r13829_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.601479.PhPy8EG_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8472_s3873_r13829_p5631",
+                    "genFiltEff": 1,
+                    "crossSection": 0.000030836,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "2b_mc21_ggF_k10",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2023_05_30.601480.PhPy8EG_HH4b_cHHH10d0.e8472_s3873_r13829_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.601480.PhPy8EG_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8472_s3873_r13829_p5631",
+                    "genFiltEff": 1,
+                    "crossSection": 0.00064131,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "2b_mc21_ttbar",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.ttbar/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.601237.PhPy8EG_A14_ttbar_hdamp258p75_allhad.e8453_s3873_r13829_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.601237.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYS.e8453_s3873_r13829_p5631",
+                    "genFiltEff": 0.4561722,
+                    "crossSection": 8.1128e-01,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "2b_mc21_dijets_JZ1",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801166.Py8EG_A14NNPDF23LO_jj_JZ1.e8453_s3873_r13829_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.801166.Py8EG_A14NNPDF23LO_jj_JZ1.deriv.DAOD_PHYS.e8453_s3873_r13829_p5631",
+                    "genFiltEff": 0.0351617,
+                    "crossSection": 93897000,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "2b_mc21_dijets_JZ2",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801167.Py8EG_A14NNPDF23LO_jj_JZ2.e8453_s3873_r13829_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.801167.Py8EG_A14NNPDF23LO_jj_JZ2.deriv.DAOD_PHYS.e8453_s3873_r13829_p5631",
+                    "genFiltEff": 0.01007986,
+                    "crossSection": 2582600,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "2b_mc21_dijets_JZ3",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801168.Py8EG_A14NNPDF23LO_jj_JZ3.e8453_s3873_r13829_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.801168.Py8EG_A14NNPDF23LO_jj_JZ3.deriv.DAOD_PHYS.e8453_s3873_r13829_p5631",
+                    "genFiltEff": 0.01191385,
+                    "crossSection": 28527,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "2b_mc21_dijets_JZ4",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801169.Py8EG_A14NNPDF23LO_jj_JZ4.e8453_s3873_r13829_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.801169.Py8EG_A14NNPDF23LO_jj_JZ4.deriv.DAOD_PHYS.e8453_s3873_r13829_p5631",
+                    "genFiltEff": 0.01376542,
+                    "crossSection": 280.14,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "2b_mc21_dijets_JZ5",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801170.Py8EG_A14NNPDF23LO_jj_JZ5.e8453_s3873_r13829_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.801170.Py8EG_A14NNPDF23LO_jj_JZ5.deriv.DAOD_PHYS.e8453_s3873_r13829_p5631",
+                    "genFiltEff": 0.01516748,
+                    "crossSection": 5.1325,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "2b_mc21_dijets_JZ6",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801171.Py8EG_A14NNPDF23LO_jj_JZ6.e8453_s3873_r13829_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.801171.Py8EG_A14NNPDF23LO_jj_JZ6.deriv.DAOD_PHYS.e8453_s3873_r13829_p5631",
+                    "genFiltEff": 0.01015822,
+                    "crossSection": 0.29767,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "2b_mc21_dijets_JZ7",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801172.Py8EG_A14NNPDF23LO_jj_JZ7.e8453_s3873_r13829_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.801172.Py8EG_A14NNPDF23LO_jj_JZ7.deriv.DAOD_PHYS.e8453_s3873_r13829_p5631",
+                    "genFiltEff": 0.01227761,
+                    "crossSection": 0.019415,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "2b_mc21_dijets_JZ8",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801173.Py8EG_A14NNPDF23LO_jj_JZ8.e8453_s3873_r13829_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.801173.Py8EG_A14NNPDF23LO_jj_JZ8.deriv.DAOD_PHYS.e8453_s3873_r13829_p5631",
+                    "genFiltEff": 0.01181108,
+                    "crossSection": 0.00079804,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "2b_mc21_dijets_JZ9",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc21_13p6TeV.dijets/output/user.viruelas.EJ_2023_05_25.mc21_13p6TeV.801174.Py8EG_A14NNPDF23LO_jj_JZ9incl.e8453_s3873_r13829_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.801174.Py8EG_A14NNPDF23LO_jj_JZ9incl.deriv.DAOD_PHYS.e8453_s3873_r13829_p5631",
+                    "genFiltEff": 0.01531609,
+                    "crossSection": 0.000027822,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        }
+    ],
+    "event_selection": {
+        "central_jets": {
+            "pt": {
+                "operator": ">",
+                "value": 40000
+            },
+            "eta": {
+                "operator": "<",
+                "value": 2.5
+            },
+            "count": {
+                "operator": ">=",
+                "value": 4
+            }
+        },
+        "btagging": {
+            "model": "DL1dv01",
+            "efficiency": 0.85,
+            "count": {
+                "operator": "==",
+                "value": 2
+            }
+        },
+        "forward_jets": {
+            "pt": {
+                "operator": ">",
+                "value": 30000
+            },
+            "eta": {
+                "operator": ">",
+                "value": 2.5
+            },
+            "count": {
+                "operator": ">=",
+                "value": 6
+            }
+        },
+        "top_veto": {
+            "operator": ">",
+            "value": 1.5
+        },
+        "hh_deltaeta_veto": {
+            "operator": "<",
+            "value": 1.5
+        },
+        "hh_mass_veto": {
+            "signal": {
+                "inner_boundry": {
+                    "operator": "<",
+                    "value": 1.6
+                }
+            },
+            "control": {
+                "inner_boundry": {
+                    "operator": ">=",
+                    "value": 1.6
+                },
+                "outer_boundry": {
+                    "operator": "<=",
+                    "value": 45
+                }
+            }
+        }
+    }
+}

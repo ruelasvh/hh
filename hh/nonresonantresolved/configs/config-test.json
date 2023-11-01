@@ -1,0 +1,104 @@
+{
+    "samples": [
+        {
+            "label": "4b_mc21_ggF_k01",
+            "paths": [
+                "src/nonresonantresolved/tests/test-data/mc21ggF-k01/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.601479.PhPy8EG_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8472_s3873_r13829_p5631",
+                    "genFiltEff": 1,
+                    "crossSection": 0.000030836,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "4b_mc21_ggF_k10",
+            "paths": [
+                "src/nonresonantresolved/tests/test-data/mc21ggF-k10/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc21_13p6TeV.601480.PhPy8EG_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8472_s3873_r13829_p5631",
+                    "genFiltEff": 1,
+                    "crossSection": 0.00064131,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "4b_data22",
+            "paths": [
+                "src/nonresonantresolved/tests/test-data/data22/"
+            ]
+        }
+    ],
+    "event_selection": {
+        "central_jets": {
+            "pt": {
+                "operator": ">",
+                "value": 40000
+            },
+            "eta": {
+                "operator": "<",
+                "value": 2.5
+            },
+            "count": {
+                "operator": ">=",
+                "value": 4
+            }
+        },
+        "btagging": {
+            "model": "DL1dv01",
+            "efficiency": 0.77,
+            "count": {
+                "operator": ">=",
+                "value": 4
+            }
+        },
+        "forward_jets": {
+            "pt": {
+                "operator": ">",
+                "value": 30000
+            },
+            "eta": {
+                "operator": ">",
+                "value": 2.5
+            },
+            "count": {
+                "operator": ">=",
+                "value": 6
+            }
+        },
+        "top_veto": {
+            "operator": ">",
+            "value": 1.5
+        },
+        "hh_deltaeta_veto": {
+            "operator": "<",
+            "value": 1.5
+        },
+        "hh_mass_veto": {
+            "signal": {
+                "inner_boundry": {
+                    "operator": "<",
+                    "value": 1.6
+                }
+            },
+            "control": {
+                "inner_boundry": {
+                    "operator": ">=",
+                    "value": 1.6
+                },
+                "outer_boundry": {
+                    "operator": "<=",
+                    "value": 45
+                }
+            }
+        }
+    }
+}
