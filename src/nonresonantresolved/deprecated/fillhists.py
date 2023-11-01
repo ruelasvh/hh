@@ -1,7 +1,7 @@
 import numpy as np
 import vector as p4
 import awkward as ak
-from shared.utils import logger
+from src.shared.utils import logger
 from ..triggers import run3_all as triggers_run3_all
 from ..utils import (
     find_hist,

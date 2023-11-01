@@ -258,6 +258,37 @@ def draw_mH_plane_2D_hists(
         colors=["red", "black"],
         linestyles=["solid", "dashed"],
     )
+    # line connecting SR and CR points x_ur, y_ur
+    ax.plot(
+        (139.35, 161.84),
+        (132.35, 154.84),
+        color="black",
+        linestyle="dashed",
+    )
+    # line connecting SR and CR points x_dr, y_dr
+    ax.plot(
+        (137.24, 155.42),
+        (103.76, 85.58),
+        color="black",
+        linestyle="dashed",
+    )
+    # line connecting SR and CR points x_ul, y_ul
+    ax.plot(
+        (110.51, 92.93),
+        (130.05, 148.07),
+        color="black",
+        linestyle="dashed",
+    )
+    # line connecting SR and CR points x_dl, y_dl
+    ax.plot(
+        (111.77, 98.21),
+        (104.77, 91.21),
+        color="black",
+        linestyle="dashed",
+    )
+    # ax.axline((124, 117), (125 + 45, 117 + 45), color="black", linestyle="dashed")
+    # ax.axline((124, 117), slope=1, color="black", linestyle="dashed")
+    # ax.axline((124, 117), slope=-1, color="black", linestyle="dashed")
     if is_data:
         ax.contourf(
             X,

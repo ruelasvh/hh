@@ -214,7 +214,7 @@ def select_hh_events(events, deltaeta_sel=None, mass_sel=None):
     )
     h1 = jet_p4[h1_jet1_idx] + jet_p4[h1_jet2_idx]
     h2 = jet_p4[h2_jet1_idx] + jet_p4[h2_jet2_idx]
-    keep = np.ones_like(events.event_number, dtype=bool)
+    keep = np.ones(len(events), dtype=bool)
     hh_var = np.array([])
     if deltaeta_sel is not None:
         hh_var = np.abs(ak.firsts(h1.eta) - ak.firsts(h2.eta))
@@ -299,5 +299,5 @@ def calculate_scale_factors(events):
     """
     # jsfs = t.arrays('sf', aliases=jalias, cut=f'(pt > {pT_min}) & (abs(eta) < {eta_max}) & {jvtCut}')
     # mc_sf = ak.prod(jsfs.sf[:,:,0],axis=-1).to_numpy()
-    sf = np.ones_like(events.event_number)
+    sf = np.ones(len(events))
     return sf

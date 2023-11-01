@@ -1,6 +1,6 @@
 import awkward as ak
 import pandas as pd
-from shared.utils import logger
+from src.shared.utils import logger
 from ..triggers import run3_all as triggers_run3_all
 from ..utils import (
     find_hist,

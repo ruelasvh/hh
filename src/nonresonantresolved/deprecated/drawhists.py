@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import mplhep as hep
-from shared.utils import logger
+from src.shared.utils import logger
 from .utils import find_hist, find_hists_by_name, inv_GeV, nth, kin_labels
 from .selection import X_HH, R_CR
 from .error import get_efficiency_with_uncertainties
