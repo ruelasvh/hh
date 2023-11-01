@@ -25,14 +25,18 @@ def process_batch(
     """Apply analysis regions selection and append info to events."""
 
     logger.info("Initial Events: %s", len(events))
-    # set some default columns
-    btagger = format_btagger_model_name(
-        event_selection["btagging"]["model"], event_selection["btagging"]["efficiency"]
-    )
-    # events["jet_btag"] = events[f"jet_btag_{btagger}"]
-    events["btag_num"] = ak.sum(events.jet_btag, axis=1)
-    events["jet_num"] = ak.num(events.jet_pt)
+
+    # set overall event filter, up to signal and background selections
+    events["valid_event"] = np.ones(len(events), dtype=bool)
     events["event_weight"] = np.ones(len(events))
+    events["jet_num"] = ak.num(events.jet_pt)
+    if "jet_btag" not in events.fields:
+        btagger = format_btagger_model_name(
+            event_selection["btagging"]["model"],
+            event_selection["btagging"]["efficiency"],
+        )
+        events["jet_btag"] = events[f"jet_btag_{btagger}"]
+    events["btag_num"] = ak.sum(events.jet_btag, axis=1)
     if is_mc:
         events["mc_event_weight"] = ak.firsts(events.mc_event_weights, axis=1)
         # events["ftag_sf"] = calculate_scale_factors(events)
@@ -40,34 +44,29 @@ def process_batch(
             np.prod([events.mc_event_weight, events.pileup_weight], axis=0)
             * total_weight
         )
-    # # select and save events passing the OR of all triggers
-    # passed_trigs_mask = select_events_passing_all_triggers_OR(events)
-    # logger.info("Events passing the OR of all triggers: %s", ak.sum(passed_trigs_mask))
-    # events["passed_triggers"] = passed_trigs_mask
-    # # keep track of valid events
-    # events["valid_event"] = passed_trigs_mask
-    events["valid_event"] = np.ones(len(events), dtype=bool)
+    # select and save events passing the OR of all triggers
+    if "trigs" in event_selection:
+        trigs = event_selection["trigs"]
+        passed_trigs_mask = select_events_passing_all_triggers_OR(events, trigs)
+        logger.info(
+            "Events passing the OR of all triggers: %s", ak.sum(passed_trigs_mask)
+        )
+        events["passed_triggers"] = passed_trigs_mask
+        events["valid_event"] = events.valid_event & passed_trigs_mask
     # select and save events with >= n central jets
     central_jets_sel = event_selection["central_jets"]
-    # n_central_jets_mask, with_n_central_jets = select_n_jets_events(
-    #     jets=ak.zip(
-    #         {
-    #             "pt": events.jet_pt,
-    #             "eta": events.jet_eta,
-    #             "jvttag": events.jet_jvttag,
-    #         }
-    #     ),
-    #     selection=central_jets_sel,
-    # )
     n_central_jets_mask, with_n_central_jets = select_n_jets_events(
         jets=ak.zip(
             {
-                "pt": events.jet_pt,
-                "eta": events.jet_eta,
+                k: events[v]
+                for k, v in zip(
+                    ["pt", "eta", "jvttag"], ["jet_pt", "jet_eta", "jet_jvttag"]
+                )
+                if v in events.fields
             }
         ),
         selection=central_jets_sel,
-        do_jvt=False,
+        do_jvt="jet_jvttag" in events.fields,
     )
     events["n_central_jets"] = n_central_jets_mask
     events["with_n_central_jets"] = with_n_central_jets
@@ -101,7 +100,7 @@ def process_batch(
         bjets_sel["efficiency"],
         ak.sum(events.valid_event),
     )
-    # # logger.info("Events with >= 6 central or forward jets", len(events_with_central_or_forward_jets))
+
     # get the higgs candidate jets indices
     hc_jet_idx, non_hc_jet_idx = select_hc_jets(
         jets=ak.zip(
