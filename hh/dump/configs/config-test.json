@@ -1,6 +1,6 @@
 {
     "features": {
-        "path": "src/dump/configs/features.json"
+        "path": "hh/dump/configs/features.json"
     },
     "samples": [
         {
@@ -13,8 +13,8 @@
                         "value": 100000
                     },
                     "trigs": {
-                        "operator": "run",
-                        "value": 2
+                        "operator": "OR",
+                        "value": "Run 2"
                     },
                     "hh_deltaeta_veto": {
                         "operator": "<",
@@ -49,7 +49,7 @@
                 }
             },
             "paths": [
-                "src/nonresonantresolved/tests/test-data/mc21ggF-k01/"
+                "hh/nonresonantresolved/tests/test-data/mc21ggF-k01/"
             ],
             "metadata": [
                 {

@@ -57,10 +57,12 @@ def reconstruct_hh_mindeltar(jets, hc_jet_idx):
     )
 
 
-def select_events_passing_all_triggers_OR(events, triggers: list = None):
+def select_events_passing_triggers(events, op="OR", triggers: list = None):
     triggers = triggers or list(filter(lambda x: "trig_passed_" in x, events.fields))
-    passed_all_trigs_OR_mask = get_all_trigs_or(events, triggers)
-    return passed_all_trigs_OR_mask
+    passed_trigs_mask = np.ones(len(events), dtype=bool)
+    if op.upper() == "OR":
+        passed_trigs_mask = get_all_trigs_or(events, triggers)
+    return passed_trigs_mask
 
 
 def select_n_jets_events(jets, selection, do_jvt=True):

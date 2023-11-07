@@ -44,14 +44,6 @@ def get_args():
         **defaults,
     )
     parser.add_argument(
-        "-r",
-        "--run",
-        type=int,
-        default=2,
-        choices=[2, 3],
-        **defaults,
-    )
-    parser.add_argument(
         "-b",
         "--batch-size",
         type=lambda x: int(x) if x.isdigit() else x,
@@ -93,7 +85,10 @@ def process_sample_worker(
     args: argparse.Namespace,
 ) -> None:
     is_mc = "data" not in sample_name
-    branch_aliases = get_branch_aliases(is_mc, args.run)
+    trig_set = None
+    if event_selection.get("trigs"):
+        trig_set = event_selection["trigs"].get("value")
+    branch_aliases = get_branch_aliases(is_mc, trig_set)
     total_weight = 1.0
     current_file_path = ""
     for batch_events, batch_report in uproot.iterate(

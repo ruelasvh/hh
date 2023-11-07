@@ -4,6 +4,7 @@ from hh.shared.utils import (
     logger,
     format_btagger_model_name,
 )
+from hh.nonresonantresolved.triggers import trig_sets
 from .selection import (
     select_n_jets_events,
     select_n_bjets_events,
@@ -12,7 +13,7 @@ from .selection import (
     select_X_Wt_events,
     select_hh_events,
     select_correct_hh_pair_events,
-    select_events_passing_all_triggers_OR,
+    select_events_passing_triggers,
 )
 
 
@@ -46,10 +47,19 @@ def process_batch(
         )
     # select and save events passing the OR of all triggers
     if "trigs" in event_selection:
-        trigs = event_selection["trigs"]
-        passed_trigs_mask = select_events_passing_all_triggers_OR(events, trigs)
+        trig_op, trig_set = (
+            event_selection["trigs"].get("operator"),
+            event_selection["trigs"].get("value"),
+        )
+        assert trig_op and trig_set, (
+            "Invalid trigger selection. Please provide both operator and value. "
+            f"Possible operators: AND, OR. Possible values: {trig_sets.keys()}"
+        )
+        passed_trigs_mask = select_events_passing_triggers(events, op=trig_op)
         logger.info(
-            "Events passing the OR of all triggers: %s", ak.sum(passed_trigs_mask)
+            "Events passing the %s of all triggers: %s",
+            trig_op.upper(),
+            ak.sum(passed_trigs_mask),
         )
         events["passed_triggers"] = passed_trigs_mask
         events["valid_event"] = events.valid_event & passed_trigs_mask

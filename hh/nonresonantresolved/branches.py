@@ -1,6 +1,5 @@
 from .triggers import (
-    run3_main_stream as trigs_run3_main,
-    run2_reoptimized as trigs_run2_reoptimized,
+    trig_sets,
 )
 
 BASE_ALIASES = {
@@ -30,7 +29,7 @@ MC_ALIASES = {
 }
 
 
-def get_branch_aliases(is_mc=False, run=None):
+def get_branch_aliases(is_mc=False, trig_set=None):
     aliases = {**BASE_ALIASES}
     aliases.update(
         {
@@ -40,18 +39,12 @@ def get_branch_aliases(is_mc=False, run=None):
     )
     if is_mc:
         aliases.update(MC_ALIASES)
-    if run == 2:
+
+    if trig_set:
         aliases.update(
             {
                 f"trig_passed_{trig_short}": f"trigPassed_{trig_long}"
-                for trig_long, trig_short, _ in trigs_run2_reoptimized
-            }
-        )
-    if run == 3:
-        aliases.update(
-            {
-                f"trig_passed_{trig_short}": f"trigPassed_{trig_long}"
-                for trig_long, trig_short, _ in trigs_run3_main
+                for trig_long, trig_short, _ in trig_sets[trig_set]
             }
         )
     return aliases

@@ -40,7 +40,7 @@ run3_asymm_L1_all = _get_triggers(run3_asymm_L1_all_idx)
 run2_reoptimized = _get_triggers(run2_reoptimized_idx)
 all = dict(zip(trigs_labels, trigs_long))
 
-sets = {
+trig_sets = {
     "Run 2": run2_reoptimized,
     "Main physics stream": run3_main_stream,
     "Main + delayed streams": run3_delayed_stream,

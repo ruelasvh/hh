@@ -87,10 +87,10 @@ def process_sample_worker(
     args: argparse.Namespace,
 ) -> None:
     is_mc = "data" not in sample_name
-    run = None
+    trig_set = None
     if selections.get("events") and selections["events"].get("trigs"):
-        run = selections["events"]["trigs"].get("value")
-    branch_aliases = get_branch_aliases(is_mc, run)
+        trig_set = selections["events"]["trigs"].get("value")
+    branch_aliases = get_branch_aliases(is_mc, trig_set)
     total_weight = 1.0
     current_file_path = ""
     for batch_events, batch_report in uproot.iterate(

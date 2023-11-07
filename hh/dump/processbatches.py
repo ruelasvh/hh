@@ -8,13 +8,14 @@ from hh.shared.utils import (
 )
 from hh.dump.output import Features, Labels
 from hh.nonresonantresolved.selection import (
-    select_events_passing_all_triggers_OR,
+    select_events_passing_triggers,
     select_n_jets_events,
     select_n_bjets_events,
     select_hc_jets,
     reconstruct_hh_mindeltar,
     select_correct_hh_pair_events,
 )
+from hh.nonresonantresolved.triggers import trig_sets
 
 
 def process_batch(
@@ -56,12 +57,22 @@ def process_batch(
     events["valid_event"] = np.ones(len(events), dtype=bool)
 
     if event_selection and event_selection.get("trigs"):
+        trig_op, trig_set = (
+            event_selection["trigs"].get("operator"),
+            event_selection["trigs"].get("value"),
+        )
+        assert trig_op and trig_set, (
+            "Invalid trigger selection. Please provide both operator and value. "
+            f"Possible operators: AND, OR. Possible values: {trig_sets.keys()}"
+        )
         # select and save events passing the OR of all triggers
-        passed_trigs_mask = select_events_passing_all_triggers_OR(events)
+        passed_trigs_mask = select_events_passing_triggers(events, op=trig_op)
         # keep track of valid events
         events["valid_event"] = events.valid_event & passed_trigs_mask
         logger.info(
-            "Events passing the OR of all triggers: %s", ak.sum(events.valid_event)
+            "Events passing the %s of all triggers: %s",
+            trig_op.upper(),
+            ak.sum(events.valid_event),
         )
 
     # start setting data to be saved
