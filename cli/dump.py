@@ -25,7 +25,7 @@ from hh.nonresonantresolved.branches import (
 from hh.shared.utils import (
     logger,
     concatenate_cutbookkeepers,
-    get_total_weight,
+    get_partial_weight,
     resolve_project_paths,
     concatenate_datasets,
     write_out,
@@ -91,7 +91,7 @@ def process_sample_worker(
     if selections.get("events") and selections["events"].get("trigs"):
         trig_set = selections["events"]["trigs"].get("value")
     branch_aliases = get_branch_aliases(is_mc, trig_set)
-    total_weight = 1.0
+    partial_weight = 1.0
     current_file_path = ""
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
@@ -109,17 +109,19 @@ def process_sample_worker(
             # concatenate cutbookkeepers for each sample
             cbk = concatenate_cutbookkeepers(sample_path, batch_report.file_path)
             logger.debug(f"Metadata: {sample_metadata}")
-            total_weight = get_total_weight(
+            partial_weight = get_partial_weight(
                 sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
             )
-        logger.debug(f"Total weight: {total_weight}")
+        logger.debug(
+            f"Partial weight (filter_efficiency * k_factor * cross_section * luminosity / sum_of_weights): {partial_weight}"
+        )
         # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
         processed_batch = process_batch(
             batch_events,
             selections,
             features,
             class_label,
-            total_weight,
+            partial_weight,
             is_mc,
         )
         if len(processed_batch) == 0:

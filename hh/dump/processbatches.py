@@ -23,7 +23,7 @@ def process_batch(
     selections: dict,
     features: dict,
     class_label: str,
-    total_weight: float = 1.0,
+    partial_weight: float = 1.0,
     is_mc: bool = True,
 ) -> ak.Array:
     """Apply analysis regions selection and append info to events."""
@@ -47,7 +47,7 @@ def process_batch(
     # set event wide selections variables
     event_selection = selections.get("events")
     # get jet and b-jet selections
-    jet_selection = selections["jets"]
+    jet_selection = selections.get("jets")
     bjet_selection = jet_selection["btagging"]
     btagger = format_btagger_model_name(
         bjet_selection["model"], bjet_selection["efficiency"]
@@ -82,10 +82,11 @@ def process_batch(
     if is_mc:
         events[Features.EVENT_MCWEIGHT.value] = events.mc_event_weights[:, 0]
         events[Features.EVENT_PUWEIGHT.value] = events.pileup_weight
-        events[Features.EVENT_XWEIGHT.value] = (
-            np.ones(len(events), dtype=float) * total_weight
+        events[Features.EVENT_XWEIGHT.value] = np.full(len(events), partial_weight)
+        events[Features.EVENT_WEIGHT.value] = partial_weight * np.prod(
+            [events.mc_event_weights[:, 0], events.pileup_weight],
+            axis=0,
         )
-        # events["ftag_sf"] = calculate_scale_factors(events)
 
     jets_p4 = p4.zip(
         {

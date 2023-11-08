@@ -16,7 +16,8 @@
         "bb_dEta",
         "event_mcweight",
         "event_puweight",
-        "event_xweight"
+        "event_xweight",
+        "event_weight"
     ],
     "classes": [
         "label_HH",

@@ -26,7 +26,7 @@ from hh.nonresonantresolved.fillhists import fill_hists
 from hh.shared.utils import (
     logger,
     concatenate_cutbookkeepers,
-    get_total_weight,
+    get_partial_weight,
     write_hists,
     resolve_project_paths,
 )
@@ -80,16 +80,16 @@ def process_sample_worker(
     sample_name: str,
     sample_path: Path,
     sample_metadata: list,
-    event_selection: dict,
+    selections: dict,
     hists: list,
     args: argparse.Namespace,
 ) -> None:
     is_mc = "data" not in sample_name
     trig_set = None
-    if event_selection.get("trigs"):
-        trig_set = event_selection["trigs"].get("value")
+    if selections.get("trigs"):
+        trig_set = selections["trigs"].get("value")
     branch_aliases = get_branch_aliases(is_mc, trig_set)
-    total_weight = 1.0
+    partial_weight = 1.0
     current_file_path = ""
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
@@ -107,17 +107,22 @@ def process_sample_worker(
             # concatenate cutbookkeepers for each sample
             cbk = concatenate_cutbookkeepers(sample_path, batch_report.file_path)
             logger.debug(f"Metadata: {sample_metadata}")
-            total_weight = get_total_weight(
-                sample_metadata, cbk["initial_sum_of_weights"]
+            partial_weight = get_partial_weight(
+                sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
             )
-        logger.debug(f"Total weight: {total_weight}")
+        logger.debug(
+            f"Partial weight (filter_efficiency * k_factor * cross_section * luminosity / sum_of_weights): {partial_weight}"
+        )
         # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
         processed_batch = process_batch(
             batch_events,
-            event_selection,
-            total_weight,
+            selections,
+            partial_weight,
             is_mc,
         )
+        if len(processed_batch) == 0:
+            continue
+
         with multiprocessing.Lock() if args.jobs > 1 else contextlib.nullcontext():
             # NOTE: important: copy the hists back (otherwise parent process won't see the changes)
             hists[sample_name] = fill_hists(processed_batch, hists[sample_name], is_mc)

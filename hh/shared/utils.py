@@ -40,7 +40,6 @@ def concatenate_cutbookkeepers(files, file_delimeter=None):
             if not _dirs
             else list(filter(lambda _dir: _dir in file_delimeter, _dirs))[0]
         )
-        # _files = glob.glob(f"{_dir}/*.root")
         _files = glob.glob(f"{_dir}*.root")
 
     cutbookkeepers = {}
@@ -58,7 +57,7 @@ def concatenate_cutbookkeepers(files, file_delimeter=None):
     return cutbookkeepers
 
 
-def get_total_weight(metadata, sum_weights=1.0):
+def get_partial_weight(metadata, sum_weights=1.0):
     filter_efficiency = float(metadata["genFiltEff"])
     k_factor = float(metadata["kFactor"])
     cross_section = float(metadata["crossSection"]) * 1e6
@@ -221,6 +220,7 @@ def write_out(sample_output, sample_name, output_name):
                 Features.EVENT_MCWEIGHT.value: "float32",
                 Features.EVENT_PUWEIGHT.value: "float32",
                 Features.EVENT_XWEIGHT.value: "float32",
+                Features.EVENT_WEIGHT.value: "float32",
                 Labels.LABEL_HH.value: "i4",
                 Labels.LABEL_TTBAR.value: "i4",
                 Labels.LABEL_QCD.value: "i4",

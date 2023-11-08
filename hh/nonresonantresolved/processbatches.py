@@ -20,7 +20,7 @@ from .selection import (
 def process_batch(
     events: ak.Record,
     event_selection: dict,
-    total_weight: float = 1.0,
+    partial_weight: float = 1.0,
     is_mc: bool = True,
 ) -> ak.Record:
     """Apply analysis regions selection and append info to events."""
@@ -41,9 +41,8 @@ def process_batch(
     if is_mc:
         events["mc_event_weight"] = ak.firsts(events.mc_event_weights, axis=1)
         # events["ftag_sf"] = calculate_scale_factors(events)
-        events["event_weight"] = (
-            np.prod([events.mc_event_weight, events.pileup_weight], axis=0)
-            * total_weight
+        events["event_weight"] = partial_weight * np.prod(
+            [events.mc_event_weight, events.pileup_weight], axis=0
         )
     # select and save events passing the OR of all triggers
     if "trigs" in event_selection:

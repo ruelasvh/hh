@@ -19,6 +19,7 @@ class Features(Enum):
     EVENT_MCWEIGHT = "event_mcweight"
     EVENT_PUWEIGHT = "event_puweight"
     EVENT_XWEIGHT = "event_xweight"
+    EVENT_WEIGHT = "event_weight"
 
     @classmethod
     def get_all(cls):

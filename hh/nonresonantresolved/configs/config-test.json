@@ -3,7 +3,7 @@
         {
             "label": "4b_mc21_ggF_k01",
             "paths": [
-                "src/nonresonantresolved/tests/test-data/mc21ggF-k01/"
+                "hh/nonresonantresolved/tests/test-data/mc21ggF-k01/"
             ],
             "metadata": [
                 {
@@ -18,7 +18,7 @@
         {
             "label": "4b_mc21_ggF_k10",
             "paths": [
-                "src/nonresonantresolved/tests/test-data/mc21ggF-k10/"
+                "hh/nonresonantresolved/tests/test-data/mc21ggF-k10/"
             ],
             "metadata": [
                 {
@@ -33,11 +33,15 @@
         {
             "label": "4b_data22",
             "paths": [
-                "src/nonresonantresolved/tests/test-data/data22/"
+                "hh/nonresonantresolved/tests/test-data/data22/"
             ]
         }
     ],
     "event_selection": {
+        "trigs": {
+            "operator": "or",
+            "value": "Main physics stream"
+        },
         "central_jets": {
             "pt": {
                 "operator": ">",
