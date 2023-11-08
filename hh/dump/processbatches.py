@@ -65,7 +65,7 @@ def process_batch(
             "Invalid trigger selection. Please provide both operator and value. "
             f"Possible operators: AND, OR. Possible values: {trig_sets.keys()}"
         )
-        # select and save events passing the OR of all triggers
+        # select and save events passing the triggers
         passed_trigs_mask = select_events_passing_triggers(events, op=trig_op)
         # keep track of valid events
         events["valid_event"] = events.valid_event & passed_trigs_mask

@@ -6,7 +6,7 @@ from ..utils import (
     find_hist,
     find_hists_by_name,
     format_btagger_model_name,
-    get_all_trigs_or,
+    get_trigs_bitwise_op,
 )
 from ..selection import (
     select_n_jets_events,
@@ -41,7 +41,7 @@ def cut_flow(events: pd.DataFrame, hists, luminosity_weight, config, args) -> No
     logger.info("Filling histograms")
     logger.info("Initial Events: %s", len(events))
 
-    all_trigs_or_decicions = get_all_trigs_or(events, triggers_run3_all)
+    all_trigs_or_decicions = get_trigs_bitwise_op(events, triggers_run3_all)
     passed_trigs_or_events = events[all_trigs_or_decicions]
     logger.info(
         "Events passing the OR of all triggers: %s", len(passed_trigs_or_events)

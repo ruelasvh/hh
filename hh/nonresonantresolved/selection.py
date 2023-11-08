@@ -1,7 +1,7 @@
 import awkward as ak
 import numpy as np
 import vector as p4
-from hh.shared.utils import get_op, get_all_trigs_or, kin_labels, inv_GeV
+from hh.shared.utils import get_op, get_trigs_bitwise_op, kin_labels, inv_GeV
 from hh.shared.selection import X_HH, R_CR, X_Wt
 
 
@@ -57,11 +57,14 @@ def reconstruct_hh_mindeltar(jets, hc_jet_idx):
     )
 
 
-def select_events_passing_triggers(events, op="OR", triggers: list = None):
+def select_events_passing_triggers(
+    events,
+    triggers: list = None,
+    op: str = "or",
+):
     triggers = triggers or list(filter(lambda x: "trig_passed_" in x, events.fields))
     passed_trigs_mask = np.ones(len(events), dtype=bool)
-    if op.upper() == "OR":
-        passed_trigs_mask = get_all_trigs_or(events, triggers)
+    passed_trigs_mask = get_trigs_bitwise_op(events, triggers, op)
     return passed_trigs_mask
 
 

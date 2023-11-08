@@ -8,21 +8,9 @@
             "class_label": "label_HH",
             "selections": {
                 "events": {
-                    "count": {
-                        "operator": "==",
-                        "value": 100000
-                    },
                     "trigs": {
-                        "operator": "OR",
+                        "operator": "or",
                         "value": "Run 2"
-                    },
-                    "hh_deltaeta_veto": {
-                        "operator": "<",
-                        "value": 1.5
-                    },
-                    "top_veto": {
-                        "operator": ">",
-                        "value": 1.5
                     }
                 },
                 "jets": {
@@ -40,7 +28,7 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.85,
+                        "efficiency": 0.77,
                         "count": {
                             "operator": ">=",
                             "value": 4

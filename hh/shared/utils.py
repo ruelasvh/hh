@@ -96,6 +96,8 @@ def get_op(op):
         "<=": operator.le,
         "==": operator.eq,
         "!=": operator.ne,
+        "and": operator.and_,
+        "or": operator.or_,
     }[op]
 
 
@@ -136,11 +138,12 @@ def find_hists_by_name(hists, delimeter):
     return list(filter(lambda h: prog.match(h.name), hists))
 
 
-def get_all_trigs_or(events, trigs, skip_trig=None):
+def get_trigs_bitwise_op(events, trigs, op="or", skip_trig=None):
     """Returns the OR decision of all trigs except skip_trig"""
     trigs = list(filter(lambda trig: trig != skip_trig, trigs))
     return reduce(
-        lambda acc, it: acc | events[it],
+        # lambda acc, it: acc | events[it],
+        lambda acc, it: get_op(op)(acc, events[it]),
         trigs,
         events[trigs[0]],
     )
