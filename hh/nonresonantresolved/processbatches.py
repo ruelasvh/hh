@@ -21,7 +21,7 @@ def process_batch(
     events: ak.Record,
     event_selection: dict,
     partial_weight: float = 1.0,
-    is_mc: bool = True,
+    is_mc: bool = False,
 ) -> ak.Record:
     """Apply analysis regions selection and append info to events."""
 
@@ -29,7 +29,6 @@ def process_batch(
 
     # set overall event filter, up to signal and background selections
     events["valid_event"] = np.ones(len(events), dtype=bool)
-    events["event_weight"] = np.ones(len(events))
     events["jet_num"] = ak.num(events.jet_pt)
     if "jet_btag" not in events.fields:
         btagger = format_btagger_model_name(
@@ -38,11 +37,12 @@ def process_batch(
         )
         events["jet_btag"] = events[f"jet_btag_{btagger}"]
     events["btag_num"] = ak.sum(events.jet_btag, axis=1)
+    if "event_weight" not in events.fields:
+        events["event_weight"] = np.ones(len(events), dtype=float)
     if is_mc:
-        events["mc_event_weight"] = ak.firsts(events.mc_event_weights, axis=1)
         # events["ftag_sf"] = calculate_scale_factors(events)
         events["event_weight"] = partial_weight * np.prod(
-            [events.mc_event_weight, events.pileup_weight], axis=0
+            [events.mc_event_weights[:, 0], events.pileup_weight], axis=0
         )
     # select and save events passing the OR of all triggers
     if "trigs" in event_selection:
@@ -122,7 +122,7 @@ def process_batch(
     )
     events["hc_jet_idx"] = hc_jet_idx
     events["non_hc_jet_idx"] = non_hc_jet_idx
-    # calculate hh delta eta
+    # reconstruct higgs candidates using the minimum deltaR
     leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
         jets=ak.zip(
             {
@@ -138,43 +138,46 @@ def process_batch(
     events["subleading_h_jet_idx"] = subleading_h_jet_idx
     # correctly paired Higgs bosons
     if is_mc:
-        correct_hh_pairs_from_truth = select_correct_hh_pair_events(
-            events["jet_truth_H_parents"], leading_h_jet_idx, subleading_h_jet_idx
-        )
+        correct_hh_pairs_from_truth = select_correct_hh_pair_events(events)
         logger.info(
             "Events with correct HH pairs: %s",
             ak.sum(correct_hh_pairs_from_truth),
         )
+
     # calculate top veto discriminant
-    passed_top_veto_mask, X_Wt_discriminant_min = select_X_Wt_events(
-        events,
-        selection=event_selection["top_veto"],
-    )
-    events["X_Wt_discriminant_min"] = X_Wt_discriminant_min
-    events["passed_top_veto"] = passed_top_veto_mask
-    # keep track of valid events
-    events["valid_event"] = events.valid_event & passed_top_veto_mask
-    top_veto_sel = event_selection["top_veto"]
-    logger.info(
-        "Events passing central jet selection and top-veto discriminant %s %s: %s",
-        top_veto_sel["operator"],
-        top_veto_sel["value"],
-        ak.sum(events.valid_event),
-    )
-    hh_deltaeta_sel = event_selection["hh_deltaeta_veto"]
-    passed_hh_deltaeta_mask, hh_deltaeta_discrim = select_hh_events(
-        events, deltaeta_sel=hh_deltaeta_sel
-    )
-    events["hh_deltaeta_discriminant"] = hh_deltaeta_discrim
-    events["passed_hh_deltaeta"] = passed_hh_deltaeta_mask
-    # keep track of valid events
-    events["valid_event"] = events.valid_event & passed_hh_deltaeta_mask
-    logger.info(
-        "Events passing central jet selection and |deltaEta_HH| %s %s: %s",
-        hh_deltaeta_sel["operator"],
-        hh_deltaeta_sel["value"],
-        ak.sum(events.valid_event),
-    )
+    if "top_veto" in event_selection:
+        top_veto_sel = event_selection["top_veto"]
+        passed_top_veto_mask, X_Wt_discriminant_min = select_X_Wt_events(
+            events,
+            selection=top_veto_sel,
+        )
+        events["X_Wt_discriminant_min"] = X_Wt_discriminant_min
+        events["passed_top_veto"] = passed_top_veto_mask
+        # keep track of valid events
+        events["valid_event"] = events.valid_event & passed_top_veto_mask
+        logger.info(
+            "Events passing central jet selection and top-veto discriminant %s %s: %s",
+            top_veto_sel["operator"],
+            top_veto_sel["value"],
+            ak.sum(events.valid_event),
+        )
+
+    if "hh_deltaeta_veto" in event_selection:
+        hh_deltaeta_sel = event_selection["hh_deltaeta_veto"]
+        passed_hh_deltaeta_mask, hh_deltaeta_discrim = select_hh_events(
+            events, deltaeta_sel=hh_deltaeta_sel
+        )
+        events["hh_deltaeta_discriminant"] = hh_deltaeta_discrim
+        events["passed_hh_deltaeta"] = passed_hh_deltaeta_mask
+        # keep track of valid events
+        events["valid_event"] = events.valid_event & passed_hh_deltaeta_mask
+        logger.info(
+            "Events passing central jet selection and |deltaEta_HH| %s %s: %s",
+            hh_deltaeta_sel["operator"],
+            hh_deltaeta_sel["value"],
+            ak.sum(events.valid_event),
+        )
+
     # calculate mass discriminant for signal and control regions
     # signal region
     signal_hh_mass_selection = event_selection["hh_mass_veto"]["signal"]

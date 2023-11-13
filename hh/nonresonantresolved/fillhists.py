@@ -282,43 +282,50 @@ def fill_reco_mH_truth_pairing_histograms(events, hists: list) -> None:
 
 def fill_hh_deltaeta_histograms(events, hists: list) -> None:
     """Fill HH deltaeta histograms"""
-    hh_deltar = events.hh_deltaeta_discriminant
-    if ak.count(hh_deltar) != 0:
-        valid_events = ~ak.is_none(hh_deltar)
-        hist = find_hist(hists, lambda h: "hh_deltaeta_baseline" in h.name)
-        logger.debug(hist.name)
-        hist.fill(
-            np.array(hh_deltar[valid_events]),
-            weights=np.array(events.event_weight[valid_events]),
-        )
+
+    if "hh_deltaeta_discriminant" in events.fields:
+        hh_deltar = events.hh_deltaeta_discriminant
+        if ak.count(hh_deltar) != 0:
+            valid_events = ~ak.is_none(hh_deltar)
+            hist = find_hist(hists, lambda h: "hh_deltaeta_baseline" in h.name)
+            logger.debug(hist.name)
+            hist.fill(
+                np.array(hh_deltar[valid_events]),
+                weights=np.array(events.event_weight[valid_events]),
+            )
 
 
 def fill_hh_mass_discrim_histograms(events, hists: list) -> None:
     """Fill HH mass discriminant histograms"""
-    hh_mass_discrim = events.hh_mass_discriminant_signal
-    if ak.count(hh_mass_discrim) != 0:
-        valid_events = ~ak.is_none(hh_mass_discrim)
-        hist = find_hist(hists, lambda h: "hh_mass_discrim_baseline" in h.name)
-        logger.debug(hist.name)
-        hist.fill(
-            np.array(hh_mass_discrim[valid_events]),
-            weights=np.array(events.event_weight[valid_events]),
-        )
+
+    if "hh_mass_discriminant_signal" in events.fields:
+        hh_mass_discrim = events.hh_mass_discriminant_signal
+        if ak.count(hh_mass_discrim) != 0:
+            valid_events = ~ak.is_none(hh_mass_discrim)
+            hist = find_hist(hists, lambda h: "hh_mass_discrim_baseline" in h.name)
+            logger.debug(hist.name)
+            hist.fill(
+                np.array(hh_mass_discrim[valid_events]),
+                weights=np.array(events.event_weight[valid_events]),
+            )
 
 
 def fill_top_veto_histograms(events, hists: list) -> None:
     """Fill top veto histograms"""
 
-    X_Wt_discrim = events.X_Wt_discriminant_min
-    if ak.count(X_Wt_discrim) != 0:
-        valid_events = ~ak.is_none(X_Wt_discrim)
-        top_veto_discrim_hist = find_hist(
-            hists, lambda h: "top_veto_baseline" in h.name
-        )
-        top_veto_discrim_hist.fill(
-            np.array(X_Wt_discrim[valid_events]),
-            weights=np.array(events.event_weight[valid_events]),
-        )
+    if "X_Wt_discriminant_min" in events.fields:
+        X_Wt_discrim = events.X_Wt_discriminant_min
+        if ak.count(X_Wt_discrim) != 0:
+            valid_events = ~ak.is_none(X_Wt_discrim)
+            top_veto_discrim_hist = find_hist(
+                hists, lambda h: "top_veto_baseline" in h.name
+            )
+            top_veto_discrim_hist.fill(
+                np.array(X_Wt_discrim[valid_events]),
+                weights=np.array(events.event_weight[valid_events]),
+            )
 
-        top_veto_nbtags_hist = find_hist(hists, lambda h: "top_veto_n_btags" in h.name)
-        top_veto_nbtags_hist.fill(np.array(events.btag_num[valid_events]))
+            top_veto_nbtags_hist = find_hist(
+                hists, lambda h: "top_veto_n_btags" in h.name
+            )
+            top_veto_nbtags_hist.fill(np.array(events.btag_num[valid_events]))

@@ -16,9 +16,9 @@ class Features(Enum):
     EVENT_BB_RMH = "bb_RmH"
     EVENT_BB_DR = "bb_dR"
     EVENT_BB_DETA = "bb_dEta"
-    EVENT_MCWEIGHT = "event_mcweight"
-    EVENT_PUWEIGHT = "event_puweight"
-    EVENT_XWEIGHT = "event_xweight"
+    EVENT_DELTAETA_HH = "deltaEta_hh"
+    EVENT_X_WT = "X_Wt"
+    EVENT_X_HH = "X_hh"
     EVENT_WEIGHT = "event_weight"
 
     @classmethod

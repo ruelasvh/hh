@@ -158,11 +158,11 @@ def main():
 
     assert Features.contains_all(
         config["features"]["out"]
-    ), f"Valid features: {Features.get_all()}"
+    ), f"Invalid features: {set(config['features']['out']) - set(Features.get_all())}"
 
     assert Labels.contains_all(
         config["features"]["classes"]
-    ), f"Valid labels: {Labels.get_all()}"
+    ), f"Invalid labels: {set(config['features']['classes']) - set(Labels.get_all())}"
 
     samples, features = config["samples"], config["features"]
     output = {sample["label"]: ak.Array([]) for sample in samples}

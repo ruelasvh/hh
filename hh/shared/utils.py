@@ -197,35 +197,58 @@ def concatenate_datasets(processed_batch, out, is_mc):
     return ak.concatenate([processed_batch, out])
 
 
+def get_feature_types(output):
+    type_dict = {}
+    if Features.JET_NUM.value in output.fields:
+        type_dict[Features.JET_NUM.value] = "i4"
+    if Features.JET_NBTAGS.value in output.fields:
+        type_dict[Features.JET_NBTAGS.value] = "i4"
+    if Features.JET_BTAG.value in output.fields:
+        type_dict[Features.JET_BTAG.value] = "var * int8"
+    if Features.JET_PT.value in output.fields:
+        type_dict[Features.JET_PT.value] = "var * float32"
+    if Features.JET_ETA.value in output.fields:
+        type_dict[Features.JET_ETA.value] = "var * float32"
+    if Features.JET_PHI.value in output.fields:
+        type_dict[Features.JET_PHI.value] = "var * float32"
+    if Features.JET_MASS.value in output.fields:
+        type_dict[Features.JET_MASS.value] = "var * float32"
+    if Features.JET_X.value in output.fields:
+        type_dict[Features.JET_X.value] = "var * float32"
+    if Features.JET_Y.value in output.fields:
+        type_dict[Features.JET_Y.value] = "var * float32"
+    if Features.JET_Z.value in output.fields:
+        type_dict[Features.JET_Z.value] = "var * float32"
+    if Features.EVENT_M_4B.value in output.fields:
+        type_dict[Features.EVENT_M_4B.value] = "f4"
+    if Features.EVENT_BB_RMH.value in output.fields:
+        type_dict[Features.EVENT_BB_RMH.value] = ("f8", 6)
+    if Features.EVENT_BB_DR.value in output.fields:
+        type_dict[Features.EVENT_BB_DR.value] = ("f8", 6)
+    if Features.EVENT_BB_DETA.value in output.fields:
+        type_dict[Features.EVENT_BB_DETA.value] = ("f8", 6)
+    if Features.EVENT_DELTAETA_HH.value in output.fields:
+        type_dict[Features.EVENT_DELTAETA_HH.value] = "float32"
+    if Features.EVENT_X_WT.value in output.fields:
+        type_dict[Features.EVENT_X_WT.value] = "float32"
+    if Features.EVENT_X_HH.value in output.fields:
+        type_dict[Features.EVENT_X_HH.value] = "float32"
+    if Features.EVENT_WEIGHT.value in output.fields:
+        type_dict[Features.EVENT_WEIGHT.value] = "float32"
+    if Labels.LABEL_HH.value in output.fields:
+        type_dict[Labels.LABEL_HH.value] = "i4"
+    if Labels.LABEL_TTBAR.value in output.fields:
+        type_dict[Labels.LABEL_TTBAR.value] = "i4"
+    if Labels.LABEL_QCD.value in output.fields:
+        type_dict[Labels.LABEL_QCD.value] = "i4"
+    return type_dict
+
+
 def write_out(sample_output, sample_name, output_name):
     with uproot.recreate(output_name) as f:
         # Declare all branches
-        f.mktree(
-            sample_name,
-            {
-                Features.JET_NUM.value: "i4",
-                Features.JET_NBTAGS.value: "i4",
-                Features.JET_BTAG.value: "var * int8",
-                Features.JET_PT.value: "var * float32",
-                Features.JET_ETA.value: "var * float32",
-                Features.JET_PHI.value: "var * float32",
-                Features.JET_MASS.value: "var * float32",
-                Features.JET_X.value: "var * float32",
-                Features.JET_Y.value: "var * float32",
-                Features.JET_Z.value: "var * float32",
-                Features.EVENT_M_4B.value: "f4",
-                Features.EVENT_BB_RMH.value: ("f8", 6),
-                Features.EVENT_BB_DR.value: ("f8", 6),
-                Features.EVENT_BB_DETA.value: ("f8", 6),
-                Features.EVENT_MCWEIGHT.value: "float32",
-                Features.EVENT_PUWEIGHT.value: "float32",
-                Features.EVENT_XWEIGHT.value: "float32",
-                Features.EVENT_WEIGHT.value: "float32",
-                Labels.LABEL_HH.value: "i4",
-                Labels.LABEL_TTBAR.value: "i4",
-                Labels.LABEL_QCD.value: "i4",
-            },
-        )
+        type_dict = get_feature_types(sample_output)
+        f.mktree(sample_name, type_dict)
         f[sample_name].extend(
             {field: sample_output[field] for field in sample_output.fields}
         )

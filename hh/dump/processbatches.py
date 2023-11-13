@@ -3,6 +3,7 @@ import numpy as np
 import vector as p4
 from hh.shared.utils import (
     logger,
+    inv_GeV,
     make_4jet_comb_array,
     format_btagger_model_name,
 )
@@ -14,8 +15,10 @@ from hh.nonresonantresolved.selection import (
     select_hc_jets,
     reconstruct_hh_mindeltar,
     select_correct_hh_pair_events,
+    get_W_t_p4,
 )
 from hh.nonresonantresolved.triggers import trig_sets
+from hh.shared.selection import X_HH, X_Wt
 
 
 def process_batch(
@@ -79,10 +82,8 @@ def process_batch(
     events[Features.JET_NUM.value] = ak.num(events.jet_pt, axis=1)
     events[Features.JET_BTAG.value] = events[f"jet_btag_{btagger}"]
     events[Features.JET_NBTAGS.value] = ak.sum(events.jet_btag, axis=1)
+    events[Features.EVENT_WEIGHT.value] = ak.ones_like(events.event_number)
     if is_mc:
-        events[Features.EVENT_MCWEIGHT.value] = events.mc_event_weights[:, 0]
-        events[Features.EVENT_PUWEIGHT.value] = events.pileup_weight
-        events[Features.EVENT_XWEIGHT.value] = np.full(len(events), partial_weight)
         events[Features.EVENT_WEIGHT.value] = partial_weight * np.prod(
             [events.mc_event_weights[:, 0], events.pileup_weight],
             axis=0,
@@ -173,35 +174,83 @@ def process_batch(
         # events[Features.EVENT_BB_DETA.value] = abs(
         #     jets_p4[left_bjet].eta - jets_p4[right_bjet].eta
         # )
-        events[Features.EVENT_BB_RMH.value] = (
-            make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass) / 125.0
+        if Features.EVENT_BB_RMH.value in features_out:
+            events[Features.EVENT_BB_RMH.value] = (
+                make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass) / 125.0
+            )
+        if Features.EVENT_BB_DR.value in features_out:
+            events[Features.EVENT_BB_DR.value] = make_4jet_comb_array(
+                four_bjets_p4, lambda x, y: x.deltaR(y)
+            )
+        if Features.EVENT_BB_DETA.value in features_out:
+            events[Features.EVENT_BB_DETA.value] = make_4jet_comb_array(
+                four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
+            )
+        # reconstruct higgs candidates using the minimum deltaR
+        leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
+            jets=ak.zip(
+                {
+                    "pt": events.jet_pt,
+                    "eta": events.jet_eta,
+                    "phi": events.jet_phi,
+                    "mass": events.jet_mass,
+                }
+            ),
+            hc_jet_idx=hc_jet_idx,
         )
-        events[Features.EVENT_BB_DR.value] = make_4jet_comb_array(
-            four_bjets_p4, lambda x, y: x.deltaR(y)
-        )
-        events[Features.EVENT_BB_DETA.value] = make_4jet_comb_array(
-            four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
-        )
+        events["leading_h_jet_idx"] = leading_h_jet_idx
+        events["subleading_h_jet_idx"] = subleading_h_jet_idx
         # correctly paired Higgs bosons to further clean up labels
         if is_mc:
-            leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
-                jets=ak.zip(
+            correct_hh_pairs_from_truth = select_correct_hh_pair_events(events)
+            events["valid_event"] = events.valid_event & correct_hh_pairs_from_truth
+            logger.info(
+                "Events passing previous cuts and truth-matched to HH: %s",
+                ak.sum(events.valid_event),
+            )
+
+        if Features.EVENT_X_WT.value in features_out:
+            W_candidates_p4, top_candidates_p4 = get_W_t_p4(
+                ak.zip(
                     {
                         "pt": events.jet_pt,
                         "eta": events.jet_eta,
                         "phi": events.jet_phi,
                         "mass": events.jet_mass,
+                        "btag": events.jet_btag,
                     }
                 ),
-                hc_jet_idx=hc_jet_idx,
+                hc_jet_idx,
+                non_hc_jet_idx,
             )
-            correct_hh_pairs_from_truth = select_correct_hh_pair_events(
-                events["jet_truth_H_parents"], leading_h_jet_idx, subleading_h_jet_idx
+            X_Wt_discriminant = X_Wt(
+                W_candidates_p4.mass * inv_GeV,
+                top_candidates_p4.mass * inv_GeV,
             )
-            logger.info(
-                "Events with correct HH pairs: %s",
-                ak.sum(correct_hh_pairs_from_truth),
+            # select only the minimum X_Wt for each event
+            X_Wt_discriminant_min = ak.min(X_Wt_discriminant, axis=1)
+            events[Features.EVENT_X_WT.value] = X_Wt_discriminant_min
+
+        # calculate HH features
+        h1_jet1_idx, h1_jet2_idx = (
+            leading_h_jet_idx[:, 0, np.newaxis],
+            leading_h_jet_idx[:, 1, np.newaxis],
+        )
+        h2_jet1_idx, h2_jet2_idx = (
+            subleading_h_jet_idx[:, 0, np.newaxis],
+            subleading_h_jet_idx[:, 1, np.newaxis],
+        )
+        h1 = jets_p4[h1_jet1_idx] + jets_p4[h1_jet2_idx]
+        h2 = jets_p4[h2_jet1_idx] + jets_p4[h2_jet2_idx]
+        # deltaEta_hh
+        if Features.EVENT_DELTAETA_HH.value in features_out:
+            events[Features.EVENT_DELTAETA_HH.value] = np.abs(
+                ak.firsts(h1.eta) - ak.firsts(h2.eta)
             )
-            events["valid_event"] = events.valid_event & correct_hh_pairs_from_truth
+        # X_hh
+        if Features.EVENT_X_HH.value in features_out:
+            events[Features.EVENT_X_HH.value] = X_HH(
+                ak.firsts(h1.m) * inv_GeV, ak.firsts(h2.m) * inv_GeV
+            )
 
     return events[events.valid_event][[*features_out, *class_names]]

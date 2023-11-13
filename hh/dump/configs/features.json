@@ -14,9 +14,8 @@
         "bb_RmH",
         "bb_dR",
         "bb_dEta",
-        "event_mcweight",
-        "event_puweight",
-        "event_xweight",
+        "deltaEta_hh",
+        "X_hh",
         "event_weight"
     ],
     "classes": [
