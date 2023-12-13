@@ -43,6 +43,14 @@ def get_args():
         default=Path("train.root"),
         **defaults,
     )
+    # add argument for sum_weights
+    parser.add_argument(
+        "-w",
+        "--sum-weights",
+        type=float,
+        default=None,
+        **defaults,
+    )
     parser.add_argument(
         "-b",
         "--batch-size",
@@ -106,12 +114,12 @@ def process_sample_worker(
         logger.debug(f"Columns: {batch_events.fields}")
         if (current_file_path != batch_report.file_path) and is_mc:
             current_file_path = batch_report.file_path
-            # concatenate cutbookkeepers for each sample
-            cbk = concatenate_cutbookkeepers(sample_path, batch_report.file_path)
-            logger.debug(f"Metadata: {sample_metadata}")
-            partial_weight = get_partial_weight(
-                sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
-            )
+            if args.sum_weights is not None:
+                sum_weights = args.sum_weights
+            else:
+                cbk = concatenate_cutbookkeepers(sample_path, batch_report.file_path)
+                sum_weights = cbk["initial_sum_of_weights"]
+            partial_weight = get_partial_weight(sample_metadata, sum_weights)
         logger.debug(
             f"Partial weight (filter_efficiency * k_factor * cross_section * luminosity / sum_of_weights): {partial_weight}"
         )

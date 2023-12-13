@@ -14,7 +14,7 @@ import json
 import argparse
 import htcondor
 from pathlib import Path
-from hh.shared.utils import resolve_project_paths
+from hh.shared.utils import resolve_project_paths, concatenate_cutbookkeepers
 
 
 def get_args():
@@ -49,24 +49,39 @@ def main():
     # Create a config file for each file in 'paths' for each sample in 'samples'
     configs = []
     for sample in config["samples"]:
-        for path in sample["paths"]:
-            # remove .root ext from files
-            files = [f.parent / f.stem for f in Path(path).glob("*.root")]
+        for sample_path in sample["paths"]:
+            files = list(Path(sample_path).glob("*.root"))
+            # compute the cut book keepers for the sample
+            cbk = concatenate_cutbookkeepers(files)
             # iterate over each file and create a config file for it as described in the docstring
-            for file in files:
+            for file_path in files:
                 # create a config file for each file
-                config_file = CONFIG_DIR / f"config-{sample['label']}-{file.stem}.json"
+                config_file = (
+                    CONFIG_DIR / f"config-{sample['label']}-{file_path.stem}.json"
+                )
                 # add the config file to the list of configs
-                configs.append({"config_file": config_file.as_posix()})
+                configs.append(
+                    {
+                        "config_file": config_file.as_posix(),
+                        "sum_weights": str(cbk["initial_sum_of_weights"]),
+                    }
+                )
                 # create a new config file for each file
-                with open(config_file, "w") as f:
+                with open(config_file, "w") as file:
                     # write the sample and event_selection objects to the new config file
                     json.dump(
                         {
                             **config,
-                            "samples": [{**sample, "paths": [file.as_posix()]}],
+                            "samples": [
+                                {
+                                    **sample,
+                                    "paths": [
+                                        (file_path.parent / file_path.stem).as_posix()
+                                    ],
+                                }
+                            ],
                         },
-                        f,
+                        file,
                         indent=4,
                     )
 
@@ -92,7 +107,7 @@ def main():
             "executable": f"{args.executable}",
             "should_transfer_files": "no",
             "my.sendcredential": "true",
-            "arguments": f"$(config_file) -o {args.output.stem}_$(ClusterId)_$(ProcId) -v {' '.join(restargs)}",
+            "arguments": f"$(config_file) -o {args.output.stem}_$(ClusterId)_$(ProcId) -w $(sum_weights) -v {' '.join(restargs)}",
             "output": f"{OUTPUT_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).out",
             "error": f"{ERROR_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).err",
             "log": f"{LOG_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).log",
