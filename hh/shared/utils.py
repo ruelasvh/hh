@@ -228,13 +228,13 @@ def get_feature_types(output):
     if Features.EVENT_BB_DETA.value in output.fields:
         type_dict[Features.EVENT_BB_DETA.value] = ("f8", 6)
     if Features.EVENT_DELTAETA_HH.value in output.fields:
-        type_dict[Features.EVENT_DELTAETA_HH.value] = "float32"
+        type_dict[Features.EVENT_DELTAETA_HH.value] = "f4"
     if Features.EVENT_X_WT.value in output.fields:
-        type_dict[Features.EVENT_X_WT.value] = "float32"
+        type_dict[Features.EVENT_X_WT.value] = "f4"
     if Features.EVENT_X_HH.value in output.fields:
-        type_dict[Features.EVENT_X_HH.value] = "float32"
+        type_dict[Features.EVENT_X_HH.value] = "f4"
     if Features.EVENT_WEIGHT.value in output.fields:
-        type_dict[Features.EVENT_WEIGHT.value] = "float32"
+        type_dict[Features.EVENT_WEIGHT.value] = "f8"
     if Labels.LABEL_HH.value in output.fields:
         type_dict[Labels.LABEL_HH.value] = "i4"
     if Labels.LABEL_TTBAR.value in output.fields:

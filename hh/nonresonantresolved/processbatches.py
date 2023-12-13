@@ -178,46 +178,57 @@ def process_batch(
             ak.sum(events.valid_event),
         )
 
-    # calculate mass discriminant for signal and control regions
+    # #
+    # Calculate mass discriminant for signal and control regions
+    ##
     # signal region
-    signal_hh_mass_selection = event_selection["hh_mass_veto"]["signal"]
-    (
-        passed_signal_hh_mass_mask,
-        hh_mass_discrim_signal,
-    ) = select_hh_events(
-        events,
-        mass_sel=signal_hh_mass_selection,
-    )
-    events["hh_mass_discriminant_signal"] = hh_mass_discrim_signal
-    events["passed_signal_hh_mass"] = passed_signal_hh_mass_mask
-    # keep track of signal region events
-    events["signal_event"] = events.valid_event & passed_signal_hh_mass_mask
-    logger.info(
-        "Signal events passing previous cut and di-Higgs mass discriminant %s %s: %s",
-        signal_hh_mass_selection["inner_boundry"]["operator"],
-        signal_hh_mass_selection["inner_boundry"]["value"],
-        ak.sum(events.signal_event),
-    )
+    if (
+        "hh_mass_veto" in event_selection
+        and "signal" in event_selection["hh_mass_veto"]
+    ):
+        signal_hh_mass_selection = event_selection["hh_mass_veto"]["signal"]
+        (
+            passed_signal_hh_mass_mask,
+            hh_mass_discrim_signal,
+        ) = select_hh_events(
+            events,
+            mass_sel=signal_hh_mass_selection,
+        )
+        events["hh_mass_discriminant_signal"] = hh_mass_discrim_signal
+        events["passed_signal_hh_mass"] = passed_signal_hh_mass_mask
+        # keep track of signal region events
+        events["signal_event"] = events.valid_event & passed_signal_hh_mass_mask
+        logger.info(
+            "Signal events passing previous cut and di-Higgs mass discriminant %s %s: %s",
+            signal_hh_mass_selection["inner_boundry"]["operator"],
+            signal_hh_mass_selection["inner_boundry"]["value"],
+            ak.sum(events.signal_event),
+        )
+
     # control region
-    control_hh_mass_selection = event_selection["hh_mass_veto"]["control"]
-    (
-        passed_control_hh_mass_mask,
-        hh_mass_discrim_control,
-    ) = select_hh_events(
-        events,
-        mass_sel=control_hh_mass_selection,
-    )
-    events["hh_mass_discriminant_control"] = hh_mass_discrim_control
-    events["passed_control_hh_mass"] = passed_control_hh_mass_mask
-    # keep track of control region events
-    events["control_event"] = events.valid_event & passed_control_hh_mass_mask
-    logger.info(
-        "Control events passing previous cut and di-Higgs mass discriminant between %s %s and %s %s: %s",
-        control_hh_mass_selection["inner_boundry"]["operator"],
-        control_hh_mass_selection["inner_boundry"]["value"],
-        control_hh_mass_selection["outer_boundry"]["operator"],
-        control_hh_mass_selection["outer_boundry"]["value"],
-        ak.sum(events.control_event),
-    )
+    if (
+        "hh_mass_veto" in event_selection
+        and "control" in event_selection["hh_mass_veto"]
+    ):
+        control_hh_mass_selection = event_selection["hh_mass_veto"]["control"]
+        (
+            passed_control_hh_mass_mask,
+            hh_mass_discrim_control,
+        ) = select_hh_events(
+            events,
+            mass_sel=control_hh_mass_selection,
+        )
+        events["hh_mass_discriminant_control"] = hh_mass_discrim_control
+        events["passed_control_hh_mass"] = passed_control_hh_mass_mask
+        # keep track of control region events
+        events["control_event"] = events.valid_event & passed_control_hh_mass_mask
+        logger.info(
+            "Control events passing previous cut and di-Higgs mass discriminant between %s %s and %s %s: %s",
+            control_hh_mass_selection["inner_boundry"]["operator"],
+            control_hh_mass_selection["inner_boundry"]["value"],
+            control_hh_mass_selection["outer_boundry"]["operator"],
+            control_hh_mass_selection["outer_boundry"]["value"],
+            ak.sum(events.control_event),
+        )
 
     return events
