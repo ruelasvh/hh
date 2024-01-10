@@ -33,6 +33,23 @@ def get_args():
         default=Path("output"),
         metavar="",
     )
+    parser.add_argument(
+        "-m",
+        "--memory",
+        type=str,
+        help="Memory request for the job",
+        default="5 GB",
+        metavar="",
+    )
+    parser.add_argument(
+        "-c",
+        "--cpus",
+        type=int,
+        help="Number of cpus for the job",
+        default=1,
+        metavar="",
+    )
+
     return parser.parse_known_args()
 
 
@@ -50,10 +67,10 @@ def main():
     configs = []
     for sample in config["samples"]:
         for sample_path in sample["paths"]:
-            files = list(Path(sample_path).glob("*.root"))
             # compute the cut book keepers for the sample
-            cbk = concatenate_cutbookkeepers(files)
+            cbk = concatenate_cutbookkeepers(sample_path)
             # iterate over each file and create a config file for it as described in the docstring
+            files = list(Path(sample_path).glob("*.root"))
             for file_path in files:
                 # create a config file for each file
                 config_file = (
@@ -94,13 +111,6 @@ def main():
     credd = htcondor.Credd()
     credd.add_user_cred(htcondor.CredTypes.Kerberos, None)
 
-    if "-j" in restargs:
-        cpus = restargs[restargs.index("-j") + 1]
-    elif "--jobs" in restargs:
-        cpus = restargs[restargs.index("--jobs") + 1]
-    else:
-        cpus = 1
-
     # create a submit object using htcondor.Submit
     sub = htcondor.Submit(
         {
@@ -111,8 +121,8 @@ def main():
             "output": f"{OUTPUT_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).out",
             "error": f"{ERROR_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).err",
             "log": f"{LOG_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).log",
-            "request_memory": f"{cpus * 5} GB",
-            "request_cpus": f"{cpus}",
+            "request_memory": args.memory,
+            "request_cpus": args.cpus,
             "getenv": "PYTHONPATH",
         }
     )

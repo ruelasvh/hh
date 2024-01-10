@@ -16,102 +16,129 @@ from .selection import (
 def fill_hists(
     events: ak.Record,
     hists: list,
+    selection: dict,
     is_mc: bool = True,
 ) -> list:  # hists:
     """Fill histograms for analysis regions"""
     fill_event_no_histograms(events, hists)
     fill_jet_kin_histograms(events, hists)
-    fill_top_veto_histograms(
-        events,
-        hists=find_hists(hists, lambda h: "top_veto" in h.name),
-    )
-    fill_hh_deltaeta_histograms(
-        events,
-        hists=find_hists(hists, lambda h: "hh_deltaeta" in h.name),
-    )
-    fill_hh_mass_discrim_histograms(
-        events,
-        hists=find_hists(hists, lambda h: "hh_mass_discrim" in h.name),
-    )
-    leading_h_jet_idx = events.leading_h_jet_idx
-    subleading_h_jet_idx = events.subleading_h_jet_idx
-    jet_p4 = p4.zip(
-        {var: events[f"jet_{var}"] for var in kin_labels.keys()},
-    )
-    h1 = (
-        jet_p4[leading_h_jet_idx[:, 0, np.newaxis]]
-        + jet_p4[leading_h_jet_idx[:, 1, np.newaxis]]
-    )
-    h1 = h1[:, 0]  # remove the extra dimension
-    h2 = (
-        jet_p4[subleading_h_jet_idx[:, 0, np.newaxis]]
-        + jet_p4[subleading_h_jet_idx[:, 1, np.newaxis]]
-    )
-    h2 = h2[:, 0]  # remove the extra dimension
-    hh = h1 + h2
-    fill_reco_H_histograms(
-        h1=h1,
-        h2=h2,
-        weights=events.event_weight,
-        hists=find_hists_by_name(hists, "h[12]_(pt|eta|phi|mass)_baseline"),
-    )
-    fill_reco_mH_2d_histograms(
-        mh1=h1.mass,
-        mh2=h2.mass,
-        weights=events.event_weight,
-        hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
-    )
-    fill_reco_HH_histograms(
-        hh=hh,
-        weights=events.event_weight,
-        hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_baseline"),
-    )
-    signal_event = events.signal_event
-    signal_h1 = h1[signal_event]
-    signal_h2 = h2[signal_event]
-    signal_event_weight = events.event_weight[signal_event]
-    fill_reco_H_histograms(
-        h1=signal_h1,
-        h2=signal_h2,
-        weights=signal_event_weight,
-        hists=find_hists_by_name(
-            hists, "h[12]_(pt|eta|phi|mass)_baseline_signal_region"
-        ),
-    )
-    fill_reco_mH_2d_histograms(
-        mh1=signal_h1.mass,
-        mh2=signal_h2.mass,
-        weights=signal_event_weight,
-        hist=find_hist(hists, lambda h: "mH_plane_baseline_signal_region" in h.name),
-    )
-    fill_reco_HH_histograms(
-        hh=hh[signal_event],
-        weights=events.event_weight[signal_event],
-        hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_baseline_signal_region"),
-    )
-    control_event = events.control_event
-    control_h1 = h1[control_event]
-    control_h2 = h2[control_event]
-    control_event_weight = events.event_weight[control_event]
-    fill_reco_H_histograms(
-        h1=control_h1,
-        h2=control_h2,
-        weights=control_event_weight,
-        hists=find_hists_by_name(
-            hists, "h[12]_(pt|eta|phi|mass)_baseline_control_region"
-        ),
-    )
-    fill_reco_mH_2d_histograms(
-        mh1=control_h1.mass,
-        mh2=control_h2.mass,
-        weights=control_event_weight,
-        hist=find_hist(hists, lambda h: "mH_plane_baseline_control_region" in h.name),
-    )
-    fill_reco_HH_histograms(
-        hh=hh[control_event],
-        weights=events.event_weight[control_event],
-        hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_baseline_control_region"),
-    )
+
+    if "top_veto" in selection:
+        fill_top_veto_histograms(
+            events,
+            hists=find_hists(hists, lambda h: "top_veto" in h.name),
+        )
+
+    if "hh_deltaeta_veto" in selection:
+        fill_hh_deltaeta_histograms(
+            events,
+            hists=find_hists(hists, lambda h: "hh_deltaeta" in h.name),
+        )
+
+    if "hh_mass_veto" in selection:
+        fill_hh_mass_discrim_histograms(
+            events,
+            hists=find_hists(hists, lambda h: "hh_mass_discrim" in h.name),
+        )
+
+    if all(
+        sel in selection
+        for sel in [
+            "central_jets",
+            "btagging",
+            "top_veto",
+            "hh_deltaeta_veto",
+            "hh_mass_veto",
+        ]
+    ):
+        leading_h_jet_idx = events.leading_h_jet_idx
+        subleading_h_jet_idx = events.subleading_h_jet_idx
+        jet_p4 = p4.zip(
+            {var: events[f"jet_{var}"] for var in kin_labels.keys()},
+        )
+        h1 = (
+            jet_p4[leading_h_jet_idx[:, 0, np.newaxis]]
+            + jet_p4[leading_h_jet_idx[:, 1, np.newaxis]]
+        )
+        h1 = h1[:, 0]  # remove the extra dimension
+        h2 = (
+            jet_p4[subleading_h_jet_idx[:, 0, np.newaxis]]
+            + jet_p4[subleading_h_jet_idx[:, 1, np.newaxis]]
+        )
+        h2 = h2[:, 0]  # remove the extra dimension
+        hh = h1 + h2
+        fill_reco_H_histograms(
+            h1=h1,
+            h2=h2,
+            weights=events.event_weight,
+            hists=find_hists_by_name(hists, "h[12]_(pt|eta|phi|mass)_baseline"),
+        )
+        fill_reco_mH_2d_histograms(
+            mh1=h1.mass,
+            mh2=h2.mass,
+            weights=events.event_weight,
+            hist=find_hist(hists, lambda h: "mH_plane_baseline" in h.name),
+        )
+        fill_reco_HH_histograms(
+            hh=hh,
+            weights=events.event_weight,
+            hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_baseline"),
+        )
+        signal_event = events.signal_event
+        signal_h1 = h1[signal_event]
+        signal_h2 = h2[signal_event]
+        signal_event_weight = events.event_weight[signal_event]
+        fill_reco_H_histograms(
+            h1=signal_h1,
+            h2=signal_h2,
+            weights=signal_event_weight,
+            hists=find_hists_by_name(
+                hists, "h[12]_(pt|eta|phi|mass)_baseline_signal_region"
+            ),
+        )
+        fill_reco_mH_2d_histograms(
+            mh1=signal_h1.mass,
+            mh2=signal_h2.mass,
+            weights=signal_event_weight,
+            hist=find_hist(
+                hists, lambda h: "mH_plane_baseline_signal_region" in h.name
+            ),
+        )
+        fill_reco_HH_histograms(
+            hh=hh[signal_event],
+            weights=events.event_weight[signal_event],
+            hists=find_hists_by_name(
+                hists, "hh_(pt|eta|phi|mass)_baseline_signal_region"
+            ),
+        )
+
+        control_event = events.control_event
+        control_h1 = h1[control_event]
+        control_h2 = h2[control_event]
+        control_event_weight = events.event_weight[control_event]
+        fill_reco_H_histograms(
+            h1=control_h1,
+            h2=control_h2,
+            weights=control_event_weight,
+            hists=find_hists_by_name(
+                hists, "h[12]_(pt|eta|phi|mass)_baseline_control_region"
+            ),
+        )
+        fill_reco_mH_2d_histograms(
+            mh1=control_h1.mass,
+            mh2=control_h2.mass,
+            weights=control_event_weight,
+            hist=find_hist(
+                hists, lambda h: "mH_plane_baseline_control_region" in h.name
+            ),
+        )
+        fill_reco_HH_histograms(
+            hh=hh[control_event],
+            weights=events.event_weight[control_event],
+            hists=find_hists_by_name(
+                hists, "hh_(pt|eta|phi|mass)_baseline_control_region"
+            ),
+        )
 
     return hists
 

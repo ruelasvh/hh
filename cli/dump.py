@@ -9,11 +9,9 @@ import json
 import time
 import uproot
 import argparse
-import multiprocessing
 import awkward as ak
 from pathlib import Path
 import coloredlogs, logging
-from contextlib import nullcontext
 
 from hh.dump.processbatches import (
     process_batch,
@@ -43,7 +41,6 @@ def get_args():
         default=Path("train.root"),
         **defaults,
     )
-    # add argument for sum_weights
     parser.add_argument(
         "-w",
         "--sum-weights",
@@ -59,11 +56,11 @@ def get_args():
         **defaults,
     )
     parser.add_argument(
-        "-j",
-        "--jobs",
-        default=1,
+        "-n",
+        "--num-workers",
+        default=3,
         type=lambda x: min(os.cpu_count(), max(1, int(x))),
-        help=f"Number of jobs to run in parallel (default: 1, max: {os.cpu_count()})",
+        help=f"Number of workers for reading files (max: {os.cpu_count()})",
     )
     parser.add_argument(
         "-d",
@@ -88,6 +85,7 @@ def process_sample_worker(
     sample_name: str,
     sample_path: Path,
     sample_metadata: list,
+    sample_sum_weights: float,
     selections: dict,
     class_label: str,
     features: dict,
@@ -99,30 +97,29 @@ def process_sample_worker(
     if selections.get("events") and selections["events"].get("trigs"):
         trig_set = selections["events"]["trigs"].get("value")
     branch_aliases = get_branch_aliases(is_mc, trig_set)
-    partial_weight = 1.0
-    current_file_path = ""
+    if is_mc:
+        if sample_sum_weights is None:
+            cbk = concatenate_cutbookkeepers(sample_path)
+            partial_weight = get_partial_weight(
+                sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
+            )
+        else:
+            partial_weight = get_partial_weight(
+                sample_metadata, sum_weights=sample_sum_weights
+            )
+    else:
+        partial_weight = 1.0
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
         aliases=branch_aliases,
-        num_workers=args.jobs * 2,
+        num_workers=args.num_workers,
         step_size=args.batch_size,
         allow_missing=True,
         report=True,
     ):
         logger.info(f"Processing batch: {batch_report}")
         logger.debug(f"Columns: {batch_events.fields}")
-        if (current_file_path != batch_report.file_path) and is_mc:
-            current_file_path = batch_report.file_path
-            if args.sum_weights is not None:
-                sum_weights = args.sum_weights
-            else:
-                cbk = concatenate_cutbookkeepers(sample_path, batch_report.file_path)
-                sum_weights = cbk["initial_sum_of_weights"]
-            partial_weight = get_partial_weight(sample_metadata, sum_weights)
-        logger.debug(
-            f"Partial weight (filter_efficiency * k_factor * cross_section * luminosity / sum_of_weights): {partial_weight}"
-        )
         # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
         processed_batch = process_batch(
             batch_events,
@@ -135,17 +132,16 @@ def process_sample_worker(
         if len(processed_batch) == 0:
             continue
 
-        with multiprocessing.Lock() if args.jobs > 1 else nullcontext():
-            logger.info(f"Merging batches for sample: {sample_name}")
-            # NOTE: important: copy the out back (otherwise parent process won't see the changes)
-            output[sample_name] = concatenate_datasets(
-                processed_batch, output[sample_name], is_mc
-            )
-            output_name = args.output.with_name(
-                f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.root"
-            )
-            logger.info(f"Writing {sample_name} to {output_name}")
-            write_out(output[sample_name], sample_name, output_name)
+        logger.info(f"Merging batches for sample: {sample_name}")
+        # NOTE: important: copy the out back (otherwise parent process won't see the changes)
+        output[sample_name] = concatenate_datasets(
+            processed_batch, output[sample_name], is_mc
+        )
+        output_name = args.output.with_name(
+            f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.root"
+        )
+        logger.info(f"Writing {sample_name} to {output_name}")
+        write_out(output[sample_name], sample_name, output_name)
 
 
 def main():
@@ -175,15 +171,12 @@ def main():
     samples, features = config["samples"], config["features"]
     output = {sample["label"]: ak.Array([]) for sample in samples}
 
-    manager = multiprocessing.Manager()
-    if args.jobs > 1:
-        output = manager.dict(output) if manager else output
-
     worker_items = [
         (
             sample["label"],
             sample_path,
             sample["metadata"][idx],
+            args.sum_weights,
             sample["selections"],
             sample["class_label"],
             features,
@@ -194,14 +187,8 @@ def main():
         for idx, sample_path in enumerate(sample["paths"])
     ]
 
-    if args.jobs > 1:
-        with multiprocessing.Pool(args.jobs) as pool:
-            pool.starmap(process_sample_worker, worker_items)
-    else:
-        for worker_item in worker_items:
-            process_sample_worker(*worker_item)
-
-    manager.shutdown()
+    for worker_item in worker_items:
+        process_sample_worker(*worker_item)
 
     if logger.level == logging.DEBUG:
         logger.debug(

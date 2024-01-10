@@ -30,27 +30,18 @@ def get_com_lumi_label(lumi, com=13.6):
     return com_label + lumi_label
 
 
-def concatenate_cutbookkeepers(files, file_delimeter=None):
-    if isinstance(files, list):
-        _files = files
-    else:
-        _dirs = glob.glob(files)
-        _dir = (
-            files
-            if not _dirs
-            else list(filter(lambda _dir: _dir in file_delimeter, _dirs))[0]
-        )
-        _files = glob.glob(f"{_dir}*.root")
+def concatenate_cutbookkeepers(sample_path):
+    sample_files = glob.glob(f"{sample_path}*.root")
 
     cutbookkeepers = {}
     cutbookkeepers["initial_events"] = 0
     cutbookkeepers["initial_sum_of_weights"] = 0
     cutbookkeepers["initial_sum_of_weights_squared"] = 0
-    for file_path in _files:
-        with uproot.open(file_path) as file:
-            for key in file.keys():
+    for file_path in sample_files:
+        with uproot.open(file_path) as f:
+            for key in f.keys():
                 if "CutBookkeeper" and "NOSYS" in key:
-                    cbk = file[key].to_numpy()
+                    cbk = f[key].to_numpy()
                     cutbookkeepers["initial_events"] += cbk[0][0]
                     cutbookkeepers["initial_sum_of_weights"] += cbk[0][1]
                     cutbookkeepers["initial_sum_of_weights_squared"] += cbk[0][2]

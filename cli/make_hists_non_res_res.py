@@ -4,6 +4,7 @@
 build plots of everything
 """
 
+import os
 import uproot
 import argparse
 import json
@@ -11,9 +12,6 @@ import time
 import coloredlogs, logging
 from pathlib import Path
 import h5py
-import multiprocessing
-import os
-import contextlib
 
 from hh.nonresonantresolved.inithists import init_hists
 from hh.nonresonantresolved.branches import (
@@ -44,6 +42,13 @@ def get_args():
         **defaults,
     )
     parser.add_argument(
+        "-w",
+        "--sum-weights",
+        type=float,
+        default=None,
+        **defaults,
+    )
+    parser.add_argument(
         "-b",
         "--batch-size",
         type=lambda x: int(x) if x.isdigit() else x,
@@ -51,11 +56,11 @@ def get_args():
         **defaults,
     )
     parser.add_argument(
-        "-j",
-        "--jobs",
-        default=1,
+        "-n",
+        "--num-workers",
+        default=3,
         type=lambda x: min(os.cpu_count(), max(1, int(x))),
-        help=f"Number of jobs to run in parallel (default: 1, max: {os.cpu_count()})",
+        help=f"Number of workers for reading files (max: {os.cpu_count()})",
     )
     parser.add_argument(
         "-d",
@@ -80,6 +85,7 @@ def process_sample_worker(
     sample_name: str,
     sample_path: Path,
     sample_metadata: list,
+    sample_sum_weights: float,
     selections: dict,
     hists: list,
     args: argparse.Namespace,
@@ -89,30 +95,29 @@ def process_sample_worker(
     if selections.get("trigs"):
         trig_set = selections["trigs"].get("value")
     branch_aliases = get_branch_aliases(is_mc, trig_set)
-    partial_weight = 1.0
-    current_file_path = ""
+    if is_mc:
+        if sample_sum_weights is None:
+            cbk = concatenate_cutbookkeepers(sample_path)
+            partial_weight = get_partial_weight(
+                sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
+            )
+        else:
+            partial_weight = get_partial_weight(
+                sample_metadata, sum_weights=sample_sum_weights
+            )
+    else:
+        partial_weight = 1.0
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
         aliases=branch_aliases,
-        num_workers=args.jobs * 2,
+        num_workers=args.num_workers,
         step_size=args.batch_size,
         allow_missing=True,
         report=True,
     ):
         logger.info(f"Processing batch: {batch_report}")
         logger.debug(f"Columns: {batch_events.fields}")
-        if (current_file_path != batch_report.file_path) and is_mc:
-            current_file_path = batch_report.file_path
-            # concatenate cutbookkeepers for each sample
-            cbk = concatenate_cutbookkeepers(sample_path, batch_report.file_path)
-            logger.debug(f"Metadata: {sample_metadata}")
-            partial_weight = get_partial_weight(
-                sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
-            )
-        logger.debug(
-            f"Partial weight (filter_efficiency * k_factor * cross_section * luminosity / sum_of_weights): {partial_weight}"
-        )
         # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
         processed_batch = process_batch(
             batch_events,
@@ -123,15 +128,16 @@ def process_sample_worker(
         if len(processed_batch) == 0:
             continue
 
-        with multiprocessing.Lock() if args.jobs > 1 else contextlib.nullcontext():
-            # NOTE: important: copy the hists back (otherwise parent process won't see the changes)
-            hists[sample_name] = fill_hists(processed_batch, hists[sample_name], is_mc)
-            output_name = args.output.with_name(
-                f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
-            )
-            with h5py.File(output_name, "w") as output_file:
-                logger.info(f"Saving histograms to file: {output_name}")
-                write_hists(hists[sample_name], sample_name, output_file)
+        # NOTE: important: copy the hists back (otherwise parent process won't see the changes)
+        hists[sample_name] = fill_hists(
+            processed_batch, hists[sample_name], selections, is_mc
+        )
+        output_name = args.output.with_name(
+            f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
+        )
+        with h5py.File(output_name, "w") as output_file:
+            logger.info(f"Saving histograms to file: {output_name}")
+            write_hists(hists[sample_name], sample_name, output_file)
 
 
 def main():
@@ -149,15 +155,12 @@ def main():
     samples, event_selection = config["samples"], config["event_selection"]
     hists = init_hists(samples, args)
 
-    manager = multiprocessing.Manager()
-    if args.jobs > 1:
-        hists = manager.dict(hists)
-
     worker_items = [
         (
             sample["label"],
             sample_path,
             sample["metadata"][idx] if "metadata" in sample else None,
+            args.sum_weights,
             event_selection,
             hists,
             args,
@@ -165,14 +168,8 @@ def main():
         for sample in samples
         for idx, sample_path in enumerate(sample["paths"])
     ]
-    if args.jobs > 1:
-        with multiprocessing.Pool(args.jobs) as pool:
-            pool.starmap(process_sample_worker, worker_items)
-    else:
-        for worker_item in worker_items:
-            process_sample_worker(*worker_item)
-
-    manager.shutdown()
+    for worker_item in worker_items:
+        process_sample_worker(*worker_item)
 
     if logger.level == logging.DEBUG:
         logger.debug(

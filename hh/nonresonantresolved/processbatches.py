@@ -27,6 +27,19 @@ def process_batch(
 
     logger.info("Initial Events: %s", len(events))
 
+    if "event_weight" not in events.fields:
+        events["event_weight"] = np.ones(len(events), dtype=float)
+    if is_mc:
+        # events["ftag_sf"] = calculate_scale_factors(events)
+        events["event_weight"] = partial_weight * np.prod(
+            [events.mc_event_weights[:, 0], events.pileup_weight], axis=0
+        )
+
+    # check if event_selection is empty (i.e. no selection)
+    if not event_selection:
+        logger.info("No event selection applied.")
+        return events
+
     # set overall event filter, up to signal and background selections
     events["valid_event"] = np.ones(len(events), dtype=bool)
     events["jet_num"] = ak.num(events.jet_pt)
@@ -37,13 +50,6 @@ def process_batch(
         )
         events["jet_btag"] = events[f"jet_btag_{btagger}"]
     events["btag_num"] = ak.sum(events.jet_btag, axis=1)
-    if "event_weight" not in events.fields:
-        events["event_weight"] = np.ones(len(events), dtype=float)
-    if is_mc:
-        # events["ftag_sf"] = calculate_scale_factors(events)
-        events["event_weight"] = partial_weight * np.prod(
-            [events.mc_event_weights[:, 0], events.pileup_weight], axis=0
-        )
     # select and save events passing the OR of all triggers
     if "trigs" in event_selection:
         trig_op, trig_set = (
