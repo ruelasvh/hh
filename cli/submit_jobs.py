@@ -14,7 +14,11 @@ import json
 import argparse
 import htcondor
 from pathlib import Path
-from hh.shared.utils import resolve_project_paths, concatenate_cutbookkeepers
+from hh.shared.utils import (
+    resolve_project_paths,
+    concatenate_cutbookkeepers,
+    get_sample_weight,
+)
 
 
 def get_args():
@@ -66,9 +70,15 @@ def main():
     # Create a config file for each file in 'paths' for each sample in 'samples'
     configs = []
     for sample in config["samples"]:
-        for sample_path in sample["paths"]:
-            # compute the cut book keepers for the sample
-            cbk = concatenate_cutbookkeepers(sample_path)
+        sample_is_mc = "data" not in sample["label"]
+        for i, sample_path in enumerate(sample["paths"]):
+            sample_weight = 1.0
+            if sample_is_mc:
+                # get the cutbookkeepers for the sample
+                cbk = concatenate_cutbookkeepers(sample_path)
+                sample_weight = get_sample_weight(
+                    sample["metadata"][i], cbk["initial_sum_of_weights"]
+                )
             # iterate over each file and create a config file for it as described in the docstring
             files = list(Path(sample_path).glob("*.root"))
             for file_path in files:
@@ -80,7 +90,7 @@ def main():
                 configs.append(
                     {
                         "config_file": config_file.as_posix(),
-                        "sum_weights": str(cbk["initial_sum_of_weights"]),
+                        "sample_weight": str(sample_weight),
                     }
                 )
                 # create a new config file for each file
@@ -107,17 +117,16 @@ def main():
     ########################################################
 
     # token management needed for submitting jobs to HTCondor in python
-    # col = htcondor.Collector()
     credd = htcondor.Credd()
     credd.add_user_cred(htcondor.CredTypes.Kerberos, None)
 
     # create a submit object using htcondor.Submit
     sub = htcondor.Submit(
         {
-            "executable": f"{args.executable}",
+            "executable": args.executable,
             "should_transfer_files": "no",
             "my.sendcredential": "true",
-            "arguments": f"$(config_file) -o {args.output.stem}_$(ClusterId)_$(ProcId) -w $(sum_weights) -v {' '.join(restargs)}",
+            "arguments": f"$(config_file) -o {args.output.stem}_$(ClusterId)_$(ProcId) -w $(sample_weight) -v {' '.join(restargs)}",
             "output": f"{OUTPUT_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).out",
             "error": f"{ERROR_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).err",
             "log": f"{LOG_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).log",

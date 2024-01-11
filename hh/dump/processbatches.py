@@ -26,7 +26,7 @@ def process_batch(
     selections: dict,
     features: dict,
     class_label: str,
-    partial_weight: float = 1.0,
+    sample_weight: float = 1.0,
     is_mc: bool = True,
 ) -> ak.Array:
     """Apply analysis regions selection and append info to events."""
@@ -46,16 +46,40 @@ def process_batch(
 
     if Features.EVENT_WEIGHT.value not in events.fields:
         events[Features.EVENT_WEIGHT.value] = np.ones(len(events), dtype=float)
+
     if is_mc:
         # events["ftag_sf"] = calculate_scale_factors(events)
-        events[Features.EVENT_WEIGHT.value] = partial_weight * np.prod(
-            [events.mc_event_weights[:, 0], events.pileup_weight], axis=0
+        events[Features.EVENT_WEIGHT.value] = (
+            np.prod([events.mc_event_weights[:, 0], events.pileup_weight], axis=0)
+            * sample_weight
         )
+
+    # start adding jet features
+    jets_p4 = p4.zip(
+        {
+            "pt": events.jet_pt,
+            "eta": events.jet_eta,
+            "phi": events.jet_phi,
+            "mass": events.jet_mass,
+        }
+    )
+    # convert jets to cartesian coordinates and save them
+    jets_xyz = ak.zip(
+        {
+            Features.JET_X.value: jets_p4.x,
+            Features.JET_Y.value: jets_p4.y,
+            Features.JET_Z.value: jets_p4.z,
+        }
+    )
+    for f in jets_xyz.fields:
+        events[Features(f).value] = jets_xyz[f]
+
+    events[Features.JET_NUM.value] = ak.num(events.jet_pt, axis=1)
 
     # check if selections is empty (i.e. no selection)
     if not selections:
         logger.info("No selections applied.")
-        return events
+        return events[[*features_out, *class_names]]
 
     # check that required configs else exit
     required_configs = ["jets", "btagging"]
@@ -96,27 +120,6 @@ def process_batch(
 
     # get jet selections
     jet_selection = selections["jets"]
-    events[Features.JET_NUM.value] = ak.num(events.jet_pt, axis=1)
-
-    jets_p4 = p4.zip(
-        {
-            "pt": events.jet_pt,
-            "eta": events.jet_eta,
-            "phi": events.jet_phi,
-            "mass": events.jet_mass,
-        }
-    )
-    # convert jets to cartesian coordinates and save them
-    jets_xyz = ak.zip(
-        {
-            Features.JET_X.value: jets_p4.x,
-            Features.JET_Y.value: jets_p4.y,
-            Features.JET_Z.value: jets_p4.z,
-        }
-    )
-    for f in jets_xyz.fields:
-        events[Features(f).value] = jets_xyz[f]
-
     # select and save jet selections
     n_jets_mask, n_jets_event_mask = select_n_jets_events(
         jets=ak.zip(

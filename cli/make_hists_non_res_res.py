@@ -24,7 +24,7 @@ from hh.nonresonantresolved.fillhists import fill_hists
 from hh.shared.utils import (
     logger,
     concatenate_cutbookkeepers,
-    get_partial_weight,
+    get_sample_weight,
     write_hists,
     resolve_project_paths,
 )
@@ -43,7 +43,7 @@ def get_args():
     )
     parser.add_argument(
         "-w",
-        "--sum-weights",
+        "--sample-weight",
         type=float,
         default=None,
         **defaults,
@@ -85,7 +85,6 @@ def process_sample_worker(
     sample_name: str,
     sample_path: Path,
     sample_metadata: list,
-    sample_sum_weights: float,
     selections: dict,
     hists: list,
     args: argparse.Namespace,
@@ -95,18 +94,13 @@ def process_sample_worker(
     if selections.get("trigs"):
         trig_set = selections["trigs"].get("value")
     branch_aliases = get_branch_aliases(is_mc, trig_set)
-    if is_mc:
-        if sample_sum_weights is None:
-            cbk = concatenate_cutbookkeepers(sample_path)
-            partial_weight = get_partial_weight(
-                sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
-            )
-        else:
-            partial_weight = get_partial_weight(
-                sample_metadata, sum_weights=sample_sum_weights
-            )
+    if args.sample_weight is None and is_mc:
+        cbk = concatenate_cutbookkeepers(sample_path)
+        sample_weight = get_sample_weight(
+            sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
+        )
     else:
-        partial_weight = 1.0
+        sample_weight = 1.0 if args.sample_weight is None else args.sample_weight
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
@@ -122,7 +116,7 @@ def process_sample_worker(
         processed_batch = process_batch(
             batch_events,
             selections,
-            partial_weight,
+            sample_weight,
             is_mc,
         )
         if len(processed_batch) == 0:
@@ -160,7 +154,6 @@ def main():
             sample["label"],
             sample_path,
             sample["metadata"][idx] if "metadata" in sample else None,
-            args.sum_weights,
             event_selection,
             hists,
             args,

@@ -48,12 +48,12 @@ def concatenate_cutbookkeepers(sample_path):
     return cutbookkeepers
 
 
-def get_partial_weight(metadata, sum_weights=1.0):
+def get_sample_weight(metadata, sum_weights=1.0):
     filter_efficiency = float(metadata["genFiltEff"])
     k_factor = float(metadata["kFactor"])
-    cross_section = float(metadata["crossSection"]) * 1e6
-    luminosity = float(metadata["luminosity"])
-    return filter_efficiency * k_factor * cross_section * luminosity * sum_weights**-1
+    cross_section = float(metadata["crossSection"]) * 1e6  # nb to fb
+    luminosity = float(metadata["luminosity"])  # fb^-1
+    return (filter_efficiency * k_factor * cross_section * luminosity) / sum_weights
 
 
 def get_datasetname_query(filepath):
@@ -183,9 +183,9 @@ def resolve_project_paths(config, path_delimiter="path"):
     return config
 
 
-def concatenate_datasets(processed_batch, out, is_mc):
+def concatenate_datasets(arr1, arr2):
     # concatenate datasets. Processed batch is an Akward array of events. Each event in an Awkward record. Second argument is also an Awkward array of events. Each event is an Awkward record. Concatenate the two arrays and return the concatenated array
-    return ak.concatenate([processed_batch, out])
+    return ak.concatenate([arr1, arr2])
 
 
 def get_feature_types(output):
@@ -243,6 +243,7 @@ def write_out(sample_output, sample_name, output_name):
         f[sample_name].extend(
             {field: sample_output[field] for field in sample_output.fields}
         )
+        # f[sample_name] = {field: sample_output[field] for field in sample_output.fields}
 
 
 def make_4jet_comb_array(a, op):

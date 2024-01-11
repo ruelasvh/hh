@@ -23,7 +23,7 @@ from hh.nonresonantresolved.branches import (
 from hh.shared.utils import (
     logger,
     concatenate_cutbookkeepers,
-    get_partial_weight,
+    get_sample_weight,
     resolve_project_paths,
     concatenate_datasets,
     write_out,
@@ -43,7 +43,7 @@ def get_args():
     )
     parser.add_argument(
         "-w",
-        "--sum-weights",
+        "--sample-weight",
         type=float,
         default=None,
         **defaults,
@@ -85,7 +85,6 @@ def process_sample_worker(
     sample_name: str,
     sample_path: Path,
     sample_metadata: list,
-    sample_sum_weights: float,
     selections: dict,
     class_label: str,
     features: dict,
@@ -94,21 +93,16 @@ def process_sample_worker(
 ) -> None:
     is_mc = "data" not in sample_name
     trig_set = None
-    if selections.get("events") and selections["events"].get("trigs"):
-        trig_set = selections["events"]["trigs"].get("value")
+    if "events" in selections and "trigs" in selections["events"]:
+        trig_set = selections["events"]["trigs"]["value"]
     branch_aliases = get_branch_aliases(is_mc, trig_set)
-    if is_mc:
-        if sample_sum_weights is None:
-            cbk = concatenate_cutbookkeepers(sample_path)
-            partial_weight = get_partial_weight(
-                sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
-            )
-        else:
-            partial_weight = get_partial_weight(
-                sample_metadata, sum_weights=sample_sum_weights
-            )
+    if args.sample_weight is None and is_mc:
+        cbk = concatenate_cutbookkeepers(sample_path)
+        sample_weight = get_sample_weight(
+            sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
+        )
     else:
-        partial_weight = 1.0
+        sample_weight = 1.0 if args.sample_weight is None else args.sample_weight
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
@@ -126,7 +120,7 @@ def process_sample_worker(
             selections,
             features,
             class_label,
-            partial_weight,
+            sample_weight,
             is_mc,
         )
         if len(processed_batch) == 0:
@@ -134,9 +128,7 @@ def process_sample_worker(
 
         logger.info(f"Merging batches for sample: {sample_name}")
         # NOTE: important: copy the out back (otherwise parent process won't see the changes)
-        output[sample_name] = concatenate_datasets(
-            processed_batch, output[sample_name], is_mc
-        )
+        output[sample_name] = concatenate_datasets(processed_batch, output[sample_name])
         output_name = args.output.with_name(
             f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.root"
         )
@@ -176,7 +168,6 @@ def main():
             sample["label"],
             sample_path,
             sample["metadata"][idx],
-            args.sum_weights,
             sample["selections"],
             sample["class_label"],
             features,

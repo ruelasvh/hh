@@ -20,7 +20,7 @@ from .selection import (
 def process_batch(
     events: ak.Record,
     event_selection: dict,
-    partial_weight: float = 1.0,
+    sample_weight: float = 1.0,
     is_mc: bool = False,
 ) -> ak.Record:
     """Apply analysis regions selection and append info to events."""
@@ -31,8 +31,9 @@ def process_batch(
         events["event_weight"] = np.ones(len(events), dtype=float)
     if is_mc:
         # events["ftag_sf"] = calculate_scale_factors(events)
-        events["event_weight"] = partial_weight * np.prod(
-            [events.mc_event_weights[:, 0], events.pileup_weight], axis=0
+        events["event_weight"] = (
+            np.prod([events.mc_event_weights[:, 0], events.pileup_weight], axis=0)
+            * sample_weight
         )
 
     # check if event_selection is empty (i.e. no selection)
