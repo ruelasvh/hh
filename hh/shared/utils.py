@@ -226,6 +226,8 @@ def get_feature_types(output):
         type_dict[Features.EVENT_X_HH.value] = "f4"
     if Features.EVENT_WEIGHT.value in output.fields:
         type_dict[Features.EVENT_WEIGHT.value] = "f8"
+    if Features.PILEUP_WEIGHT.value in output.fields:
+        type_dict[Features.PILEUP_WEIGHT.value] = "f8"
     if Labels.LABEL_HH.value in output.fields:
         type_dict[Labels.LABEL_HH.value] = "i4"
     if Labels.LABEL_TTBAR.value in output.fields:

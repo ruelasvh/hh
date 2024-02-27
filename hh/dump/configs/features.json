@@ -16,7 +16,8 @@
         "bb_dEta",
         "deltaEta_hh",
         "X_hh",
-        "event_weight"
+        "event_weight",
+        "pileup_weight"
     ],
     "classes": [
         "label_HH",

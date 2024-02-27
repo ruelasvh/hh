@@ -44,15 +44,13 @@ def process_batch(
         else:
             events[Labels(class_name).value] = np.zeros(len(events))
 
-    if Features.EVENT_WEIGHT.value not in events.fields:
-        events[Features.EVENT_WEIGHT.value] = np.ones(len(events), dtype=float)
-
     if is_mc:
         # events["ftag_sf"] = calculate_scale_factors(events)
         events[Features.EVENT_WEIGHT.value] = (
-            np.prod([events.mc_event_weights[:, 0], events.pileup_weight], axis=0)
-            * sample_weight
+            events.mc_event_weights[:, 0] * sample_weight
         )
+    else:
+        events[Features.EVENT_WEIGHT.value] = np.ones(len(events), dtype=float)
 
     # start adding jet features
     jets_p4 = p4.zip(
