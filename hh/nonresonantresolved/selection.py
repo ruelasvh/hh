@@ -163,7 +163,7 @@ def select_X_Wt_events(events, selection):
     passed_top_veto_mask = get_op(selection["operator"])(
         X_Wt_discriminant_min, selection["value"]
     )
-    passed_top_veto_mask = ak.fill_none(passed_top_veto_mask, False).to_numpy()
+    passed_top_veto_mask = ak.fill_none(passed_top_veto_mask, False)
     return passed_top_veto_mask, X_Wt_discriminant_min
 
 
@@ -205,6 +205,7 @@ def select_hh_events(events, deltaeta_sel=None, mass_sel=None):
             keep = keep & get_op(mass_sel["outer_boundry"]["operator"])(
                 hh_var, mass_sel["outer_boundry"]["value"]
             )
+    keep = ak.fill_none(keep, False)
     return keep, hh_var
 
 
@@ -226,7 +227,7 @@ def select_correct_hh_pair_events(events):
         leading_h_jets_have_same_parent_mask & subleading_h_jets_have_same_parent_mask
     )
     # convert to numpy array and replace None with False
-    correct_hh_pairs_mask = ak.fill_none(correct_hh_pairs_mask, False).to_numpy()
+    correct_hh_pairs_mask = ak.fill_none(correct_hh_pairs_mask, False)
     return correct_hh_pairs_mask
 
 

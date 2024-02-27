@@ -199,9 +199,10 @@ def process_batch(
         if len(events[events.valid_event]) == 0:
             return events
 
-    # #
+    ############################################################
     # Calculate mass discriminant for signal and control regions
-    ##
+    ############################################################
+
     # signal region
     if (
         "hh_mass_veto" in event_selection
@@ -225,8 +226,6 @@ def process_batch(
             signal_hh_mass_selection["inner_boundry"]["value"],
             ak.sum(events.signal_event),
         )
-        if len(events[events.valid_event]) == 0:
-            return events
 
     # control region
     if (
