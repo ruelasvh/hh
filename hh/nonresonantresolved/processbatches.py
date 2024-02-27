@@ -43,6 +43,8 @@ def process_batch(
 
     # set overall event filter, up to signal and background selections
     events["valid_event"] = np.ones(len(events), dtype=bool)
+
+    # add jet and b-tagging info
     events["jet_num"] = ak.num(events.jet_pt)
     if "jet_btag" not in events.fields:
         btagger = format_btagger_model_name(
@@ -51,6 +53,7 @@ def process_batch(
         )
         events["jet_btag"] = events[f"jet_btag_{btagger}"]
     events["btag_num"] = ak.sum(events.jet_btag, axis=1)
+
     # select and save events passing the OR of all triggers
     if "trigs" in event_selection:
         trig_op, trig_set = (
@@ -62,13 +65,16 @@ def process_batch(
             f"Possible operators: AND, OR. Possible values: {trig_sets.keys()}"
         )
         passed_trigs_mask = select_events_passing_triggers(events, op=trig_op)
+        events["passed_triggers"] = passed_trigs_mask
+        events["valid_event"] = events.valid_event & passed_trigs_mask
         logger.info(
             "Events passing the %s of all triggers: %s",
             trig_op.upper(),
-            ak.sum(passed_trigs_mask),
+            ak.sum(events.valid_event),
         )
-        events["passed_triggers"] = passed_trigs_mask
-        events["valid_event"] = events.valid_event & passed_trigs_mask
+        if len(events[events.valid_event]) == 0:
+            return events
+
     # select and save events with >= n central jets
     central_jets_sel = event_selection["central_jets"]
     n_central_jets_mask, with_n_central_jets = select_n_jets_events(
@@ -86,7 +92,6 @@ def process_batch(
     )
     events["n_central_jets"] = n_central_jets_mask
     events["with_n_central_jets"] = with_n_central_jets
-    # keep track of valid events
     events["valid_event"] = events.valid_event & with_n_central_jets
     logger.info(
         "Events passing previous cut and %s %s central jets with pT %s %s, |eta| %s %s and Jvt tag: %s",
@@ -98,6 +103,9 @@ def process_batch(
         central_jets_sel["eta"]["value"],
         ak.sum(events.valid_event),
     )
+    if len(events[events.valid_event]) == 0:
+        return events
+
     # select and save events with >= n central b-jets
     bjets_sel = event_selection["btagging"]
     n_central_bjets_mask, with_n_central_bjets = select_n_bjets_events(
@@ -116,6 +124,8 @@ def process_batch(
         bjets_sel["efficiency"],
         ak.sum(events.valid_event),
     )
+    if len(events[events.valid_event]) == 0:
+        return events
 
     # get the higgs candidate jets indices
     hc_jet_idx, non_hc_jet_idx = select_hc_jets(
@@ -168,6 +178,8 @@ def process_batch(
             top_veto_sel["value"],
             ak.sum(events.valid_event),
         )
+        if len(events[events.valid_event]) == 0:
+            return events
 
     if "hh_deltaeta_veto" in event_selection:
         hh_deltaeta_sel = event_selection["hh_deltaeta_veto"]
@@ -184,6 +196,8 @@ def process_batch(
             hh_deltaeta_sel["value"],
             ak.sum(events.valid_event),
         )
+        if len(events[events.valid_event]) == 0:
+            return events
 
     # #
     # Calculate mass discriminant for signal and control regions
@@ -211,6 +225,8 @@ def process_batch(
             signal_hh_mass_selection["inner_boundry"]["value"],
             ak.sum(events.signal_event),
         )
+        if len(events[events.valid_event]) == 0:
+            return events
 
     # control region
     if (

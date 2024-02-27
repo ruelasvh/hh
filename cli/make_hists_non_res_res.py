@@ -122,10 +122,7 @@ def process_sample_worker(
         if len(processed_batch) == 0:
             continue
 
-        # NOTE: important: copy the hists back (otherwise parent process won't see the changes)
-        hists[sample_name] = fill_hists(
-            processed_batch, hists[sample_name], selections, is_mc
-        )
+        fill_hists(processed_batch, hists[sample_name], selections, is_mc)
         output_name = args.output.with_name(
             f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
         )

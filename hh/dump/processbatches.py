@@ -107,6 +107,7 @@ def process_batch(
             # select and save events passing the triggers
             passed_trigs_mask = select_events_passing_triggers(events, op=trig_op)
             # keep track of valid events
+            events["passed_triggers"] = passed_trigs_mask
             events["valid_event"] = events.valid_event & passed_trigs_mask
             logger.info(
                 "Events passing the %s of all triggers: %s",
