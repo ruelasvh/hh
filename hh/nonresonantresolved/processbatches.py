@@ -28,13 +28,12 @@ def process_batch(
     logger.info("Initial Events: %s", len(events))
 
     if "event_weight" not in events.fields:
-        events["event_weight"] = np.ones(len(events), dtype=float)
-    if is_mc:
-        # events["ftag_sf"] = calculate_scale_factors(events)
-        events["event_weight"] = (
-            np.prod([events.mc_event_weights[:, 0], events.pileup_weight], axis=0)
-            * sample_weight
-        )
+        events["event_weight"] = np.ones(len(events), dtype=float) * sample_weight
+        if is_mc:
+            events["event_weight"] = (
+                np.prod([events.mc_event_weights[:, 0], events.pileup_weight], axis=0)
+                * sample_weight
+            )
 
     # check if event_selection is empty (i.e. no selection)
     if not event_selection:

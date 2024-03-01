@@ -98,9 +98,7 @@ def process_sample_worker(
     branch_aliases = get_branch_aliases(is_mc, trig_set)
     if args.sample_weight is None and is_mc:
         cbk = concatenate_cutbookkeepers(sample_path)
-        sample_weight = get_sample_weight(
-            sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
-        )
+        sample_weight = get_sample_weight(sample_metadata, cbk)
     else:
         sample_weight = 1.0 if args.sample_weight is None else args.sample_weight
     for batch_events, batch_report in uproot.iterate(

@@ -118,16 +118,39 @@ def draw_hists(
     #     output_dir=output_dir,
     # )
 
+    draw_1d_hists(
+        hists_group={
+            key: value for key, value in hists_group.items() if "data" not in key
+        },
+        hist_prefix="mc_event_weight",
+        luminosity=luminosity,
+        xlabel="mc_event_weight",
+        output_dir=output_dir,
+    )
+
+    for ith_h in [1, 2]:
+        draw_1d_hists(
+            hists_group={
+                key: value for key, value in hists_group.items() if "data" not in key
+            },
+            hist_prefix=f"h{ith_h}_truth_jet_baseline_signal_region",
+            luminosity=luminosity,
+            xlabel=f"H{ith_h} jet truth ID",
+            third_exp_label=f"\n{btag} Signal Region \n 0: light, 4: c, 5: b",
+            density=True,
+            output_dir=output_dir,
+        )
+
     for sample_type, sample_hists in hists_group.items():
         is_data = "data" in sample_type
-        # draw_kin_hists(
-        #     sample_hists=sample_hists,
-        #     sample_name=sample_type,
-        #     object="jet",
-        #     luminosity=luminosity,
-        #     yscale="log",
-        #     output_dir=output_dir,
-        # )
+        draw_kin_hists(
+            sample_hists=sample_hists,
+            sample_name=sample_type,
+            object="jet",
+            luminosity=luminosity,
+            yscale="log",
+            output_dir=output_dir,
+        )
         # draw_kin_hists(
         #     sample_hists=sample_hists,
         #     sample_name=sample_type,

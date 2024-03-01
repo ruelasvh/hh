@@ -76,9 +76,7 @@ def main():
             if sample_is_mc:
                 # get the cutbookkeepers for the sample
                 cbk = concatenate_cutbookkeepers(sample_path)
-                sample_weight = get_sample_weight(
-                    sample["metadata"][i], cbk["initial_sum_of_weights"]
-                )
+                sample_weight = get_sample_weight(sample["metadata"][i], cbk)
             # iterate over each file and create a config file for it as described in the docstring
             files = list(Path(sample_path).glob("*.root"))
             for file_path in files:

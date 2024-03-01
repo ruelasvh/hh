@@ -12,6 +12,10 @@
                         "operator": ">",
                         "value": 40000
                     },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
+                    },
                     "count": {
                         "operator": ">=",
                         "value": 4
@@ -47,6 +51,10 @@
                     "pt": {
                         "operator": ">",
                         "value": 40000
+                    },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
                     },
                     "count": {
                         "operator": ">=",
@@ -84,6 +92,10 @@
                         "operator": ">",
                         "value": 40000
                     },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
+                    },
                     "count": {
                         "operator": ">=",
                         "value": 4
@@ -119,6 +131,10 @@
                     "pt": {
                         "operator": ">",
                         "value": 40000
+                    },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
                     },
                     "count": {
                         "operator": ">=",
@@ -156,6 +172,10 @@
                         "operator": ">",
                         "value": 40000
                     },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
+                    },
                     "count": {
                         "operator": ">=",
                         "value": 4
@@ -191,6 +211,10 @@
                     "pt": {
                         "operator": ">",
                         "value": 40000
+                    },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
                     },
                     "count": {
                         "operator": ">=",
@@ -228,6 +252,10 @@
                         "operator": ">",
                         "value": 40000
                     },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
+                    },
                     "count": {
                         "operator": ">=",
                         "value": 4
@@ -264,6 +292,10 @@
                         "operator": ">",
                         "value": 40000
                     },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
+                    },
                     "count": {
                         "operator": ">=",
                         "value": 4
@@ -299,6 +331,10 @@
                     "pt": {
                         "operator": ">",
                         "value": 40000
+                    },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
                     },
                     "count": {
                         "operator": ">=",

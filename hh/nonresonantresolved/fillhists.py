@@ -53,6 +53,9 @@ def fill_hists(
     ):
         fill_HH_histograms(events, hists)
 
+    if is_mc:
+        fill_mc_event_weight_histograms(events, hists)
+
     return hists
 
 
@@ -62,6 +65,14 @@ def fill_event_no_histograms(events, hists: list) -> None:
     hist = find_hist(hists, lambda h: "event_number" in h.name)
     logger.debug(hist.name)
     hist.fill(events.event_number.to_numpy())
+
+
+def fill_mc_event_weight_histograms(events, hists: list) -> None:
+    """Fill mc event weight histograms"""
+
+    hist = find_hist(hists, lambda h: "mc_event_weight" in h.name)
+    logger.debug(hist.name)
+    hist.fill(events.mc_event_weights[:, 0].to_numpy())
 
 
 def fill_jet_kin_histograms(events, hists: list) -> None:
@@ -205,11 +216,11 @@ def fill_HH_histograms(events, hists: list) -> None:
             signal_event = events.signal_event
             signal_h1 = h1[signal_event]
             signal_h2 = h2[signal_event]
-            signal_event_weight = events.event_weight[signal_event]
+            signal_event_weights = events.event_weight[signal_event]
             fill_reco_H_histograms(
                 h1=signal_h1,
                 h2=signal_h2,
-                weights=signal_event_weight,
+                weights=signal_event_weights,
                 hists=find_hists_by_name(
                     hists, "h[12]_(pt|eta|phi|mass)_baseline_signal_region"
                 ),
@@ -217,7 +228,7 @@ def fill_HH_histograms(events, hists: list) -> None:
             fill_reco_mH_2d_histograms(
                 mh1=signal_h1.mass,
                 mh2=signal_h2.mass,
-                weights=signal_event_weight,
+                weights=signal_event_weights,
                 hist=find_hist(
                     hists, lambda h: "mH_plane_baseline_signal_region" in h.name
                 ),
@@ -227,6 +238,13 @@ def fill_HH_histograms(events, hists: list) -> None:
                 weights=events.event_weight[signal_event],
                 hists=find_hists_by_name(
                     hists, "hh_(pt|eta|phi|mass)_baseline_signal_region"
+                ),
+            )
+            fill_reco_H_truth_jet_histograms(
+                events[signal_event],
+                weights=events.event_weight[signal_event],
+                hists=find_hists_by_name(
+                    hists, "h[12]_truth_jet_baseline_signal_region"
                 ),
             )
 
@@ -257,6 +275,24 @@ def fill_HH_histograms(events, hists: list) -> None:
                 hists=find_hists_by_name(
                     hists, "hh_(pt|eta|phi|mass)_baseline_control_region"
                 ),
+            )
+
+
+def fill_reco_H_truth_jet_histograms(events, hists: list, weights=None) -> None:
+    """Fill jet truth ID histograms"""
+
+    if "jet_truth_ID" in events.fields:
+        h1_truth_jet_idx = events.jet_truth_ID[events.leading_h_jet_idx]
+        h2_truth_jet_idx = events.jet_truth_ID[events.subleading_h_jet_idx]
+        for ith_H, h_truth_jet_idx in zip([1, 2], [h1_truth_jet_idx, h2_truth_jet_idx]):
+            hist = find_hist(
+                hists,
+                lambda h: f"h{ith_H}_truth_jet_baseline_signal_region" in h.name,
+            )
+            logger.debug(hist.name)
+            hist.fill(
+                ak.flatten(h_truth_jet_idx),
+                weights=np.repeat(weights, 2) if weights is not None else None,
             )
 
 

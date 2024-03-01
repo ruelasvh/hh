@@ -48,11 +48,12 @@ def concatenate_cutbookkeepers(sample_path):
     return cutbookkeepers
 
 
-def get_sample_weight(metadata, sum_weights=1.0):
-    filter_efficiency = float(metadata["genFiltEff"])
-    k_factor = float(metadata["kFactor"])
-    cross_section = float(metadata["crossSection"]) * 1e6  # nb to fb
-    luminosity = float(metadata["luminosity"])  # fb^-1
+def get_sample_weight(sample_metadata, cbk):
+    sum_weights = cbk["initial_sum_of_weights"]
+    filter_efficiency = float(sample_metadata["genFiltEff"])
+    k_factor = float(sample_metadata["kFactor"])
+    cross_section = float(sample_metadata["crossSection"]) * 1e6  # nb to fb
+    luminosity = float(sample_metadata["luminosity"])  # fb^-1
     return (filter_efficiency * k_factor * cross_section * luminosity) / sum_weights
 
 

@@ -23,6 +23,7 @@ MC_ALIASES = {
     "mc_event_weights": "mcEventWeights",
     "pileup_weight": "PileupWeight_NOSYS",
     "jet_truth_H_parents": "recojet_antikt4_NOSYS_parentHiggsParentsMask",
+    "jet_truth_ID": "truthjet_antikt4_HadronConeExclTruthLabelID",
     # "jet_btag_sf_DL1dv01_70": "recojet_antikt4_NOSYS_ftag_effSF_DL1dv01_FixedCutBEff_70",
     # "jet_btag_sf_DL1dv01_77": "recojet_antikt4_NOSYS_ftag_effSF_DL1dv01_FixedCutBEff_77",
     # "jet_btag_sf_DL1dv01_85": "recojet_antikt4_NOSYS_ftag_effSF_DL1dv01_FixedCutBEff_85",

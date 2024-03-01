@@ -56,18 +56,20 @@ def draw_1d_hists(
             else hist_edges
         )
         bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
-        scale_factor = 1
+        scale_factor = 1.0
         if ggFk01_factor and "ggF" in sample_type and "k01" in sample_type:
             scale_factor = ggFk01_factor
         if ggFk10_factor and "ggF" in sample_type and "k10" in sample_type:
             scale_factor = ggFk10_factor
         if data2b_factor and "data" in sample_type and "2b" in sample_type:
             scale_factor = data2b_factor
+        hist_values = hist_values * scale_factor
+        bin_norm = 1.0 / hist_values.sum() if density else bin_width
         hplt.histplot(
-            hist_values * scale_factor * 1.0 / bin_width,
-            hist_edges,
+            hist_values * bin_norm,
+            hist_edges - bin_width * 0.5,
             ax=ax,
-            label=(str(scale_factor) + r"$\times$" if scale_factor != 1 else "")
+            label=(str(scale_factor) + r"$\times$" if scale_factor > 1 else "")
             + sample_type,
             linewidth=2.0,
             density=density,
@@ -345,9 +347,11 @@ def draw_kin_hists(
             else hist["edges"][:]
         )
         bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
+        # hist_bin_centers = (hist_edges[1:] + hist_edges[:-1]) / 2
         hplt.histplot(
             hist_values * 1.0 / bin_width,
             hist_edges,
+            # hist_bin_centers,
             ax=ax,
             label=sample_name,
         )

@@ -8,27 +8,40 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
 
     logger.info("Initializing hisotgrams")
     hists_dict = {}
+    binrange = {
+        "pt": [0, 1_600_000],
+        "eta": [-5, 5],
+        "phi": [-3, 3],
+        "mass": [0, 30_000],
+    }
     for sample in inputs:
-        sample_type = sample["label"]
-        hists_dict[sample_type] = []
-        hists_dict[sample_type] += init_event_no_histograms()
-        hists_dict[sample_type] += init_jet_kin_histograms()
-        hists_dict[sample_type] += init_leading_jets_histograms()
-        hists_dict[sample_type] += init_reco_H_histograms()
-        hists_dict[sample_type] += init_reco_H_histograms(postfix="_signal_region")
-        hists_dict[sample_type] += init_reco_H_histograms(postfix="_control_region")
-        hists_dict[sample_type] += init_reco_mH_2d_histograms()
-        hists_dict[sample_type] += init_reco_mH_2d_histograms(postfix="_signal_region")
-        hists_dict[sample_type] += init_reco_mH_2d_histograms(postfix="_control_region")
-        hists_dict[sample_type] += init_reco_HH_histograms()
-        hists_dict[sample_type] += init_reco_HH_histograms(postfix="_signal_region")
-        hists_dict[sample_type] += init_reco_HH_histograms(postfix="_control_region")
-        hists_dict[sample_type] += init_reco_HH_deltaeta_histograms()
-        hists_dict[sample_type] += init_reco_top_veto_histograms()
-        hists_dict[sample_type] += init_reco_HH_mass_discrim_histograms()
+        sample_name = sample["label"]
+        if any(k in sample_name for k in ["JZ", "dijets", "multijet"]):
+            binrange = {**binrange, "pt": [0, 3_900_000]}
+        # initialize histograms
+        hists_dict[sample_name] = []
+        hists_dict[sample_name] += init_event_no_histograms()
+        hists_dict[sample_name] += init_mc_event_weight_histograms()
+        hists_dict[sample_name] += init_jet_kin_histograms()
+        hists_dict[sample_name] += init_leading_jets_histograms()
+        hists_dict[sample_name] += init_reco_H_histograms()
+        hists_dict[sample_name] += init_reco_H_histograms(postfix="_signal_region")
+        hists_dict[sample_name] += init_reco_H_truth_jet_histograms(
+            postfix="_signal_region"
+        )
+        hists_dict[sample_name] += init_reco_H_histograms(postfix="_control_region")
+        hists_dict[sample_name] += init_reco_mH_2d_histograms()
+        hists_dict[sample_name] += init_reco_mH_2d_histograms(postfix="_signal_region")
+        hists_dict[sample_name] += init_reco_mH_2d_histograms(postfix="_control_region")
+        hists_dict[sample_name] += init_reco_HH_histograms()
+        hists_dict[sample_name] += init_reco_HH_histograms(postfix="_signal_region")
+        hists_dict[sample_name] += init_reco_HH_histograms(postfix="_control_region")
+        hists_dict[sample_name] += init_reco_HH_deltaeta_histograms()
+        hists_dict[sample_name] += init_reco_top_veto_histograms()
+        hists_dict[sample_name] += init_reco_HH_mass_discrim_histograms()
         # if args.signal:
-        #     hists_dict[sample_type] += init_reco_mH_truth_pairing_histograms()
-        #     hists_dict[sample_type] += init_truth_matched_mjj_histograms()
+        #     hists_dict[sample_name] += init_reco_mH_truth_pairing_histograms()
+        #     hists_dict[sample_name] += init_truth_matched_mjj_histograms()
 
     return hists_dict
 
@@ -36,13 +49,15 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
 def init_event_no_histograms(bins=100) -> list:
     """Initialize event number histograms"""
 
-    hists = []
-    hists += [
-        HistogramDynamic(
-            "event_number",
-            bins=bins,
-        )
-    ]
+    hists = [HistogramDynamic("event_number", bins=bins)]
+
+    return hists
+
+
+def init_mc_event_weight_histograms(bins=100) -> list:
+    """Initialize mc event weight histograms"""
+
+    hists = [HistogramDynamic("mc_event_weight", bins=bins, dtype=float)]
 
     return hists
 
@@ -124,6 +139,26 @@ def init_reco_H_histograms(
                     bins,
                 )
             ]
+
+    return hists
+
+
+def init_reco_H_truth_jet_histograms(
+    binrange=[0, 7],
+    bins=8,
+    postfix=None,
+) -> list:
+    """Initialize reconstructed H1 and H2 matched to the truth jet ID 1d histograms"""
+
+    hists = []
+    for reco_h in [1, 2]:
+        hists += [
+            Histogram(
+                f"h{reco_h}_truth_jet_baseline{postfix if postfix else ''}",
+                binrange,
+                bins,
+            )
+        ]
 
     return hists
 

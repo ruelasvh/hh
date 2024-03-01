@@ -96,9 +96,7 @@ def process_sample_worker(
     branch_aliases = get_branch_aliases(is_mc, trig_set)
     if args.sample_weight is None and is_mc:
         cbk = concatenate_cutbookkeepers(sample_path)
-        sample_weight = get_sample_weight(
-            sample_metadata, sum_weights=cbk["initial_sum_of_weights"]
-        )
+        sample_weight = get_sample_weight(sample_metadata, cbk)
     else:
         sample_weight = 1.0 if args.sample_weight is None else args.sample_weight
     for batch_events, batch_report in uproot.iterate(
@@ -119,10 +117,12 @@ def process_sample_worker(
             sample_weight,
             is_mc,
         )
+        # if no events pass the selection, skip filling histograms
         if len(processed_batch) == 0:
             continue
-
+        # fill histograms
         fill_hists(processed_batch, hists[sample_name], selections, is_mc)
+        # save histograms to file
         output_name = args.output.with_name(
             f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
         )

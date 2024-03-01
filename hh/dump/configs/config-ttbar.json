@@ -12,6 +12,10 @@
                         "operator": ">",
                         "value": 40000
                     },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
+                    },
                     "count": {
                         "operator": ">=",
                         "value": 4

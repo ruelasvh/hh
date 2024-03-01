@@ -31,6 +31,19 @@ def process_batch(
 ) -> ak.Array:
     """Apply analysis regions selection and append info to events."""
 
+    # check if selections is empty (i.e. no selection)
+    assert selections, "No selection applied."
+
+    # check that required configs else exit
+    required_configs = ["jets", "btagging"]
+    provided_configs = list(selections.keys()) + list(
+        [k for v in selections.values() for k in v.keys()]
+    )
+    remaining_configs = list(set(required_configs) - set(provided_configs))
+    assert (
+        not remaining_configs
+    ), f"Missing configs: {remaining_configs}. Required configs: {required_configs}"
+
     logger.info("Initial Events: %s", len(events))
 
     # get features and class names to be saved
@@ -45,12 +58,17 @@ def process_batch(
             events[Labels(class_name).value] = np.zeros(len(events))
 
     if is_mc:
-        # events["ftag_sf"] = calculate_scale_factors(events)
+        events[Features.MC_EVENT_WEIGHT.value] = events.mc_event_weights[:, 0]
         events[Features.EVENT_WEIGHT.value] = (
-            events.mc_event_weights[:, 0] * sample_weight
+            np.prod([events.mc_event_weight, events.pileup_weight], axis=0)
+            * sample_weight
         )
     else:
-        events[Features.EVENT_WEIGHT.value] = np.ones(len(events), dtype=float)
+        events[Features.EVENT_WEIGHT.value] = (
+            np.ones(len(events), dtype=float) * sample_weight
+        )
+        events[Features.MC_EVENT_WEIGHT.value] = np.ones(len(events), dtype=float)
+        events[Features.PILEUP_WEIGHT.value] = np.ones(len(events), dtype=float)
 
     # start adding jet features
     jets_p4 = p4.zip(
@@ -73,21 +91,6 @@ def process_batch(
         events[Features(f).value] = jets_xyz[f]
 
     events[Features.JET_NUM.value] = ak.num(events.jet_pt, axis=1)
-
-    # check if selections is empty (i.e. no selection)
-    if not selections:
-        logger.info("No selections applied.")
-        return events[[*features_out, *class_names]]
-
-    # check that required configs else exit
-    required_configs = ["jets", "btagging"]
-    provided_configs = list(selections.keys()) + list(
-        [k for v in selections.values() for k in v.keys()]
-    )
-    remaining_configs = list(set(required_configs) - set(provided_configs))
-    assert (
-        not remaining_configs
-    ), f"Missing configs: {remaining_configs}. Required configs: {required_configs}"
 
     # set overall event filter
     events["valid_event"] = np.ones(len(events), dtype=bool)
@@ -115,7 +118,7 @@ def process_batch(
                 ak.sum(events.valid_event),
             )
             if len(events[events.valid_event]) == 0:
-                return events[events.valid_event]
+                return events[events.valid_event][[*features_out, *class_names]]
 
     # get jet selections
     jet_selection = selections["jets"]
@@ -139,7 +142,7 @@ def process_batch(
         ak.sum(events.valid_event),
     )
     if len(events[events.valid_event]) == 0:
-        return events[events.valid_event]
+        return events[events.valid_event][[*features_out, *class_names]]
 
     # select and save b-jet selections
     bjet_selection = jet_selection["btagging"]
@@ -158,7 +161,7 @@ def process_batch(
         ak.sum(events.valid_event),
     )
     if len(events[events.valid_event]) == 0:
-        return events[events.valid_event]
+        return events[events.valid_event][[*features_out, *class_names]]
 
     # select and save hc jets
     hc_jet_idx, non_hc_jet_idx = select_hc_jets(
@@ -193,14 +196,7 @@ def process_batch(
 
     # reconstruct higgs candidates using the minimum deltaR
     leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
-        jets=ak.zip(
-            {
-                "pt": events.jet_pt,
-                "eta": events.jet_eta,
-                "phi": events.jet_phi,
-                "mass": events.jet_mass,
-            }
-        ),
+        jets=jets_p4,
         hc_jet_idx=hc_jet_idx,
     )
     events["leading_h_jet_idx"] = leading_h_jet_idx
@@ -215,7 +211,7 @@ def process_batch(
             ak.sum(events.valid_event),
         )
         if len(events[events.valid_event]) == 0:
-            return events[events.valid_event]
+            return events[events.valid_event][[*features_out, *class_names]]
 
     # calculate X_Wt
     if Features.EVENT_X_WT.value in features_out:
