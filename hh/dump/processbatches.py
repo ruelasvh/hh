@@ -6,6 +6,7 @@ from hh.shared.utils import (
     inv_GeV,
     make_4jet_comb_array,
     format_btagger_model_name,
+    get_common,
 )
 from hh.dump.output import Features, Labels
 from hh.nonresonantresolved.selection import (
@@ -24,7 +25,7 @@ from hh.shared.selection import X_HH, X_Wt
 def process_batch(
     events: ak.Array,
     selections: dict,
-    features: dict,
+    outputs: dict,
     class_label: str,
     sample_weight: float = 1.0,
     is_mc: bool = True,
@@ -47,11 +48,11 @@ def process_batch(
     logger.info("Initial Events: %s", len(events))
 
     # get features and class names to be saved
-    features_out = features["out"]
-    class_names = features["classes"]
+    feature_names = outputs["features"]
+    label_names = outputs["labels"]
 
-    # append class_names to events and set them to 0 or 1
-    for class_name in class_names:
+    # append label_names to events and set them to 0 or 1
+    for class_name in label_names:
         if class_name == class_label:
             events[Labels(class_name).value] = np.ones(len(events))
         else:
@@ -117,7 +118,8 @@ def process_batch(
                 ak.sum(events.valid_event),
             )
             if len(events[events.valid_event]) == 0:
-                return events[events.valid_event][[*features_out, *class_names]]
+                features_out = get_common(events.fields, feature_names)
+                return events[events.valid_event][[*features_out, *label_names]]
 
     # get jet selections
     jet_selection = selections["jets"]
@@ -141,7 +143,8 @@ def process_batch(
         ak.sum(events.valid_event),
     )
     if len(events[events.valid_event]) == 0:
-        return events[events.valid_event][[*features_out, *class_names]]
+        features_out = get_common(events.fields, feature_names)
+        return events[events.valid_event][[*features_out, *label_names]]
 
     # select and save b-jet selections
     bjet_selection = jet_selection["btagging"]
@@ -160,7 +163,8 @@ def process_batch(
         ak.sum(events.valid_event),
     )
     if len(events[events.valid_event]) == 0:
-        return events[events.valid_event][[*features_out, *class_names]]
+        features_out = get_common(events.fields, feature_names)
+        return events[events.valid_event][[*features_out, *label_names]]
 
     # select and save hc jets
     hc_jet_idx, non_hc_jet_idx = select_hc_jets(
@@ -180,15 +184,15 @@ def process_batch(
         + four_bjets_p4[:, 3]
     ).mass
     # calculate bb features
-    if Features.EVENT_BB_RMH.value in features_out:
+    if Features.EVENT_BB_RMH.value in feature_names:
         events[Features.EVENT_BB_RMH.value] = (
             make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass) / 125.0
         )
-    if Features.EVENT_BB_DR.value in features_out:
+    if Features.EVENT_BB_DR.value in feature_names:
         events[Features.EVENT_BB_DR.value] = make_4jet_comb_array(
             four_bjets_p4, lambda x, y: x.deltaR(y)
         )
-    if Features.EVENT_BB_DETA.value in features_out:
+    if Features.EVENT_BB_DETA.value in feature_names:
         events[Features.EVENT_BB_DETA.value] = make_4jet_comb_array(
             four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
         )
@@ -217,10 +221,11 @@ def process_batch(
             ak.sum(events.valid_event),
         )
         if len(events[events.valid_event]) == 0:
-            return events[events.valid_event][[*features_out, *class_names]]
+            features_out = get_common(events.fields, feature_names)
+            return events[events.valid_event][[*features_out, *label_names]]
 
     # calculate X_Wt
-    if Features.EVENT_X_WT.value in features_out:
+    if Features.EVENT_X_WT.value in feature_names:
         W_candidates_p4, top_candidates_p4 = get_W_t_p4(
             ak.zip(
                 {
@@ -253,13 +258,14 @@ def process_batch(
     )
     h1 = jets_p4[h1_jet1_idx] + jets_p4[h1_jet2_idx]
     h2 = jets_p4[h2_jet1_idx] + jets_p4[h2_jet2_idx]
-    if Features.EVENT_DELTAETA_HH.value in features_out:
+    if Features.EVENT_DELTAETA_HH.value in feature_names:
         events[Features.EVENT_DELTAETA_HH.value] = np.abs(
             ak.firsts(h1.eta) - ak.firsts(h2.eta)
         )
-    if Features.EVENT_X_HH.value in features_out:
+    if Features.EVENT_X_HH.value in feature_names:
         events[Features.EVENT_X_HH.value] = X_HH(
             ak.firsts(h1.m) * inv_GeV, ak.firsts(h2.m) * inv_GeV
         )
 
-    return events[events.valid_event][[*features_out, *class_names]]
+    features_out = get_common(events.fields, feature_names)
+    return events[events.valid_event][[*features_out, *label_names]]

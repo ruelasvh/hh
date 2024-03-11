@@ -151,12 +151,12 @@ def main():
             config["features"] = json.load(ff)
 
     assert Features.contains_all(
-        config["features"]["out"]
-    ), f"Invalid features: {set(config['features']['out']) - set(Features.get_all())}"
+        config["features"]["features"]
+    ), f"Invalid features: {set(config['features']['features']) - set(Features.get_all())}"
 
     assert Labels.contains_all(
-        config["features"]["classes"]
-    ), f"Invalid labels: {set(config['features']['classes']) - set(Labels.get_all())}"
+        config["features"]["labels"]
+    ), f"Invalid labels: {set(config['features']['labels']) - set(Labels.get_all())}"
 
     samples, features = config["samples"], config["features"]
     output = {sample["label"]: ak.Array([]) for sample in samples}

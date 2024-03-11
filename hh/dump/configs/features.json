@@ -1,5 +1,5 @@
 {
-    "out": [
+    "features": [
         "jet_pt",
         "jet_eta",
         "jet_phi",
@@ -23,7 +23,7 @@
         "event_weight",
         "mc_event_weight"
     ],
-    "classes": [
+    "labels": [
         "label_HH",
         "label_ttbar",
         "label_QCD"

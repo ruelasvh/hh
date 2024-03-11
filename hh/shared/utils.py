@@ -264,3 +264,8 @@ def write_out(sample_output, sample_name, output_name):
 def make_4jet_comb_array(a, op):
     fourpairs = list(itertools.combinations(range(4), 2))
     return np.transpose(ak.Array(op(a[:, i], a[:, j]) for i, j in fourpairs))
+
+
+def get_common(lst1, lst2):
+    """Get the common elements between two lists."""
+    return list(set(lst1) & set(lst2))
