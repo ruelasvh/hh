@@ -27,8 +27,7 @@ def get_args():
         "--btag",
         help="btag category",
         type=str,
-        # default="4b",
-        default="",
+        default=None,
         choices=["4b", "3b", "2b"],
     )
     parser.add_argument(
@@ -36,7 +35,7 @@ def get_args():
         "--luminosity",
         help="Luminosity in fb^-1",
         type=float,
-        default=26.0714,
+        default=1.0,
     )
     parser.add_argument(
         "-w",

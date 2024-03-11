@@ -33,7 +33,7 @@ def get_args():
         "-o",
         "--output",
         type=Path,
-        help="Output file name postfix",
+        help="Output file name postfix (default: %(default)s)",
         default=Path("output"),
         metavar="",
     )
@@ -41,7 +41,7 @@ def get_args():
         "-m",
         "--memory",
         type=str,
-        help="Memory request for the job",
+        help="Memory request for the job (default: %(default)s)",
         default="5 GB",
         metavar="",
     )
@@ -49,7 +49,7 @@ def get_args():
         "-c",
         "--cpus",
         type=int,
-        help="Number of cpus for the job",
+        help="Number of cpus for the job (default: %(default)s)",
         default=1,
         metavar="",
     )
