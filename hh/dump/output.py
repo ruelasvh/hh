@@ -12,6 +12,12 @@ class Features(Enum):
     JET_NUM = "jet_num"
     JET_BTAG = "jet_btag"
     JET_NBTAGS = "jet_nbtags"
+    JET_DL1DV01_PB = "jet_btag_DL1dv01_pb"
+    JET_DL1DV01_PC = "jet_btag_DL1dv01_pc"
+    JET_DL1DV01_PU = "jet_btag_DL1dv01_pu"
+    JET_BTAG_GN2V00_PB = "jet_btag_GN2v00_pb"
+    JET_BTAG_GN2V00_PC = "jet_btag_GN2v00_pc"
+    JET_BTAG_GN2V00_PU = "jet_btag_GN2v00_pu"
     EVENT_M_4B = "m_4b"
     EVENT_BB_RMH = "bb_RmH"
     EVENT_BB_DR = "bb_dR"
@@ -20,7 +26,6 @@ class Features(Enum):
     EVENT_X_WT = "X_Wt"
     EVENT_X_HH = "X_hh"
     EVENT_WEIGHT = "event_weight"
-    PILEUP_WEIGHT = "pileup_weight"
     MC_EVENT_WEIGHT = "mc_event_weight"
 
     @classmethod

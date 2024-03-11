@@ -10,14 +10,18 @@
         "jet_num",
         "jet_btag",
         "jet_nbtags",
+        "jet_btag_GN2v00_pb",
+        "jet_btag_GN2v00_pc",
+        "jet_btag_GN2v00_pu",
         "m_4b",
         "bb_RmH",
         "bb_dR",
         "bb_dEta",
+        "X_Wt",
         "deltaEta_hh",
         "X_hh",
         "event_weight",
-        "pileup_weight"
+        "mc_event_weight"
     ],
     "classes": [
         "label_HH",

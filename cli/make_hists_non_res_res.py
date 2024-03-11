@@ -91,7 +91,7 @@ def process_sample_worker(
 ) -> None:
     is_mc = "data" not in sample_name
     trig_set = None
-    if selections.get("trigs"):
+    if "trigs" in selections:
         trig_set = selections["trigs"].get("value")
     branch_aliases = get_branch_aliases(is_mc, trig_set)
     if args.sample_weight is None and is_mc:

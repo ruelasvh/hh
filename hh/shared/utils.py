@@ -197,6 +197,18 @@ def get_feature_types(output):
         type_dict[Features.JET_NBTAGS.value] = "i4"
     if Features.JET_BTAG.value in output.fields:
         type_dict[Features.JET_BTAG.value] = "var * int8"
+    if Features.JET_DL1DV01_PB.value in output.fields:
+        type_dict[Features.JET_DL1DV01_PB.value] = "var * float32"
+    if Features.JET_DL1DV01_PC.value in output.fields:
+        type_dict[Features.JET_DL1DV01_PC.value] = "var * float32"
+    if Features.JET_DL1DV01_PU.value in output.fields:
+        type_dict[Features.JET_DL1DV01_PU.value] = "var * float32"
+    if Features.JET_BTAG_GN2V00_PB.value in output.fields:
+        type_dict[Features.JET_BTAG_GN2V00_PB.value] = "var * float32"
+    if Features.JET_BTAG_GN2V00_PC.value in output.fields:
+        type_dict[Features.JET_BTAG_GN2V00_PC.value] = "var * float32"
+    if Features.JET_BTAG_GN2V00_PU.value in output.fields:
+        type_dict[Features.JET_BTAG_GN2V00_PU.value] = "var * float32"
     if Features.JET_PT.value in output.fields:
         type_dict[Features.JET_PT.value] = "var * float32"
     if Features.JET_ETA.value in output.fields:
@@ -227,8 +239,8 @@ def get_feature_types(output):
         type_dict[Features.EVENT_X_HH.value] = "f4"
     if Features.EVENT_WEIGHT.value in output.fields:
         type_dict[Features.EVENT_WEIGHT.value] = "f8"
-    if Features.PILEUP_WEIGHT.value in output.fields:
-        type_dict[Features.PILEUP_WEIGHT.value] = "f8"
+    if Features.MC_EVENT_WEIGHT.value in output.fields:
+        type_dict[Features.MC_EVENT_WEIGHT.value] = "f8"
     if Labels.LABEL_HH.value in output.fields:
         type_dict[Labels.LABEL_HH.value] = "i4"
     if Labels.LABEL_TTBAR.value in output.fields:

@@ -107,7 +107,7 @@ def process_sample_worker(
         aliases=branch_aliases,
         num_workers=args.num_workers,
         step_size=args.batch_size,
-        allow_missing=True,
+        allow_missing=False,
         report=True,
     ):
         logger.info(f"Processing batch: {batch_report}")

@@ -1,0 +1,53 @@
+{
+    "features": {
+        "path": "hh/dump/configs/features.json"
+    },
+    "samples": [
+        {
+            "label": "4b_mc21_ttbar",
+            "class_label": "label_ttbar",
+            "selections": {
+                "events": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2 legacy"
+                    }
+                },
+                "jets": {
+                    "pt": {
+                        "operator": ">",
+                        "value": 40000
+                    },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
+                    },
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    },
+                    "btagging": {
+                        "model": "GN120220509",
+                        "efficiency": 0.77,
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        }
+                    }
+                }
+            },
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.ttbar_allhad.202401/output/user.viruelas.EJ_2024_01_31.410471.PhPy8EG_A14_ttbar_hdamp258p75_allhad.e6337_s3681_r13144_p5631_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc20_13TeV.410471.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYS.e6337_s3681_r13144_p5855",
+                    "genFiltEff": 5.4380E-01,
+                    "crossSection": 739770.0,
+                    "kFactor": 1.13975636159,
+                    "luminosity": 1.0
+                }
+            ]
+        }
+    ]
+}

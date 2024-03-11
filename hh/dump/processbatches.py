@@ -32,7 +32,7 @@ def process_batch(
     """Apply analysis regions selection and append info to events."""
 
     # check if selections is empty (i.e. no selection)
-    assert selections, "No selection applied."
+    assert selections, "Need selections object to process dataset."
 
     # check that required configs else exit
     required_configs = ["jets", "btagging"]
@@ -68,7 +68,6 @@ def process_batch(
             np.ones(len(events), dtype=float) * sample_weight
         )
         events[Features.MC_EVENT_WEIGHT.value] = np.ones(len(events), dtype=float)
-        events[Features.PILEUP_WEIGHT.value] = np.ones(len(events), dtype=float)
 
     # start adding jet features
     jets_p4 = p4.zip(
@@ -196,7 +195,14 @@ def process_batch(
 
     # reconstruct higgs candidates using the minimum deltaR
     leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
-        jets=jets_p4,
+        jets=ak.zip(
+            {
+                "pt": events.jet_pt,
+                "eta": events.jet_eta,
+                "phi": events.jet_phi,
+                "mass": events.jet_mass,
+            }
+        ),
         hc_jet_idx=hc_jet_idx,
     )
     events["leading_h_jet_idx"] = leading_h_jet_idx
