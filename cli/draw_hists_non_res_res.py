@@ -38,6 +38,13 @@ def get_args():
         default=1.0,
     )
     parser.add_argument(
+        "-e",
+        "--energy",
+        help="Center of mass energy in TeV",
+        type=float,
+        default=13,
+    )
+    parser.add_argument(
         "-w",
         "--bkg-weight",
         help="Bkg estimation weight",
@@ -80,6 +87,9 @@ def merge_sample_files(inputs, hists=None):
                 if jz_regex.search(sample_name):
                     merged_sample_name = (
                         "_".join(sample_name.split("_")[:-2]) + "_multijet"
+                    )
+                    merged_sample_name = merged_sample_name.replace(
+                        "multijet_multijet", "multijet"
                     )
                 else:
                     merged_sample_name = sample_name

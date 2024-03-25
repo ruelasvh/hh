@@ -27,7 +27,7 @@
                         "value": 4
                     },
                     "btagging": {
-                        "model": "DL1dv01",
+                        "model": "GN120220509",
                         "efficiency": 0.77,
                         "count": {
                             "operator": ">=",
@@ -73,7 +73,7 @@
                         "value": 4
                     },
                     "btagging": {
-                        "model": "DL1dv01",
+                        "model": "GN120220509",
                         "efficiency": 0.77,
                         "count": {
                             "operator": ">=",
@@ -119,7 +119,7 @@
                         "value": 4
                     },
                     "btagging": {
-                        "model": "DL1dv01",
+                        "model": "GN120220509",
                         "efficiency": 0.77,
                         "count": {
                             "operator": ">=",
@@ -165,7 +165,7 @@
                         "value": 4
                     },
                     "btagging": {
-                        "model": "DL1dv01",
+                        "model": "GN120220509",
                         "efficiency": 0.77,
                         "count": {
                             "operator": ">=",
@@ -211,7 +211,7 @@
                         "value": 4
                     },
                     "btagging": {
-                        "model": "DL1dv01",
+                        "model": "GN120220509",
                         "efficiency": 0.77,
                         "count": {
                             "operator": ">=",
@@ -257,7 +257,7 @@
                         "value": 4
                     },
                     "btagging": {
-                        "model": "DL1dv01",
+                        "model": "GN120220509",
                         "efficiency": 0.77,
                         "count": {
                             "operator": ">=",
@@ -303,7 +303,7 @@
                         "value": 4
                     },
                     "btagging": {
-                        "model": "DL1dv01",
+                        "model": "GN120220509",
                         "efficiency": 0.77,
                         "count": {
                             "operator": ">=",
@@ -349,7 +349,7 @@
                         "value": 4
                     },
                     "btagging": {
-                        "model": "DL1dv01",
+                        "model": "GN120220509",
                         "efficiency": 0.77,
                         "count": {
                             "operator": ">=",
@@ -395,7 +395,7 @@
                         "value": 4
                     },
                     "btagging": {
-                        "model": "DL1dv01",
+                        "model": "GN120220509",
                         "efficiency": 0.77,
                         "count": {
                             "operator": ">=",

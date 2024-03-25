@@ -21,6 +21,7 @@ plt.style.use(hplt.style.ATLAS)
 def draw_1d_hists(
     hists_group,
     hist_prefix,
+    energy,
     xlabel=None,
     ylabel="Frequency",
     third_exp_label="",
@@ -32,7 +33,6 @@ def draw_1d_hists(
     ggFk01_factor=None,
     ggFk10_factor=None,
     data2b_factor=None,
-    postfix=None,
     output_dir=Path("plots"),
 ):
     """Draw 1D histograms in one figure. The number of histograms in the figure is
@@ -41,7 +41,7 @@ def draw_1d_hists(
 
     fig, ax = plt.subplots()
     for sample_type, sample_hists in hists_group.items():
-        hist_name = find_hist(sample_hists, lambda h: hist_prefix in h)
+        hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
         is_data = "data" in sample_type
         hist = sample_hists[hist_name]
         hist_values = (
@@ -95,19 +95,20 @@ def draw_1d_hists(
     ax.set_ylim(ymin=ymin, ymax=ymax * 1.5)
     hplt.atlas.label(
         label="Work In Progress",
-        rlabel=get_com_lumi_label(luminosity) + third_exp_label,
+        rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
         loc=4,
         ax=ax,
         pad=0.01,
     )
-    filename = output_dir / f"{hist_prefix}{'_' + postfix if postfix else ''}.png"
-    fig.savefig(filename, bbox_inches="tight")
+    plot_name = hist_prefix.replace("$", "")
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close()
 
 
 def draw_mH_1D_hists_v2(
     hists_group,
     hist_prefix,
+    energy,
     luminosity=None,
     xlims=None,
     ylims=None,
@@ -115,7 +116,6 @@ def draw_mH_1D_hists_v2(
     ylabel="Frequency",
     ynorm_binwidth=False,
     yscale="linear",
-    region=None,
     ggFk01_factor=None,
     ggFk10_factor=None,
     output_dir=Path("plots"),
@@ -124,10 +124,10 @@ def draw_mH_1D_hists_v2(
     axs = axs.flat
     for sample_type, sample_hists in hists_group.items():
         is_data = "data" in sample_type
-        if region == "SR" and is_data:
-            continue
         hists = find_hists(sample_hists, lambda h: re.match(hist_prefix, h))
         for i in range(len(hists)):
+            if "signal" in hists[i] and is_data:
+                continue
             ax = axs[i]
             hist = sample_hists[hists[i]]
             hist_values = (
@@ -161,13 +161,13 @@ def draw_mH_1D_hists_v2(
             ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
             ax.set_ylabel(ylabel + " / %.2g" % bin_width if ynorm_binwidth else ylabel)
             hplt.atlas.label(
-                rlabel=get_com_lumi_label(luminosity) + third_exp_label,
+                rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
                 loc=4,
                 ax=ax,
                 pad=0.01,
             )
-    plot_postfix = "_" + region if region else ""
-    fig.savefig(f"{output_dir}/mH1_mH2{plot_postfix}.png", bbox_inches="tight")
+    plot_name = hist_prefix.replace("$", "")
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close()
 
 
@@ -175,8 +175,8 @@ def draw_mH_1D_hists(
     sample_hists,
     sample_name,
     hist_prefix,
+    energy,
     luminosity=None,
-    region=None,
     xlim=None,
     third_exp_label="",
     output_dir=Path("plots"),
@@ -210,10 +210,12 @@ def draw_mH_1D_hists(
         ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
         ax.set_ylabel("Frequency")
         hplt.atlas.label(
-            rlabel=get_com_lumi_label(luminosity) + third_exp_label, loc=4, ax=ax
+            rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
+            loc=4,
+            ax=ax,
         )
-    plot_postfix = sample_name + ("_" + region if region else "")
-    fig.savefig(f"{output_dir}/mH_{plot_postfix}.png", bbox_inches="tight")
+    plot_name = f"{sample_name}_{hist_prefix.replace('$', '')}"
+    fig.savefig(f"{output_dir}/mH_{plot_name}.png", bbox_inches="tight")
     plt.close()
 
 
@@ -221,7 +223,7 @@ def draw_mH_plane_2D_hists(
     sample_hists,
     sample_name,
     hist_prefix,
-    region=None,
+    energy,
     luminosity=None,
     output_dir=Path("plots"),
 ):
@@ -235,9 +237,7 @@ def draw_mH_plane_2D_hists(
         if luminosity and not is_data
         else hist["values"][:]
     )
-    logger.info(
-        f"{region} {sample_name} {hist_name} counts: {np.sum(hist['values'][:])}"
-    )
+    logger.info(f"{sample_name} {hist_name} counts: {np.sum(hist['values'][:])}")
     hplt.hist2dplot(
         hist_values,
         bins_GeV,
@@ -309,18 +309,16 @@ def draw_mH_plane_2D_hists(
         colors=["black"],
         linestyles=["dashed"],
     )
-    hplt.atlas.label(loc=0, ax=ax, label=sample_name, com=13.6, lumi=luminosity)
-    plot_postfix = sample_name + ("_" + region if region else "")
-    fig.savefig(
-        f"{output_dir}/mH_plane_{plot_postfix}.png",
-        bbox_inches="tight",
-    )
+    hplt.atlas.label(loc=0, ax=ax, label=sample_name, com=energy, lumi=luminosity)
+    plot_name = f"{sample_name}_{hist_name}"
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close()
 
 
 def draw_kin_hists(
     sample_hists,
     sample_name,
+    energy,
     object="jet",
     luminosity=None,
     ylabel="Events",
@@ -356,7 +354,7 @@ def draw_kin_hists(
             label=sample_name,
         )
         hplt.atlas.label(
-            rlabel=get_com_lumi_label(luminosity) + third_exp_label,
+            rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
             loc=4,
             ax=ax,
             pad=0.01,
@@ -366,7 +364,6 @@ def draw_kin_hists(
         ax.legend()
         unit = "[GeV]" if kin_var in ["pt", "mass"] else ""
         ax.set_xlabel(f"{object} {kin_labels[kin_var]} {unit}".rstrip())
-        fig.savefig(
-            f"{output_dir}/{object}_{kin_var}_{sample_name}.png", bbox_inches="tight"
-        )
+        plot_name = f"{sample_name}_{hist_name}"
+        fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
         plt.close()

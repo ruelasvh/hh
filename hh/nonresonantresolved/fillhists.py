@@ -22,6 +22,7 @@ def fill_hists(
     """Fill histograms for analysis regions"""
     fill_event_no_histograms(events, hists)
     fill_jet_kin_histograms(events, hists)
+    fill_leading_jets_histograms(events, hists)
 
     if "top_veto" in selection:
         fill_top_veto_histograms(
@@ -54,7 +55,7 @@ def fill_hists(
         fill_HH_histograms(events, hists)
 
     if is_mc:
-        fill_mc_event_weight_histograms(events, hists)
+        fill_event_weight_histograms(events, hists)
 
     return hists
 
@@ -67,66 +68,105 @@ def fill_event_no_histograms(events, hists: list) -> None:
     hist.fill(events.event_number.to_numpy())
 
 
-def fill_mc_event_weight_histograms(events, hists: list) -> None:
+def fill_event_weight_histograms(events, hists: list) -> None:
     """Fill mc event weight histograms"""
 
-    hist = find_hist(hists, lambda h: "mc_event_weight" in h.name)
-    logger.debug(hist.name)
-    hist.fill(events.mc_event_weights[:, 0].to_numpy())
+    for h_name in [
+        "mc_event_weight",
+        "mc_event_weight_baseline_signal_region",
+        "mc_event_weight_baseline_control_region",
+    ]:
+        hist = find_hist(hists, lambda h: h_name in h.name)
+        if hist:
+            logger.debug(hist.name)
+            if "signal" in h_name:
+                valid = events.signal_event
+            elif "control" in h_name:
+                valid = events.control_event
+            else:
+                valid = np.ones(len(events), dtype=bool)
+            hist.fill(events[valid].mc_event_weights[:, 0].to_numpy())
+    for h_name in [
+        "total_event_weight",
+        "total_event_weight_baseline_signal_region",
+        "totla_event_weight_baseline_control_region",
+    ]:
+        hist = find_hist(hists, lambda h: h_name in h.name)
+        if hist:
+            logger.debug(hist.name)
+            if "signal" in h_name:
+                valid = events.signal_event
+            elif "control" in h_name:
+                valid = events.control_event
+            else:
+                valid = np.ones(len(events), dtype=bool)
+            hist.fill(events[valid].event_weight.to_numpy())
 
 
 def fill_jet_kin_histograms(events, hists: list) -> None:
     """Fill jet kinematics histograms"""
 
-    for kin_var in kin_labels.keys():
-        hist = find_hist(hists, lambda h: f"jet_{kin_var}" in h.name)
-        logger.debug(hist.name)
-        jets = events[f"jet_{kin_var}"]
-        event_weight = events.event_weight[:, np.newaxis]
-        event_weight, _ = ak.broadcast_arrays(event_weight, jets)
-        hist.fill(
-            np.array(ak.flatten(jets)), weights=np.array(ak.flatten(event_weight))
-        )
+    regions = ["", "_baseline_signal_region", "_baseline_control_region"]
+    for region in regions:
+        for kin_var in kin_labels.keys():
+            hist = find_hist(hists, lambda h: f"jet_{kin_var}{region}" in h.name)
+            if hist:
+                logger.debug(hist.name)
+                if "signal" in region:
+                    valid = events.signal_event
+                elif "control" in region:
+                    valid = events.control_event
+                else:
+                    valid = np.ones(len(events), dtype=bool)
+                jets = events[valid][f"jet_{kin_var}"]
+                event_weight = events[valid].event_weight[:, np.newaxis]
+                event_weight, _ = ak.broadcast_arrays(event_weight, jets)
+                hist.fill(
+                    np.array(ak.flatten(jets)),
+                    weights=np.array(ak.flatten(event_weight)),
+                )
 
 
 def fill_leading_jets_histograms(events, hists: list) -> None:
     """Fill leading jets histograms"""
 
-    jet_pt = events["jet_pt"]
+    jet_pt = ak.sort(events["jet_pt"], ascending=False)
 
-    leading_jets_hists = find_hists_by_name(hists, "leading_jet_[1234]_pt")
-    for ith_jet in [1, 2, 3, 4]:
-        hist = find_hist(
-            leading_jets_hists, lambda h: f"leading_jet_{ith_jet}_pt" in h.name
-        )
-        logger.debug(hist.name)
-        hist.fill(np.array(jet_pt[:, ith_jet - 1]))
+    regions = ["", "_baseline_signal_region", "_baseline_control_region"]
+    for region in regions:
+        for ith_jet in [1, 2, 3, 4]:
+            hist = find_hist(
+                hists, lambda h: f"leading_jet_{ith_jet}_pt{region}" in h.name
+            )
+            if hist:
+                logger.debug(hist.name)
+                if "signal" in region:
+                    valid = events.signal_event
+                elif "control" in region:
+                    valid = events.control_event
+                else:
+                    valid = np.ones(len(events), dtype=bool)
+                hist.fill(np.array(jet_pt[valid, ith_jet - 1]))
 
 
 def fill_truth_matched_mjj_histograms(events, hists: list) -> None:
     """Fill reconstructed mjj invariant mass 1D histograms"""
 
-    jet_vars = [
-        "resolved_truth_mached_jet_pt",
-        "resolved_truth_mached_jet_eta",
-        "resolved_truth_mached_jet_phi",
-        "resolved_truth_mached_jet_m",
-    ]
-    pt_var, eta_var, phi_var, mass_var = jet_vars
-    leading_jets_events = select_n_jets_events(
+    jet_vars = {
+        "pt": "resolved_truth_mached_jet_pt",
+        "eta": "resolved_truth_mached_jet_eta",
+        "phi": "resolved_truth_mached_jet_phi",
+        "mass": "resolved_truth_mached_jet_m",
+    }
+    leading_jets = select_n_jets_events(
         events,
         pt_cut=20_000,
         eta_cut=2.5,
         njets_cut=4,
-        jet_vars=jet_vars,
+        jet_vars=jet_vars.values(),
     )
     leading_jets_p4 = p4.zip(
-        {
-            "pt": leading_jets_events[pt_var],
-            "eta": leading_jets_events[eta_var],
-            "phi": leading_jets_events[phi_var],
-            "mass": leading_jets_events[mass_var],
-        }
+        {key: leading_jets[value] for key, value in jet_vars.items()}
     )
 
     mjj_hists = find_hists_by_name(hists, "mjj[12]")
@@ -143,21 +183,13 @@ def fill_truth_matched_mjj_histograms(events, hists: list) -> None:
 def fill_truth_matched_mjj_passed_pairing_histograms(events, hists: list) -> None:
     """Fill reconstructed mjj invariant mass 1D histograms"""
 
-    jet_vars = [
-        "resolved_truth_mached_jet_pt",
-        "resolved_truth_mached_jet_eta",
-        "resolved_truth_mached_jet_phi",
-        "resolved_truth_mached_jet_m",
-    ]
-    pt_var, eta_var, phi_var, mass_var = jet_vars
-    jets_p4 = p4.zip(
-        {
-            "pt": events[pt_var],
-            "eta": events[eta_var],
-            "phi": events[phi_var],
-            "mass": events[mass_var],
-        }
-    )
+    jet_vars = {
+        "pt": "resolved_truth_mached_jet_pt",
+        "eta": "resolved_truth_mached_jet_eta",
+        "phi": "resolved_truth_mached_jet_phi",
+        "mass": "resolved_truth_mached_jet_m",
+    }
+    jets_p4 = p4.zip({key: events[value] for key, value in jet_vars.items()})
 
     mjj_hists = find_hists_by_name(hists, "mjj[12]_pairingPassedTruth")
     for ith_jj in [1, 2]:
