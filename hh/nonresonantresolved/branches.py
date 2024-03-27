@@ -60,8 +60,3 @@ def get_branch_aliases(is_mc=False, trig_set=None):
             }
         )
     return aliases
-
-
-def get_jet_branch_alias_names(aliases):
-    jet_alias_names = list(filter(lambda alias: "jet_" in alias, aliases))
-    return jet_alias_names

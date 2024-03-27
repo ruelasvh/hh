@@ -192,9 +192,9 @@ def concatenate_datasets(arr1, arr2):
 def get_feature_types(output):
     type_dict = {}
     if Features.JET_NUM.value in output.fields:
-        type_dict[Features.JET_NUM.value] = "i4"
+        type_dict[Features.JET_NUM.value] = "i8"
     if Features.JET_NBTAGS.value in output.fields:
-        type_dict[Features.JET_NBTAGS.value] = "i4"
+        type_dict[Features.JET_NBTAGS.value] = "i8"
     if Features.JET_BTAG.value in output.fields:
         type_dict[Features.JET_BTAG.value] = "var * int8"
     if Features.JET_DL1DV01_PB.value in output.fields:
@@ -269,3 +269,8 @@ def make_4jet_comb_array(a, op):
 def get_common(lst1, lst2):
     """Get the common elements between two lists."""
     return list(set(lst1) & set(lst2))
+
+
+def get_jet_branch_alias_names(aliases):
+    jet_alias_names = list(filter(lambda alias: "jet_" in alias, aliases))
+    return jet_alias_names

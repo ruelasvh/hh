@@ -19,7 +19,7 @@ from .selection import (
 
 def process_batch(
     events: ak.Record,
-    event_selection: dict,
+    selections: dict,
     sample_weight: float = 1.0,
     is_mc: bool = False,
 ) -> ak.Record:
@@ -30,14 +30,15 @@ def process_batch(
     if "event_weight" not in events.fields:
         events["event_weight"] = np.ones(len(events), dtype=float) * sample_weight
         if is_mc:
+            events["mc_event_weight"] = events.mc_event_weights[:, 0]
             events["event_weight"] = (
-                np.prod([events.mc_event_weights[:, 0], events.pileup_weight], axis=0)
+                np.prod([events.mc_event_weight, events.pileup_weight], axis=0)
                 * sample_weight
             )
 
-    # check if event_selection is empty (i.e. no selection)
-    if not event_selection:
-        logger.info("No event selection applied.")
+    # check if selections is empty (i.e. no selection)
+    if not selections:
+        logger.info("No objects selection applied.")
         return events
 
     # set overall event filter, up to signal and background selections
@@ -47,17 +48,17 @@ def process_batch(
     events["jet_num"] = ak.num(events.jet_pt)
     if "jet_btag" not in events.fields:
         btagger = format_btagger_model_name(
-            event_selection["btagging"]["model"],
-            event_selection["btagging"]["efficiency"],
+            selections["btagging"]["model"],
+            selections["btagging"]["efficiency"],
         )
         events["jet_btag"] = events[f"jet_btag_{btagger}"]
     events["btag_num"] = ak.sum(events.jet_btag, axis=1)
 
     # select and save events passing the OR of all triggers
-    if "trigs" in event_selection:
+    if "trigs" in selections:
         trig_op, trig_set = (
-            event_selection["trigs"].get("operator"),
-            event_selection["trigs"].get("value"),
+            selections["trigs"].get("operator"),
+            selections["trigs"].get("value"),
         )
         assert trig_op and trig_set, (
             "Invalid trigger selection. Please provide both operator and value. "
@@ -71,11 +72,11 @@ def process_batch(
             trig_op.upper(),
             ak.sum(events.valid_event),
         )
-        if len(events[events.valid_event]) == 0:
+        if ak.sum(events.valid_event) == 0:
             return events
 
     # select and save events with >= n central jets
-    central_jets_sel = event_selection["central_jets"]
+    central_jets_sel = selections["central_jets"]
     n_central_jets_mask, with_n_central_jets = select_n_jets_events(
         jets=ak.zip(
             {
@@ -102,11 +103,11 @@ def process_batch(
         central_jets_sel["eta"]["value"],
         ak.sum(events.valid_event),
     )
-    if len(events[events.valid_event]) == 0:
+    if ak.sum(events.valid_event) == 0:
         return events
 
     # select and save events with >= n central b-jets
-    bjets_sel = event_selection["btagging"]
+    bjets_sel = selections["btagging"]
     n_central_bjets_mask, with_n_central_bjets = select_n_bjets_events(
         jets=ak.zip({"btag": events.jet_btag, "valid": n_central_jets_mask}),
         selection=bjets_sel,
@@ -123,7 +124,7 @@ def process_batch(
         bjets_sel["efficiency"],
         ak.sum(events.valid_event),
     )
-    if len(events[events.valid_event]) == 0:
+    if ak.sum(events.valid_event) == 0:
         return events
 
     # get the higgs candidate jets indices
@@ -161,8 +162,8 @@ def process_batch(
         )
 
     # calculate top veto discriminant
-    if "top_veto" in event_selection:
-        top_veto_sel = event_selection["top_veto"]
+    if "top_veto" in selections:
+        top_veto_sel = selections["top_veto"]
         passed_top_veto_mask, X_Wt_discriminant_min = select_X_Wt_events(
             events,
             selection=top_veto_sel,
@@ -177,11 +178,11 @@ def process_batch(
             top_veto_sel["value"],
             ak.sum(events.valid_event),
         )
-        if len(events[events.valid_event]) == 0:
+        if ak.sum(events.valid_event) == 0:
             return events
 
-    if "hh_deltaeta_veto" in event_selection:
-        hh_deltaeta_sel = event_selection["hh_deltaeta_veto"]
+    if "hh_deltaeta_veto" in selections:
+        hh_deltaeta_sel = selections["hh_deltaeta_veto"]
         passed_hh_deltaeta_mask, hh_deltaeta_discrim = select_hh_events(
             events, deltaeta_sel=hh_deltaeta_sel
         )
@@ -195,7 +196,7 @@ def process_batch(
             hh_deltaeta_sel["value"],
             ak.sum(events.valid_event),
         )
-        if len(events[events.valid_event]) == 0:
+        if ak.sum(events.valid_event) == 0:
             return events
 
     ############################################################
@@ -203,11 +204,8 @@ def process_batch(
     ############################################################
 
     # signal region
-    if (
-        "hh_mass_veto" in event_selection
-        and "signal" in event_selection["hh_mass_veto"]
-    ):
-        signal_hh_mass_selection = event_selection["hh_mass_veto"]["signal"]
+    if "hh_mass_veto" in selections and "signal" in selections["hh_mass_veto"]:
+        signal_hh_mass_selection = selections["hh_mass_veto"]["signal"]
         (
             passed_signal_hh_mass_mask,
             hh_mass_discrim_signal,
@@ -227,11 +225,8 @@ def process_batch(
         )
 
     # control region
-    if (
-        "hh_mass_veto" in event_selection
-        and "control" in event_selection["hh_mass_veto"]
-    ):
-        control_hh_mass_selection = event_selection["hh_mass_veto"]["control"]
+    if "hh_mass_veto" in selections and "control" in selections["hh_mass_veto"]:
+        control_hh_mass_selection = selections["hh_mass_veto"]["control"]
         (
             passed_control_hh_mass_mask,
             hh_mass_discrim_control,
