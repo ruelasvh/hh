@@ -25,7 +25,6 @@ from hh.shared.utils import (
     concatenate_cutbookkeepers,
     get_sample_weight,
     resolve_project_paths,
-    concatenate_datasets,
     write_out,
 )
 
@@ -88,7 +87,6 @@ def process_sample_worker(
     selections: dict,
     class_label: str,
     features: dict,
-    output: dict,
     args: argparse.Namespace,
 ) -> None:
     is_mc = "data" not in sample_name
@@ -101,6 +99,7 @@ def process_sample_worker(
         sample_weight = get_sample_weight(sample_metadata, cbk)
     else:
         sample_weight = 1.0 if args.sample_weight is None else args.sample_weight
+    out = []
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
@@ -111,7 +110,6 @@ def process_sample_worker(
         report=True,
     ):
         logger.info(f"Processing batch: {batch_report}")
-        logger.debug(f"Columns: {batch_events.fields}")
         # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
         processed_batch = process_batch(
             batch_events,
@@ -123,15 +121,19 @@ def process_sample_worker(
         )
         if len(processed_batch) == 0:
             continue
-
-        logger.info(f"Merging batches for sample: {sample_name}")
-        # NOTE: important: copy the out back (otherwise parent process won't see the changes)
-        output[sample_name] = concatenate_datasets(processed_batch, output[sample_name])
-        output_name = args.output.with_name(
-            f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.root"
+        logger.info(f"Sample weight: {sample_weight}")
+        logger.info(
+            f"Sum of mc event weights: {ak.sum(processed_batch.mc_event_weight)}"
         )
-        logger.info(f"Writing {sample_name} to {output_name}")
-        write_out(output[sample_name], sample_name, output_name)
+        logger.info(f"Sum of event weights: {ak.sum(processed_batch.event_weight)}")
+        logger.info(f"Merging batches for sample: {sample_name}")
+        out.append(processed_batch)
+    out = ak.concatenate(out)
+    out_filename = args.output.with_name(
+        f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.root"
+    )
+    logger.info(f"Writing {sample_name} to {out_filename}")
+    write_out(out, sample_name, out_filename)
 
 
 def main():
@@ -159,21 +161,19 @@ def main():
     ), f"Invalid labels: {set(config['features']['labels']) - set(Labels.get_all())}"
 
     samples, features = config["samples"], config["features"]
-    output = {sample["label"]: ak.Array([]) for sample in samples}
 
     worker_items = [
         (
             sample["label"],
             sample_path,
-            sample["metadata"][idx],
+            sample_metadata,
             sample["selections"],
             sample["class_label"],
             features,
-            output,
             args,
         )
         for sample in samples
-        for idx, sample_path in enumerate(sample["paths"])
+        for sample_path, sample_metadata in zip(sample["paths"], sample["metadata"])
     ]
 
     for worker_item in worker_items:

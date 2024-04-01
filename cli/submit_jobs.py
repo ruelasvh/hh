@@ -28,7 +28,11 @@ def get_args():
         type=Path,
         help="Executable for the job",
     )
-    parser.add_argument("config", type=Path, help="Config file for the executable")
+    parser.add_argument(
+        "config",
+        type=Path,
+        help="Config file for the executable",
+    )
     parser.add_argument(
         "-o",
         "--output",

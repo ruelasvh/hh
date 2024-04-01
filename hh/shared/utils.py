@@ -1,6 +1,7 @@
 import uproot
 import glob
 import re
+import os
 import logging
 import operator
 import itertools
@@ -11,7 +12,14 @@ import awkward as ak
 from hh.dump.output import Features, Labels
 
 
-logger = logging.getLogger("plot-hh4b-analysis")
+logger = logging.getLogger("hh4b-analysis")
+os.getpgid(os.getpid())
+logging_handler = logging.FileHandler(f"hh4b-analysis_{os.getpgid(os.getpid())}.log")
+logging_formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logging_handler.setFormatter(logging_formatter)
+logger.addHandler(logging_handler)
 
 nth = {1: "first", 2: "second", 3: "third", 4: "fourth"}
 
@@ -184,81 +192,47 @@ def resolve_project_paths(config, path_delimiter="path"):
     return config
 
 
-def concatenate_datasets(arr1, arr2):
-    # concatenate datasets. Processed batch is an Akward array of events. Each event in an Awkward record. Second argument is also an Awkward array of events. Each event is an Awkward record. Concatenate the two arrays and return the concatenated array
-    return ak.concatenate([arr1, arr2])
-
-
-def get_feature_types(output):
+def get_feature_types():
     type_dict = {}
-    if Features.JET_NUM.value in output.fields:
-        type_dict[Features.JET_NUM.value] = "i8"
-    if Features.JET_NBTAGS.value in output.fields:
-        type_dict[Features.JET_NBTAGS.value] = "i8"
-    if Features.JET_BTAG.value in output.fields:
-        type_dict[Features.JET_BTAG.value] = "var * int8"
-    if Features.JET_DL1DV01_PB.value in output.fields:
-        type_dict[Features.JET_DL1DV01_PB.value] = "var * float32"
-    if Features.JET_DL1DV01_PC.value in output.fields:
-        type_dict[Features.JET_DL1DV01_PC.value] = "var * float32"
-    if Features.JET_DL1DV01_PU.value in output.fields:
-        type_dict[Features.JET_DL1DV01_PU.value] = "var * float32"
-    if Features.JET_BTAG_GN2V00_PB.value in output.fields:
-        type_dict[Features.JET_BTAG_GN2V00_PB.value] = "var * float32"
-    if Features.JET_BTAG_GN2V00_PC.value in output.fields:
-        type_dict[Features.JET_BTAG_GN2V00_PC.value] = "var * float32"
-    if Features.JET_BTAG_GN2V00_PU.value in output.fields:
-        type_dict[Features.JET_BTAG_GN2V00_PU.value] = "var * float32"
-    if Features.JET_PT.value in output.fields:
-        type_dict[Features.JET_PT.value] = "var * float32"
-    if Features.JET_ETA.value in output.fields:
-        type_dict[Features.JET_ETA.value] = "var * float32"
-    if Features.JET_PHI.value in output.fields:
-        type_dict[Features.JET_PHI.value] = "var * float32"
-    if Features.JET_MASS.value in output.fields:
-        type_dict[Features.JET_MASS.value] = "var * float32"
-    if Features.JET_X.value in output.fields:
-        type_dict[Features.JET_X.value] = "var * float32"
-    if Features.JET_Y.value in output.fields:
-        type_dict[Features.JET_Y.value] = "var * float32"
-    if Features.JET_Z.value in output.fields:
-        type_dict[Features.JET_Z.value] = "var * float32"
-    if Features.EVENT_M_4B.value in output.fields:
-        type_dict[Features.EVENT_M_4B.value] = "f4"
-    if Features.EVENT_BB_RMH.value in output.fields:
-        type_dict[Features.EVENT_BB_RMH.value] = ("f8", 6)
-    if Features.EVENT_BB_DR.value in output.fields:
-        type_dict[Features.EVENT_BB_DR.value] = ("f8", 6)
-    if Features.EVENT_BB_DETA.value in output.fields:
-        type_dict[Features.EVENT_BB_DETA.value] = ("f8", 6)
-    if Features.EVENT_DELTAETA_HH.value in output.fields:
-        type_dict[Features.EVENT_DELTAETA_HH.value] = "f4"
-    if Features.EVENT_X_WT.value in output.fields:
-        type_dict[Features.EVENT_X_WT.value] = "f4"
-    if Features.EVENT_X_HH.value in output.fields:
-        type_dict[Features.EVENT_X_HH.value] = "f4"
-    if Features.EVENT_WEIGHT.value in output.fields:
-        type_dict[Features.EVENT_WEIGHT.value] = "f8"
-    if Features.MC_EVENT_WEIGHT.value in output.fields:
-        type_dict[Features.MC_EVENT_WEIGHT.value] = "f8"
-    if Labels.LABEL_HH.value in output.fields:
-        type_dict[Labels.LABEL_HH.value] = "i4"
-    if Labels.LABEL_TTBAR.value in output.fields:
-        type_dict[Labels.LABEL_TTBAR.value] = "i4"
-    if Labels.LABEL_QCD.value in output.fields:
-        type_dict[Labels.LABEL_QCD.value] = "i4"
+    type_dict[Features.JET_NUM.value] = "i8"
+    type_dict[Features.JET_NBTAGS.value] = "i8"
+    type_dict[Features.JET_BTAG.value] = "var * int8"
+    type_dict[Features.JET_DL1DV01_PB.value] = "var * float32"
+    type_dict[Features.JET_DL1DV01_PC.value] = "var * float32"
+    type_dict[Features.JET_DL1DV01_PU.value] = "var * float32"
+    type_dict[Features.JET_BTAG_GN2V01_PB.value] = "var * float32"
+    type_dict[Features.JET_BTAG_GN2V01_PC.value] = "var * float32"
+    type_dict[Features.JET_BTAG_GN2V01_PU.value] = "var * float32"
+    type_dict[Features.JET_PT.value] = "var * float32"
+    type_dict[Features.JET_ETA.value] = "var * float32"
+    type_dict[Features.JET_PHI.value] = "var * float32"
+    type_dict[Features.JET_MASS.value] = "var * float32"
+    type_dict[Features.JET_X.value] = "var * float32"
+    type_dict[Features.JET_Y.value] = "var * float32"
+    type_dict[Features.JET_Z.value] = "var * float32"
+    type_dict[Features.EVENT_M_4B.value] = "f4"
+    type_dict[Features.EVENT_BB_RMH.value] = ("f8", 6)
+    type_dict[Features.EVENT_BB_DR.value] = ("f8", 6)
+    type_dict[Features.EVENT_BB_DETA.value] = ("f8", 6)
+    type_dict[Features.EVENT_DELTAETA_HH.value] = "f4"
+    type_dict[Features.EVENT_X_WT.value] = "f4"
+    type_dict[Features.EVENT_X_HH.value] = "f4"
+    type_dict[Features.EVENT_WEIGHT.value] = "float64"
+    type_dict[Features.MC_EVENT_WEIGHT.value] = "float64"
+    type_dict[Labels.LABEL_HH.value] = "i4"
+    type_dict[Labels.LABEL_TTBAR.value] = "i4"
+    type_dict[Labels.LABEL_QCD.value] = "i4"
     return type_dict
 
 
 def write_out(sample_output, sample_name, output_name):
     with uproot.recreate(output_name) as f:
         # Declare all branches
-        type_dict = get_feature_types(sample_output)
+        type_dict = get_feature_types()
         f.mktree(sample_name, type_dict)
         f[sample_name].extend(
             {field: sample_output[field] for field in sample_output.fields}
         )
-        # f[sample_name] = {field: sample_output[field] for field in sample_output.fields}
 
 
 def make_4jet_comb_array(a, op):

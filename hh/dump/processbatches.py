@@ -1,12 +1,13 @@
 import awkward as ak
 import numpy as np
-import vector as p4
+import vector
 from hh.shared.utils import (
     logger,
     inv_GeV,
     make_4jet_comb_array,
     format_btagger_model_name,
     get_common,
+    kin_labels,
 )
 from hh.dump.output import Features, Labels
 from hh.nonresonantresolved.selection import (
@@ -20,6 +21,12 @@ from hh.nonresonantresolved.selection import (
 )
 from hh.nonresonantresolved.triggers import trig_sets
 from hh.shared.selection import X_HH, X_Wt
+
+vector.register_awkward()
+
+
+def get_jet_p4(events):
+    return ak.zip({k: events[f"jet_{k}"] for k in kin_labels}, with_name="Momentum4D")
 
 
 def process_batch(
@@ -58,33 +65,18 @@ def process_batch(
     # start adding jet features
     events[Features.JET_NUM.value] = ak.num(events.jet_pt, axis=-1)
     # build 4-momentum vectors for jets
-    jets_p4 = p4.zip(
-        {
-            "pt": events.jet_pt,
-            "eta": events.jet_eta,
-            "phi": events.jet_phi,
-            "mass": events.jet_mass,
-        }
-    )
+    j4 = get_jet_p4(events)
     # convert jets to cartesian coordinates and save them
-    jets_xyz = ak.zip(
-        {
-            Features.JET_X.value: jets_p4.x,
-            Features.JET_Y.value: jets_p4.y,
-            Features.JET_Z.value: jets_p4.z,
-        }
-    )
-    for f in jets_xyz.fields:
-        events[Features(f).value] = jets_xyz[f]
+    for f, v in zip(
+        [Features.JET_X, Features.JET_Y, Features.JET_Z], [j4.px, j4.py, j4.pz]
+    ):
+        events[f.value] = v
 
     # check if selections is empty (i.e. no selection)
     if not selections:
         logger.info("No objects selection applied.")
         features_out = get_common(events.fields, feature_names)
         return events[[*features_out, *label_names]]
-
-    # set overall event filter
-    events["valid_event"] = np.ones(len(events), dtype=bool)
 
     # get event level selections
     if "events" in selections:
@@ -100,17 +92,15 @@ def process_batch(
             )
             # select and save events passing the triggers
             passed_trigs_mask = select_events_passing_triggers(events, op=trig_op)
-            # keep track of valid events
-            events["passed_triggers"] = passed_trigs_mask
-            events["valid_event"] = events.valid_event & passed_trigs_mask
+            events = events[passed_trigs_mask]
             logger.info(
                 "Events passing the %s of all triggers: %s",
                 trig_op.upper(),
-                ak.sum(events.valid_event),
+                len(events),
             )
-            if ak.sum(events.valid_event) == 0:
+            if len(events) == 0:
                 features_out = get_common(events.fields, feature_names)
-                return events[events.valid_event][[*features_out, *label_names]]
+                return events[[*features_out, *label_names]]
 
     # get jet selections
     if "jets" in selections:
@@ -129,14 +119,14 @@ def process_batch(
             selection=jet_selection,
             do_jvt="jet_jvttag" in events.fields,
         )
-        events["valid_event"] = events.valid_event & n_jets_event_mask
+        events = events[n_jets_event_mask]
         logger.info(
             "Events passing previous cuts and jets selection: %s",
-            ak.sum(events.valid_event),
+            len(events),
         )
-        if ak.sum(events.valid_event) == 0:
+        if len(events) == 0:
             features_out = get_common(events.fields, feature_names)
-            return events[events.valid_event][[*features_out, *label_names]]
+            return events[[*features_out, *label_names]]
 
         # select and save b-jet selections
         if "btagging" in jet_selection:
@@ -152,31 +142,34 @@ def process_batch(
                 jets=ak.zip(
                     {
                         "btag": events[Features.JET_BTAG.value],
-                        "valid": n_jets_mask,
+                        "valid": n_jets_mask[n_jets_event_mask],
                     }
                 ),
                 selection=bjet_selection,
             )
-            events["valid_event"] = events.valid_event & n_bjets_event_mask
+            events = events[n_bjets_event_mask]
             logger.info(
                 "Events passing previous cuts and b-jets selection: %s",
-                ak.sum(events.valid_event),
+                len(events),
             )
-            if ak.sum(events.valid_event) == 0:
+            if len(events) == 0:
                 features_out = get_common(events.fields, feature_names)
-                return events[events.valid_event][[*features_out, *label_names]]
+                return events[[*features_out, *label_names]]
 
             # select and save hc jets
-            hc_jet_idx, non_hc_jet_idx = select_hc_jets(
+            hh_c_jets = select_hc_jets(
                 jets=ak.zip(
                     {
-                        "valid": n_bjets_mask,
                         "pt": events.jet_pt,
                         "btag": events[Features.JET_BTAG.value],
+                        "valid": n_bjets_mask[n_bjets_event_mask],
                     }
                 )
             )
-            four_bjets_p4 = ak.mask(jets_p4[hc_jet_idx], events.valid_event)
+            events["hc_jet_idx"] = hh_c_jets[0]
+            events["non_hc_jet_idx"] = hh_c_jets[1]
+            j4 = get_jet_p4(events)
+            four_bjets_p4 = j4[events.hc_jet_idx]
             events[Features.EVENT_M_4B.value] = (
                 four_bjets_p4[:, 0]
                 + four_bjets_p4[:, 1]
@@ -199,7 +192,7 @@ def process_batch(
                 )
 
             # reconstruct higgs candidates using the minimum deltaR
-            leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
+            hh_jet = reconstruct_hh_mindeltar(
                 jets=ak.zip(
                     {
                         "pt": events.jet_pt,
@@ -208,22 +201,22 @@ def process_batch(
                         "mass": events.jet_mass,
                     }
                 ),
-                hc_jet_idx=hc_jet_idx,
+                hc_jet_idx=events.hc_jet_idx,
             )
-            events["leading_h_jet_idx"] = leading_h_jet_idx
-            events["subleading_h_jet_idx"] = subleading_h_jet_idx
+            events["leading_h_jet_idx"] = hh_jet[0]
+            events["subleading_h_jet_idx"] = hh_jet[1]
 
             # correctly paired Higgs bosons to further clean up labels
             if is_mc:
                 correct_hh_pairs_from_truth = select_correct_hh_pair_events(events)
-                events["valid_event"] = events.valid_event & correct_hh_pairs_from_truth
+                events = events[correct_hh_pairs_from_truth]
                 logger.info(
                     "Events passing previous cuts and truth-matched to HH: %s",
-                    ak.sum(events.valid_event),
+                    len(events),
                 )
-                if ak.sum(events.valid_event) == 0:
+                if len(events) == 0:
                     features_out = get_common(events.fields, feature_names)
-                    return events[events.valid_event][[*features_out, *label_names]]
+                    return events[[*features_out, *label_names]]
 
             # calculate X_Wt
             if Features.EVENT_X_WT.value in feature_names:
@@ -237,8 +230,8 @@ def process_batch(
                             "btag": events.jet_btag,
                         }
                     ),
-                    hc_jet_idx,
-                    non_hc_jet_idx,
+                    events.hc_jet_idx,
+                    events.non_hc_jet_idx,
                 )
                 X_Wt_discriminant = X_Wt(
                     W_candidates_p4.mass * inv_GeV,
@@ -250,15 +243,16 @@ def process_batch(
 
             # calculate HH features
             h1_jet1_idx, h1_jet2_idx = (
-                leading_h_jet_idx[:, 0, np.newaxis],
-                leading_h_jet_idx[:, 1, np.newaxis],
+                events.leading_h_jet_idx[:, 0, np.newaxis],
+                events.leading_h_jet_idx[:, 1, np.newaxis],
             )
             h2_jet1_idx, h2_jet2_idx = (
-                subleading_h_jet_idx[:, 0, np.newaxis],
-                subleading_h_jet_idx[:, 1, np.newaxis],
+                events.subleading_h_jet_idx[:, 0, np.newaxis],
+                events.subleading_h_jet_idx[:, 1, np.newaxis],
             )
-            h1 = jets_p4[h1_jet1_idx] + jets_p4[h1_jet2_idx]
-            h2 = jets_p4[h2_jet1_idx] + jets_p4[h2_jet2_idx]
+            j4 = get_jet_p4(events)
+            h1 = j4[h1_jet1_idx] + j4[h1_jet2_idx]
+            h2 = j4[h2_jet1_idx] + j4[h2_jet2_idx]
             if Features.EVENT_DELTAETA_HH.value in feature_names:
                 events[Features.EVENT_DELTAETA_HH.value] = np.abs(
                     ak.firsts(h1.eta) - ak.firsts(h2.eta)
@@ -269,4 +263,4 @@ def process_batch(
                 )
 
     features_out = get_common(events.fields, feature_names)
-    return events[events.valid_event][[*features_out, *label_names]]
+    return events[[*features_out, *label_names]]
