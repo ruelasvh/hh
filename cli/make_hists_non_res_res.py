@@ -21,6 +21,11 @@ from hh.nonresonantresolved.processbatches import (
     process_batch,
 )
 from hh.nonresonantresolved.fillhists import fill_hists
+from hh.nonresonantresolved.fillhists import (
+    fill_jet_kin_histograms,
+    fill_leading_jets_histograms,
+    fill_event_weight_histograms,
+)
 from hh.shared.utils import (
     logger,
     setup_logger,
@@ -82,6 +87,56 @@ def get_args():
     return parser.parse_args()
 
 
+# def process_sample_worker(
+#     sample_name: str,
+#     sample_path: Path,
+#     sample_metadata: dict,
+#     selections: dict,
+#     hists: list,
+#     args: argparse.Namespace,
+# ) -> None:
+#     is_mc = "data" not in sample_name
+#     trig_set = None
+#     if "trigs" in selections:
+#         trig_set = selections["trigs"].get("value")
+#     branch_aliases = get_branch_aliases(is_mc, trig_set)
+#     if args.sample_weight is None and is_mc:
+#         cbk = concatenate_cutbookkeepers(sample_path)
+#         sample_weight = get_sample_weight(sample_metadata, cbk)
+#     else:
+#         sample_weight = 1.0 if args.sample_weight is None else args.sample_weight
+#     for batch_events, batch_report in uproot.iterate(
+#         f"{sample_path}*.root:AnalysisMiniTree",
+#         expressions=branch_aliases.keys(),
+#         aliases=branch_aliases,
+#         num_workers=args.num_workers,
+#         step_size=args.batch_size,
+#         allow_missing=True,
+#         report=True,
+#     ):
+#         logger.info(f"Processing batch: {batch_report}")
+#         logger.debug(f"Columns: {batch_events.fields}")
+#         # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
+#         processed_batch = process_batch(
+#             batch_events,
+#             selections,
+#             sample_weight,
+#             is_mc,
+#         )
+#         # if no events pass the selection, skip filling histograms
+#         if len(processed_batch) == 0:
+#             continue
+#         # fill histograms
+#         fill_hists(processed_batch, hists[sample_name], selections, is_mc)
+#         # save histograms to file
+#         output_name = args.output.with_name(
+#             f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
+#         )
+#         with h5py.File(output_name, "w") as output_file:
+#             logger.info(f"Saving histograms to file: {output_name}")
+#             write_hists(hists[sample_name], sample_name, output_file)
+
+
 def process_sample_worker(
     sample_name: str,
     sample_path: Path,
@@ -91,10 +146,14 @@ def process_sample_worker(
     args: argparse.Namespace,
 ) -> None:
     is_mc = "data" not in sample_name
-    trig_set = None
-    if "trigs" in selections:
-        trig_set = selections["trigs"].get("value")
-    branch_aliases = get_branch_aliases(is_mc, trig_set)
+    branch_aliases = {
+        "jet_pt": "recojet_antikt4PFlow_NOSYS_pt",
+        "jet_eta": "recojet_antikt4PFlow_NOSYS_eta",
+        "jet_phi": "recojet_antikt4PFlow_NOSYS_phi",
+        "jet_mass": "recojet_antikt4PFlow_NOSYS_m",
+        "mc_event_weights": "mcEventWeights",
+        "pileup_weight": "PileupWeight_NOSYS",
+    }
     if args.sample_weight is None and is_mc:
         cbk = concatenate_cutbookkeepers(sample_path)
         sample_weight = get_sample_weight(sample_metadata, cbk)
@@ -111,18 +170,19 @@ def process_sample_worker(
     ):
         logger.info(f"Processing batch: {batch_report}")
         logger.debug(f"Columns: {batch_events.fields}")
-        # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
-        processed_batch = process_batch(
+        events_batch = process_batch(
             batch_events,
             selections,
             sample_weight,
             is_mc,
         )
         # if no events pass the selection, skip filling histograms
-        if len(processed_batch) == 0:
+        if len(events_batch) == 0:
             continue
         # fill histograms
-        fill_hists(processed_batch, hists[sample_name], selections, is_mc)
+        fill_jet_kin_histograms(events_batch, hists[sample_name])
+        fill_leading_jets_histograms(events_batch, hists[sample_name])
+        fill_event_weight_histograms(events_batch, hists[sample_name])
         # save histograms to file
         output_name = args.output.with_name(
             f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"

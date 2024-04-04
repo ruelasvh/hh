@@ -19,21 +19,20 @@ def draw_hists(
     energy = args.energy
     output_dir = args.output_dir
 
-    draw_1d_hists(
-        {
-            key: value
-            for key, value in hists_group.items()
-            if "multijet" in key or "QCD" in key
-        },
-        f"leading_jet_{1}_pt",
-        energy,
-        xlabel="Leading jet $p_{\mathrm{T}}$ [GeV]",
-        ylabel="Events",
-        luminosity=luminosity,
-        yscale="log",
-        output_dir=output_dir,
-    )
-
+    # draw_1d_hists(
+    #     {
+    #         key: value
+    #         for key, value in hists_group.items()
+    #         if "multijet" in key or "QCD" in key
+    #     },
+    #     f"leading_jet_{1}_pt",
+    #     energy,
+    #     xlabel="Leading jet $p_{\mathrm{T}}$ [GeV]",
+    #     ylabel="Events",
+    #     luminosity=luminosity,
+    #     yscale="log",
+    #     output_dir=output_dir,
+    # )
     # draw_1d_hists(
     #     {
     #         key: value
@@ -124,37 +123,57 @@ def draw_hists(
     #     output_dir=output_dir,
     # )
 
-    draw_1d_hists(
-        {key: value for key, value in hists_group.items() if "data" not in key},
-        "mc_event_weight_baseline_signal_region",
-        energy,
-        luminosity=luminosity,
-        yscale="log",
-        xlabel="mc_event_weight",
-        output_dir=output_dir,
-    )
+    # draw_1d_hists(
+    #     {key: value for key, value in hists_group.items() if "data" not in key},
+    #     "mc_event_weight",
+    #     energy,
+    #     luminosity=luminosity,
+    #     yscale="log",
+    #     xlabel="mc_event_weight",
+    #     output_dir=output_dir,
+    # )
 
-    draw_1d_hists(
-        {key: value for key, value in hists_group.items() if "data" not in key},
-        "total_event_weight_baseline_signal_region",
-        energy,
-        luminosity=luminosity,
-        yscale="log",
-        xlabel="total_event_weight",
-        output_dir=output_dir,
-    )
+    # draw_1d_hists(
+    #     {key: value for key, value in hists_group.items() if "data" not in key},
+    #     "mc_event_weight_baseline_signal_region",
+    #     energy,
+    #     luminosity=luminosity,
+    #     yscale="log",
+    #     xlabel="mc_event_weight_baseline_signal_region",
+    #     output_dir=output_dir,
+    # )
 
-    for ith_h in [1, 2]:
-        draw_1d_hists(
-            {key: value for key, value in hists_group.items() if "data" not in key},
-            f"h{ith_h}_truth_jet_baseline_signal_region",
-            energy,
-            luminosity=luminosity,
-            xlabel=f"H{ith_h} jet truth ID",
-            third_exp_label=f"\n{btag} Signal Region \n 0: light, 4: c, 5: b",
-            density=True,
-            output_dir=output_dir,
-        )
+    # draw_1d_hists(
+    #     {key: value for key, value in hists_group.items() if "data" not in key},
+    #     "total_event_weight",
+    #     energy,
+    #     luminosity=luminosity,
+    #     yscale="log",
+    #     xlabel="total_event_weight",
+    #     output_dir=output_dir,
+    # )
+
+    # draw_1d_hists(
+    #     {key: value for key, value in hists_group.items() if "data" not in key},
+    #     "total_event_weight_baseline_signal_region",
+    #     energy,
+    #     luminosity=luminosity,
+    #     yscale="log",
+    #     xlabel="total_event_weight_baseline_signal_region",
+    #     output_dir=output_dir,
+    # )
+
+    # for ith_h in [1, 2]:
+    #     draw_1d_hists(
+    #         {key: value for key, value in hists_group.items() if "data" not in key},
+    #         f"h{ith_h}_truth_jet_baseline_signal_region",
+    #         energy,
+    #         luminosity=luminosity,
+    #         xlabel=f"H{ith_h} jet truth ID",
+    #         third_exp_label=f"\n{btag} Signal Region \n 0: light, 4: c, 5: b",
+    #         density=True,
+    #         output_dir=output_dir,
+    #     )
 
     for sample_type, sample_hists in hists_group.items():
         is_data = "data" in sample_type
@@ -167,6 +186,58 @@ def draw_hists(
             yscale="log",
             output_dir=output_dir,
         )
+        draw_1d_hists(
+            {sample_type: sample_hists},
+            f"leading_jet_{1}_pt",
+            energy,
+            xlabel="Leading jet $p_{\mathrm{T}}$ [GeV]",
+            ylabel="Events",
+            luminosity=luminosity,
+            yscale="log",
+            plot_name=f"leading_jet_{1}_pt_{sample_type}",
+            output_dir=output_dir,
+        )
+        draw_1d_hists(
+            {sample_type: sample_hists},
+            "mc_event_weight",
+            energy,
+            luminosity=luminosity,
+            yscale="log",
+            xlabel="mc_event_weight",
+            plot_name=f"mc_event_weight_{sample_type}",
+            output_dir=output_dir,
+        )
+        draw_1d_hists(
+            {sample_type: sample_hists},
+            "total_event_weight",
+            energy,
+            luminosity=luminosity,
+            yscale="log",
+            xlabel="total_event_weight",
+            plot_name=f"total_event_weight_{sample_type}",
+            output_dir=output_dir,
+        )
+        # draw_kin_hists(
+        #     sample_hists,
+        #     sample_type,
+        #     energy,
+        #     object="jet",
+        #     region="_baseline_signal_region",
+        #     luminosity=luminosity,
+        #     yscale="log",
+        #     output_dir=output_dir,
+        # )
+        # draw_kin_hists(
+        #     sample_hists,
+        #     sample_type,
+        #     energy,
+        #     object="jet",
+        #     region="_baseline_control_region",
+        #     luminosity=luminosity,
+        #     yscale="log",
+        #     output_dir=output_dir,
+        # )
+
         # draw_kin_hists(
         #     sample_hists,
         #     sample_type,
@@ -194,28 +265,29 @@ def draw_hists(
         #     yscale="log",
         #     output_dir=output_dir,
         # )
-        draw_mH_plane_2D_hists(
-            sample_hists,
-            sample_type,
-            "mH_plane_baseline$",
-            energy,
-            luminosity=luminosity,
-            output_dir=output_dir,
-        )
-        draw_mH_plane_2D_hists(
-            sample_hists,
-            sample_type,
-            "mH_plane_baseline_control_region$",
-            energy,
-            luminosity=luminosity,
-            output_dir=output_dir,
-        )
-        if not is_data:
-            draw_mH_plane_2D_hists(
-                sample_hists,
-                sample_type,
-                "mH_plane_baseline_signal_region$",
-                energy,
-                luminosity=luminosity,
-                output_dir=output_dir,
-            )
+
+        # draw_mH_plane_2D_hists(
+        #     sample_hists,
+        #     sample_type,
+        #     "mH_plane_baseline$",
+        #     energy,
+        #     luminosity=luminosity,
+        #     output_dir=output_dir,
+        # )
+        # draw_mH_plane_2D_hists(
+        #     sample_hists,
+        #     sample_type,
+        #     "mH_plane_baseline_control_region$",
+        #     energy,
+        #     luminosity=luminosity,
+        #     output_dir=output_dir,
+        # )
+        # if not is_data:
+        #     draw_mH_plane_2D_hists(
+        #         sample_hists,
+        #         sample_type,
+        #         "mH_plane_baseline_signal_region$",
+        #         energy,
+        #         luminosity=luminosity,
+        #         output_dir=output_dir,
+        #     )

@@ -79,13 +79,28 @@ def fill_event_weight_histograms(events, hists: list) -> None:
         hist = find_hist(hists, lambda h: h_name in h.name)
         if hist:
             logger.debug(hist.name)
-            if "signal" in h_name:
+            valid = np.ones(len(events), dtype=bool)
+            if "signal" in h_name and "signal_event" in events.fields:
                 valid = events.signal_event
-            elif "control" in h_name:
+            if "control" in h_name and "control_event" in events.fields:
                 valid = events.control_event
-            else:
-                valid = np.ones(len(events), dtype=bool)
-            hist.fill(events[valid].mc_event_weights[:, 0].to_numpy())
+            hist.fill(events[valid].mc_event_weight.to_numpy())
+
+    for h_name in [
+        "pileup_weight",
+        "pileup_weight_baseline_signal_region",
+        "pileup_weight_baseline_control_region",
+    ]:
+        hist = find_hist(hists, lambda h: h_name in h.name)
+        if hist:
+            logger.debug(hist.name)
+            valid = np.ones(len(events), dtype=bool)
+            if "signal" in h_name and "signal_event" in events.fields:
+                valid = events.signal_event
+            if "control" in h_name and "control_event" in events.fields:
+                valid = events.control_event
+            hist.fill(events[valid].pileup_weight.to_numpy())
+
     for h_name in [
         "total_event_weight",
         "total_event_weight_baseline_signal_region",
@@ -94,12 +109,11 @@ def fill_event_weight_histograms(events, hists: list) -> None:
         hist = find_hist(hists, lambda h: h_name in h.name)
         if hist:
             logger.debug(hist.name)
-            if "signal" in h_name:
+            valid = np.ones(len(events), dtype=bool)
+            if "signal" in h_name and "signal_event" in events.fields:
                 valid = events.signal_event
-            elif "control" in h_name:
+            if "control" in h_name and "control_event" in events.fields:
                 valid = events.control_event
-            else:
-                valid = np.ones(len(events), dtype=bool)
             hist.fill(events[valid].event_weight.to_numpy())
 
 
@@ -112,12 +126,11 @@ def fill_jet_kin_histograms(events, hists: list) -> None:
             hist = find_hist(hists, lambda h: f"jet_{kin_var}{region}" in h.name)
             if hist:
                 logger.debug(hist.name)
-                if "signal" in region:
+                valid = np.ones(len(events), dtype=bool)
+                if "signal" in region and "signal_event" in events.fields:
                     valid = events.signal_event
-                elif "control" in region:
+                if "control" in region and "control_event" in events.fields:
                     valid = events.control_event
-                else:
-                    valid = np.ones(len(events), dtype=bool)
                 jets = events[valid][f"jet_{kin_var}"]
                 event_weight = events[valid].event_weight[:, np.newaxis]
                 event_weight, _ = ak.broadcast_arrays(event_weight, jets)
@@ -140,13 +153,12 @@ def fill_leading_jets_histograms(events, hists: list) -> None:
             )
             if hist:
                 logger.debug(hist.name)
-                if "signal" in region:
+                valid = np.ones(len(events), dtype=bool)
+                if "signal" in region and "signal_event" in events.fields:
                     valid = events.signal_event
-                elif "control" in region:
+                if "control" in region and "control_event" in events.fields:
                     valid = events.control_event
-                else:
-                    valid = np.ones(len(events), dtype=bool)
-                hist.fill(np.array(jet_pt[valid, ith_jet - 1]))
+                hist.fill(np.array(jet_pt[valid][ith_jet - 1]))
 
 
 def fill_truth_matched_mjj_histograms(events, hists: list) -> None:

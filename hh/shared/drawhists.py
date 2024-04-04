@@ -25,6 +25,7 @@ def draw_1d_hists(
     xlabel=None,
     ylabel="Frequency",
     third_exp_label="",
+    plot_name="",
     luminosity=None,
     yscale="linear",
     ynorm_binwidth=False,
@@ -64,10 +65,10 @@ def draw_1d_hists(
         if data2b_factor and "data" in sample_type and "2b" in sample_type:
             scale_factor = data2b_factor
         hist_values = hist_values * scale_factor
-        bin_norm = 1.0 / hist_values.sum() if density else bin_width
+        bin_norm = 1.0 / (hist_values.sum() if density else bin_width)
         hplt.histplot(
             hist_values * bin_norm,
-            hist_edges - bin_width * 0.5,
+            hist_edges,
             ax=ax,
             label=(str(scale_factor) + r"$\times$" if scale_factor > 1 else "")
             + sample_type,
@@ -75,7 +76,7 @@ def draw_1d_hists(
             density=density,
         )
         ax.set_ylabel(ylabel + " / %.2g" % bin_width if ynorm_binwidth else ylabel)
-    ax.legend()
+    ax.legend(loc="upper right")
     if xcut:
         ax.axvline(x=xcut, ymax=0.6, color="purple")
         ax.text(
@@ -93,6 +94,8 @@ def draw_1d_hists(
     ax.set_yscale(yscale)
     ymin, ymax = ax.get_ylim()
     ax.set_ylim(ymin=ymin, ymax=ymax * 1.5)
+    ax.set_xticks(ax.get_xticks()[::2])
+    ax.ticklabel_format(style="sci", axis="x", scilimits=(-12, 5))
     hplt.atlas.label(
         label="Work In Progress",
         rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
@@ -100,7 +103,8 @@ def draw_1d_hists(
         ax=ax,
         pad=0.01,
     )
-    plot_name = hist_prefix.replace("$", "")
+    if not plot_name:
+        plot_name = hist_prefix.replace("$", "")
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close()
 
@@ -115,6 +119,7 @@ def draw_mH_1D_hists_v2(
     third_exp_label="",
     ylabel="Frequency",
     ynorm_binwidth=False,
+    density=False,
     yscale="linear",
     ggFk01_factor=None,
     ggFk10_factor=None,
@@ -142,8 +147,9 @@ def draw_mH_1D_hists_v2(
                 scale_factor = ggFk01_factor
             if ggFk10_factor and "ggF" in sample_type and "k10" in sample_type:
                 scale_factor = ggFk10_factor
+            bin_norm = 1.0 / (hist_values.sum() if density else bin_width)
             hplt.histplot(
-                hist_values * scale_factor * 1.0 / bin_width,
+                hist_values * scale_factor * bin_norm,
                 hist_edges * inv_GeV,
                 histtype="step",
                 stack=False,
@@ -157,7 +163,7 @@ def draw_mH_1D_hists_v2(
             if ylims is None:
                 ylims = ax.get_ylim()
             ax.set_ylim(ylims[0], ylims[1] * 1.1)
-            ax.legend()
+            ax.legend(loc="upper right")
             ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
             ax.set_ylabel(ylabel + " / %.2g" % bin_width if ynorm_binwidth else ylabel)
             hplt.atlas.label(
@@ -206,7 +212,7 @@ def draw_mH_1D_hists(
         )
         if xlim:
             ax.set_xlim(*xlim)
-        ax.legend()
+        ax.legend(loc="upper right")
         ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
         ax.set_ylabel("Frequency")
         hplt.atlas.label(
@@ -320,10 +326,12 @@ def draw_kin_hists(
     sample_name,
     energy,
     object="jet",
+    region="",
     luminosity=None,
     ylabel="Events",
     yscale="linear",
     ynorm_binwidth=False,
+    density=False,
     third_exp_label="",
     output_dir=Path("plots"),
 ):
@@ -331,7 +339,9 @@ def draw_kin_hists(
     is_data = "data" in sample_name
     for kin_var in kin_vars:
         fig, ax = plt.subplots()
-        hist_name = find_hist(sample_hists, lambda h: f"{object}_{kin_var}" in h)
+        hist_name = find_hist(
+            sample_hists, lambda h: f"{object}_{kin_var}{region}" in h
+        )
         logger.debug(hist_name)
         hist = sample_hists[hist_name]
         hist_values = (
@@ -345,11 +355,10 @@ def draw_kin_hists(
             else hist["edges"][:]
         )
         bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
-        # hist_bin_centers = (hist_edges[1:] + hist_edges[:-1]) / 2
+        bin_norm = 1.0 / (hist_values.sum() if density else bin_width)
         hplt.histplot(
-            hist_values * 1.0 / bin_width,
+            hist_values * bin_norm,
             hist_edges,
-            # hist_bin_centers,
             ax=ax,
             label=sample_name,
         )
@@ -361,9 +370,9 @@ def draw_kin_hists(
         )
         ax.set_ylabel(ylabel)
         ax.set_yscale(yscale)
-        ax.legend()
+        ax.legend(loc="upper right")
         unit = "[GeV]" if kin_var in ["pt", "mass"] else ""
         ax.set_xlabel(f"{object} {kin_labels[kin_var]} {unit}".rstrip())
-        plot_name = f"{sample_name}_{hist_name}"
+        plot_name = f"{sample_name}_{hist_name}{region}"
         fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
         plt.close()

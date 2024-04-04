@@ -20,58 +20,58 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
             binrange = {**binrange, "pt": [0, 3_900_000]}
         # initialize histograms
         hists_dict[sample_name] = []
-        hists_dict[sample_name] += init_event_no_histograms()
+        # hists_dict[sample_name] += init_event_no_histograms()
         hists_dict[sample_name] += init_event_weight_histograms()
-        hists_dict[sample_name] += init_event_weight_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_event_weight_histograms(
-            postfix="_baseline_control_region"
-        )
+        # hists_dict[sample_name] += init_event_weight_histograms(
+        #     postfix="_baseline_signal_region"
+        # )
+        # hists_dict[sample_name] += init_event_weight_histograms(
+        #     postfix="_baseline_control_region"
+        # )
         hists_dict[sample_name] += init_jet_kin_histograms()
-        hists_dict[sample_name] += init_jet_kin_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_jet_kin_histograms(
-            postfix="_baseline_control_region"
-        )
+        # hists_dict[sample_name] += init_jet_kin_histograms(
+        #     postfix="_baseline_signal_region"
+        # )
+        # hists_dict[sample_name] += init_jet_kin_histograms(
+        #     postfix="_baseline_control_region"
+        # )
         hists_dict[sample_name] += init_leading_jets_histograms()
-        hists_dict[sample_name] += init_leading_jets_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_leading_jets_histograms(
-            postfix="_baseline_control_region"
-        )
-        hists_dict[sample_name] += init_reco_H_histograms(postfix="_baseline")
-        hists_dict[sample_name] += init_reco_H_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_reco_H_histograms(
-            postfix="_baseline_control_region"
-        )
-        hists_dict[sample_name] += init_reco_H_truth_jet_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_reco_mH_2d_histograms(postfix="_baseline")
-        hists_dict[sample_name] += init_reco_mH_2d_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_reco_mH_2d_histograms(
-            postfix="_baseline_control_region"
-        )
-        hists_dict[sample_name] += init_reco_HH_histograms(postfix="_baseline")
-        hists_dict[sample_name] += init_reco_HH_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_reco_HH_histograms(
-            postfix="_baseline_control_region"
-        )
-        hists_dict[sample_name] += init_reco_HH_deltaeta_histograms()
-        hists_dict[sample_name] += init_reco_top_veto_histograms()
-        hists_dict[sample_name] += init_reco_HH_mass_discrim_histograms()
-        # if args.signal:
-        #     hists_dict[sample_name] += init_reco_mH_truth_pairing_histograms()
-        #     hists_dict[sample_name] += init_truth_matched_mjj_histograms()
+        # hists_dict[sample_name] += init_leading_jets_histograms(
+        #     postfix="_baseline_signal_region"
+        # )
+        # hists_dict[sample_name] += init_leading_jets_histograms(
+        #     postfix="_baseline_control_region"
+        # )
+        # hists_dict[sample_name] += init_reco_H_histograms(postfix="_baseline")
+        # hists_dict[sample_name] += init_reco_H_histograms(
+        #     postfix="_baseline_signal_region"
+        # )
+        # hists_dict[sample_name] += init_reco_H_histograms(
+        #     postfix="_baseline_control_region"
+        # )
+        # hists_dict[sample_name] += init_reco_H_truth_jet_histograms(
+        #     postfix="_baseline_signal_region"
+        # )
+        # hists_dict[sample_name] += init_reco_mH_2d_histograms(postfix="_baseline")
+        # hists_dict[sample_name] += init_reco_mH_2d_histograms(
+        #     postfix="_baseline_signal_region"
+        # )
+        # hists_dict[sample_name] += init_reco_mH_2d_histograms(
+        #     postfix="_baseline_control_region"
+        # )
+        # hists_dict[sample_name] += init_reco_HH_histograms(postfix="_baseline")
+        # hists_dict[sample_name] += init_reco_HH_histograms(
+        #     postfix="_baseline_signal_region"
+        # )
+        # hists_dict[sample_name] += init_reco_HH_histograms(
+        #     postfix="_baseline_control_region"
+        # )
+        # hists_dict[sample_name] += init_reco_HH_deltaeta_histograms()
+        # hists_dict[sample_name] += init_reco_top_veto_histograms()
+        # hists_dict[sample_name] += init_reco_HH_mass_discrim_histograms()
+        # # if args.signal:
+        # #     hists_dict[sample_name] += init_reco_mH_truth_pairing_histograms()
+        # #     hists_dict[sample_name] += init_truth_matched_mjj_histograms()
 
     return hists_dict
 
@@ -88,7 +88,7 @@ def init_event_weight_histograms(bins=100, postfix=None) -> list:
     """Initialize mc event weight histograms"""
 
     hists = []
-    for h_name in ["mc_event_weight", "total_event_weight"]:
+    for h_name in ["mc_event_weight", "pileup_weight", "total_event_weight"]:
         h_name += f"{postfix if postfix else ''}"
         hists += [HistogramDynamic(h_name, bins=bins, dtype=float)]
 
