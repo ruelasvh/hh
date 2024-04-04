@@ -2,12 +2,12 @@
 
 import re
 import h5py
+import logging
 import argparse
 import numpy as np
 from pathlib import Path
-import logging, coloredlogs
 from collections import defaultdict
-from hh.shared.utils import logger
+from hh.shared.utils import logger, setup_logger
 from hh.nonresonantresolved import drawhistsdiagnostics
 from hh.nonresonantresolved import drawhistsbkgest
 
@@ -109,9 +109,10 @@ def merge_sample_files(inputs, hists=None):
 
 def main():
     args = get_args()
+
     if args.loglevel:
-        logger.setLevel(args.loglevel)
-        coloredlogs.install(level=logger.level, logger=logger)
+        setup_logger(args.loglevel)
+
     # check if output_dir exists, if not create it
     if args.output_dir.exists():
         logger.warning(f"Output directory '{args.output_dir}' already exists")
@@ -122,10 +123,10 @@ def main():
 
     hists = merge_sample_files(args.hists_files)
 
-    if args.btag:
-        drawhistsdiagnostics.draw_hists(hists, args)
     if args.bkg_weight:
         drawhistsbkgest.draw_hists(hists, args)
+    else:
+        drawhistsdiagnostics.draw_hists(hists, args)
 
 
 if __name__ == "__main__":

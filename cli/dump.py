@@ -8,10 +8,10 @@ import os
 import json
 import time
 import uproot
+import logging
 import argparse
 import awkward as ak
 from pathlib import Path
-import coloredlogs, logging
 
 from hh.dump.processbatches import (
     process_batch,
@@ -22,10 +22,12 @@ from hh.nonresonantresolved.branches import (
 )
 from hh.shared.utils import (
     logger,
+    setup_logger,
     concatenate_cutbookkeepers,
     get_sample_weight,
     resolve_project_paths,
-    write_out,
+    write_out_h5,
+    write_out_root,
 )
 
 
@@ -81,6 +83,7 @@ def get_args():
 
 
 def process_sample_worker(
+    sample_id: int,
     sample_name: str,
     sample_path: Path,
     sample_metadata: list,
@@ -129,11 +132,19 @@ def process_sample_worker(
         logger.info(f"Merging batches for sample: {sample_name}")
         out.append(processed_batch)
     out = ak.concatenate(out)
-    out_filename = args.output.with_name(
-        f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.root"
+    out_filename_stem = args.output.with_name(
+        f"{args.output.stem}_{sample_name}_{sample_id}_{os.getpgid(os.getpid())}"
     )
-    logger.info(f"Writing {sample_name} to {out_filename}")
-    write_out(out, sample_name, out_filename)
+    if args.output.suffix == ".h5":
+        out_filename = out_filename_stem.with_suffix(".h5")
+        logger.info(f"Writing {sample_name} to {out_filename}")
+        write_out_h5(out, sample_name, out_filename)
+    elif args.output.suffix == ".root":
+        out_filename = out_filename_stem.with_suffix(".root")
+        logger.info(f"Writing {sample_name} to {out_filename}")
+        write_out_root(out, sample_name, out_filename)
+    else:
+        raise ValueError(f"Invalid output file format: {args.output.suffix}")
 
 
 def main():
@@ -142,8 +153,7 @@ def main():
     args = get_args()
 
     if args.loglevel:
-        logger.setLevel(args.loglevel)
-        coloredlogs.install(level=logger.level, logger=logger)
+        setup_logger(args.loglevel)
 
     with open(args.config) as cf:
         config = resolve_project_paths(config=json.load(cf))
@@ -164,16 +174,17 @@ def main():
 
     worker_items = [
         (
+            sample_id,
             sample["label"],
-            sample_path,
-            sample_metadata,
+            sample["paths"][sample_id],
+            sample["metadata"][sample_id],
             sample["selections"],
             sample["class_label"],
             features,
             args,
         )
         for sample in samples
-        for sample_path, sample_metadata in zip(sample["paths"], sample["metadata"])
+        for sample_id in range(len(sample["paths"]))
     ]
 
     for worker_item in worker_items:

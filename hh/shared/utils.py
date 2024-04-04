@@ -2,7 +2,7 @@ import uproot
 import glob
 import re
 import os
-import logging
+import logging, coloredlogs
 import operator
 import itertools
 import numpy as np
@@ -13,13 +13,6 @@ from hh.dump.output import Features, Labels
 
 
 logger = logging.getLogger("hh4b-analysis")
-os.getpgid(os.getpid())
-logging_handler = logging.FileHandler(f"hh4b-analysis_{os.getpgid(os.getpid())}.log")
-logging_formatter = logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logging_handler.setFormatter(logging_formatter)
-logger.addHandler(logging_handler)
 
 nth = {1: "first", 2: "second", 3: "third", 4: "fourth"}
 
@@ -28,6 +21,20 @@ kin_labels = {"pt": r"$p_T$", "eta": r"$\eta$", "phi": r"$\phi$", "mass": r"$m$"
 GeV = 1_000
 
 inv_GeV = 1 / GeV
+
+
+def setup_logger(loglevel, filename=None):
+    logger.setLevel(loglevel)
+    if not filename:
+        filename = f"hh4b-analysis_{os.getpgid(os.getpid())}.log"
+    logging_handler = logging.FileHandler(filename)
+    logging_formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    logging_handler.setFormatter(logging_formatter)
+    logger.addHandler(logging_handler)
+    coloredlogs.install(level=logger.level, logger=logger)
+    return logger
 
 
 def get_com_lumi_label(lumi, com=13.6):
@@ -225,9 +232,15 @@ def get_feature_types():
     return type_dict
 
 
-def write_out(sample_output, sample_name, output_name):
+def write_out_h5(sample_output, sample_name, output_name):
+    """Writes the sample_output to an hdf5 file with the sample_name as the key."""
+    output_df = ak.to_dataframe(sample_output, how="outer")
+    output_df.to_hdf(output_name, key=sample_name, mode="w")
+
+
+def write_out_root(sample_output, sample_name, output_name):
+    """Writes the sample_output to a root file with the sample_name as the tree name."""
     with uproot.recreate(output_name) as f:
-        # Declare all branches
         type_dict = get_feature_types()
         f.mktree(sample_name, type_dict)
         f[sample_name].extend(

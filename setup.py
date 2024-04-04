@@ -20,14 +20,16 @@ setup(
         "vector>=0.11.0",
         "coloredlogs>=15.0.1",
         "h5py>=3.8.0",
+        "pandas>=2.1.0",
+        "tables>=3.9.2",
         "htcondor>=10.6.0",
     ],
     entry_points={
         "console_scripts": [
             "hh4b_non_res_res_make_hists = cli.make_hists_non_res_res:main",
             "hh4b_non_res_res_draw_hists = cli.draw_hists_non_res_res:main",
-            "hh_submit_jobs = cli.submit_jobs:main",
-            "hh_dump = cli.dump:main",
+            "hh4b_submit = cli.submit_jobs:main",
+            "hh4b_dump = cli.dump:main",
         ]
     },
     zip_safe=False,

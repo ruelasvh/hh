@@ -5,13 +5,13 @@ build plots of everything
 """
 
 import os
-import uproot
-import argparse
 import json
 import time
-import coloredlogs, logging
-from pathlib import Path
 import h5py
+import uproot
+import argparse
+import logging
+from pathlib import Path
 
 from hh.nonresonantresolved.inithists import init_hists
 from hh.nonresonantresolved.branches import (
@@ -23,6 +23,7 @@ from hh.nonresonantresolved.processbatches import (
 from hh.nonresonantresolved.fillhists import fill_hists
 from hh.shared.utils import (
     logger,
+    setup_logger,
     concatenate_cutbookkeepers,
     get_sample_weight,
     write_hists,
@@ -137,8 +138,7 @@ def main():
     args = get_args()
 
     if args.loglevel:
-        logger.setLevel(args.loglevel)
-        coloredlogs.install(level=logger.level, logger=logger)
+        setup_logger(args.loglevel)
 
     with open(args.config) as cf:
         config = resolve_project_paths(config=json.load(cf))

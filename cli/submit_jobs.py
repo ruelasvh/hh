@@ -10,6 +10,7 @@ keeps the object 'event_selection'. For each config-sample-fileID.json it submit
 a job to HTCondor.
 """
 
+import os
 import json
 import argparse
 import htcondor
@@ -38,7 +39,7 @@ def get_args():
         "--output",
         type=Path,
         help="Output file name postfix (default: %(default)s)",
-        default=Path("output"),
+        default=Path("output.h5"),
         metavar="",
     )
     parser.add_argument(
@@ -62,12 +63,16 @@ def get_args():
 
 
 def main():
-    CONFIG_DIR = Path("/lustre/fs22/group/atlas/ruelasv/tmp/condor/configs")
-    OUTPUT_DIR = Path("/lustre/fs22/group/atlas/ruelasv/tmp/condor/output")
-    ERROR_DIR = Path("/lustre/fs22/group/atlas/ruelasv/tmp/condor/error")
-    LOG_DIR = Path("/lustre/fs22/group/atlas/ruelasv/tmp/condor/log")
+    LOGGING_DIR = Path(os.getenv("HH4B_LOGS_DIR", f"/tmp/{os.getenv('USER')}"))
+    CONFIG_DIR = LOGGING_DIR / "configs"
+    OUTPUT_DIR = LOGGING_DIR / "output"
+    ERROR_DIR = LOGGING_DIR / "error"
+    LOG_DIR = LOGGING_DIR / "log"
+    for d in [CONFIG_DIR, OUTPUT_DIR, ERROR_DIR, LOG_DIR]:
+        os.makedirs(d, exist_ok=True)
 
     args, restargs = get_args()
+
     with open(args.config) as f:
         config = resolve_project_paths(json.load(f))
 
@@ -128,7 +133,7 @@ def main():
             "executable": args.executable,
             "should_transfer_files": "no",
             "my.sendcredential": "true",
-            "arguments": f"$(config_file) -o {args.output.stem}_$(ClusterId)_$(ProcId) -w $(sample_weight) -v {' '.join(restargs)}",
+            "arguments": f"$(config_file) -o {args.output.stem}_$(ClusterId)_$(ProcId){args.output.suffix} -w $(sample_weight) -v {' '.join(restargs)}",
             "output": f"{OUTPUT_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).out",
             "error": f"{ERROR_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).err",
             "log": f"{LOG_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).log",
