@@ -10,7 +10,7 @@ import time
 import h5py
 import uproot
 import argparse
-import logging
+import coloredlogs, logging
 from pathlib import Path
 
 from hh.nonresonantresolved.inithists import init_hists
@@ -139,6 +139,7 @@ def main():
 
     if args.loglevel:
         setup_logger(args.loglevel)
+        coloredlogs.install(level=logger.level, logger=logger)
 
     with open(args.config) as cf:
         config = resolve_project_paths(config=json.load(cf))

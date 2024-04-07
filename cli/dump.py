@@ -8,7 +8,7 @@ import os
 import json
 import time
 import uproot
-import logging
+import coloredlogs, logging
 import argparse
 import awkward as ak
 from pathlib import Path
@@ -154,6 +154,7 @@ def main():
 
     if args.loglevel:
         setup_logger(args.loglevel)
+        coloredlogs.install(level=logger.level, logger=logger)
 
     with open(args.config) as cf:
         config = resolve_project_paths(config=json.load(cf))
