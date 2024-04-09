@@ -2,6 +2,8 @@ from .triggers import (
     trig_sets,
 )
 
+CAMPAIGNS = {"r13167": [2016], "r13144": [2017], "r13145": [2018]}
+
 BASE_ALIASES = {
     "event_number": "eventNumber",
     "run_number": "runNumber",
@@ -40,7 +42,7 @@ MC_ALIASES = {
 }
 
 
-def get_branch_aliases(is_mc=False, trig_set=None):
+def get_branch_aliases(is_mc=False, trig_set=None, sample_metadata=None):
     aliases = {**BASE_ALIASES}
     aliases.update(
         {
@@ -52,9 +54,14 @@ def get_branch_aliases(is_mc=False, trig_set=None):
         aliases.update(MC_ALIASES)
 
     if trig_set:
+        if sample_metadata:
+            for c, y in CAMPAIGNS.items():
+                if c in sample_metadata["logicalDatasetName"]:
+                    year = y[0]
+                    trig_set = f"{trig_set} {year}"
         aliases.update(
             {
-                f"trig_passed_{trig_short}": f"trigPassed_{trig_long}"
+                f"trig_{trig_short}": f"trigPassed_{trig_long}"
                 for trig_long, trig_short, _ in trig_sets[trig_set]
             }
         )

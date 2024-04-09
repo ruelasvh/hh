@@ -2,7 +2,7 @@ import uproot
 import glob
 import re
 import os
-import logging
+import logging, coloredlogs
 import operator
 import itertools
 import numpy as np
@@ -33,6 +33,7 @@ def setup_logger(loglevel, filename=None):
     )
     logging_handler.setFormatter(logging_formatter)
     logger.addHandler(logging_handler)
+    coloredlogs.install(level=logger.level, logger=logger)
     return logger
 
 

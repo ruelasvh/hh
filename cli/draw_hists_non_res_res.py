@@ -2,7 +2,7 @@
 
 import re
 import h5py
-import coloredlogs, logging
+import logging
 import argparse
 import numpy as np
 from pathlib import Path
@@ -112,7 +112,6 @@ def main():
 
     if args.loglevel:
         setup_logger(args.loglevel)
-        coloredlogs.install(level=logger.level, logger=logger)
 
     # check if output_dir exists, if not create it
     if args.output_dir.exists():

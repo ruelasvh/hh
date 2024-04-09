@@ -62,7 +62,7 @@ def select_events_passing_triggers(
     triggers: list = None,
     op: str = "or",
 ):
-    triggers = triggers or list(filter(lambda x: "trig_passed_" in x, events.fields))
+    triggers = triggers or list(filter(lambda x: "trig_" in x, events.fields))
     passed_trigs_mask = np.ones(len(events), dtype=bool)
     passed_trigs_mask = get_trigs_bitwise_op(events, triggers, op)
     return passed_trigs_mask

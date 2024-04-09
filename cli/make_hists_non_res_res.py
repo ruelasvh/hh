@@ -10,7 +10,7 @@ import time
 import h5py
 import uproot
 import argparse
-import coloredlogs, logging
+import logging
 from pathlib import Path
 
 from hh.nonresonantresolved.inithists import init_hists
@@ -94,7 +94,7 @@ def process_sample_worker(
     trig_set = None
     if "trigs" in selections:
         trig_set = selections["trigs"].get("value")
-    branch_aliases = get_branch_aliases(is_mc, trig_set)
+    branch_aliases = get_branch_aliases(is_mc, trig_set, sample_metadata)
     if args.sample_weight is None and is_mc:
         cbk = concatenate_cutbookkeepers(sample_path)
         sample_weight = get_sample_weight(sample_metadata, cbk)
@@ -139,7 +139,6 @@ def main():
 
     if args.loglevel:
         setup_logger(args.loglevel)
-        coloredlogs.install(level=logger.level, logger=logger)
 
     with open(args.config) as cf:
         config = resolve_project_paths(config=json.load(cf))
