@@ -33,16 +33,23 @@ def get_args():
     parser.add_argument(
         "-l",
         "--luminosity",
-        help="Luminosity in fb^-1",
         type=float,
         default=1.0,
+        help="Luminosity in fb^-1 (default: %(default)s)",
     )
     parser.add_argument(
         "-e",
         "--energy",
-        help="Center of mass energy in TeV",
         type=float,
-        default=13,
+        default=13.0,
+        help="Center of mass energy in TeV (default: %(default)s)",
+    )
+    # add bool argument to merge JZ0-9 samples
+    parser.add_argument(
+        "-j",
+        "--split-jz",
+        action="store_true",
+        help="Split JZ0-9 samples (default: %(default)s)",
     )
     parser.add_argument(
         "-w",
@@ -69,28 +76,22 @@ def get_args():
     return parser.parse_args()
 
 
-def merge_sample_files(inputs, hists=None):
+def merge_sample_files(inputs, hists=None, merge_jz_regex=None):
     _hists = (
         hists
         if hists is not None
         else defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: np.array([]))))
     )
     # checks if JZ0-9 is in the sample name
-    jz_regex = re.compile(r"JZ[0-9]")
     for input in inputs:
         if input.is_dir():
             files_in_dir = input.glob("*.h5")
-            merge_sample_files(files_in_dir, _hists)
+            merge_sample_files(files_in_dir, _hists, merge_jz_regex)
             continue
         with h5py.File(input, "r") as hists_file:
             for sample_name in hists_file:
-                if jz_regex.search(sample_name):
-                    merged_sample_name = (
-                        "_".join(sample_name.split("_")[:-2]) + "_multijet"
-                    )
-                    merged_sample_name = merged_sample_name.replace(
-                        "multijet_multijet", "multijet"
-                    )
+                if merge_jz_regex and merge_jz_regex.search(sample_name):
+                    merged_sample_name = "_".join(sample_name.split("_")[:-2])
                 else:
                     merged_sample_name = sample_name
                 for hist_name in hists_file[sample_name]:
@@ -121,7 +122,10 @@ def main():
         args.output_dir.mkdir(parents=True)
         logger.info(f"Saving plots to '{args.output_dir}'")
 
-    hists = merge_sample_files(args.hists_files)
+    hists = merge_sample_files(
+        args.hists_files,
+        merge_jz_regex=None if args.split_jz else re.compile(r"JZ[0-9]"),
+    )
 
     if args.bkg_weight:
         drawhistsbkgest.draw_hists(hists, args)

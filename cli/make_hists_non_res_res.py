@@ -106,7 +106,7 @@ def process_sample_worker(
         aliases=branch_aliases,
         num_workers=args.num_workers,
         step_size=args.batch_size,
-        allow_missing=True,
+        allow_missing=False,
         report=True,
     ):
         logger.info(f"Processing batch: {batch_report}")
@@ -119,7 +119,7 @@ def process_sample_worker(
             is_mc,
         )
         # if no events pass the selection, skip filling histograms
-        if len(processed_batch) == 0:
+        if sum(processed_batch.valid_event) == 0:
             continue
         # fill histograms
         fill_hists(processed_batch, hists[sample_name], selections, is_mc)

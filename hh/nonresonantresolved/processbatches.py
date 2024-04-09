@@ -36,13 +36,13 @@ def process_batch(
                 * sample_weight
             )
 
+    # set overall event filter, up to signal and background selections
+    events["valid_event"] = np.ones(len(events), dtype=bool)
+
     # check if selections is empty (i.e. no selection)
     if not selections:
         logger.info("No objects selection applied.")
         return events
-
-    # set overall event filter, up to signal and background selections
-    events["valid_event"] = np.ones(len(events), dtype=bool)
 
     # add jet and b-tagging info
     events["jet_num"] = ak.num(events.jet_pt)
@@ -131,9 +131,9 @@ def process_batch(
     hc_jet_idx, non_hc_jet_idx = select_hc_jets(
         jets=ak.zip(
             {
-                "valid": n_central_bjets_mask,
                 "pt": events.jet_pt,
                 "btag": events.jet_btag,
+                "valid": n_central_bjets_mask,
             }
         )
     )

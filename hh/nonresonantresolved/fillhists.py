@@ -112,9 +112,9 @@ def fill_jet_kin_histograms(events, hists: list) -> None:
             hist = find_hist(hists, lambda h: f"jet_{kin_var}{region}" in h.name)
             if hist:
                 logger.debug(hist.name)
-                if "signal" in region:
+                if "signal" in hist.name:
                     valid = events.signal_event
-                elif "control" in region:
+                elif "control" in hist.name:
                     valid = events.control_event
                 else:
                     valid = np.ones(len(events), dtype=bool)
@@ -122,8 +122,8 @@ def fill_jet_kin_histograms(events, hists: list) -> None:
                 event_weight = events[valid].event_weight[:, np.newaxis]
                 event_weight, _ = ak.broadcast_arrays(event_weight, jets)
                 hist.fill(
-                    np.array(ak.flatten(jets)),
-                    weights=np.array(ak.flatten(event_weight)),
+                    ak.flatten(jets).to_numpy(),
+                    weights=ak.flatten(event_weight).to_numpy(),
                 )
 
 
@@ -140,13 +140,13 @@ def fill_leading_jets_histograms(events, hists: list) -> None:
             )
             if hist:
                 logger.debug(hist.name)
-                if "signal" in region:
+                if "signal" in hist.name:
                     valid = events.signal_event
-                elif "control" in region:
+                elif "control" in hist.name:
                     valid = events.control_event
                 else:
                     valid = np.ones(len(events), dtype=bool)
-                hist.fill(np.array(jet_pt[valid, ith_jet - 1]))
+                hist.fill(ak.flatten(jet_pt[valid, :ith_jet]).to_numpy())
 
 
 def fill_truth_matched_mjj_histograms(events, hists: list) -> None:
@@ -244,7 +244,7 @@ def fill_HH_histograms(events, hists: list) -> None:
             hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_baseline"),
         )
 
-        if "signal_event" in events.fields:
+        if "signal_event" in events.fields and sum(events.signal_event) > 0:
             signal_event = events.signal_event
             signal_h1 = h1[signal_event]
             signal_h2 = h2[signal_event]
@@ -280,7 +280,7 @@ def fill_HH_histograms(events, hists: list) -> None:
                 ),
             )
 
-        if "control_event" in events.fields:
+        if "control_event" in events.fields and sum(events.control_event) > 0:
             control_event = events.control_event
             control_h1 = h1[control_event]
             control_h2 = h2[control_event]
@@ -314,8 +314,12 @@ def fill_reco_H_truth_jet_histograms(events, hists: list, weights=None) -> None:
     """Fill jet truth ID histograms"""
 
     if "jet_truth_ID" in events.fields:
-        h1_truth_jet_idx = events.jet_truth_ID[events.leading_h_jet_idx]
-        h2_truth_jet_idx = events.jet_truth_ID[events.subleading_h_jet_idx]
+        if len(events) > 1:
+            h1_truth_jet_idx = events.jet_truth_ID[events.leading_h_jet_idx]
+            h2_truth_jet_idx = events.jet_truth_ID[events.subleading_h_jet_idx]
+        else:
+            h1_truth_jet_idx = events.jet_truth_ID[0][events.leading_h_jet_idx[0]]
+            h2_truth_jet_idx = events.jet_truth_ID[0][events.subleading_h_jet_idx[0]]
         for ith_H, h_truth_jet_idx in zip([1, 2], [h1_truth_jet_idx, h2_truth_jet_idx]):
             hist = find_hist(
                 hists,
@@ -323,8 +327,10 @@ def fill_reco_H_truth_jet_histograms(events, hists: list, weights=None) -> None:
             )
             logger.debug(hist.name)
             hist.fill(
-                ak.flatten(h_truth_jet_idx),
-                weights=np.repeat(weights, 2) if weights is not None else None,
+                ak.to_numpy(ak.flatten(h_truth_jet_idx, axis=None)),
+                weights=(
+                    ak.to_numpy(np.repeat(weights, 2)) if weights is not None else None
+                ),
             )
 
 

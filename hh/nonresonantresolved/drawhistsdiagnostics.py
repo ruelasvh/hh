@@ -151,7 +151,7 @@ def draw_hists(
             energy,
             luminosity=luminosity,
             xlabel=f"H{ith_h} jet truth ID",
-            third_exp_label=f"\n{btag} Signal Region \n 0: light, 4: c, 5: b",
+            third_exp_label=f"\n{btag} Signal Region \n 0: light, 4: charm, 5: bottom",
             density=True,
             output_dir=output_dir,
         )
