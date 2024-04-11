@@ -128,9 +128,9 @@ def select_hc_jets(jets, nbjets_cut=4):
 
     Returns the 4 Higgs candidate jets in each event.
     """
+    jet_idx = ak.mask(ak.local_index(jets.pt), jets.valid)
     jet_pt = ak.mask(jets.pt, jets.valid)
     jet_btag = ak.mask(jets.btag, jets.valid)
-    jet_idx = ak.mask(ak.local_index(jet_pt), jets.valid)
     pt_sort_idx = ak.argsort(jet_pt, ascending=False)
     jet_btag = jet_btag[pt_sort_idx]
     jet_idx = jet_idx[pt_sort_idx]
@@ -234,10 +234,8 @@ def select_correct_hh_pair_events(events):
 def get_W_t_p4(jets, hc_jet_idx, non_hc_jet_idx):
     jet_idx = ak.concatenate([hc_jet_idx, non_hc_jet_idx], axis=1)
     jets = jets[jet_idx]
-    jet_p4 = p4.zip(
-        {var: jets[f"{var}"] for var in kin_labels.keys()},
-    )
-    bjet_p4 = jet_p4[hc_jet_idx][jets.btag[hc_jet_idx] == 1]
+    jet_p4 = p4.zip({var: jets[var] for var in kin_labels})
+    bjet_p4 = jet_p4[:, :4][jets.btag[:, :4] == 1]
     bjet_idx = ak.local_index(bjet_p4, axis=1)
     # for one event with hc_jet_indices with 4 jets, remaining_jets with 2 jets
     # jet_indices -> [[0, 1, 2, 3, 4, 5], ...]
@@ -261,9 +259,7 @@ def get_W_t_p4(jets, hc_jet_idx, non_hc_jet_idx):
     top_jet2_indices = top_jet2_indices[valid_top_candidate_mask]
     top_jet3_indices = top_jet3_indices[valid_top_candidate_mask]
     W_candidates_p4 = jet_p4[top_jet1_indices] + jet_p4[top_jet2_indices]
-    top_candidates_p4 = (
-        jet_p4[top_jet1_indices] + jet_p4[top_jet2_indices] + jet_p4[top_jet3_indices]
-    )
+    top_candidates_p4 = W_candidates_p4 + jet_p4[top_jet3_indices]
     return W_candidates_p4, top_candidates_p4
 
 
