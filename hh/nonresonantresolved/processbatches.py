@@ -65,19 +65,21 @@ def process_batch(
             f"Possible operators: AND, OR. Possible values: {trig_sets.keys()}"
         )
         passed_trigs_mask = select_events_passing_triggers(events, op=trig_op)
-        events["passed_triggers"] = passed_trigs_mask
-        events["valid_event"] = events.valid_event & passed_trigs_mask
+        events = events[passed_trigs_mask]
+        # events["valid_event"] = events.valid_event & passed_trigs_mask
         logger.info(
             "Events passing the %s of all triggers: %s",
             trig_op.upper(),
-            ak.sum(events.valid_event),
+            len(events),
+            # ak.sum(events.valid_event),
         )
-        if ak.sum(events.valid_event) == 0:
+        if len(events) == 0:
+            # if ak.sum(events.valid_event) == 0:
             return events
 
     # select and save events with >= n central jets
     central_jets_sel = selections["central_jets"]
-    n_central_jets_mask, with_n_central_jets = select_n_jets_events(
+    n_central_jets_mask, n_central_jets_event_mask = select_n_jets_events(
         jets=ak.zip(
             {
                 k: events[v]
@@ -90,9 +92,9 @@ def process_batch(
         selection=central_jets_sel,
         do_jvt="jet_jvttag" in events.fields,
     )
-    events["n_central_jets"] = n_central_jets_mask
-    events["with_n_central_jets"] = with_n_central_jets
-    events["valid_event"] = events.valid_event & with_n_central_jets
+    events["n_central_jets_mask"] = n_central_jets_mask
+    events = events[n_central_jets_event_mask]
+    # events["valid_event"] = events.valid_event & n_central_jets_event_mask
     logger.info(
         "Events passing previous cut and %s %s central jets with pT %s %s, |eta| %s %s and Jvt tag: %s",
         central_jets_sel["count"]["operator"],
@@ -101,44 +103,52 @@ def process_batch(
         central_jets_sel["pt"]["value"],
         central_jets_sel["eta"]["operator"],
         central_jets_sel["eta"]["value"],
-        ak.sum(events.valid_event),
+        len(events),
+        # ak.sum(events.valid_event),
     )
-    if ak.sum(events.valid_event) == 0:
+    if len(events) == 0:
+        # if ak.sum(events.valid_event) == 0:
         return events
 
     # select and save events with >= n central b-jets
     bjets_sel = selections["btagging"]
-    n_central_bjets_mask, with_n_central_bjets = select_n_bjets_events(
-        jets=ak.zip({"btag": events.jet_btag, "valid": n_central_jets_mask}),
+    n_central_bjets_mask, n_central_bjets_event_mask = select_n_bjets_events(
+        jets=ak.zip(
+            {
+                "btag": events.jet_btag,
+                "valid": events.n_central_jets_mask,
+            }
+        ),
         selection=bjets_sel,
     )
-    events["n_central_bjets"] = n_central_bjets_mask
-    events["with_n_central_bjets"] = with_n_central_bjets
-    # keep track of valid events
-    events["valid_event"] = events.valid_event & with_n_central_bjets
+    events["n_central_bjets_mask"] = n_central_bjets_mask
+    events = events[n_central_bjets_event_mask]
+    # events["valid_event"] = events.valid_event & n_central_bjets_event_mask
     logger.info(
         "Events passing previous cut and %s %s central b-jets tagged with %s and %s efficiency: %s",
         bjets_sel["count"]["operator"],
         bjets_sel["count"]["value"],
         bjets_sel["model"],
         bjets_sel["efficiency"],
-        ak.sum(events.valid_event),
+        len(events),
+        # ak.sum(events.valid_event),
     )
-    if ak.sum(events.valid_event) == 0:
+    if len(events) == 0:
+        # if ak.sum(events.valid_event) == 0:
         return events
 
     # get the higgs candidate jets indices
-    hc_jet_idx, non_hc_jet_idx = select_hc_jets(
+    hh_jet_idx, non_hh_jet_idx = select_hc_jets(
         jets=ak.zip(
             {
                 "pt": events.jet_pt,
                 "btag": events.jet_btag,
-                "valid": n_central_bjets_mask,
+                "valid": events.n_central_bjets_mask,
             }
         )
     )
-    events["hc_jet_idx"] = hc_jet_idx
-    events["non_hc_jet_idx"] = non_hc_jet_idx
+    events["hh_jet_idx"] = hh_jet_idx
+    events["non_hh_jet_idx"] = non_hh_jet_idx
     # reconstruct higgs candidates using the minimum deltaR
     leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
         jets=ak.zip(
@@ -149,13 +159,16 @@ def process_batch(
                 "mass": events.jet_mass,
             }
         ),
-        hc_jet_idx=hc_jet_idx,
+        hh_jet_idx=hh_jet_idx,
     )
     events["leading_h_jet_idx"] = leading_h_jet_idx
     events["subleading_h_jet_idx"] = subleading_h_jet_idx
     # correctly paired Higgs bosons
     if is_mc:
-        correct_hh_pairs_from_truth = select_correct_hh_pair_events(events)
+        # correct_hh_pairs_from_truth = select_correct_hh_pair_events(events)
+        correct_hh_pairs_from_truth = select_correct_hh_pair_events(
+            events[events.valid_event]
+        )
         logger.info(
             "Events with correct HH pairs: %s",
             ak.sum(correct_hh_pairs_from_truth),
@@ -169,16 +182,17 @@ def process_batch(
             selection=top_veto_sel,
         )
         events["X_Wt_discriminant_min"] = X_Wt_discriminant_min
-        events["passed_top_veto"] = passed_top_veto_mask
-        # keep track of valid events
-        events["valid_event"] = events.valid_event & passed_top_veto_mask
+        events = events[passed_top_veto_mask]
+        # events["valid_event"] = events.valid_event & passed_top_veto_mask
         logger.info(
             "Events passing central jet selection and top-veto discriminant %s %s: %s",
             top_veto_sel["operator"],
             top_veto_sel["value"],
-            ak.sum(events.valid_event),
+            len(events),
+            # ak.sum(events.valid_event),
         )
-        if ak.sum(events.valid_event) == 0:
+        if len(events) == 0:
+            # if ak.sum(events.valid_event) == 0:
             return events
 
     if "hh_deltaeta_veto" in selections:
@@ -187,16 +201,17 @@ def process_batch(
             events, deltaeta_sel=hh_deltaeta_sel
         )
         events["hh_deltaeta_discriminant"] = hh_deltaeta_discrim
-        events["passed_hh_deltaeta"] = passed_hh_deltaeta_mask
-        # keep track of valid events
-        events["valid_event"] = events.valid_event & passed_hh_deltaeta_mask
+        events = events[passed_hh_deltaeta_mask]
+        # events["valid_event"] = events.valid_event & passed_hh_deltaeta_mask
         logger.info(
             "Events passing central jet selection and |deltaEta_HH| %s %s: %s",
             hh_deltaeta_sel["operator"],
             hh_deltaeta_sel["value"],
-            ak.sum(events.valid_event),
+            len(events),
+            # ak.sum(events.valid_event),
         )
-        if ak.sum(events.valid_event) == 0:
+        if len(events) == 0:
+            # if ak.sum(events.valid_event) == 0:
             return events
 
     ############################################################
@@ -214,9 +229,8 @@ def process_batch(
             mass_sel=signal_hh_mass_selection,
         )
         events["hh_mass_discriminant_signal"] = hh_mass_discrim_signal
-        events["passed_signal_hh_mass"] = passed_signal_hh_mass_mask
-        # keep track of signal region events
-        events["signal_event"] = events.valid_event & passed_signal_hh_mass_mask
+        events["signal_event"] = passed_signal_hh_mass_mask
+        # events["signal_event"] = events.valid_event & passed_signal_hh_mass_mask
         logger.info(
             "Signal events passing previous cut and di-Higgs mass discriminant %s %s: %s",
             signal_hh_mass_selection["inner_boundry"]["operator"],
@@ -235,9 +249,9 @@ def process_batch(
             mass_sel=control_hh_mass_selection,
         )
         events["hh_mass_discriminant_control"] = hh_mass_discrim_control
-        events["passed_control_hh_mass"] = passed_control_hh_mass_mask
         # keep track of control region events
-        events["control_event"] = events.valid_event & passed_control_hh_mass_mask
+        events["control_event"] = passed_control_hh_mass_mask
+        # events["control_event"] = events.valid_event & passed_control_hh_mass_mask
         logger.info(
             "Control events passing previous cut and di-Higgs mass discriminant between %s %s and %s %s: %s",
             control_hh_mass_selection["inner_boundry"]["operator"],

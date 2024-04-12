@@ -5,7 +5,7 @@ from hh.shared.utils import get_op, get_trigs_bitwise_op, kin_labels, inv_GeV
 from hh.shared.selection import X_HH, R_CR, X_Wt
 
 
-def reconstruct_hh_mindeltar(jets, hc_jet_idx):
+def reconstruct_hh_mindeltar(jets, hh_jet_idx):
     """Pair 4 Higgs candidate jets by pT and minimum deltaR.
 
     Three possible pairing permutations of 4 jets into the two Higgs candidates:
@@ -22,11 +22,11 @@ def reconstruct_hh_mindeltar(jets, hc_jet_idx):
     """
 
     jet_p4 = p4.zip(
-        {var: jets[f"{var}"][hc_jet_idx] for var in kin_labels.keys()},
+        {var: jets[f"{var}"][hh_jet_idx] for var in kin_labels.keys()},
     )
     jet_sorted_idx = ak.argsort(jet_p4.pt, axis=1, ascending=False)
     jet_p4_sorted = jet_p4[jet_sorted_idx]
-    hc_jet_sorted_idx = hc_jet_idx[jet_sorted_idx]
+    hc_jet_sorted_idx = hh_jet_idx[jet_sorted_idx]
     leading_jets = jet_sorted_idx[:, :1]
     subleading_jets = jet_sorted_idx[:, 1:]
     jet_pairs = ak.cartesian([leading_jets, subleading_jets], axis=1)
@@ -68,6 +68,37 @@ def select_events_passing_triggers(
     return passed_trigs_mask
 
 
+# def select_n_jets_events(jets, selection, do_jvt=True):
+#     """Selects events by applying the cuts specified in the selection."""
+
+#     pt_cut = selection["pt"] if "pt" in selection else None
+#     eta_cut = selection["eta"] if "eta" in selection else None
+#     njets_cut = selection["count"] if "count" in selection else None
+#     # mask array for valid jets
+#     valid_jets_mask = np.ones_like(jets.pt, dtype=bool)
+#     if pt_cut:
+#         valid_jets_mask = valid_jets_mask & get_op(pt_cut["operator"])(
+#             jets.pt, pt_cut["value"]
+#         )
+#     if eta_cut:
+#         valid_jets_mask = valid_jets_mask & get_op(eta_cut["operator"])(
+#             np.abs(jets.eta), eta_cut["value"]
+#         )
+#     if do_jvt:
+#         jvttag_mask = jets.jvttag == 1
+#         valid_jets_mask = valid_jets_mask & jvttag_mask
+#     # mask array for valid events
+#     valid_events_mask = np.ones(len(jets.pt), dtype=bool)
+#     if njets_cut:
+#         n_jets = ak.sum(valid_jets_mask, axis=1)
+#         valid_events_mask = valid_events_mask & get_op(njets_cut["operator"])(
+#             n_jets, njets_cut["value"]
+#         )
+#     # jets mask for valid events (mantains original size of events array)
+#     valid_n_jets_mask = ak.where(valid_events_mask, valid_jets_mask, False)
+#     return valid_n_jets_mask, valid_events_mask
+
+
 def select_n_jets_events(jets, selection, do_jvt=True):
     """Selects events by applying the cuts specified in the selection."""
 
@@ -94,9 +125,25 @@ def select_n_jets_events(jets, selection, do_jvt=True):
         valid_events_mask = valid_events_mask & get_op(njets_cut["operator"])(
             n_jets, njets_cut["value"]
         )
-    # jets mask for valid events (mantains original size of events array)
-    valid_n_jets_mask = ak.where(valid_events_mask, valid_jets_mask, False)
-    return valid_n_jets_mask, valid_events_mask
+    return valid_jets_mask, valid_events_mask
+
+
+# def select_n_bjets_events(
+#     jets,
+#     selection,
+# ):
+#     """Selects events by applying the cuts specified in the selection."""
+
+#     valid_events_mask = np.ones(len(jets.btag), dtype=bool)
+#     n_btags_cut = selection.get("count")
+#     if n_btags_cut:
+#         n_btags = ak.sum(jets.btag[jets.valid], axis=1)
+#         valid_events_mask = valid_events_mask & get_op(n_btags_cut["operator"])(
+#             n_btags, n_btags_cut["value"]
+#         )
+#     # jets mask for valid events (mantains original size of events array)
+#     valid_n_bjets_mask = ak.where(valid_events_mask, jets.valid, False)
+#     return valid_n_bjets_mask, valid_events_mask
 
 
 def select_n_bjets_events(
@@ -105,16 +152,40 @@ def select_n_bjets_events(
 ):
     """Selects events by applying the cuts specified in the selection."""
 
-    valid_events_mask = np.ones(len(jets.btag), dtype=bool)
-    n_btags_cut = selection.get("count")
-    if n_btags_cut:
-        n_btags = ak.sum(jets.btag[jets.valid], axis=1)
+    # mask array for valid events
+    valid_events_mask = np.ones(len(jets.valid), dtype=bool)
+    btagged_jets_mask = jets.valid & jets.btag == 1
+    if "count" in selection:
+        n_btags_cut = selection["count"]
+        n_btags = ak.sum(btagged_jets_mask, axis=1)
         valid_events_mask = valid_events_mask & get_op(n_btags_cut["operator"])(
             n_btags, n_btags_cut["value"]
         )
-    # jets mask for valid events (mantains original size of events array)
-    valid_n_bjets_mask = ak.where(valid_events_mask, jets.valid, False)
-    return valid_n_bjets_mask, valid_events_mask
+    return btagged_jets_mask, valid_events_mask
+
+
+# def select_hc_jets(jets, nbjets_cut=4):
+#     """Selects events by applying the cuts specified in the arguments.
+#     The HH system is reconstructed from two Higgs candidates, which are
+#     themselves reconstructed from two jets each (four Higgs candidate jets in total).
+
+#     b-jets are selected first. If the event is a 4b event, the leading four
+#     in pT are selected. If it is a 2b event, the remaining places are filled
+#     by non-b-tagged jets, which are sorted in pT and the two leading jets taken
+
+#     Returns the 4 Higgs candidate jets in each event.
+#     """
+#     jet_idx = ak.mask(ak.local_index(jets.pt), jets.valid)
+#     jet_pt = ak.mask(jets.pt, jets.valid)
+#     jet_btag = ak.mask(jets.btag, jets.valid)
+#     pt_sort_idx = ak.argsort(jet_pt, ascending=False)
+#     jet_btag = jet_btag[pt_sort_idx]
+#     jet_idx = jet_idx[pt_sort_idx]
+#     btag_sort_idx = ak.argsort(jet_btag, ascending=False)
+#     jet_idx = jet_idx[btag_sort_idx]
+#     hh_jet_idx = jet_idx[:, :nbjets_cut]
+#     non_hh_jet_idx = jet_idx[:, nbjets_cut:]
+#     return hh_jet_idx, non_hh_jet_idx
 
 
 def select_hc_jets(jets, nbjets_cut=4):
@@ -128,17 +199,20 @@ def select_hc_jets(jets, nbjets_cut=4):
 
     Returns the 4 Higgs candidate jets in each event.
     """
-    jet_idx = ak.mask(ak.local_index(jets.pt), jets.valid)
-    jet_pt = ak.mask(jets.pt, jets.valid)
-    jet_btag = ak.mask(jets.btag, jets.valid)
-    pt_sort_idx = ak.argsort(jet_pt, ascending=False)
-    jet_btag = jet_btag[pt_sort_idx]
-    jet_idx = jet_idx[pt_sort_idx]
-    btag_sort_idx = ak.argsort(jet_btag, ascending=False)
-    jet_idx = jet_idx[btag_sort_idx]
-    hc_jet_idx = jet_idx[:, :nbjets_cut]
-    non_hc_jet_idx = jet_idx[:, nbjets_cut:]
-    return hc_jet_idx, non_hc_jet_idx
+
+    jet_idx = ak.local_index(jets)
+    invalid_hh_jet_idx = jet_idx[~jets.valid]
+    valid_hh_jet_idx = jet_idx[jets.valid]
+    valid_hh_jet_pt = jets.pt[jets.valid]
+    pt_sort_valid_hh_jet_idx = ak.argsort(valid_hh_jet_pt, ascending=False)
+    valid_hh_jet_idx = valid_hh_jet_idx[pt_sort_valid_hh_jet_idx]
+
+    hh_candidate_jet_idx = valid_hh_jet_idx[:, :nbjets_cut]
+    non_hh_candidate_jet_idx = valid_hh_jet_idx[:, nbjets_cut:]
+    non_hh_candidate_jet_idx = ak.concatenate(
+        [non_hh_candidate_jet_idx, invalid_hh_jet_idx], axis=1
+    )
+    return hh_candidate_jet_idx, non_hh_candidate_jet_idx
 
 
 def select_X_Wt_events(events, selection):
@@ -150,8 +224,8 @@ def select_X_Wt_events(events, selection):
     # reconstruct W and top candidates
     W_candidates_p4, top_candidates_p4 = get_W_t_p4(
         ak.zip({var: events[f"jet_{var}"] for var in list(kin_labels) + ["btag"]}),
-        events.hc_jet_idx,
-        events.non_hc_jet_idx,
+        events.hh_jet_idx,
+        events.non_hh_jet_idx,
     )
     # calculate X_Wt discriminant
     X_Wt_discriminant = X_Wt(
@@ -210,7 +284,7 @@ def select_hh_events(events, deltaeta_sel=None, mass_sel=None):
 
 
 def select_correct_hh_pair_events(events):
-    jets_truth_matched_to_hh = events["jet_truth_H_parents"]
+    jets_truth_matched_to_hh = events.jet_truth_H_parents
     leading_h_truth_matched = jets_truth_matched_to_hh[events.leading_h_jet_idx]
     leading_h_jet1_truth_matched = leading_h_truth_matched[:, 0, np.newaxis]
     leading_h_jet2_truth_matched = leading_h_truth_matched[:, 1, np.newaxis]
@@ -231,8 +305,8 @@ def select_correct_hh_pair_events(events):
     return correct_hh_pairs_mask
 
 
-def get_W_t_p4(jets, hc_jet_idx, non_hc_jet_idx):
-    jet_idx = ak.concatenate([hc_jet_idx, non_hc_jet_idx], axis=1)
+def get_W_t_p4(jets, hh_jet_idx, non_hh_jet_idx):
+    jet_idx = ak.concatenate([hh_jet_idx, non_hh_jet_idx], axis=1)
     jets = jets[jet_idx]
     jet_p4 = p4.zip({var: jets[var] for var in kin_labels})
     bjet_p4 = jet_p4[:, :4][jets.btag[:, :4] == 1]
@@ -287,15 +361,6 @@ def get_hh_p4(jets, leading_h_jet_idx, subleading_h_jet_idx):
     h2 = jet_p4[h2_jet1_idx] + jet_p4[h2_jet2_idx]
 
     return h1[:, 0], h2[:, 0]
-
-
-def select_buckets(events, leading_jet_pt_cut=170, third_jet_pt_cut=70):
-    jet_pt = events.jet_pt[events.n_central_bjets]
-    leading_jet_pt = jet_pt[:, 0]
-    third_jet_pt = jet_pt[:, 2]
-    passed_king_cut = (leading_jet_pt > leading_jet_pt_cut) & (
-        third_jet_pt > third_jet_pt_cut
-    )
 
 
 def calculate_scale_factors(events):
