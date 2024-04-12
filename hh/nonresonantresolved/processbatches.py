@@ -65,16 +65,16 @@ def process_batch(
             f"Possible operators: AND, OR. Possible values: {trig_sets.keys()}"
         )
         passed_trigs_mask = select_events_passing_triggers(events, op=trig_op)
-        events = events[passed_trigs_mask]
-        # events["valid_event"] = events.valid_event & passed_trigs_mask
+        # events = events[passed_trigs_mask]
+        events["valid_event"] = events.valid_event & passed_trigs_mask
         logger.info(
             "Events passing the %s of all triggers: %s",
             trig_op.upper(),
-            len(events),
-            # ak.sum(events.valid_event),
+            # len(events),
+            ak.sum(events.valid_event),
         )
-        if len(events) == 0:
-            # if ak.sum(events.valid_event) == 0:
+        # if len(events) == 0:
+        if ak.sum(events.valid_event) == 0:
             return events
 
     # select and save events with >= n central jets
@@ -93,8 +93,8 @@ def process_batch(
         do_jvt="jet_jvttag" in events.fields,
     )
     events["n_central_jets_mask"] = n_central_jets_mask
-    events = events[n_central_jets_event_mask]
-    # events["valid_event"] = events.valid_event & n_central_jets_event_mask
+    # events = events[n_central_jets_event_mask]
+    events["valid_event"] = events.valid_event & n_central_jets_event_mask
     logger.info(
         "Events passing previous cut and %s %s central jets with pT %s %s, |eta| %s %s and Jvt tag: %s",
         central_jets_sel["count"]["operator"],
@@ -103,11 +103,11 @@ def process_batch(
         central_jets_sel["pt"]["value"],
         central_jets_sel["eta"]["operator"],
         central_jets_sel["eta"]["value"],
-        len(events),
-        # ak.sum(events.valid_event),
+        # len(events),
+        ak.sum(events.valid_event),
     )
-    if len(events) == 0:
-        # if ak.sum(events.valid_event) == 0:
+    # if len(events) == 0:
+    if ak.sum(events.valid_event) == 0:
         return events
 
     # select and save events with >= n central b-jets
@@ -122,19 +122,19 @@ def process_batch(
         selection=bjets_sel,
     )
     events["n_central_bjets_mask"] = n_central_bjets_mask
-    events = events[n_central_bjets_event_mask]
-    # events["valid_event"] = events.valid_event & n_central_bjets_event_mask
+    # events = events[n_central_bjets_event_mask]
+    events["valid_event"] = events.valid_event & n_central_bjets_event_mask
     logger.info(
         "Events passing previous cut and %s %s central b-jets tagged with %s and %s efficiency: %s",
         bjets_sel["count"]["operator"],
         bjets_sel["count"]["value"],
         bjets_sel["model"],
         bjets_sel["efficiency"],
-        len(events),
-        # ak.sum(events.valid_event),
+        # len(events),
+        ak.sum(events.valid_event),
     )
-    if len(events) == 0:
-        # if ak.sum(events.valid_event) == 0:
+    # if len(events) == 0:
+    if ak.sum(events.valid_event) == 0:
         return events
 
     # get the higgs candidate jets indices
@@ -182,17 +182,17 @@ def process_batch(
             selection=top_veto_sel,
         )
         events["X_Wt_discriminant_min"] = X_Wt_discriminant_min
-        events = events[passed_top_veto_mask]
-        # events["valid_event"] = events.valid_event & passed_top_veto_mask
+        # events = events[passed_top_veto_mask]
+        events["valid_event"] = events.valid_event & passed_top_veto_mask
         logger.info(
             "Events passing central jet selection and top-veto discriminant %s %s: %s",
             top_veto_sel["operator"],
             top_veto_sel["value"],
-            len(events),
-            # ak.sum(events.valid_event),
+            # len(events),
+            ak.sum(events.valid_event),
         )
-        if len(events) == 0:
-            # if ak.sum(events.valid_event) == 0:
+        # if len(events) == 0:
+        if ak.sum(events.valid_event) == 0:
             return events
 
     if "hh_deltaeta_veto" in selections:
@@ -201,17 +201,17 @@ def process_batch(
             events, deltaeta_sel=hh_deltaeta_sel
         )
         events["hh_deltaeta_discriminant"] = hh_deltaeta_discrim
-        events = events[passed_hh_deltaeta_mask]
-        # events["valid_event"] = events.valid_event & passed_hh_deltaeta_mask
+        # events = events[passed_hh_deltaeta_mask]
+        events["valid_event"] = events.valid_event & passed_hh_deltaeta_mask
         logger.info(
             "Events passing central jet selection and |deltaEta_HH| %s %s: %s",
             hh_deltaeta_sel["operator"],
             hh_deltaeta_sel["value"],
-            len(events),
-            # ak.sum(events.valid_event),
+            # len(events),
+            ak.sum(events.valid_event),
         )
-        if len(events) == 0:
-            # if ak.sum(events.valid_event) == 0:
+        # if len(events) == 0:
+        if ak.sum(events.valid_event) == 0:
             return events
 
     ############################################################
@@ -229,8 +229,8 @@ def process_batch(
             mass_sel=signal_hh_mass_selection,
         )
         events["hh_mass_discriminant_signal"] = hh_mass_discrim_signal
-        events["signal_event"] = passed_signal_hh_mass_mask
-        # events["signal_event"] = events.valid_event & passed_signal_hh_mass_mask
+        # events["signal_event"] = passed_signal_hh_mass_mask
+        events["signal_event"] = events.valid_event & passed_signal_hh_mass_mask
         logger.info(
             "Signal events passing previous cut and di-Higgs mass discriminant %s %s: %s",
             signal_hh_mass_selection["inner_boundry"]["operator"],
@@ -250,8 +250,8 @@ def process_batch(
         )
         events["hh_mass_discriminant_control"] = hh_mass_discrim_control
         # keep track of control region events
-        events["control_event"] = passed_control_hh_mass_mask
-        # events["control_event"] = events.valid_event & passed_control_hh_mass_mask
+        # events["control_event"] = passed_control_hh_mass_mask
+        events["control_event"] = events.valid_event & passed_control_hh_mass_mask
         logger.info(
             "Control events passing previous cut and di-Higgs mass discriminant between %s %s and %s %s: %s",
             control_hh_mass_selection["inner_boundry"]["operator"],
