@@ -9,7 +9,7 @@ setup(
     author_email="victor.hugo.ruelas.rivera@cern.ch",
     license="MIT",
     packages=[""],
-    python_requires=">=3.7",
+    python_requires=">=3.6",
     install_requires=[
         "awkward>=2.2.4",
         "matplotlib>=3.6.2",

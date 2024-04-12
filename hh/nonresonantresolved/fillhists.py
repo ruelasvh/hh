@@ -18,42 +18,24 @@ def fill_hists(
     hists: list,
     selection: dict,
     is_mc: bool = True,
-) -> list:  # hists:
+) -> list:
     """Fill histograms for analysis regions"""
     fill_event_no_histograms(events, hists)
     fill_jet_kin_histograms(events, hists)
     fill_leading_jets_histograms(events, hists)
-
-    if "top_veto" in selection:
-        fill_top_veto_histograms(
-            events,
-            hists=find_hists(hists, lambda h: "top_veto" in h.name),
-        )
-
-    if "hh_deltaeta_veto" in selection:
-        fill_hh_deltaeta_histograms(
-            events,
-            hists=find_hists(hists, lambda h: "hh_deltaeta" in h.name),
-        )
-
-    if "hh_mass_veto" in selection:
-        fill_hh_mass_discrim_histograms(
-            events,
-            hists=find_hists(hists, lambda h: "hh_mass_discrim" in h.name),
-        )
-
-    if all(
-        sel in selection
-        for sel in [
-            "central_jets",
-            "btagging",
-            "top_veto",
-            "hh_deltaeta_veto",
-            "hh_mass_veto",
-        ]
-    ):
-        fill_HH_histograms(events, hists)
-
+    fill_top_veto_histograms(
+        events,
+        hists=find_hists(hists, lambda h: "top_veto" in h.name),
+    )
+    fill_hh_deltaeta_histograms(
+        events,
+        hists=find_hists(hists, lambda h: "hh_deltaeta" in h.name),
+    )
+    fill_hh_mass_discrim_histograms(
+        events,
+        hists=find_hists(hists, lambda h: "hh_mass_discrim" in h.name),
+    )
+    fill_HH_histograms(events, hists)
     if is_mc:
         fill_event_weight_histograms(events, hists)
 
@@ -79,9 +61,9 @@ def fill_event_weight_histograms(events, hists: list) -> None:
         hist = find_hist(hists, lambda h: h_name in h.name)
         if hist:
             logger.debug(hist.name)
-            if "signal" in h_name:
+            if "signal" in h_name and "signal_event" in events.fields:
                 valid = events.signal_event
-            elif "control" in h_name:
+            elif "control" in h_name and "control_event" in events.fields:
                 valid = events.control_event
             else:
                 valid = np.ones(len(events), dtype=bool)
@@ -94,9 +76,9 @@ def fill_event_weight_histograms(events, hists: list) -> None:
         hist = find_hist(hists, lambda h: h_name in h.name)
         if hist:
             logger.debug(hist.name)
-            if "signal" in h_name:
+            if "signal" in h_name and "signal_event" in events.fields:
                 valid = events.signal_event
-            elif "control" in h_name:
+            elif "control" in h_name and "control_event" in events.fields:
                 valid = events.control_event
             else:
                 valid = np.ones(len(events), dtype=bool)
@@ -112,9 +94,9 @@ def fill_jet_kin_histograms(events, hists: list) -> None:
             hist = find_hist(hists, lambda h: f"jet_{kin_var}{region}" in h.name)
             if hist:
                 logger.debug(hist.name)
-                if "signal" in hist.name:
+                if "signal" in hist.name and "signal_event" in events.fields:
                     valid = events.signal_event
-                elif "control" in hist.name:
+                elif "control" in hist.name and "control_event" in events.fields:
                     valid = events.control_event
                 else:
                     valid = np.ones(len(events), dtype=bool)
@@ -140,9 +122,9 @@ def fill_leading_jets_histograms(events, hists: list) -> None:
             )
             if hist:
                 logger.debug(hist.name)
-                if "signal" in hist.name:
+                if "signal" in hist.name and "signal_event" in events.fields:
                     valid = events.signal_event
-                elif "control" in hist.name:
+                elif "control" in hist.name and "control_event" in events.fields:
                     valid = events.control_event
                 else:
                     valid = np.ones(len(events), dtype=bool)
@@ -314,12 +296,8 @@ def fill_reco_H_truth_jet_histograms(events, hists: list, weights=None) -> None:
     """Fill jet truth ID histograms"""
 
     if "jet_truth_ID" in events.fields:
-        if len(events) > 1:
-            h1_truth_jet_idx = events.jet_truth_ID[events.leading_h_jet_idx]
-            h2_truth_jet_idx = events.jet_truth_ID[events.subleading_h_jet_idx]
-        else:
-            h1_truth_jet_idx = events.jet_truth_ID[0][events.leading_h_jet_idx[0]]
-            h2_truth_jet_idx = events.jet_truth_ID[0][events.subleading_h_jet_idx[0]]
+        h1_truth_jet_idx = events.jet_truth_ID[events.leading_h_jet_idx]
+        h2_truth_jet_idx = events.jet_truth_ID[events.subleading_h_jet_idx]
         for ith_H, h_truth_jet_idx in zip([1, 2], [h1_truth_jet_idx, h2_truth_jet_idx]):
             hist = find_hist(
                 hists,

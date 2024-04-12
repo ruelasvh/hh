@@ -120,7 +120,7 @@ def process_sample_worker(
             is_mc,
         )
         # if no events pass the selection, skip filling histograms
-        if sum(processed_batch.valid_event) == 0:
+        if len(processed_batch) == 0:
             continue
         # fill histograms
         fill_hists(processed_batch, hists[sample_name], selections, is_mc)

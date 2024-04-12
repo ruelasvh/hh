@@ -3,11 +3,11 @@
         {
             "label": "4b_mc20_ggF_k01",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k01/user.viruelas.EJ_2024_03_23_T095848.600463.e8222_s3681_r13144_p6026_TREE/user.viruelas.37917919._000001.output-tree"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k01/user.viruelas.EJ_2024_03_23_T095848.600463.e8222_s3681_r13145_p6026_TREE/user.viruelas.37917922._000002.output-tree"
             ],
             "metadata": [
                 {
-                    "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13144_p6026",
+                    "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13145_p6026",
                     "genFiltEff": 1.0,
                     "crossSection": 2.7882E-05,
                     "kFactor": 1.0,
