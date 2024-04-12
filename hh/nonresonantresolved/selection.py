@@ -68,37 +68,6 @@ def select_events_passing_triggers(
     return passed_trigs_mask
 
 
-# def select_n_jets_events(jets, selection, do_jvt=True):
-#     """Selects events by applying the cuts specified in the selection."""
-
-#     pt_cut = selection["pt"] if "pt" in selection else None
-#     eta_cut = selection["eta"] if "eta" in selection else None
-#     njets_cut = selection["count"] if "count" in selection else None
-#     # mask array for valid jets
-#     valid_jets_mask = np.ones_like(jets.pt, dtype=bool)
-#     if pt_cut:
-#         valid_jets_mask = valid_jets_mask & get_op(pt_cut["operator"])(
-#             jets.pt, pt_cut["value"]
-#         )
-#     if eta_cut:
-#         valid_jets_mask = valid_jets_mask & get_op(eta_cut["operator"])(
-#             np.abs(jets.eta), eta_cut["value"]
-#         )
-#     if do_jvt:
-#         jvttag_mask = jets.jvttag == 1
-#         valid_jets_mask = valid_jets_mask & jvttag_mask
-#     # mask array for valid events
-#     valid_events_mask = np.ones(len(jets.pt), dtype=bool)
-#     if njets_cut:
-#         n_jets = ak.sum(valid_jets_mask, axis=1)
-#         valid_events_mask = valid_events_mask & get_op(njets_cut["operator"])(
-#             n_jets, njets_cut["value"]
-#         )
-#     # jets mask for valid events (mantains original size of events array)
-#     valid_n_jets_mask = ak.where(valid_events_mask, valid_jets_mask, False)
-#     return valid_n_jets_mask, valid_events_mask
-
-
 def select_n_jets_events(jets, selection, do_jvt=True):
     """Selects events by applying the cuts specified in the selection."""
 
@@ -125,25 +94,8 @@ def select_n_jets_events(jets, selection, do_jvt=True):
         valid_events_mask = valid_events_mask & get_op(njets_cut["operator"])(
             n_jets, njets_cut["value"]
         )
+    valid_jets_mask = ak.where(valid_events_mask, valid_jets_mask, False)
     return valid_jets_mask, valid_events_mask
-
-
-# def select_n_bjets_events(
-#     jets,
-#     selection,
-# ):
-#     """Selects events by applying the cuts specified in the selection."""
-
-#     valid_events_mask = np.ones(len(jets.btag), dtype=bool)
-#     n_btags_cut = selection.get("count")
-#     if n_btags_cut:
-#         n_btags = ak.sum(jets.btag[jets.valid], axis=1)
-#         valid_events_mask = valid_events_mask & get_op(n_btags_cut["operator"])(
-#             n_btags, n_btags_cut["value"]
-#         )
-#     # jets mask for valid events (mantains original size of events array)
-#     valid_n_bjets_mask = ak.where(valid_events_mask, jets.valid, False)
-#     return valid_n_bjets_mask, valid_events_mask
 
 
 def select_n_bjets_events(
@@ -161,31 +113,8 @@ def select_n_bjets_events(
         valid_events_mask = valid_events_mask & get_op(n_btags_cut["operator"])(
             n_btags, n_btags_cut["value"]
         )
+    btagged_jets_mask = ak.where(valid_events_mask, jets.valid, False)
     return btagged_jets_mask, valid_events_mask
-
-
-# def select_hc_jets(jets, nbjets_cut=4):
-#     """Selects events by applying the cuts specified in the arguments.
-#     The HH system is reconstructed from two Higgs candidates, which are
-#     themselves reconstructed from two jets each (four Higgs candidate jets in total).
-
-#     b-jets are selected first. If the event is a 4b event, the leading four
-#     in pT are selected. If it is a 2b event, the remaining places are filled
-#     by non-b-tagged jets, which are sorted in pT and the two leading jets taken
-
-#     Returns the 4 Higgs candidate jets in each event.
-#     """
-#     jet_idx = ak.mask(ak.local_index(jets.pt), jets.valid)
-#     jet_pt = ak.mask(jets.pt, jets.valid)
-#     jet_btag = ak.mask(jets.btag, jets.valid)
-#     pt_sort_idx = ak.argsort(jet_pt, ascending=False)
-#     jet_btag = jet_btag[pt_sort_idx]
-#     jet_idx = jet_idx[pt_sort_idx]
-#     btag_sort_idx = ak.argsort(jet_btag, ascending=False)
-#     jet_idx = jet_idx[btag_sort_idx]
-#     hh_jet_idx = jet_idx[:, :nbjets_cut]
-#     non_hh_jet_idx = jet_idx[:, nbjets_cut:]
-#     return hh_jet_idx, non_hh_jet_idx
 
 
 def select_hc_jets(jets, nbjets_cut=4):
