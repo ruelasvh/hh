@@ -63,7 +63,7 @@ def get_args():
 
 
 def main():
-    LOGGING_DIR = Path(os.getenv("HH4B_LOGS_DIR", f"/tmp/{os.getenv('USER')}"))
+    LOGGING_DIR = Path(os.getenv("HH4B_LOGS_DIR", f"{os.getenv('PWD')}"))
     CONFIG_DIR = LOGGING_DIR / "configs"
     OUTPUT_DIR = LOGGING_DIR / "output"
     ERROR_DIR = LOGGING_DIR / "error"
@@ -80,12 +80,12 @@ def main():
     configs = []
     for sample in config["samples"]:
         sample_is_mc = "data" not in sample["label"]
-        for i, sample_path in enumerate(sample["paths"]):
+        for sample_path, sample_metadata in zip(sample["paths"], sample["metadata"]):
             sample_weight = 1.0
             if sample_is_mc:
                 # get the cutbookkeepers for the sample
                 cbk = concatenate_cutbookkeepers(sample_path)
-                sample_weight = get_sample_weight(sample["metadata"][i], cbk)
+                sample_weight = get_sample_weight(sample_metadata, cbk)
             # iterate over each file and create a config file for it as described in the docstring
             files = list(Path(sample_path).glob("*.root"))
             for file_path in files:
@@ -112,6 +112,7 @@ def main():
                                     "paths": [
                                         (file_path.parent / file_path.stem).as_posix()
                                     ],
+                                    "metadata": [sample_metadata],
                                 }
                             ],
                         },
@@ -131,14 +132,14 @@ def main():
     sub = htcondor.Submit(
         {
             "executable": args.executable,
-            "should_transfer_files": "no",
-            "my.sendcredential": "true",
             "arguments": f"$(config_file) -o {args.output.stem}_$(ClusterId)_$(ProcId){args.output.suffix} -w $(sample_weight) -v {' '.join(restargs)}",
             "output": f"{OUTPUT_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).out",
             "error": f"{ERROR_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).err",
             "log": f"{LOG_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).log",
             "request_memory": args.memory,
             "request_cpus": args.cpus,
+            "should_transfer_files": "no",
+            "my.sendcredential": "true",
             "getenv": "PYTHONPATH",
         }
     )

@@ -22,7 +22,7 @@ setup(
         "h5py>=3.8.0",
         "pandas>=2.1.0",
         "tables>=3.9.2",
-        "htcondor>=10.6.0",
+        "htcondor>=23.0.6",
     ],
     entry_points={
         "console_scripts": [

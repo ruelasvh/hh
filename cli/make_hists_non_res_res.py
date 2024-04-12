@@ -5,6 +5,7 @@ build plots of everything
 """
 
 import os
+import sys
 import json
 import time
 import h5py
@@ -125,7 +126,7 @@ def process_sample_worker(
         fill_hists(processed_batch, hists[sample_name], selections, is_mc)
         # save histograms to file
         output_name = args.output.with_name(
-            f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
+            f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}{args.output.suffix}"
         )
         with h5py.File(output_name, "w") as output_file:
             logger.info(f"Saving histograms to file: {output_name}")
@@ -139,6 +140,11 @@ def main():
 
     if args.loglevel:
         setup_logger(args.loglevel)
+
+    # check that output file extension is .h5
+    if args.output.suffix != ".h5":
+        logger.error("Only h5 file output supported!")
+        sys.exit(1)
 
     with open(args.config) as cf:
         config = resolve_project_paths(config=json.load(cf))
