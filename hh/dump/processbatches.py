@@ -156,7 +156,7 @@ def process_batch(
                 features_out = get_common(events.fields, feature_names)
                 return events[[*features_out, *label_names]]
 
-            # select and save hc jets
+            # select and save diHiggs candidates jets
             hh_c_jets = select_hc_jets(
                 jets=ak.zip(
                     {
@@ -166,10 +166,10 @@ def process_batch(
                     }
                 )
             )
-            events["hc_jet_idx"] = hh_c_jets[0]
-            events["non_hc_jet_idx"] = hh_c_jets[1]
+            events["hh_jet_idx"] = hh_c_jets[0]
+            events["non_hh_jet_idx"] = hh_c_jets[1]
             j4 = get_jet_p4(events)
-            four_bjets_p4 = j4[events.hc_jet_idx]
+            four_bjets_p4 = j4[events.hh_jet_idx]
             events[Features.EVENT_M_4B.value] = (
                 four_bjets_p4[:, 0]
                 + four_bjets_p4[:, 1]
@@ -192,7 +192,7 @@ def process_batch(
                 )
 
             # reconstruct higgs candidates using the minimum deltaR
-            hh_jet = reconstruct_hh_mindeltar(
+            leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
                 jets=ak.zip(
                     {
                         "pt": events.jet_pt,
@@ -201,10 +201,10 @@ def process_batch(
                         "mass": events.jet_mass,
                     }
                 ),
-                hc_jet_idx=events.hc_jet_idx,
+                hh_jet_idx=events.hh_jet_idx,
             )
-            events["leading_h_jet_idx"] = hh_jet[0]
-            events["subleading_h_jet_idx"] = hh_jet[1]
+            events["leading_h_jet_idx"] = leading_h_jet_idx
+            events["subleading_h_jet_idx"] = subleading_h_jet_idx
 
             # correctly paired Higgs bosons to further clean up labels
             if is_mc:
@@ -230,8 +230,8 @@ def process_batch(
                             "btag": events.jet_btag,
                         }
                     ),
-                    events.hc_jet_idx,
-                    events.non_hc_jet_idx,
+                    events.hh_jet_idx,
+                    events.non_hh_jet_idx,
                 )
                 X_Wt_discriminant = X_Wt(
                     W_candidates_p4.mass * inv_GeV,
