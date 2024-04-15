@@ -68,12 +68,22 @@ def get_args():
 
 
 def main():
-    LOGGING_DIR = Path(os.getenv("HH4B_LOGS_DIR", f"{os.getenv('PWD')}"))
-    CONFIG_DIR = LOGGING_DIR / "configs"
-    OUTPUT_DIR = LOGGING_DIR / "output"
-    ERROR_DIR = LOGGING_DIR / "error"
-    LOG_DIR = LOGGING_DIR / "log"
-    for d in [CONFIG_DIR, OUTPUT_DIR, ERROR_DIR, LOG_DIR]:
+    # LOGGING_DIR = Path(os.getenv("HH4B_LOGS_DIR", f"{os.getenv('PWD')}"))
+    # CONFIG_DIR = LOGGING_DIR / "configs"
+    # OUTPUT_DIR = LOGGING_DIR / "output"
+    # ERROR_DIR = LOGGING_DIR / "error"
+    # LOG_DIR = LOGGING_DIR / "log"
+    # for d in [CONFIG_DIR, OUTPUT_DIR, ERROR_DIR, LOG_DIR]:
+    #     os.makedirs(d, exist_ok=True)
+
+    CWD = Path(f"{os.getenv('PWD')}")
+    CONFIG_DIR = CWD / "configs"
+    # make a directory called condor, if it doesn't exist
+    CONDOR_DIR = CWD / "condor"
+    OUTPUT_DIR = CONDOR_DIR / "output"
+    ERROR_DIR = CONDOR_DIR / "error"
+    LOG_DIR = CONDOR_DIR / "log"
+    for d in [CONFIG_DIR, CONDOR_DIR, OUTPUT_DIR, ERROR_DIR, LOG_DIR]:
         os.makedirs(d, exist_ok=True)
 
     args, restargs = get_args()
@@ -120,6 +130,7 @@ def main():
                     file,
                     indent=4,
                 )
+            # === Iterate over each file in the sample path for faster processing ===
             # files = list(Path(sample_path).glob("*.root"))
             # for file_path in files:
             #     # create a config file for each file
@@ -166,8 +177,8 @@ def main():
         {
             "executable": "/usr/bin/apptainer",
             "arguments": f"exec {args.image} {args.exec} $(config_file) -o {args.output.stem}_$(ClusterId)_$(ProcId){args.output.suffix} -w $(sample_weight) -v {' '.join(restargs)}",
-            "output": f"{OUTPUT_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).out",
-            "error": f"{ERROR_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).err",
+            "output": f"{OUTPUT_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",
+            "error": f"{ERROR_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",
             "log": f"{LOG_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",
             "request_memory": args.memory,
             "request_cpus": args.cpus,
