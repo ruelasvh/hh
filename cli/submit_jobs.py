@@ -68,14 +68,6 @@ def get_args():
 
 
 def main():
-    # LOGGING_DIR = Path(os.getenv("HH4B_LOGS_DIR", f"{os.getenv('PWD')}"))
-    # CONFIG_DIR = LOGGING_DIR / "configs"
-    # OUTPUT_DIR = LOGGING_DIR / "output"
-    # ERROR_DIR = LOGGING_DIR / "error"
-    # LOG_DIR = LOGGING_DIR / "log"
-    # for d in [CONFIG_DIR, OUTPUT_DIR, ERROR_DIR, LOG_DIR]:
-    #     os.makedirs(d, exist_ok=True)
-
     CWD = Path(f"{os.getenv('PWD')}")
     CONFIG_DIR = CWD / "configs"
     # make a directory called condor, if it doesn't exist
