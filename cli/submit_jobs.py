@@ -25,7 +25,12 @@ from hh.shared.utils import (
 def get_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "executable",
+        "image",
+        type=Path,
+        help="Apptainer image file to run the executable",
+    )
+    parser.add_argument(
+        "exec",
         type=Path,
         help="Executable for the job",
     )
@@ -80,45 +85,73 @@ def main():
     configs = []
     for sample in config["samples"]:
         sample_is_mc = "data" not in sample["label"]
-        for sample_path, sample_metadata in zip(sample["paths"], sample["metadata"]):
+        for sample_path, sample_metadata, i_sample in zip(
+            sample["paths"], sample["metadata"], range(len(sample["paths"]))
+        ):
             sample_weight = 1.0
             if sample_is_mc:
                 # get the cutbookkeepers for the sample
                 cbk = concatenate_cutbookkeepers(sample_path)
                 sample_weight = get_sample_weight(sample_metadata, cbk)
             # iterate over each file and create a config file for it as described in the docstring
-            files = list(Path(sample_path).glob("*.root"))
-            for file_path in files:
-                # create a config file for each file
-                config_file = (
-                    CONFIG_DIR / f"config-{sample['label']}-{file_path.stem}.json"
-                )
-                # add the config file to the list of configs
-                configs.append(
+            # create a config file for each file
+            config_file = CONFIG_DIR / f"config-{sample['label']}-{i_sample}.json"
+            # add the config file to the list of configs
+            configs.append(
+                {
+                    "config_file": config_file.as_posix(),
+                    "sample_weight": str(sample_weight),
+                }
+            )
+            # create a new config file for each sample path
+            with open(config_file, "w") as file:
+                # write the sample and event_selection objects to the new config file
+                json.dump(
                     {
-                        "config_file": config_file.as_posix(),
-                        "sample_weight": str(sample_weight),
-                    }
+                        **config,
+                        "samples": [
+                            {
+                                **sample,
+                                "paths": [sample_path],
+                                "metadata": [sample_metadata],
+                            }
+                        ],
+                    },
+                    file,
+                    indent=4,
                 )
-                # create a new config file for each file
-                with open(config_file, "w") as file:
-                    # write the sample and event_selection objects to the new config file
-                    json.dump(
-                        {
-                            **config,
-                            "samples": [
-                                {
-                                    **sample,
-                                    "paths": [
-                                        (file_path.parent / file_path.stem).as_posix()
-                                    ],
-                                    "metadata": [sample_metadata],
-                                }
-                            ],
-                        },
-                        file,
-                        indent=4,
-                    )
+            # files = list(Path(sample_path).glob("*.root"))
+            # for file_path in files:
+            #     # create a config file for each file
+            #     config_file = (
+            #         CONFIG_DIR / f"config-{sample['label']}-{file_path.stem}.json"
+            #     )
+            #     # add the config file to the list of configs
+            #     configs.append(
+            #         {
+            #             "config_file": config_file.as_posix(),
+            #             "sample_weight": str(sample_weight),
+            #         }
+            #     )
+            #     # create a new config file for each file
+            #     with open(config_file, "w") as file:
+            #         # write the sample and event_selection objects to the new config file
+            #         json.dump(
+            #             {
+            #                 **config,
+            #                 "samples": [
+            #                     {
+            #                         **sample,
+            #                         "paths": [
+            #                             (file_path.parent / file_path.stem).as_posix()
+            #                         ],
+            #                         "metadata": [sample_metadata],
+            #                     }
+            #                 ],
+            #             },
+            #             file,
+            #             indent=4,
+            #         )
 
     ########################################################
     # Submit a job for each config file
@@ -131,16 +164,16 @@ def main():
     # create a submit object using htcondor.Submit
     sub = htcondor.Submit(
         {
-            "executable": args.executable,
-            "arguments": f"$(config_file) -o {args.output.stem}_$(ClusterId)_$(ProcId){args.output.suffix} -w $(sample_weight) -v {' '.join(restargs)}",
-            "output": f"{OUTPUT_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).out",
-            "error": f"{ERROR_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).err",
-            "log": f"{LOG_DIR}/{args.executable.stem}-$(ClusterId).$(ProcId).log",
+            "executable": "/usr/bin/apptainer",
+            "arguments": f"exec {args.image} {args.exec} $(config_file) -o {args.output.stem}_$(ClusterId)_$(ProcId){args.output.suffix} -w $(sample_weight) -v {' '.join(restargs)}",
+            "output": f"{OUTPUT_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).out",
+            "error": f"{ERROR_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).err",
+            "log": f"{LOG_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",
             "request_memory": args.memory,
             "request_cpus": args.cpus,
             "should_transfer_files": "no",
             "my.sendcredential": "true",
-            "getenv": "PYTHONPATH",
+            "getenv": "false",
         }
     )
 

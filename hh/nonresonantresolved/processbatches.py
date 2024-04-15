@@ -137,7 +137,7 @@ def process_batch(
     if ak.sum(events.valid_event) == 0:
         return events
 
-    # get the higgs candidate jets indices
+    # get the diHiggs candidate jets indices
     hh_jet_idx, non_hh_jet_idx = select_hc_jets(
         jets=ak.zip(
             {

@@ -1,0 +1,17 @@
+Bootstrap: docker
+From: python:3.9-slim-bookworm
+
+%files
+    . /opt/hh
+
+%post
+    apt-get update && apt-get install -y git git-lfs h5utils wget vim build-essential
+    python3 -m pip install --upgrade pip
+    python3 -m pip install --no-cache-dir -e /opt/hh
+
+%environment
+
+%labels
+    Victor Ruelas
+    ContactEmail victor.hugo.ruelas.rivera@cern.ch
+    HH -> bbbb Analysis Postprocessing Container
