@@ -39,11 +39,7 @@ hh4b_dump config.json -v --output output.root
 ```
 
 ## Running jobs in parallel (htcondor)
-First create an environment variable where the logs for the jobs will be stored:
-
-```bash
-export HH4B_LOGS_DIR=/path/to/logs
-```
+First you need to set up kerberos authentication, usually done with `kinit`.
 
 Then, submit the jobs with:
 ```bash
