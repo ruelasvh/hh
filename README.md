@@ -41,9 +41,16 @@ hh4b_dump config.json -v --output output.root
 ## Running jobs in parallel (htcondor)
 First you need to set up kerberos authentication, usually done with `kinit`.
 
-Then, submit the jobs with:
+Then you need to create an image of the package with `apptainer` which contains all the depedencies:
 ```bash
-hh4b_submit [hh4b_non_res_res_make_hists|hh4b_dump] config.json
+apptainer hh.sif hh/Apptainer.def
+```
+
+The container should be re-built every time jobs will be submitted to htcondor.
+
+Now everything's ready to submit jobs. Submit the jobs with:
+```bash
+hh4b_submit hh.sif [hh4b_non_res_res_make_hists|hh4b_dump] config.json
 ```
 
 The output will be stored to the working directory.
