@@ -1,14 +1,14 @@
-import uproot
-import glob
-import re
 import os
-import logging, coloredlogs
+import re
+import glob
+import uproot
 import operator
 import itertools
 import numpy as np
-from pathlib import Path
-from functools import reduce
 import awkward as ak
+from pathlib import Path
+import logging, coloredlogs
+from functools import reduce
 from hh.dump.output import Features, Labels
 
 
@@ -17,6 +17,40 @@ logger = logging.getLogger("hh4b-analysis")
 nth = {1: "first", 2: "second", 3: "third", 4: "fourth"}
 
 kin_labels = {"pt": r"$p_T$", "eta": r"$\eta$", "phi": r"$\phi$", "mass": r"$m$"}
+
+jz_leading_jet_pt = {
+    "min": {
+        0: -1,
+        1: 20,
+        2: 60,
+        3: 160,
+        4: 400,
+        5: 800,
+        6: 1300,
+        7: 1800,
+        8: 2500,
+        9: 3200,
+        10: 3900,
+        11: 4600,
+        12: 5300,
+    },
+    "max": {
+        0: 20,
+        1: 60,
+        2: 160,
+        3: 400,
+        4: 800,
+        5: 1300,
+        6: 1800,
+        7: 2500,
+        8: 3200,
+        9: 3900,
+        10: 4600,
+        11: 5300,
+        12: 7000,
+    },
+}
+
 
 GeV = 1_000
 

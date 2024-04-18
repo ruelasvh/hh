@@ -1,6 +1,6 @@
 from argparse import Namespace
 from hh.shared.utils import logger, kin_labels
-from .hist import Histogram, Histogram2d, HistogramDynamic
+from hh.shared.hist import Histogram, Histogram2d, HistogramDynamic
 
 
 def init_hists(inputs: dict, args: Namespace) -> dict:

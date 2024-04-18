@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import re
+import time
 import h5py
+import shutil
 import logging
 import argparse
 import numpy as np
@@ -109,15 +111,23 @@ def merge_sample_files(inputs, hists=None, merge_jz_regex=None):
 
 
 def main():
+    starttime = time.time()
+
     args = get_args()
 
     if args.loglevel:
         setup_logger(args.loglevel)
 
-    # check if output_dir exists, if not create it
+    # Ask user if they want to overwrite the plots output directory, if not exit
     if args.output_dir.exists():
-        logger.warning(f"Output directory '{args.output_dir}' already exists")
-        exit(1)
+        overwrite = input(
+            f"Output directory '{args.output_dir}' already exists, do you want to overwrite it? (y/n) "
+        )
+        if overwrite.lower() != "y":
+            exit(0)
+        else:
+            shutil.rmtree(args.output_dir)
+            args.output_dir.mkdir(parents=True)
     else:
         args.output_dir.mkdir(parents=True)
         logger.info(f"Saving plots to '{args.output_dir}'")
@@ -131,6 +141,11 @@ def main():
         drawhistsbkgest.draw_hists(hists, args)
     else:
         drawhistsdiagnostics.draw_hists(hists, args)
+
+    if logger.level == logging.DEBUG:
+        logger.debug(
+            f"Loading data & processing events execution time: {time.time() - starttime} seconds"
+        )
 
 
 if __name__ == "__main__":

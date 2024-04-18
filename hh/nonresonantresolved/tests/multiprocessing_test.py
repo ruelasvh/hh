@@ -1,5 +1,5 @@
 from multiprocessing import Lock, Manager, Pool
-from hh.nonresonantresolved.hist import Histogram
+from hh.shared.hist import Histogram
 
 
 def f(L, i):

@@ -8,8 +8,9 @@ python3 -m pip install -e .
 ```
 
 ## Creating histograms and making plots
-Create a working directory:
+Create a directory outside of the repository, and go into it. For example:
 ```bash
+cd ..
 mkdir workdir
 cd workdir
 ```

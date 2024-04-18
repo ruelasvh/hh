@@ -1,5 +1,6 @@
 import numpy as np
 from abc import ABC, abstractmethod
+from hh.shared.error import get_symmetric_bin_errors, propagate_errors
 
 
 class BaseHistogram(ABC):
@@ -17,11 +18,18 @@ class Histogram(BaseHistogram):
         self._name = name
         self._binning = np.linspace(*binrange, bins)
         self._hist = np.zeros(self._binning.size - 1, dtype=float)
+        self._error = np.zeros(self._binning.size - 1, dtype=float)
         self._compression = dict(compression="gzip") if compress else {}
 
     def fill(self, values, weights=None):
         hist, _ = np.histogram(values, bins=self._binning, weights=weights)
         self._hist = self._hist + hist
+        if weights is not None:
+            self._error = propagate_errors(
+                self._error,
+                get_symmetric_bin_errors(values, weights, self._binning),
+                operation="+",
+            )
 
     @property
     def name(self):

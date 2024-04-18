@@ -12,7 +12,6 @@ import logging
 import argparse
 import awkward as ak
 from pathlib import Path
-
 from hh.dump.processbatches import (
     process_batch,
 )
