@@ -2,7 +2,13 @@ from .triggers import (
     trig_sets,
 )
 
-CAMPAIGNS = {"r13167": [2016], "r13144": [2017], "r13145": [2018]}
+CAMPAIGNS = {
+    "r13167": [2016],
+    "r13144": [2017],
+    "r13145": [2018],
+    "r14622": [2022],
+    "r15224": [2023],
+}
 
 BASE_ALIASES = {
     "event_number": "eventNumber",

@@ -21,7 +21,7 @@ def draw_hists(
     output_dir = args.output_dir
 
     draw_1d_hists(
-        {key: value for key, value in hists_group.items() if "multijet" in key},
+        hists_group,
         f"leading_jet_{1}_pt",
         energy,
         xlabel="Leading jet $p_{\mathrm{T}}$ [GeV]",
@@ -130,6 +130,7 @@ def draw_hists(
             xlabel="$\mathrm{H}_{\mathrm{" + label + "}}$ jet truth ID",
             third_exp_label=f"\n{btag} Signal Region \n 0: light, 4: charm, 5: bottom",
             density=True,
+            draw_errors=True,
             output_dir=output_dir,
         )
 
@@ -147,7 +148,7 @@ def draw_hists(
             sample_hists,
             sample_type,
             energy,
-            object="h1",
+            object="H1",
             luminosity=luminosity,
             yscale="log",
             output_dir=output_dir,
@@ -156,7 +157,7 @@ def draw_hists(
             sample_hists,
             sample_type,
             energy,
-            object="h2",
+            object="H2",
             luminosity=luminosity,
             yscale="log",
             output_dir=output_dir,
@@ -165,7 +166,7 @@ def draw_hists(
             sample_hists,
             sample_type,
             energy,
-            object="hh",
+            object="HH",
             luminosity=luminosity,
             yscale="log",
             output_dir=output_dir,

@@ -52,7 +52,7 @@ def get_args():
         "--memory",
         type=str,
         help="Memory request for the job (default: %(default)s)",
-        default="5 GB",
+        default="500 MB",
         metavar="",
     )
     parser.add_argument(
@@ -68,17 +68,36 @@ def get_args():
 
 
 def main():
-    CWD = Path(f"{os.getenv('PWD')}")
-    CONFIG_DIR = CWD / "configs"
-    # make a directory called condor, if it doesn't exist
-    CONDOR_DIR = CWD / "condor"
-    OUTPUT_DIR = CONDOR_DIR / "output"
-    ERROR_DIR = CONDOR_DIR / "error"
-    LOG_DIR = CONDOR_DIR / "log"
-    for d in [CONFIG_DIR, CONDOR_DIR, OUTPUT_DIR, ERROR_DIR, LOG_DIR]:
-        os.makedirs(d, exist_ok=True)
-
     args, restargs = get_args()
+
+    # check if the repo is dirty and ask if the user wants to rebuild the image for this package
+    repo_path = Path(__file__).resolve().parent.parent
+    os.chdir(repo_path)
+    if os.system("git diff --quiet"):
+        build_response = input(
+            "The repo is dirty. Do you want to rebuild apptainer image? (y/n) "
+        )
+        if build_response.lower() == "y":
+            os.system(f"apptainer build {args.image} Apptainer.def")
+    os.chdir(os.getenv("PWD"))
+
+    # create directories for to store files
+    CWD = Path(os.getenv("PWD"))
+    CONFIG_DIR = CWD / "configs"
+    OUTPUT_DIR = CWD / "output"
+    CONDOR_DIR = CWD / "condor"
+    CONDOR_OUTPUT_DIR = CONDOR_DIR / "output"
+    CONDOR_ERROR_DIR = CONDOR_DIR / "error"
+    CONDOR_LOG_DIR = CONDOR_DIR / "log"
+    for d in [
+        CONFIG_DIR,
+        OUTPUT_DIR,
+        CONDOR_DIR,
+        CONDOR_OUTPUT_DIR,
+        CONDOR_ERROR_DIR,
+        CONDOR_LOG_DIR,
+    ]:
+        os.makedirs(d, exist_ok=True)
 
     with open(args.config) as f:
         config = resolve_project_paths(json.load(f))
@@ -95,66 +114,64 @@ def main():
                 # get the cutbookkeepers for the sample
                 cbk = concatenate_cutbookkeepers(sample_path)
                 sample_weight = get_sample_weight(sample_metadata, cbk)
-            # iterate over each file and create a config file for it as described in the docstring
-            # create a config file for each file
-            config_file = CONFIG_DIR / f"config-{sample['label']}-{i_sample}.json"
-            # add the config file to the list of configs
-            configs.append(
-                {
-                    "config_file": config_file.as_posix(),
-                    "sample_weight": str(sample_weight),
-                }
-            )
-            # create a new config file for each sample path
-            with open(config_file, "w") as file:
-                # write the sample and event_selection objects to the new config file
-                json.dump(
-                    {
-                        **config,
-                        "samples": [
-                            {
-                                **sample,
-                                "paths": [sample_path],
-                                "metadata": [sample_metadata],
-                            }
-                        ],
-                    },
-                    file,
-                    indent=4,
-                )
-            # === Iterate over each file in the sample path for faster processing ===
-            # files = list(Path(sample_path).glob("*.root"))
-            # for file_path in files:
-            #     # create a config file for each file
-            #     config_file = (
-            #         CONFIG_DIR / f"config-{sample['label']}-{file_path.stem}.json"
-            #     )
-            #     # add the config file to the list of configs
-            #     configs.append(
+            # === Iterate over each file and create a config file for each sample ===
+            # # create a config file for each sample
+            # config_file = CONFIG_DIR / f"config-{sample['label']}-{i_sample}.json"
+            # configs.append(
+            #     {
+            #         "config_file": config_file.as_posix(),
+            #         "sample_weight": str(sample_weight),
+            #     }
+            # )
+            # with open(config_file, "w") as file:
+            #     # write the sample and event_selection objects to the new config file
+            #     json.dump(
             #         {
-            #             "config_file": config_file.as_posix(),
-            #             "sample_weight": str(sample_weight),
-            #         }
+            #             **config,
+            #             "samples": [
+            #                 {
+            #                     **sample,
+            #                     "paths": [sample_path],
+            #                     "metadata": [sample_metadata],
+            #                 }
+            #             ],
+            #         },
+            #         file,
+            #         indent=4,
             #     )
-            #     # create a new config file for each file
-            #     with open(config_file, "w") as file:
-            #         # write the sample and event_selection objects to the new config file
-            #         json.dump(
-            #             {
-            #                 **config,
-            #                 "samples": [
-            #                     {
-            #                         **sample,
-            #                         "paths": [
-            #                             (file_path.parent / file_path.stem).as_posix()
-            #                         ],
-            #                         "metadata": [sample_metadata],
-            #                     }
-            #                 ],
-            #             },
-            #             file,
-            #             indent=4,
-            #         )
+            # === Iterate over each file in the sample path for faster processing ===
+            files = list(Path(sample_path).glob("*.root"))
+            for file_path in files:
+                # create a config file for each file
+                config_file = (
+                    CONFIG_DIR / f"config-{sample['label']}-{file_path.stem}.json"
+                )
+                # add the config file to the list of configs
+                configs.append(
+                    {
+                        "config_file": config_file.as_posix(),
+                        "sample_weight": str(sample_weight),
+                    }
+                )
+                # create a new config file for each file
+                with open(config_file, "w") as file:
+                    # write the sample and event_selection objects to the new config file
+                    json.dump(
+                        {
+                            **config,
+                            "samples": [
+                                {
+                                    **sample,
+                                    "paths": [
+                                        (file_path.parent / file_path.stem).as_posix()
+                                    ],
+                                    "metadata": [sample_metadata],
+                                }
+                            ],
+                        },
+                        file,
+                        indent=4,
+                    )
 
     ########################################################
     # Submit a job for each config file
@@ -168,10 +185,10 @@ def main():
     sub = htcondor.Submit(
         {
             "executable": "/usr/bin/apptainer",
-            "arguments": f"exec {args.image} {args.exec} $(config_file) -o {args.output.stem}_$(ClusterId)_$(ProcId){args.output.suffix} -w $(sample_weight) -v {' '.join(restargs)}",
-            "output": f"{OUTPUT_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",
-            "error": f"{ERROR_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",
-            "log": f"{LOG_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",
+            "arguments": f"exec {args.image} {args.exec} $(config_file) -o {OUTPUT_DIR}/{args.output.stem}_$(ClusterId)_$(ProcId){args.output.suffix} -w $(sample_weight) -v {' '.join(restargs)}",
+            "output": f"{CONDOR_OUTPUT_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",
+            "error": f"{CONDOR_ERROR_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",
+            "log": f"{CONDOR_LOG_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",
             "request_memory": args.memory,
             "request_cpus": args.cpus,
             "should_transfer_files": "no",

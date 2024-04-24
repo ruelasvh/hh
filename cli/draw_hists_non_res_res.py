@@ -9,6 +9,7 @@ import argparse
 import numpy as np
 from pathlib import Path
 from collections import defaultdict
+from hh.shared.error import propagate_errors
 from hh.shared.utils import logger, setup_logger
 from hh.nonresonantresolved import drawhistsdiagnostics
 from hh.nonresonantresolved import drawhistsbkgest
@@ -82,7 +83,7 @@ def merge_sample_files(inputs, hists=None, merge_jz_regex=None):
     _hists = (
         hists
         if hists is not None
-        else defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: np.array([]))))
+        else defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: None)))
     )
     # checks if JZ0-9 is in the sample name
     for input in inputs:
@@ -100,13 +101,25 @@ def merge_sample_files(inputs, hists=None, merge_jz_regex=None):
                     hist_edges = hists_file[sample_name][hist_name]["edges"][:]
                     hist_values = hists_file[sample_name][hist_name]["values"][:]
                     _hists[merged_sample_name][hist_name]["edges"] = hist_edges
-                    if (
-                        hist_values.shape
-                        != _hists[merged_sample_name][hist_name]["values"].shape
-                    ):
+                    if _hists[merged_sample_name][hist_name]["values"] is None:
                         _hists[merged_sample_name][hist_name]["values"] = hist_values
                     else:
                         _hists[merged_sample_name][hist_name]["values"] += hist_values
+                    if "errors" in hists_file[sample_name][hist_name]:
+                        hist_errors = hists_file[sample_name][hist_name]["errors"][:]
+                        if _hists[merged_sample_name][hist_name]["errors"] is None:
+                            _hists[merged_sample_name][hist_name][
+                                "errors"
+                            ] = hist_errors
+                        else:
+                            _hists[merged_sample_name][hist_name]["errors"] = (
+                                propagate_errors(
+                                    _hists[merged_sample_name][hist_name]["errors"],
+                                    hist_errors,
+                                    operation="+",
+                                )
+                            )
+
     return _hists
 
 

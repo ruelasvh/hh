@@ -47,6 +47,7 @@ class Histogram(BaseHistogram):
         hgroup = group.create_group(name or self._name)
         hgroup.attrs["type"] = "float"
         hist = hgroup.create_dataset("values", data=self._hist, **self._compression)
+        errors = hgroup.create_dataset("errors", data=self._error, **self._compression)
         ax = hgroup.create_dataset("edges", data=self._binning, **self._compression)
         ax.make_scale("edges")
         hist.dims[0].attach_scale(ax)
@@ -66,6 +67,14 @@ class Histogram2d(Histogram):
             vals, bins=(self._binning, self._binning), weights=weights
         )[0]
         self._hist = self._hist + hist
+
+    def write(self, group, name=None):
+        hgroup = group.create_group(name or self._name)
+        hgroup.attrs["type"] = "float"
+        hist = hgroup.create_dataset("values", data=self._hist, **self._compression)
+        ax = hgroup.create_dataset("edges", data=self._binning, **self._compression)
+        ax.make_scale("edges")
+        hist.dims[0].attach_scale(ax)
 
 
 class HistogramDynamic(Histogram):

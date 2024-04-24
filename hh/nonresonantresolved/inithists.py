@@ -243,7 +243,7 @@ def init_reco_mH_2d_histograms(binrange=[0, 200_000], bins=50, postfix=None) -> 
     return hists
 
 
-def init_reco_HH_deltaeta_histograms(binrange=[0, 5], bins=50) -> list:
+def init_reco_HH_deltaeta_histograms(binrange=[0, 5], bins=51) -> list:
     """Initialize reconstructed hh deltaEta 1d histograms"""
 
     hists = []
@@ -258,7 +258,7 @@ def init_reco_HH_deltaeta_histograms(binrange=[0, 5], bins=50) -> list:
     return hists
 
 
-def init_reco_HH_mass_discrim_histograms(binrange=[0, 10], bins=21) -> list:
+def init_reco_HH_mass_discrim_histograms(binrange=[0, 10], bins=51) -> list:
     """Initialize reconstructed hh mass discriminant 1d histograms"""
 
     hists = []
@@ -273,7 +273,7 @@ def init_reco_HH_mass_discrim_histograms(binrange=[0, 10], bins=21) -> list:
     return hists
 
 
-def init_reco_top_veto_histograms(binrange=[0, 7], bins=8) -> list:
+def init_reco_top_veto_histograms(binrange=[0, 7], bins=51) -> list:
     """Initialize top veto 1d histograms"""
 
     hists = []

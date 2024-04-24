@@ -30,6 +30,7 @@ def draw_1d_hists(
     ynorm_binwidth=False,
     xcut=None,
     density=False,
+    draw_errors=False,
     ggFk01_factor=None,
     ggFk10_factor=None,
     data2b_factor=None,
@@ -48,6 +49,10 @@ def draw_1d_hists(
             hist["values"] * luminosity
             if luminosity and not is_data
             else hist["values"]
+        )
+        hist_errors = hist["errors"] if draw_errors else np.zeros_like(hist_values)
+        hist_errors = (
+            hist_errors * luminosity if luminosity and not is_data else hist_errors
         )
         hist_edges = hist["edges"]
         hist_edges = (
@@ -69,6 +74,7 @@ def draw_1d_hists(
             hist_values * bin_norm,
             hist_edges - bin_width * 0.5,
             ax=ax,
+            yerr=hist_errors * bin_norm if draw_errors else None,
             label=(str(scale_factor) + r"$\times$" if scale_factor > 1 else "")
             + sample_type.replace("_", " "),
             linewidth=2.0,
@@ -92,7 +98,7 @@ def draw_1d_hists(
         ax.set_xlabel(xlabel)
     ax.set_yscale(yscale)
     ymin, ymax = ax.get_ylim()
-    ax.set_ylim(ymin=ymin, ymax=ymax * 1.5)
+    ax.set_ylim(ymin=0.1 if yscale == "log" else 0.0, ymax=ymax * 1.5)
     hplt.atlas.label(
         label="Work In Progress",
         data=True,  # prevents adding Simulation label, sim labels are added in legend
@@ -104,6 +110,7 @@ def draw_1d_hists(
     plot_name = hist_prefix.replace("$", "")
     plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
 
 
 def draw_mH_1D_hists_v2(
@@ -169,6 +176,7 @@ def draw_mH_1D_hists_v2(
             )
     plot_name = hist_prefix.replace("$", "")
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
 
 
 def draw_mH_1D_hists(
@@ -214,6 +222,7 @@ def draw_mH_1D_hists(
         )
     plot_name = f"{sample_name}_{hist_prefix.replace('$', '')}"
     fig.savefig(f"{output_dir}/mH_{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
 
 
 def draw_mH_plane_2D_hists(
@@ -231,6 +240,8 @@ def draw_mH_plane_2D_hists(
     hist_values = (
         hist["values"] * luminosity if luminosity and not is_data else hist["values"]
     )
+    # remove outliers from hist_values
+    hist_values[hist_values > 2000] = 0
     bins_GeV = hist["edges"] * inv_GeV
     hplt.hist2dplot(
         hist_values,
@@ -308,6 +319,7 @@ def draw_mH_plane_2D_hists(
     )
     plot_name = f"{sample_name}_{hist_name}"
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
 
 
 def draw_kin_hists(
@@ -326,7 +338,9 @@ def draw_kin_hists(
     is_data = "data" in sample_name
     for kin_var in kin_vars:
         fig, ax = plt.subplots()
-        hist_name = find_hist(sample_hists, lambda h: f"{object}_{kin_var}" in h)
+        hist_name = find_hist(
+            sample_hists, lambda h: f"{object.lower()}_{kin_var}" in h
+        )
         hist = sample_hists[hist_name]
         hist_values = (
             hist["values"] * luminosity
@@ -356,6 +370,7 @@ def draw_kin_hists(
         ax.set_xlabel(f"{object} {kin_labels[kin_var]} {unit}".rstrip())
         plot_name = f"{sample_name}_{hist_name}"
         fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+        plt.close(fig)
 
 
 def num_events_vs_sample(
@@ -402,3 +417,4 @@ def num_events_vs_sample(
         f"{output_dir}/{ylabel.lower().replace(' ', '_')}_{xlabel.lower().replace(' ', '_')}.png",
         bbox_inches="tight",
     )
+    plt.close(fig)
