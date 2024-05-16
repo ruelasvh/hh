@@ -1,0 +1,81 @@
+{
+    "features": {
+        "path": "hh/dump/configs/features-bkg-est.json"
+    },
+    "samples": [
+        {
+            "label": "4b_data",
+            "class_label": "signal",
+            "selections": {
+                "events": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    }
+                },
+                "jets": {
+                    "pt": {
+                        "operator": ">",
+                        "value": 40000
+                    },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
+                    },
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    },
+                    "btagging": {
+                        "model": "GN2v00",
+                        "efficiency": 0.85,
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        }
+                    }
+                }
+            },
+            "paths": [
+                "hh/nonresonantresolved/tests/test-data/data15/"
+            ]
+        },
+        {
+            "label": "2b_data",
+            "class_label": "control",
+            "selections": {
+                "events": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    }
+                },
+                "jets": {
+                    "pt": {
+                        "operator": ">",
+                        "value": 40000
+                    },
+                    "eta": {
+                        "operator": "<",
+                        "value": 2.5
+                    },
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    },
+                    "btagging": {
+                        "model": "GN2v00",
+                        "efficiency": 0.85,
+                        "count": {
+                            "operator": "==",
+                            "value": 2
+                        }
+                    }
+                }
+            },
+            "paths": [
+                "hh/nonresonantresolved/tests/test-data/data15/"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,19 @@
+{
+    "features": [
+        "j4_log_pt",
+        "j2_log_pt",
+        "jj_closest_log_dR",
+        "jj_furthest_log_dR",
+        "jjjj_abs_eta",
+        "hh_log_pt",
+        "hh_dR",
+        "jj_leading_dPhi",
+        "jj_subleading_dPhi",
+        "log_X_Wt",
+        "n_jets"
+    ],
+    "labels": [
+        "signal",
+        "control"
+    ]
+}
