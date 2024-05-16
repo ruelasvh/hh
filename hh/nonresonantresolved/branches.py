@@ -3,11 +3,11 @@ from .triggers import (
 )
 
 CAMPAIGNS = {
-    "r13167": [2016],
-    "r13144": [2017],
-    "r13145": [2018],
-    "r14622": [2022],
-    "r15224": [2023],
+    2016: ["r13167"],
+    2017: ["r13144"],
+    2018: ["r13145"],
+    2022: ["r14622", "r14932"],
+    2023: ["r15224"],
 }
 
 BASE_ALIASES = {
@@ -28,7 +28,7 @@ JET_ALIASES = {
     "jet_btag_DL1dv01_pb": "recojet_antikt4PFlow_NOSYS_DL1dv01_pb",
     "jet_btag_DL1dv01_pc": "recojet_antikt4PFlow_NOSYS_DL1dv01_pc",
     "jet_btag_DL1dv01_pu": "recojet_antikt4PFlow_NOSYS_DL1dv01_pu",
-    "jet_btag_GN2v01_60": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_60",
+    "jet_btag_GN2v01_65": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_65",
     "jet_btag_GN2v01_70": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_70",
     "jet_btag_GN2v01_77": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_77",
     "jet_btag_GN2v01_85": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_85",
@@ -75,10 +75,10 @@ def get_branch_aliases(is_mc=False, trig_set=None, sample_metadata=None):
 
     if trig_set:
         if sample_metadata:
-            for c, y in CAMPAIGNS.items():
-                if c in sample_metadata["logicalDatasetName"]:
-                    year = y[0]
-                    trig_set = f"{trig_set} {year}"
+            for year, rtags in CAMPAIGNS.items():
+                for rtag in rtags:
+                    if rtag in sample_metadata["logicalDatasetName"]:
+                        trig_set = f"{trig_set} {year}"
         aliases.update(
             {
                 f"trig_{trig_short}": f"trigPassed_{trig_long}"
