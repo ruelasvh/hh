@@ -157,8 +157,9 @@ def process_batch(
     # correctly paired Higgs bosons
     if is_mc:
         correct_hh_pairs_from_truth = select_correct_hh_pair_events(
-            events[events.valid_event]
+            events, events.valid_event
         )
+        events["correct_hh_pairs_from_truth"] = correct_hh_pairs_from_truth
         logger.info(
             "Events with correct HH pairs: %s",
             ak.sum(correct_hh_pairs_from_truth),

@@ -212,15 +212,20 @@ def select_hh_events(events, deltaeta_sel=None, mass_sel=None):
     return keep, hh_var
 
 
-def select_correct_hh_pair_events(events):
-    jets_truth_matched_to_hh = events.jet_truth_H_parents
-    leading_h_truth_matched = jets_truth_matched_to_hh[events.leading_h_jet_idx]
+def select_correct_hh_pair_events(events, valid=None):
+    if valid is None:
+        valid = np.ones(len(events), dtype=bool)
+    events_masked = ak.mask(events, valid)
+    jets_truth_matched_to_hh = events_masked.jet_truth_H_parents
+    leading_h_truth_matched = jets_truth_matched_to_hh[events_masked.leading_h_jet_idx]
     leading_h_jet1_truth_matched = leading_h_truth_matched[:, 0, np.newaxis]
     leading_h_jet2_truth_matched = leading_h_truth_matched[:, 1, np.newaxis]
     leading_h_jets_have_same_parent_mask = (
         leading_h_jet1_truth_matched == leading_h_jet2_truth_matched
     )
-    subleading_h_truth_matched = jets_truth_matched_to_hh[events.subleading_h_jet_idx]
+    subleading_h_truth_matched = jets_truth_matched_to_hh[
+        events_masked.subleading_h_jet_idx
+    ]
     subleading_h_jet1_truth_matched = subleading_h_truth_matched[:, 0, np.newaxis]
     subleading_h_jet2_truth_matched = subleading_h_truth_matched[:, 1, np.newaxis]
     subleading_h_jets_have_same_parent_mask = (
