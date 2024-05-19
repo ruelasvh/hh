@@ -9,7 +9,7 @@ from .selection import (
     select_n_jets_events,
     select_n_bjets_events,
     select_hc_jets,
-    reconstruct_hh_mindeltar,
+    select_hh_jet_pairs,
     select_X_Wt_events,
     select_hh_events,
     select_correct_hh_pair_events,
@@ -38,21 +38,15 @@ def process_batch(
 
     # set overall event filter, up to signal and background selections
     events["valid_event"] = np.ones(len(events), dtype=bool)
+    events["valid_central_jets"] = np.ones_like(events.jet_pt, dtype=bool)
 
     # check if selections is empty (i.e. no selection)
     if not selections:
         logger.info("No objects selection applied.")
         return events
 
-    # add jet and b-tagging info
+    # start adding objects info
     events["jet_num"] = ak.num(events.jet_pt)
-    if "jet_btag" not in events.fields:
-        btagger = format_btagger_model_name(
-            selections["btagging"]["model"],
-            selections["btagging"]["efficiency"],
-        )
-        events["jet_btag"] = events[f"jet_btag_{btagger}"]
-    events["btag_num"] = ak.sum(events.jet_btag, axis=1)
 
     # select and save events passing the OR of all triggers
     if "trigs" in selections:
@@ -75,73 +69,82 @@ def process_batch(
             return events
 
     # select and save events with >= n central jets
-    central_jets_sel = selections["central_jets"]
-    n_central_jets_mask, n_central_jets_event_mask = select_n_jets_events(
-        jets=ak.zip(
-            {
-                k: events[v]
-                for k, v in zip(
-                    ["pt", "eta", "jvttag"], ["jet_pt", "jet_eta", "jet_jvttag"]
-                )
-                if v in events.fields
-            }
-        ),
-        selection=central_jets_sel,
-        do_jvt="jet_jvttag" in events.fields,
-    )
-    events["n_central_jets_mask"] = n_central_jets_mask
-    events["valid_event"] = events.valid_event & n_central_jets_event_mask
-    logger.info(
-        "Events passing previous cut and %s %s central jets with pT %s %s, |eta| %s %s and Jvt tag: %s",
-        central_jets_sel["count"]["operator"],
-        central_jets_sel["count"]["value"],
-        central_jets_sel["pt"]["operator"],
-        central_jets_sel["pt"]["value"],
-        central_jets_sel["eta"]["operator"],
-        central_jets_sel["eta"]["value"],
-        ak.sum(events.valid_event),
-    )
-    if ak.sum(events.valid_event) == 0:
-        return events
+    if "central_jets" in selections:
+        central_jets_sel = selections["central_jets"]
+        valid_central_jets, valid_event_central_jets = select_n_jets_events(
+            jets=ak.zip(
+                {
+                    k: events[v]
+                    for k, v in zip(
+                        ["pt", "eta", "jvttag"], ["jet_pt", "jet_eta", "jet_jvttag"]
+                    )
+                    if v in events.fields
+                }
+            ),
+            selection=central_jets_sel,
+            do_jvt="jet_jvttag" in events.fields,
+        )
+        events["valid_central_jets"] = valid_central_jets
+        events["valid_event"] = events.valid_event & valid_event_central_jets
+        logger.info(
+            "Events passing previous cut and %s %s central jets with pT %s %s, |eta| %s %s and Jvt tag: %s",
+            central_jets_sel["count"]["operator"],
+            central_jets_sel["count"]["value"],
+            central_jets_sel["pt"]["operator"],
+            central_jets_sel["pt"]["value"],
+            central_jets_sel["eta"]["operator"],
+            central_jets_sel["eta"]["value"],
+            ak.sum(events.valid_event),
+        )
+        if ak.sum(events.valid_event) == 0:
+            return events
 
-    # select and save events with >= n central b-jets
-    bjets_sel = selections["btagging"]
-    n_central_bjets_mask, n_central_bjets_event_mask = select_n_bjets_events(
-        jets=ak.zip(
-            {
-                "btag": events.jet_btag,
-                "valid": events.n_central_jets_mask,
-            }
-        ),
-        selection=bjets_sel,
-    )
-    events["n_central_bjets_mask"] = n_central_bjets_mask
-    events["valid_event"] = events.valid_event & n_central_bjets_event_mask
-    logger.info(
-        "Events passing previous cut and %s %s central b-jets tagged with %s and %s efficiency: %s",
-        bjets_sel["count"]["operator"],
-        bjets_sel["count"]["value"],
-        bjets_sel["model"],
-        bjets_sel["efficiency"],
-        ak.sum(events.valid_event),
-    )
-    if ak.sum(events.valid_event) == 0:
-        return events
+    # add jet and b-tagging info
+    if "btagging" in selections:
+        bjets_sel = selections["btagging"]
+        btagger = format_btagger_model_name(
+            bjets_sel["model"],
+            bjets_sel["efficiency"],
+        )
+        events["jet_btag"] = events[f"jet_btag_{btagger}"]
+        events["btag_num"] = ak.sum(events.jet_btag, axis=1)
+
+        # select and save events with >= n central b-jets
+        valid_central_jets, valid_event_central_jets = select_n_bjets_events(
+            jets=ak.zip(
+                {
+                    "btag": events.jet_btag,
+                    "valid": events.valid_central_jets,
+                }
+            ),
+            selection=bjets_sel,
+        )
+        events["valid_central_jets"] = valid_central_jets
+        events["valid_event"] = events.valid_event & valid_event_central_jets
+        logger.info(
+            "Events passing previous cut and %s %s central b-jets tagged with %s and %s efficiency: %s",
+            bjets_sel["count"]["operator"],
+            bjets_sel["count"]["value"],
+            bjets_sel["model"],
+            bjets_sel["efficiency"],
+            ak.sum(events.valid_event),
+        )
+        if ak.sum(events.valid_event) == 0:
+            return events
 
     # get the diHiggs candidate jets indices
     hh_jet_idx, non_hh_jet_idx = select_hc_jets(
         jets=ak.zip(
             {
                 "pt": events.jet_pt,
-                "btag": events.jet_btag,
-                "valid": events.n_central_bjets_mask,
+                "valid": events.valid_central_jets,
             }
         )
     )
     events["hh_jet_idx"] = hh_jet_idx
     events["non_hh_jet_idx"] = non_hh_jet_idx
     # reconstruct higgs candidates using the minimum deltaR
-    leading_h_jet_idx, subleading_h_jet_idx = reconstruct_hh_mindeltar(
+    leading_h_jet_idx, subleading_h_jet_idx = select_hh_jet_pairs(
         jets=ak.zip(
             {
                 "pt": events.jet_pt,

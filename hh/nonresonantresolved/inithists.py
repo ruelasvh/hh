@@ -42,36 +42,31 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_leading_jets_histograms(
             postfix="_baseline_control_region"
         )
-        hists_dict[sample_name] += init_reco_H_histograms(postfix="_baseline")
-        hists_dict[sample_name] += init_reco_H_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_reco_H_histograms(
-            postfix="_baseline_control_region"
-        )
+        hists_dict[sample_name] += init_H_histograms(postfix="_baseline")
+        hists_dict[sample_name] += init_H_histograms(postfix="_baseline_signal_region")
+        hists_dict[sample_name] += init_H_histograms(postfix="_baseline_control_region")
         hists_dict[sample_name] += init_reco_H_truth_jet_histograms(
             postfix="_baseline_signal_region"
         )
-        hists_dict[sample_name] += init_reco_mH_2d_histograms(postfix="_baseline")
-        hists_dict[sample_name] += init_reco_mH_2d_histograms(
+        hists_dict[sample_name] += init_mH_2d_histograms(postfix="_baseline")
+        hists_dict[sample_name] += init_mH_2d_histograms(
             postfix="_baseline_signal_region"
         )
-        hists_dict[sample_name] += init_reco_mH_2d_histograms(
+        hists_dict[sample_name] += init_mH_2d_histograms(
             postfix="_baseline_control_region"
         )
-        hists_dict[sample_name] += init_reco_HH_histograms(postfix="_baseline")
-        hists_dict[sample_name] += init_reco_HH_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_reco_HH_histograms(
+        hists_dict[sample_name] += init_HH_histograms(postfix="_baseline")
+        hists_dict[sample_name] += init_HH_histograms(postfix="_baseline_signal_region")
+        hists_dict[sample_name] += init_HH_histograms(
             postfix="_baseline_control_region"
         )
-        hists_dict[sample_name] += init_reco_HH_deltaeta_histograms()
-        hists_dict[sample_name] += init_reco_top_veto_histograms()
-        hists_dict[sample_name] += init_reco_HH_mass_discrim_histograms()
+        hists_dict[sample_name] += init_HH_deltaeta_histograms()
+        hists_dict[sample_name] += init_top_veto_histograms()
+        hists_dict[sample_name] += init_HH_mass_discrim_histograms()
         # if args.signal:
         #     hists_dict[sample_name] += init_reco_mH_truth_pairing_histograms()
         #     hists_dict[sample_name] += init_truth_matched_mjj_histograms()
+        hists_dict[sample_name] += init_HH_histograms(postfix="_truth")
 
     return hists_dict
 
@@ -157,7 +152,7 @@ def init_truth_matched_mjj_histograms(binrange=[0, 200_000], bins=100) -> list:
     return hists
 
 
-def init_reco_H_histograms(
+def init_H_histograms(
     binrange={
         "pt": [0, 800_000],
         "eta": [-5, 5],
@@ -167,7 +162,7 @@ def init_reco_H_histograms(
     bins=100,
     postfix=None,
 ) -> list:
-    """Initialize reconstructed H1 and H2 kinematics 1d histograms"""
+    """Initialize H1 and H2 kinematics 1d histograms"""
 
     hists = []
     for reco_h in [1, 2]:
@@ -188,7 +183,7 @@ def init_reco_H_truth_jet_histograms(
     bins=8,
     postfix=None,
 ) -> list:
-    """Initialize reconstructed H1 and H2 matched to the truth jet ID 1d histograms"""
+    """Initialize H1 and H2 matched to the truth jet ID 1d histograms"""
 
     hists = []
     for reco_h in [1, 2]:
@@ -203,7 +198,7 @@ def init_reco_H_truth_jet_histograms(
     return hists
 
 
-def init_reco_HH_histograms(
+def init_HH_histograms(
     binrange={
         "pt": [0, 500_000],
         "eta": [-5, 5],
@@ -213,7 +208,7 @@ def init_reco_HH_histograms(
     bins=100,
     postfix=None,
 ) -> list:
-    """Initialize reconstructed HH kinematics 1d histograms"""
+    """Initialize HH kinematics 1d histograms"""
 
     hists = []
     for kin_var in kin_labels.keys():
@@ -228,8 +223,8 @@ def init_reco_HH_histograms(
     return hists
 
 
-def init_reco_mH_2d_histograms(binrange=[0, 200_000], bins=50, postfix=None) -> list:
-    """Initialize reconstructed mH 2d histograms"""
+def init_mH_2d_histograms(binrange=[0, 200_000], bins=50, postfix=None) -> list:
+    """Initialize mH 2d histograms"""
 
     hists = []
     hists += [
@@ -243,8 +238,8 @@ def init_reco_mH_2d_histograms(binrange=[0, 200_000], bins=50, postfix=None) -> 
     return hists
 
 
-def init_reco_HH_deltaeta_histograms(binrange=[0, 5], bins=51) -> list:
-    """Initialize reconstructed hh deltaEta 1d histograms"""
+def init_HH_deltaeta_histograms(binrange=[0, 5], bins=51) -> list:
+    """Initialize hh deltaEta 1d histograms"""
 
     hists = []
     hists += [
@@ -258,8 +253,8 @@ def init_reco_HH_deltaeta_histograms(binrange=[0, 5], bins=51) -> list:
     return hists
 
 
-def init_reco_HH_mass_discrim_histograms(binrange=[0, 10], bins=51) -> list:
-    """Initialize reconstructed hh mass discriminant 1d histograms"""
+def init_HH_mass_discrim_histograms(binrange=[0, 10], bins=51) -> list:
+    """Initialize hh mass discriminant 1d histograms"""
 
     hists = []
     hists += [
@@ -273,7 +268,7 @@ def init_reco_HH_mass_discrim_histograms(binrange=[0, 10], bins=51) -> list:
     return hists
 
 
-def init_reco_top_veto_histograms(binrange=[0, 7], bins=51) -> list:
+def init_top_veto_histograms(binrange=[0, 7], bins=51) -> list:
     """Initialize top veto 1d histograms"""
 
     hists = []
@@ -290,7 +285,7 @@ def init_reco_top_veto_histograms(binrange=[0, 7], bins=51) -> list:
 
 
 def init_reco_mH_truth_pairing_histograms(binrange=[0, 200_000], bins=100) -> list:
-    """Initialize reconstructed H truth pairing histograms"""
+    """Initialize H truth pairing histograms"""
 
     hists = []
     hists += [

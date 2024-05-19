@@ -57,6 +57,14 @@ def reconstruct_hh_mindeltar(jets, hh_jet_idx):
     )
 
 
+def select_hh_jet_pairs(jets, hh_jet_idx, method=None):
+    if method == "mindeltar":
+        h1_jet_idx, h2_jet_idx = reconstruct_hh_mindeltar(jets, hh_jet_idx)
+        return h1_jet_idx, h2_jet_idx
+    else:
+        return hh_jet_idx[:, :2], hh_jet_idx[:, 2:]
+
+
 def select_events_passing_triggers(
     events,
     triggers: list = None,
@@ -117,14 +125,10 @@ def select_n_bjets_events(
     return btagged_jets_mask, valid_events_mask
 
 
-def select_hc_jets(jets, nbjets_cut=4):
+def select_hc_jets(jets, njets_cut=4):
     """Selects events by applying the cuts specified in the arguments.
     The HH system is reconstructed from two Higgs candidates, which are
     themselves reconstructed from two jets each (four Higgs candidate jets in total).
-
-    b-jets are selected first. If the event is a 4b event, the leading four
-    in pT are selected. If it is a 2b event, the remaining places are filled
-    by non-b-tagged jets, which are sorted in pT and the two leading jets taken
 
     Returns the 4 Higgs candidate jets in each event.
     """
@@ -136,8 +140,8 @@ def select_hc_jets(jets, nbjets_cut=4):
     pt_sort_valid_hh_jet_idx = ak.argsort(valid_hh_jet_pt, ascending=False)
     valid_hh_jet_idx = valid_hh_jet_idx[pt_sort_valid_hh_jet_idx]
 
-    hh_candidate_jet_idx = valid_hh_jet_idx[:, :nbjets_cut]
-    non_hh_candidate_jet_idx = valid_hh_jet_idx[:, nbjets_cut:]
+    hh_candidate_jet_idx = valid_hh_jet_idx[:, :njets_cut]
+    non_hh_candidate_jet_idx = valid_hh_jet_idx[:, njets_cut:]
     non_hh_candidate_jet_idx = ak.concatenate(
         [non_hh_candidate_jet_idx, invalid_hh_jet_idx], axis=1
     )

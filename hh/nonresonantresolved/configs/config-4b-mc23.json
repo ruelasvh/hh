@@ -9,7 +9,7 @@
                 {
                     "logicalDatasetName": "mc23_13p6TeV.603404.PhPy8EG_PDF4LHC21_HHbbbb_chhh1p0.deriv.DAOD_PHYS.e8564_a910_r14932_p6026",
                     "genFiltEff": 1,
-                    "crossSection": 0.000030836,
+                    "crossSection": 0.00002970,
                     "kFactor": 1.0,
                     "luminosity": 1.0
                 }
@@ -24,7 +24,7 @@
                 {
                     "logicalDatasetName": "mc23_13p6TeV.603404.PhPy8EG_PDF4LHC21_HHbbbb_chhh1p0.deriv.DAOD_PHYS.e8564_a911_r15224_p6026",
                     "genFiltEff": 1,
-                    "crossSection": 0.000030836,
+                    "crossSection": 0.00002970,
                     "kFactor": 1.0,
                     "luminosity": 1.0
                 }
@@ -39,7 +39,7 @@
                 {
                     "logicalDatasetName": "mc23_13p6TeV.603405.PhPy8EG_PDF4LHC21_HHbbbb_chhh5p0.deriv.DAOD_PHYS.e8564_a910_r14932_p6026",
                     "genFiltEff": 1,
-                    "crossSection": 0.00064131,
+                    "crossSection": 0.00008414,
                     "kFactor": 1.0,
                     "luminosity": 1.0
                 }
@@ -54,7 +54,7 @@
                 {
                     "logicalDatasetName": "mc23_13p6TeV.603405.PhPy8EG_PDF4LHC21_HHbbbb_chhh5p0.deriv.DAOD_PHYS.e8564_a911_r15224_p6026",
                     "genFiltEff": 1,
-                    "crossSection": 0.00064131,
+                    "crossSection": 0.00008414,
                     "kFactor": 1.0,
                     "luminosity": 1.0
                 }
