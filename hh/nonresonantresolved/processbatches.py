@@ -14,6 +14,7 @@ from .selection import (
     select_hh_events,
     select_correct_hh_pair_events,
     select_events_passing_triggers,
+    select_truth_matched_jets,
 )
 
 
@@ -48,21 +49,18 @@ def process_batch(
     # start adding objects info
     events["jet_num"] = ak.num(events.jet_pt)
 
-    # select and save events passing the OR of all triggers
+    # apply trigger selection
     if "trigs" in selections:
-        trig_op, trig_set = (
-            selections["trigs"].get("operator"),
+        trig_set, trig_op = (
             selections["trigs"].get("value"),
+            selections["trigs"].get("operator"),
         )
-        assert trig_op and trig_set, (
-            "Invalid trigger selection. Please provide both operator and value. "
-            f"Possible operators: AND, OR. Possible values: {trig_sets.keys()}"
-        )
+        assert trig_set, "Invalid trigger selection. Please provide a trigger set."
         passed_trigs_mask = select_events_passing_triggers(events, op=trig_op)
         events["valid_event"] = events.valid_event & passed_trigs_mask
         logger.info(
             "Events passing the %s of all triggers: %s",
-            trig_op.upper(),
+            trig_op.upper() if trig_op is not None else "None",
             ak.sum(events.valid_event),
         )
         if ak.sum(events.valid_event) == 0:
@@ -98,6 +96,25 @@ def process_batch(
         )
         if ak.sum(events.valid_event) == 0:
             return events
+
+    if is_mc:
+        truth_matched_jets = select_truth_matched_jets(
+            jets=ak.zip(
+                {
+                    "pt": events.jet_pt,
+                    "eta": events.jet_eta,
+                    "phi": events.jet_phi,
+                    "mass": events.jet_mass,
+                }
+            ),
+            hh_truth_mask=events.jet_truth_H_parents,
+            valid_jets_mask=events.valid_central_jets,
+        )
+        events["reco_truth_matched_jets"] = truth_matched_jets
+        logger.info(
+            "Events passing previous cuts and truth matched: %s",
+            ak.sum(~ak.is_none(events.reco_truth_matched_jets, axis=0)),
+        )
 
     # add jet and b-tagging info
     if "btagging" in selections:
@@ -157,16 +174,16 @@ def process_batch(
     )
     events["leading_h_jet_idx"] = leading_h_jet_idx
     events["subleading_h_jet_idx"] = subleading_h_jet_idx
-    # correctly paired Higgs bosons
-    if is_mc:
-        correct_hh_pairs_from_truth = select_correct_hh_pair_events(
-            events, events.valid_event
-        )
-        events["correct_hh_pairs_from_truth"] = correct_hh_pairs_from_truth
-        logger.info(
-            "Events with correct HH pairs: %s",
-            ak.sum(correct_hh_pairs_from_truth),
-        )
+    # # correctly paired Higgs bosons, might need revision
+    # if is_mc:
+    #     correct_hh_pairs_from_truth = select_correct_hh_pair_events(
+    #         events, events.valid_event
+    #     )
+    #     events["correct_hh_pairs_from_truth"] = correct_hh_pairs_from_truth
+    #     logger.info(
+    #         "Events with correct HH pairs: %s",
+    #         ak.sum(correct_hh_pairs_from_truth),
+    #     )
 
     # calculate top veto discriminant
     if "top_veto" in selections:

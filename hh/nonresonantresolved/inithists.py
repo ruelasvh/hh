@@ -63,10 +63,23 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_HH_deltaeta_histograms()
         hists_dict[sample_name] += init_top_veto_histograms()
         hists_dict[sample_name] += init_HH_mass_discrim_histograms()
-        # if args.signal:
-        #     hists_dict[sample_name] += init_reco_mH_truth_pairing_histograms()
-        #     hists_dict[sample_name] += init_truth_matched_mjj_histograms()
+
+        ### Validation histograms ###
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth")
+        hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched")
+        hists_dict[sample_name] += init_HH_histograms(postfix="_truth_reco_matched")
+        hists_dict[sample_name] += init_leading_jets_histograms(
+            prefix="hh_jet", postfix="_truth_matched"
+        )
+        hists_dict[sample_name] += init_leading_jets_histograms(
+            prefix="hh_jet", postfix="_truth_matched_2b2j_asym"
+        )
+        hists_dict[sample_name] += init_leading_jets_histograms(
+            prefix="hh_jet", postfix="_truth_matched_2b2j_sym"
+        )
+        hists_dict[sample_name] += init_leading_jets_histograms(
+            prefix="hh_jet", postfix="_truth_matched_2b1j"
+        )
 
     return hists_dict
 
@@ -112,19 +125,28 @@ def init_jet_kin_histograms(
 
 
 def init_leading_jets_histograms(
-    binrange=[0, 1_300_000], bins=100, postfix=None
+    binrange={
+        "pt": [0, 500_000],
+        "eta": [-5, 5],
+        "phi": [-3, 3],
+        "mass": [0, 20_000],
+    },
+    bins=100,
+    prefix="leading_jet",
+    postfix=None,
 ) -> list:
     """Initialize leading jets histograms"""
 
     hists = []
-    for leading_jet in [1, 2, 3, 4]:
-        hists += [
-            Histogram(
-                f"leading_jet_{leading_jet}_pt{postfix if postfix else ''}",
-                binrange=binrange,
-                bins=bins,
-            )
-        ]
+    for i in [1, 2, 3, 4]:
+        for kin_var in kin_labels.keys():
+            hists += [
+                Histogram(
+                    f"{prefix}_{i}_{kin_var}{postfix if postfix else ''}",
+                    binrange[kin_var],
+                    bins,
+                )
+            ]
 
     return hists
 
@@ -203,7 +225,7 @@ def init_HH_histograms(
         "pt": [0, 500_000],
         "eta": [-5, 5],
         "phi": [-3, 3],
-        "mass": [0, 1_300_000],
+        "mass": [0, 1_200_000],
     },
     bins=100,
     postfix=None,

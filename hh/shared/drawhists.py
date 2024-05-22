@@ -27,12 +27,15 @@ def draw_1d_hists(
     third_exp_label="",
     luminosity=None,
     yscale="linear",
+    xmin=None,
+    xmax=None,
     ynorm_binwidth=False,
     xcut=None,
     density=False,
     draw_errors=False,
     ggFk01_factor=None,
     ggFk10_factor=None,
+    ggFk05_factor=None,
     data2b_factor=None,
     output_dir=Path("plots"),
 ):
@@ -76,7 +79,7 @@ def draw_1d_hists(
             ax=ax,
             yerr=hist_errors * bin_norm if draw_errors else None,
             label=(str(scale_factor) + r"$\times$" if scale_factor > 1 else "")
-            + sample_type.replace("_", " "),
+            + sample_type.replace("_", " ").replace("4b ", ""),
             linewidth=2.0,
             density=density,
         )
@@ -97,12 +100,115 @@ def draw_1d_hists(
     if xlabel:
         ax.set_xlabel(xlabel)
     ax.set_yscale(yscale)
-    ymin, ymax = ax.get_ylim()
+    _, ymax = ax.get_ylim()
     ax.set_ylim(ymin=0.1 if yscale == "log" else 0.0, ymax=ymax * 1.5)
+    if xmin is not None:
+        ax.set_xlim(xmin=xmin)
+    if xmax is not None:
+        ax.set_xlim(xmax=xmax)
     hplt.atlas.label(
         label="Work In Progress",
         data=True,  # prevents adding Simulation label, sim labels are added in legend
         rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
+        loc=4,
+        ax=ax,
+        pad=0.01,
+    )
+    plot_name = hist_prefix.replace("$", "")
+    plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
+
+
+def draw_truth_vs_reco_truth_matched(
+    hists_group,
+    hist_prefixes,
+    energy,
+    xlabel=None,
+    ylabel="Frequency",
+    third_exp_label="",
+    luminosity=None,
+    yscale="linear",
+    xmin=None,
+    xmax=None,
+    ynorm_binwidth=False,
+    density=False,
+    draw_errors=False,
+    scale_factors=None,
+    output_dir=Path("plots"),
+):
+    """Draw 1D histograms in one figure. The number of histograms in the figure is
+    determined by the number of samples in the hists_group dictionary. hist_prefix
+    is used to select the histograms to be drawn."""
+
+    fig, ax = plt.subplots()
+    for sample_type, sample_hists in hists_group.items():
+        for i, hist_prefix in enumerate(hist_prefixes):
+            hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
+            is_data = "data" in sample_type
+            hist = sample_hists[hist_name]
+            hist_values = (
+                hist["values"] * luminosity
+                if luminosity and not is_data
+                else hist["values"]
+            )
+            hist_errors = hist["errors"] if draw_errors else np.zeros_like(hist_values)
+            hist_errors = (
+                hist_errors * luminosity if luminosity and not is_data else hist_errors
+            )
+            hist_edges = hist["edges"]
+            hist_edges = (
+                hist_edges * inv_GeV
+                if xlabel is not None and "GeV" in xlabel
+                else hist_edges
+            )
+            bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
+            scale_factor = 1.0
+            if scale_factors:
+                scale_factor = scale_factors[i]
+            hist_values = hist_values * scale_factor
+            bin_norm = 1.0 / hist_values.sum() if density else bin_width
+            label = (
+                (
+                    "after asymm 2b2j DL1d@77%"
+                    if "2b2j_asym" in hist_prefix
+                    else "before asymm 2b2j DL1d@77%"
+                )
+                if "mc23a" in sample_type
+                else (
+                    "after 2b2j GN1@77%"
+                    if "2b2j_asym" in hist_prefix
+                    else "before 2b2j GN1@77%"
+                )
+            )
+            hplt.histplot(
+                hist_values * bin_norm,
+                hist_edges - bin_width * 0.5,
+                ax=ax,
+                yerr=hist_errors * bin_norm if draw_errors else None,
+                label=(str(scale_factor) + r"$\times$" if scale_factor > 1 else "")
+                + (hist_prefix.replace("hh_mass", "")).replace("_", " "),
+                # label=label,
+                linewidth=2.0,
+                density=density,
+            )
+            ax.set_ylabel(ylabel + " / %.2g" % bin_width if ynorm_binwidth else ylabel)
+    ax.legend(loc="upper right")
+    if xlabel:
+        ax.set_xlabel(xlabel)
+    ax.set_yscale(yscale)
+    _, ymax = ax.get_ylim()
+    ax.set_ylim(ymin=0.1 if yscale == "log" else 0.0, ymax=ymax * 1.5)
+    if xmin is not None:
+        ax.set_xlim(xmin=xmin)
+    if xmax is not None:
+        ax.set_xlim(xmax=xmax)
+    hplt.atlas.label(
+        label="Work In Progress",
+        data=True,  # prevents adding Simulation label, sim labels are added in legend
+        rlabel=get_com_lumi_label(luminosity, energy)
+        + third_exp_label
+        + f"\n{sample_type.replace('_', ' ')}",
         loc=4,
         ax=ax,
         pad=0.01,

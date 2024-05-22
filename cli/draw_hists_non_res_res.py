@@ -12,7 +12,6 @@ from collections import defaultdict
 from hh.shared.error import propagate_errors
 from hh.shared.utils import logger, setup_logger
 from hh.nonresonantresolved import drawhistsdiagnostics
-from hh.nonresonantresolved import drawhistsbkgest
 
 
 def get_args():
@@ -53,12 +52,6 @@ def get_args():
         "--split-jz",
         action="store_true",
         help="Split JZ0-9 samples (default: %(default)s)",
-    )
-    parser.add_argument(
-        "-w",
-        "--bkg-weight",
-        help="Bkg estimation weight",
-        type=float,
     )
     parser.add_argument(
         "-d",
@@ -150,10 +143,7 @@ def main():
         merge_jz_regex=None if args.split_jz else re.compile(r"JZ[0-9]"),
     )
 
-    if args.bkg_weight:
-        drawhistsbkgest.draw_hists(hists, args)
-    else:
-        drawhistsdiagnostics.draw_hists(hists, args)
+    drawhistsdiagnostics.draw_hists(hists, args)
 
     if logger.level == logging.DEBUG:
         logger.debug(

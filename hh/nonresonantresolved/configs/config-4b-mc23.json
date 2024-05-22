@@ -1,7 +1,7 @@
 {
     "samples": [
         {
-            "label": "4b_mc23a_ggF_k01",
+            "label": "mc23a_ggF_k01",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603404.e8564_a910_r14932_p6026_TREE/"
             ],
@@ -16,7 +16,7 @@
             ]
         },
         {
-            "label": "4b_mc23d_ggF_k01",
+            "label": "mc23d_ggF_k01",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603404.e8564_a911_r15224_p6026_TREE/"
             ],
@@ -31,7 +31,7 @@
             ]
         },
         {
-            "label": "4b_mc23a_ggF_k05",
+            "label": "mc23a_ggF_k05",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603405.e8564_a910_r14932_p6026_TREE/"
             ],
@@ -46,7 +46,7 @@
             ]
         },
         {
-            "label": "4b_mc23d_ggF_k05",
+            "label": "mc23d_ggF_k05",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603405.e8564_a911_r15224_p6026_TREE/"
             ],
@@ -62,6 +62,9 @@
         }
     ],
     "event_selection": {
+        "trigs": {
+            "value": "Run 3 Experimental"
+        },
         "central_jets": {
             "pt": {
                 "operator": ">",

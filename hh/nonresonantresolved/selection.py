@@ -58,21 +58,25 @@ def reconstruct_hh_mindeltar(jets, hh_jet_idx):
 
 
 def select_hh_jet_pairs(jets, hh_jet_idx, method=None):
-    if method == "mindeltar":
+    if method == "min_delta_r":
         h1_jet_idx, h2_jet_idx = reconstruct_hh_mindeltar(jets, hh_jet_idx)
         return h1_jet_idx, h2_jet_idx
+    elif method is None:
+        hh_jet_idx_valid = ak.mask(hh_jet_idx, ak.num(hh_jet_idx) > 0)
+        return hh_jet_idx_valid[:, :2], hh_jet_idx_valid[:, 2:]
     else:
-        return hh_jet_idx[:, :2], hh_jet_idx[:, 2:]
+        raise ValueError(f"Invalid HH pairing method: {method}")
 
 
 def select_events_passing_triggers(
     events,
+    op: str = None,
     triggers: list = None,
-    op: str = "or",
 ):
     triggers = triggers or list(filter(lambda x: "trig_" in x, events.fields))
     passed_trigs_mask = np.ones(len(events), dtype=bool)
-    passed_trigs_mask = get_trigs_bitwise_op(events, triggers, op)
+    if op:
+        passed_trigs_mask = get_trigs_bitwise_op(events, triggers, op)
     return passed_trigs_mask
 
 
@@ -241,6 +245,19 @@ def select_correct_hh_pair_events(events, valid=None):
     # convert to numpy array and replace None with False
     correct_hh_pairs_mask = ak.fill_none(correct_hh_pairs_mask, False)
     return correct_hh_pairs_mask
+
+
+def select_truth_matched_jets(jets, hh_truth_mask, valid_jets_mask=None):
+    hh_jets_mask = (hh_truth_mask == 1) | (hh_truth_mask == 2)
+    truth_matched_jets_mask = (
+        hh_jets_mask & valid_jets_mask if valid_jets_mask is not None else hh_jets_mask
+    )
+    breakpoint()
+    valid_events = ak.sum(truth_matched_jets_mask, axis=1) == 4
+    truth_matched_jets = jets[truth_matched_jets_mask]
+    jets_pt_sorted = ak.argsort(truth_matched_jets.pt, axis=1, ascending=False)
+    truth_matched_jets = truth_matched_jets[jets_pt_sorted]
+    return ak.mask(truth_matched_jets, valid_events)
 
 
 def get_W_t_p4(jets, hh_jet_idx, non_hh_jet_idx):
