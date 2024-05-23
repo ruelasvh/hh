@@ -68,6 +68,15 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth")
         hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched")
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth_reco_matched")
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_vs_truth_resolution",
+            binrange={
+                "pt": [-20, 20],
+                "eta": [-20, 20],
+                "phi": [-20, 20],
+                "mass": [-20, 20],
+            },
+        )
         hists_dict[sample_name] += init_leading_jets_histograms(
             prefix="hh_jet", postfix="_truth_matched"
         )
@@ -114,10 +123,10 @@ def init_jet_kin_histograms(
     postfix=None,
 ):
     hists = []
-    for jet_var in kin_labels.keys():
+    for kin_var in kin_labels:
         hists += [
             Histogram(
-                f"jet_{jet_var}{postfix if postfix else ''}", binrange[jet_var], bins
+                f"jet_{kin_var}{postfix if postfix else ''}", binrange[kin_var], bins
             )
         ]
 
@@ -139,7 +148,7 @@ def init_leading_jets_histograms(
 
     hists = []
     for i in [1, 2, 3, 4]:
-        for kin_var in kin_labels.keys():
+        for kin_var in kin_labels:
             hists += [
                 Histogram(
                     f"{prefix}_{i}_{kin_var}{postfix if postfix else ''}",
@@ -188,7 +197,7 @@ def init_H_histograms(
 
     hists = []
     for reco_h in [1, 2]:
-        for kin_var in kin_labels.keys():
+        for kin_var in kin_labels:
             hists += [
                 Histogram(
                     f"h{reco_h}_{kin_var}{postfix if postfix else ''}",
@@ -233,7 +242,7 @@ def init_HH_histograms(
     """Initialize HH kinematics 1d histograms"""
 
     hists = []
-    for kin_var in kin_labels.keys():
+    for kin_var in kin_labels:
         hists += [
             Histogram(
                 f"hh_{kin_var}{postfix if postfix else ''}",

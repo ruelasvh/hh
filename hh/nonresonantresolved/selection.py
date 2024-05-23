@@ -252,7 +252,6 @@ def select_truth_matched_jets(jets, hh_truth_mask, valid_jets_mask=None):
     truth_matched_jets_mask = (
         hh_jets_mask & valid_jets_mask if valid_jets_mask is not None else hh_jets_mask
     )
-    breakpoint()
     valid_events = ak.sum(truth_matched_jets_mask, axis=1) == 4
     truth_matched_jets = jets[truth_matched_jets_mask]
     jets_pt_sorted = ak.argsort(truth_matched_jets.pt, axis=1, ascending=False)

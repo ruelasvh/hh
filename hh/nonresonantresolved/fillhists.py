@@ -47,11 +47,16 @@ def fill_hists(
                 "pt": events.hh_truth_pt,
                 "eta": events.hh_truth_eta,
                 "phi": events.hh_truth_phi,
-                "mass": events.hh_truth_m,
+                "mass": events.hh_truth_mass,
             }
         ),
         weights=events.event_weight,
         hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_truth"),
+    )
+    fill_reco_vs_truth_variable_resulution_histograms(
+        events=events,
+        vars=kin_labels,
+        hists=hists,
     )
     fill_hh_jets_vs_trigs_histograms(events, hists)
 
@@ -63,7 +68,7 @@ def fill_event_no_histograms(events, hists: list) -> None:
 
     hist = find_hist(hists, lambda h: "event_number" in h.name)
     logger.debug(hist.name)
-    hist.fill(events.event_number.to_numpy())
+    hist.fill(ak.to_numpy(events.event_number))
 
 
 def fill_event_weight_histograms(events, hists: list) -> None:
@@ -83,7 +88,7 @@ def fill_event_weight_histograms(events, hists: list) -> None:
                 valid = events.control_event
             else:
                 valid = np.ones(len(events), dtype=bool)
-            hist.fill(events[valid].mc_event_weights[:, 0].to_numpy())
+            hist.fill(ak.to_numpy(events[valid].mc_event_weights[:, 0]))
     for h_name in [
         "total_event_weight",
         "total_event_weight_baseline_signal_region",
@@ -98,7 +103,7 @@ def fill_event_weight_histograms(events, hists: list) -> None:
                 valid = events.control_event
             else:
                 valid = np.ones(len(events), dtype=bool)
-            hist.fill(events[valid].event_weight.to_numpy())
+            hist.fill(ak.to_numpy(events[valid].event_weight))
 
 
 def fill_jet_kin_histograms(events, hists: list) -> None:
@@ -106,7 +111,7 @@ def fill_jet_kin_histograms(events, hists: list) -> None:
 
     regions = ["", "_baseline_signal_region", "_baseline_control_region"]
     for region in regions:
-        for kin_var in kin_labels.keys():
+        for kin_var in kin_labels:
             hist = find_hist(hists, lambda h: f"jet_{kin_var}{region}" in h.name)
             if hist:
                 logger.debug(hist.name)
@@ -120,8 +125,8 @@ def fill_jet_kin_histograms(events, hists: list) -> None:
                 event_weight = events[valid].event_weight[:, np.newaxis]
                 event_weight, _ = ak.broadcast_arrays(event_weight, jets)
                 hist.fill(
-                    ak.flatten(jets).to_numpy(),
-                    weights=ak.flatten(event_weight).to_numpy(),
+                    ak.to_numpy(ak.flatten(jets)),
+                    weights=ak.to_numpy(ak.flatten(event_weight)),
                 )
 
 
@@ -144,7 +149,7 @@ def fill_leading_jets_histograms(events, hists: list) -> None:
                     valid = events.control_event
                 else:
                     valid = np.ones(len(events), dtype=bool)
-                hist.fill(ak.flatten(jet_pt[valid, :ith_jet]).to_numpy())
+                hist.fill(ak.to_numpy(ak.flatten(jet_pt[valid, :ith_jet])))
 
 
 def fill_reco_truth_matched_jets_histograms(events, hists: list) -> None:
@@ -156,31 +161,65 @@ def fill_reco_truth_matched_jets_histograms(events, hists: list) -> None:
     jets_p4 = p4.zip(
         {var: reco_truth_matched_jets[var] for var in reco_truth_matched_jets.fields},
     )
-    jet_1 = jets_p4[:, 0]
-    jet_2 = jets_p4[:, 1]
-    jet_3 = jets_p4[:, 2]
-    jet_4 = jets_p4[:, 3]
-    reco_hh = jet_1 + jet_2 + jet_3 + jet_4
+    reco_hh_p4 = jets_p4[:, 0] + jets_p4[:, 1] + jets_p4[:, 2] + jets_p4[:, 3]
     weights = events.event_weight[valid_event]
     fill_HH_histograms(
-        hh=reco_hh,
+        hh=reco_hh_p4,
         weights=weights,
         hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_reco_truth_matched"),
     )
-    truth_hh = p4.zip(
-        {
-            "pt": events.hh_truth_pt,
-            "eta": events.hh_truth_eta,
-            "phi": events.hh_truth_phi,
-            "mass": events.hh_truth_m,
-        }
-    )
-    truth_hh = truth_hh[valid_event]
+    truth_hh_p4 = p4.zip({v: events[f"hh_truth_{v}"] for v in kin_labels})
+    truth_hh_p4 = truth_hh_p4[valid_event]
     fill_HH_histograms(
-        hh=truth_hh,
+        hh=truth_hh_p4,
         weights=weights,
         hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_truth_reco_matched"),
     )
+
+
+def fill_reco_vs_truth_variable_resulution_histograms(
+    events: ak.Array, vars: list, hists: list
+) -> None:
+    """Fill variable resolution histograms.
+
+    Parameters
+    ----------
+    events : ak.Array: ak.Record
+        Events record.
+    vars : list: str
+        1D kinematic variables.
+    hists : list: Hist
+        List of histograms to fill.
+    """
+
+    reco_truth_matched_jets = events.reco_truth_matched_jets
+    reco_truth_matched_jets_mask = ~ak.is_none(reco_truth_matched_jets, axis=0)
+    reco_truth_matched_jets = reco_truth_matched_jets[reco_truth_matched_jets_mask]
+    jets_p4 = p4.zip(
+        {var: reco_truth_matched_jets[var] for var in reco_truth_matched_jets.fields},
+    )
+    reco_hh_p4 = jets_p4[:, 0] + jets_p4[:, 1] + jets_p4[:, 2] + jets_p4[:, 3]
+    reco_hh = ak.zip(
+        {
+            "pt": reco_hh_p4.pt,
+            "eta": reco_hh_p4.eta,
+            "phi": reco_hh_p4.phi,
+            "mass": reco_hh_p4.mass,
+        }
+    )
+    truth_HH_p4 = ak.zip({v: events[f"hh_truth_{v}"] for v in kin_labels})
+    truth_HH_p4 = truth_HH_p4[reco_truth_matched_jets_mask]
+    # weights = events.event_weight[reco_truth_matched_jets_mask]
+    for var in vars:
+        hist = find_hist(
+            hists, lambda h: f"hh_{var}_reco_vs_truth_resolution" in h.name
+        )
+        var_res = (reco_hh[var] - truth_HH_p4[var]) / truth_HH_p4[var]
+        print(f"HH {var} resolution: {var_res}")
+        if hist:
+            logger.debug(hist.name)
+            # hist.fill(ak.to_numpy(var_res), weights=ak.to_numpy(weights))
+            hist.fill(ak.to_numpy(var_res))
 
 
 def fill_hh_jets_vs_trigs_histograms(events, hists: list) -> None:
@@ -206,7 +245,7 @@ def fill_hh_jets_vs_trigs_histograms(events, hists: list) -> None:
     ]
     for cat in categories:
         for i in [1, 2, 3, 4]:
-            for kin_var in kin_labels.keys():
+            for kin_var in kin_labels:
                 hist = find_hist(
                     hists, lambda h: f"hh_jet_{i}_{kin_var}{cat}" in h.name
                 )
@@ -220,27 +259,21 @@ def fill_hh_jets_vs_trigs_histograms(events, hists: list) -> None:
                         passed_trig = trigs[t]
                     else:
                         passed_trig = np.ones(ak.sum(valid), dtype=bool)
-                    hist.fill(ak.flatten(jets[kin_var][passed_trig, :i]).to_numpy())
+                    hist.fill(ak.to_numpy(ak.flatten(jets[kin_var][passed_trig, :i])))
 
 
 def fill_truth_matched_mjj_histograms(events, hists: list) -> None:
     """Fill reconstructed mjj invariant mass 1D histograms"""
 
-    jet_vars = {
-        "pt": "resolved_truth_mached_jet_pt",
-        "eta": "resolved_truth_mached_jet_eta",
-        "phi": "resolved_truth_mached_jet_phi",
-        "mass": "resolved_truth_mached_jet_m",
-    }
     leading_jets = select_n_jets_events(
         events,
         pt_cut=20_000,
         eta_cut=2.5,
         njets_cut=4,
-        jet_vars=jet_vars.values(),
+        jet_vars=kin_labels.keys(),
     )
     leading_jets_p4 = p4.zip(
-        {key: leading_jets[value] for key, value in jet_vars.items()}
+        {v: leading_jets[f"resolved_truth_matched_jet_{v}"]} for v in kin_labels
     )
 
     mjj_hists = find_hists_by_name(hists, "mjj[12]")
@@ -257,13 +290,7 @@ def fill_truth_matched_mjj_histograms(events, hists: list) -> None:
 def fill_truth_matched_mjj_passed_pairing_histograms(events, hists: list) -> None:
     """Fill reconstructed mjj invariant mass 1D histograms"""
 
-    jet_vars = {
-        "pt": "resolved_truth_mached_jet_pt",
-        "eta": "resolved_truth_mached_jet_eta",
-        "phi": "resolved_truth_mached_jet_phi",
-        "mass": "resolved_truth_mached_jet_m",
-    }
-    jets_p4 = p4.zip({key: events[value] for key, value in jet_vars.items()})
+    jets_p4 = p4.zip({v: events[f"resolved_truth_matched_jet_{v}"]} for v in kin_labels)
 
     mjj_hists = find_hists_by_name(hists, "mjj[12]_pairingPassedTruth")
     for ith_jj in [1, 2]:
@@ -287,7 +314,7 @@ def fill_H1_H2_HH_histograms(events, hists: list) -> None:
         leading_h_jet_idx = events.leading_h_jet_idx
         subleading_h_jet_idx = events.subleading_h_jet_idx
         jet_p4 = p4.zip(
-            {var: events[f"jet_{var}"] for var in kin_labels.keys()},
+            {var: events[f"jet_{var}"] for var in kin_labels},
         )
         h1 = (
             jet_p4[leading_h_jet_idx[:, 0, np.newaxis]]
@@ -409,7 +436,7 @@ def fill_H_histograms(h1, h2, weights, hists: list) -> None:
 
     if ak.count(h1) != 0 and ak.count(h2) != 0:
         for h_i, h in zip(["1", "2"], [h1, h2]):
-            for kin_var in kin_labels.keys():
+            for kin_var in kin_labels:
                 hist = find_hist(hists, lambda h: f"h{h_i}_{kin_var}" in h.name)
                 logger.debug(hist.name)
                 if kin_var == "pt":
@@ -435,7 +462,7 @@ def fill_HH_histograms(hh, weights, hists: list) -> None:
     """Fill diHiggs (HH) kinematics histograms"""
 
     if ak.count(hh, axis=0) != 0:
-        for kin_var in kin_labels.keys():
+        for kin_var in kin_labels:
             hist = find_hist(hists, lambda h: f"hh_{kin_var}" in h.name)
             logger.debug(hist.name)
             if kin_var == "pt":

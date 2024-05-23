@@ -50,14 +50,22 @@ def draw_hists(
     for sample_type, sample_hists in hists_group.items():
         draw_truth_vs_reco_truth_matched(
             {sample_type: sample_hists},
-            ["hh_mass_truth", "hh_mass_reco_truth_matched"],
+            ["hh_mass_truth_reco_matched", "hh_mass_reco_truth_matched"],
             energy,
             luminosity=luminosity,
             xlabel="$m_{\mathrm{HH}}$ [GeV]",
             ylabel="Events",
             xmin=0,
-            # scale_factors=[1, 10],
             draw_errors=True,
+            output_dir=output_dir,
+        )
+        draw_1d_hists(
+            {sample_type: sample_hists},
+            "hh_mass_reco_vs_truth_resolution",
+            energy,
+            luminosity=luminosity,
+            # yscale="log",
+            xlabel="HH mass resolution [GeV]",
             output_dir=output_dir,
         )
         # for i in [1, 2, 3, 4]:
