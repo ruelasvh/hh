@@ -69,26 +69,35 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched")
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth_reco_matched")
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_vs_truth_resolution",
+            postfix="_reco_vs_truth_response",
             binrange={
-                "pt": [-20, 20],
-                "eta": [-20, 20],
-                "phi": [-20, 20],
-                "mass": [-20, 20],
+                "pt": [-100, 100],
+                "eta": [-100, 100],
+                "phi": [-100, 100],
+                "mass": [-100, 100],
             },
         )
         hists_dict[sample_name] += init_leading_jets_histograms(
             prefix="hh_jet", postfix="_truth_matched"
         )
         hists_dict[sample_name] += init_leading_jets_histograms(
+            prefix="hh_jet", postfix="_truth_matched_4_btags"
+        )
+        hists_dict[sample_name] += init_leading_jets_histograms(
             prefix="hh_jet", postfix="_truth_matched_2b2j_asym"
         )
         hists_dict[sample_name] += init_leading_jets_histograms(
-            prefix="hh_jet", postfix="_truth_matched_2b2j_sym"
+            prefix="hh_jet", postfix="_truth_matched_2b2j_asym_n_btags"
         )
         hists_dict[sample_name] += init_leading_jets_histograms(
-            prefix="hh_jet", postfix="_truth_matched_2b1j"
+            prefix="hh_jet", postfix="_truth_matched_2b2j_asym_4_btags"
         )
+        # hists_dict[sample_name] += init_leading_jets_histograms(
+        #     prefix="hh_jet", postfix="_truth_matched_2b2j_sym"
+        # )
+        # hists_dict[sample_name] += init_leading_jets_histograms(
+        #     prefix="hh_jet", postfix="_truth_matched_2b1j"
+        # )
 
     return hists_dict
 

@@ -117,15 +117,20 @@ def select_n_bjets_events(
     """Selects events by applying the cuts specified in the selection."""
 
     # mask array for valid events
-    valid_events_mask = np.ones(len(jets.valid), dtype=bool)
-    btagged_jets_mask = jets.valid & jets.btag == 1
+    valid_jets_mask = (
+        jets[k]
+        if (k := "valid") in jets.fields
+        else np.ones_like((jets[jets.fields[0]]), dtype=bool)
+    )
+    valid_events_mask = np.ones(len(jets), dtype=bool)
+    btagged_jets_mask = valid_jets_mask & jets.btag == 1
     if "count" in selection:
         n_btags_cut = selection["count"]
         n_btags = ak.sum(btagged_jets_mask, axis=1)
         valid_events_mask = valid_events_mask & get_op(n_btags_cut["operator"])(
             n_btags, n_btags_cut["value"]
         )
-    btagged_jets_mask = ak.where(valid_events_mask, jets.valid, False)
+    btagged_jets_mask = ak.where(valid_events_mask, valid_jets_mask, False)
     return btagged_jets_mask, valid_events_mask
 
 
@@ -220,6 +225,9 @@ def select_hh_events(events, deltaeta_sel=None, mass_sel=None):
     return keep, hh_var
 
 
+######################
+### NEEDS REVISION ###
+######################
 def select_correct_hh_pair_events(events, valid=None):
     if valid is None:
         valid = np.ones(len(events), dtype=bool)
@@ -248,6 +256,20 @@ def select_correct_hh_pair_events(events, valid=None):
 
 
 def select_truth_matched_jets(jets, hh_truth_mask, valid_jets_mask=None):
+    """Selects jets that are truth-matched to the Higgs bosons.
+
+    Jets marked with 1 or 2 are truth-matched to the Higgs bosons.
+    Jets marked with 0 are not truth-matched to the Higgs bosons.
+    Jets marked with 3 are truth-matched to both Higgs bosons.
+
+    Parameters:
+        jets: The jets in the event
+        hh_truth_mask: The truth mask for the Higgs bosons
+        valid_jets_mask: The mask for valid jets
+
+    Returns:
+        The truth-matched jets
+    """
     hh_jets_mask = (hh_truth_mask == 1) | (hh_truth_mask == 2)
     truth_matched_jets_mask = (
         hh_jets_mask & valid_jets_mask if valid_jets_mask is not None else hh_jets_mask

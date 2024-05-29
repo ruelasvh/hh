@@ -21,12 +21,20 @@ def draw_hists(
     energy = args.energy
     output_dir = args.output_dir
 
+    sample_labels = {
+        "mc23d_ggF_k05": "kl=5 ggF MC23d",
+        "mc23a_ggF_k01": "kl=1 ggF MC23a",
+        "mc23a_ggF_k05": "kl=5 ggF MC23a",
+        "mc23d_ggF_k01": "kl=1 ggF MC23d",
+    }
+
     draw_1d_hists(
         hists_group,
         f"hh_mass_truth",
         energy,
         xlabel="Truth HH mass [GeV]",
         ylabel="Events",
+        legend_labels=sample_labels,
         luminosity=luminosity,
         xmin=0,
         ggFk01_factor=10,
@@ -40,6 +48,8 @@ def draw_hists(
         energy,
         xlabel="Reco Truth Matched HH mass [GeV]",
         ylabel="Events",
+        legend_labels=sample_labels,
+        third_exp_label="\nReco Truth-matched $\Delta R < 0.3$",
         luminosity=luminosity,
         xmin=0,
         ggFk01_factor=10,
@@ -55,38 +65,62 @@ def draw_hists(
             luminosity=luminosity,
             xlabel="$m_{\mathrm{HH}}$ [GeV]",
             ylabel="Events",
+            legend_labels={
+                "hh_mass_truth_reco_matched": f"Truth reco-matched",
+                "hh_mass_reco_truth_matched": f"Reco truth-matched",
+            },
+            third_exp_label=f"\n{sample_labels[sample_type]}"
+            + "\nReco Truth-matched $\Delta R < 0.3$",
             xmin=0,
             draw_errors=True,
             output_dir=output_dir,
         )
         draw_1d_hists(
             {sample_type: sample_hists},
-            "hh_mass_reco_vs_truth_resolution",
+            "hh_mass_reco_vs_truth_response",
             energy,
             luminosity=luminosity,
             # yscale="log",
-            xlabel="HH mass resolution [GeV]",
+            xlabel="HH mass response [%]",
+            legend_labels={sample_type: sample_labels[sample_type]},
+            third_exp_label="\nReco Truth-matched $\Delta R < 0.3$",
             output_dir=output_dir,
         )
-        # for i in [1, 2, 3, 4]:
-        #     categories = [
-        #         "_truth_matched_2b2j_asym",
-        #         "_truth_matched_2b2j_sym",
-        #         "_truth_matched_2b1j",
-        #     ]
-        #     for cat in categories:
-        #         draw_truth_vs_reco_truth_matched(
-        #             {sample_type: sample_hists},
-        #             [f"hh_jet_{i}_pt_truth_matched", f"hh_jet_{i}_pt{cat}"],
-        #             energy,
-        #             luminosity=luminosity,
-        #             xlabel="HH jet$_" + str(i) + "$ $p_{\mathrm{T}}$ [GeV]",
-        #             ylabel="Events",
-        #             xmin=0,
-        #             # scale_factors=[1, 10],
-        #             # draw_errors=True,
-        #             output_dir=output_dir,
-        #         )
+        for i in [1, 2, 3, 4]:
+            categories = [
+                "_truth_matched_2b2j_asym",
+                # "_truth_matched_2b2j_sym",
+                # "_truth_matched_2b1j",
+            ]
+            for cat in categories:
+                draw_truth_vs_reco_truth_matched(
+                    {sample_type: sample_hists},
+                    [
+                        f"hh_jet_{i}_pt_truth_matched",
+                        f"hh_jet_{i}_pt{cat}",
+                        f"hh_jet_{i}_pt{cat}_n_btags",
+                        # f"hh_jet_{i}_pt{cat}_4_btags",
+                        # f"hh_jet_{i}_pt_truth_matched_4_btags",
+                    ],
+                    energy,
+                    luminosity=luminosity,
+                    xmin=0,
+                    xlabel="HH jet$_" + str(i) + "$ $p_{\mathrm{T}}$ [GeV]",
+                    ylabel="Events",
+                    legend_labels={
+                        f"hh_jet_{i}_pt_truth_matched": r"$\geq$ 4 jets with $p_{\mathrm{T}} > 25$ GeV, $|\eta| < 2.5$, JVT",
+                        f"hh_jet_{i}_pt{cat}": "asym 2b2j trigger",
+                        f"hh_jet_{i}_pt{cat}_n_btags": r"asym 2b2j and $\geq$ 2 jets passing GN2v01@77%",
+                        # f"hh_jet_{i}_pt{cat}_4_btags": r"asym 2b2j and $\geq$ 4 jets passing GN2v01@77%",
+                        # f"hh_jet_{i}_pt_truth_matched_4_btags": r"$\geq$ 4 jets passing GN2v01@77%",
+                    },
+                    legend_options={"loc": "center right", "fontsize": "small"},
+                    third_exp_label=f"\n{sample_labels[sample_type]}"
+                    + "\nReco Truth-matched $\Delta R < 0.3$",
+                    # scale_factors=[1, 10],
+                    # draw_errors=True,
+                    output_dir=output_dir,
+                )
 
     #### Old plots ####
 

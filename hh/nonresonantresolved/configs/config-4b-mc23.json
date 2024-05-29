@@ -68,7 +68,7 @@
         "central_jets": {
             "pt": {
                 "operator": ">",
-                "value": 20000
+                "value": 25000
             },
             "eta": {
                 "operator": "<",
@@ -77,6 +77,14 @@
             "count": {
                 "operator": ">=",
                 "value": 4
+            }
+        },
+        "btagging": {
+            "model": "GN2v01",
+            "efficiency": 0.77,
+            "count": {
+                "operator": ">=",
+                "value": 2
             }
         }
     }

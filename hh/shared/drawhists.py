@@ -10,6 +10,7 @@ from .utils import (
     kin_labels,
     get_com_lumi_label,
     jz_leading_jet_pt,
+    get_legend_label,
 )
 from .selection import X_HH, R_CR
 
@@ -22,9 +23,10 @@ def draw_1d_hists(
     hists_group,
     hist_prefix,
     energy,
-    xlabel=None,
-    ylabel="Frequency",
+    xlabel: str = None,
+    ylabel: str = "Frequency",
     third_exp_label="",
+    legend_labels: dict = None,
     luminosity=None,
     yscale="linear",
     xmin=None,
@@ -42,6 +44,13 @@ def draw_1d_hists(
     """Draw 1D histograms in one figure. The number of histograms in the figure is
     determined by the number of samples in the hists_group dictionary. hist_prefix
     is used to select the histograms to be drawn."""
+
+    # assert that legend_labels is either a list or "auto" with list size equal to the number of samples
+    if isinstance(legend_labels, dict):
+        assert len(legend_labels) == len(hists_group), (
+            "legend_labels map must have the same size as the number of samples in hists_group."
+            f"Expected {len(hists_group)} labels, got {len(legend_labels)}."
+        )
 
     fig, ax = plt.subplots()
     for sample_type, sample_hists in hists_group.items():
@@ -67,6 +76,8 @@ def draw_1d_hists(
         scale_factor = 1.0
         if ggFk01_factor and "ggF" in sample_type and "k01" in sample_type:
             scale_factor = ggFk01_factor
+        if ggFk05_factor and "ggF" in sample_type and "k05" in sample_type:
+            scale_factor = ggFk05_factor
         if ggFk10_factor and "ggF" in sample_type and "k10" in sample_type:
             scale_factor = ggFk10_factor
         if data2b_factor and "data" in sample_type and "2b" in sample_type:
@@ -78,8 +89,13 @@ def draw_1d_hists(
             hist_edges - bin_width * 0.5,
             ax=ax,
             yerr=hist_errors * bin_norm if draw_errors else None,
-            label=(str(scale_factor) + r"$\times$" if scale_factor > 1 else "")
-            + sample_type.replace("_", " ").replace("4b ", ""),
+            label=get_legend_label(
+                sample_type,
+                legend_labels,
+                postfix=(
+                    r" ($\times$" + f"{scale_factor})" if scale_factor > 1 else None
+                ),
+            ),
             linewidth=2.0,
             density=density,
         )
@@ -126,6 +142,8 @@ def draw_truth_vs_reco_truth_matched(
     energy,
     xlabel=None,
     ylabel="Frequency",
+    legend_labels: dict = None,
+    legend_options=None,
     third_exp_label="",
     luminosity=None,
     yscale="linear",
@@ -140,6 +158,16 @@ def draw_truth_vs_reco_truth_matched(
     """Draw 1D histograms in one figure. The number of histograms in the figure is
     determined by the number of samples in the hists_group dictionary. hist_prefix
     is used to select the histograms to be drawn."""
+
+    # assert that legend_labels is either a list or "auto" with list size equal to the number of samples
+    if isinstance(legend_labels, dict):
+        assert len(legend_labels) == len(hist_prefixes), (
+            "legend_labels map must have the same size as the number of samples in hists_group."
+            f"Expected {len(hist_prefixes)} labels, got {len(legend_labels)}."
+        )
+
+    if legend_options is None:
+        legend_options = {"loc": "upper right"}
 
     fig, ax = plt.subplots()
     for sample_type, sample_hists in hists_group.items():
@@ -168,32 +196,23 @@ def draw_truth_vs_reco_truth_matched(
                 scale_factor = scale_factors[i]
             hist_values = hist_values * scale_factor
             bin_norm = 1.0 / hist_values.sum() if density else bin_width
-            label = (
-                (
-                    "after asymm 2b2j DL1d@77%"
-                    if "2b2j_asym" in hist_prefix
-                    else "before asymm 2b2j DL1d@77%"
-                )
-                if "mc23a" in sample_type
-                else (
-                    "after 2b2j GN1@77%"
-                    if "2b2j_asym" in hist_prefix
-                    else "before 2b2j GN1@77%"
-                )
-            )
             hplt.histplot(
                 hist_values * bin_norm,
                 hist_edges - bin_width * 0.5,
                 ax=ax,
                 yerr=hist_errors * bin_norm if draw_errors else None,
-                label=(str(scale_factor) + r"$\times$" if scale_factor > 1 else "")
-                + (hist_prefix.replace("hh_mass", "")).replace("_", " "),
-                # label=label,
+                label=get_legend_label(
+                    hist_prefix,
+                    legend_labels,
+                    postfix=(
+                        r" ($\times$" + f"{scale_factor})" if scale_factor > 1 else None
+                    ),
+                ),
                 linewidth=2.0,
                 density=density,
             )
             ax.set_ylabel(ylabel + " / %.2g" % bin_width if ynorm_binwidth else ylabel)
-    ax.legend(loc="upper right")
+    ax.legend(**legend_options)
     if xlabel:
         ax.set_xlabel(xlabel)
     ax.set_yscale(yscale)
@@ -206,9 +225,7 @@ def draw_truth_vs_reco_truth_matched(
     hplt.atlas.label(
         label="Work In Progress",
         data=True,  # prevents adding Simulation label, sim labels are added in legend
-        rlabel=get_com_lumi_label(luminosity, energy)
-        + third_exp_label
-        + f"\n{sample_type.replace('_', ' ')}",
+        rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
         loc=4,
         ax=ax,
         pad=0.01,

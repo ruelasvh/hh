@@ -295,3 +295,10 @@ def get_common(lst1, lst2):
 def get_jet_branch_alias_names(aliases):
     jet_alias_names = list(filter(lambda alias: "jet_" in alias, aliases))
     return jet_alias_names
+
+
+def get_legend_label(sample_id, sample_dict, prefix=None, postfix=None):
+    label = sample_dict[sample_id] if sample_dict else sample_id
+    label = label if not prefix else prefix + label
+    label = label if not postfix else label + postfix
+    return label
