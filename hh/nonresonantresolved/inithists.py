@@ -68,6 +68,7 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth")
         hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched")
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth_reco_matched")
+        hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched_v2")
         hists_dict[sample_name] += init_HH_histograms(
             postfix="_reco_vs_truth_response",
             binrange={
@@ -79,6 +80,9 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         )
         hists_dict[sample_name] += init_leading_jets_histograms(
             prefix="hh_jet", postfix="_truth_matched"
+        )
+        hists_dict[sample_name] += init_leading_jets_histograms(
+            prefix="hh_jet", postfix="_truth_matched_v2"
         )
         hists_dict[sample_name] += init_leading_jets_histograms(
             prefix="hh_jet", postfix="_truth_matched_4_btags"

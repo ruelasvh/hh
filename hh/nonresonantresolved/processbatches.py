@@ -102,15 +102,27 @@ def process_batch(
             return events
 
     if is_mc:
-        truth_matched_jets = select_truth_matched_jets(
+        events["reco_truth_matched_jets"] = select_truth_matched_jets(
             jets=ak.zip({k: events[f"jet_{k}"] for k in kin_labels}),
-            hh_truth_mask=events.jet_truth_H_parents,
+            hh_truth_jets_mask=(
+                (events.truth_jet_H_parent_mask == 1)
+                | (events.truth_jet_H_parent_mask == 2)
+            ),
             valid_jets_mask=events.valid_central_jets,
         )
-        events["reco_truth_matched_jets"] = truth_matched_jets
         logger.info(
             "Events passing previous cuts and truth matched: %s",
             ak.sum(~ak.is_none(events.reco_truth_matched_jets, axis=0)),
+        )
+        ### jets truth matched with HadronConeExclTruthLabelID ###
+        events["reco_truth_matched_jets_v2"] = select_truth_matched_jets(
+            jets=ak.zip({k: events[f"jet_{k}"] for k in kin_labels}),
+            hh_truth_jets_mask=events.jet_truth_label_ID == 5,
+            valid_jets_mask=events.valid_central_jets,
+        )
+        logger.info(
+            "Events passing previous cuts and truth matched using HadronConeExclTruthLabelID: %s",
+            ak.sum(~ak.is_none(events.reco_truth_matched_jets_v2, axis=0)),
         )
 
     # add jet and b-tagging info
@@ -180,7 +192,10 @@ def process_batch(
     if is_mc:
         events["reco_truth_matched_btagged_jets"] = select_truth_matched_jets(
             jets=ak.zip({k: events[f"jet_{k}"] for k in kin_labels}),
-            hh_truth_mask=events.jet_truth_H_parents,
+            hh_truth_jets_mask=(
+                (events.truth_jet_H_parent_mask == 1)
+                | (events.truth_jet_H_parent_mask == 2)
+            ),
             valid_jets_mask=events.valid_central_btagged_jets,
         )
         logger.info(
@@ -192,7 +207,10 @@ def process_batch(
         ### baseline 4 b-tagged jets ###
         events["reco_truth_matched_4_btagged_jets"] = select_truth_matched_jets(
             jets=ak.zip({k: events[f"jet_{k}"] for k in kin_labels}),
-            hh_truth_mask=events.jet_truth_H_parents,
+            hh_truth_jets_mask=(
+                (events.truth_jet_H_parent_mask == 1)
+                | (events.truth_jet_H_parent_mask == 2)
+            ),
             valid_jets_mask=events.valid_central_4_btagged_jets,
         )
         logger.info(

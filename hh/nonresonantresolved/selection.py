@@ -130,7 +130,7 @@ def select_n_bjets_events(
         valid_events_mask = valid_events_mask & get_op(n_btags_cut["operator"])(
             n_btags, n_btags_cut["value"]
         )
-    btagged_jets_mask = ak.where(valid_events_mask, valid_jets_mask, False)
+    btagged_jets_mask = ak.where(valid_events_mask, btagged_jets_mask, False)
     return btagged_jets_mask, valid_events_mask
 
 
@@ -232,7 +232,7 @@ def select_correct_hh_pair_events(events, valid=None):
     if valid is None:
         valid = np.ones(len(events), dtype=bool)
     events_masked = ak.mask(events, valid)
-    jets_truth_matched_to_hh = events_masked.jet_truth_H_parents
+    jets_truth_matched_to_hh = events_masked.truth_jet_H_parent_mask
     leading_h_truth_matched = jets_truth_matched_to_hh[events_masked.leading_h_jet_idx]
     leading_h_jet1_truth_matched = leading_h_truth_matched[:, 0, np.newaxis]
     leading_h_jet2_truth_matched = leading_h_truth_matched[:, 1, np.newaxis]
@@ -255,7 +255,7 @@ def select_correct_hh_pair_events(events, valid=None):
     return correct_hh_pairs_mask
 
 
-def select_truth_matched_jets(jets, hh_truth_mask, valid_jets_mask=None):
+def select_truth_matched_jets(jets, hh_truth_jets_mask, valid_jets_mask=None):
     """Selects jets that are truth-matched to the Higgs bosons.
 
     Jets marked with 1 or 2 are truth-matched to the Higgs bosons.
@@ -264,17 +264,18 @@ def select_truth_matched_jets(jets, hh_truth_mask, valid_jets_mask=None):
 
     Parameters:
         jets: The jets in the event
-        hh_truth_mask: The truth mask for the Higgs bosons
+        hh_truth_jets_mask: The truth mask for the diHiggs jet candidates
         valid_jets_mask: The mask for valid jets
 
     Returns:
         The truth-matched jets
     """
-    hh_jets_mask = (hh_truth_mask == 1) | (hh_truth_mask == 2)
     truth_matched_jets_mask = (
-        hh_jets_mask & valid_jets_mask if valid_jets_mask is not None else hh_jets_mask
+        (hh_truth_jets_mask & valid_jets_mask)
+        if valid_jets_mask is not None
+        else hh_truth_jets_mask
     )
-    valid_events = ak.sum(truth_matched_jets_mask, axis=1) == 4
+    valid_events = ak.sum(truth_matched_jets_mask, axis=1) >= 4
     truth_matched_jets = jets[truth_matched_jets_mask]
     jets_pt_sorted = ak.argsort(truth_matched_jets.pt, axis=1, ascending=False)
     truth_matched_jets = truth_matched_jets[jets_pt_sorted]

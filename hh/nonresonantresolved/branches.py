@@ -22,6 +22,7 @@ JET_ALIASES = {
     "jet_mass": "recojet_antikt4PFlow_NOSYS_m",
     "jet_NNJvt": "recojet_antikt4PFlow_NOSYS_NNJvt",
     "jet_jvttag": "recojet_antikt4PFlow_NOSYS_NNJvtPass",
+    "jet_truth_label_ID": "recojet_antikt4PFlow_NOSYS_HadronConeExclTruthLabelID",
     "jet_btag_DL1dv01_70": "recojet_antikt4PFlow_NOSYS_ftag_select_DL1dv01_FixedCutBEff_70",
     "jet_btag_DL1dv01_77": "recojet_antikt4PFlow_NOSYS_ftag_select_DL1dv01_FixedCutBEff_77",
     "jet_btag_DL1dv01_85": "recojet_antikt4PFlow_NOSYS_ftag_select_DL1dv01_FixedCutBEff_85",
@@ -40,8 +41,8 @@ JET_ALIASES = {
 MC_ALIASES = {
     "mc_event_weights": "mcEventWeights",
     "pileup_weight": "PileupWeight_NOSYS",
-    "jet_truth_H_parents": "recojet_antikt4PFlow_NOSYS_parentHiggsParentsMask",
-    "jet_truth_ID": "truthjet_antikt4_HadronConeExclTruthLabelID",
+    "truth_jet_H_parent_mask": "recojet_antikt4PFlow_NOSYS_parentHiggsParentsMask",
+    "truth_jet_label_ID": "truthjet_antikt4_HadronConeExclTruthLabelID",
     "h1_truth_ID": "truth_H1_pdgId",
     "h1_truth_pt": "truth_H1_pt",
     "h1_truth_eta": "truth_H1_eta",

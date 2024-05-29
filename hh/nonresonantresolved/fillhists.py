@@ -174,6 +174,23 @@ def fill_reco_truth_matched_jets_histograms(events, hists: list) -> None:
         weights=weights,
         hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_truth_reco_matched"),
     )
+    ### jets truth matched with HadronConeExclTruthLabelID ###
+    reco_truth_matched_jets_v2 = events.reco_truth_matched_jets_v2
+    valid_event = ~ak.is_none(reco_truth_matched_jets_v2, axis=0)
+    reco_truth_matched_jets_v2 = reco_truth_matched_jets_v2[valid_event]
+    jets_p4 = p4.zip(
+        {
+            var: reco_truth_matched_jets_v2[var]
+            for var in reco_truth_matched_jets_v2.fields
+        },
+    )
+    reco_hh_p4 = jets_p4[:, 0] + jets_p4[:, 1] + jets_p4[:, 2] + jets_p4[:, 3]
+    weights = events.event_weight[valid_event]
+    fill_HH_histograms(
+        hh=reco_hh_p4,
+        weights=weights,
+        hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_reco_truth_matched_v2"),
+    )
 
 
 def fill_reco_vs_truth_variable_response_histograms(
@@ -221,6 +238,7 @@ def fill_hh_jets_vs_trigs_histograms(events, hists: list) -> None:
     """Fill leading jets histograms"""
 
     truth_matched_jets = events.reco_truth_matched_jets
+    truth_matched_jets_v2 = events.reco_truth_matched_jets_v2
     truth_matched_btagged_jets = events.reco_truth_matched_btagged_jets
     truth_matched_4_btagged_jets = events.reco_truth_matched_4_btagged_jets
     weights = events.event_weight
@@ -258,41 +276,47 @@ def fill_hh_jets_vs_trigs_histograms(events, hists: list) -> None:
                     else:
                         trig = None
                         passed_trig = np.ones(len(events), dtype=bool)
-                    if "n_btags" in cat and trig is not None:
-                        valid_jets = truth_matched_btagged_jets[kin_var][
-                            passed_trig, i : i + 1
-                        ]
-                        valid_jets_mask = ~ak.is_none(valid_jets)
-                        valid_jets = valid_jets[valid_jets_mask]
+                    if "4_btags" in cat and trig is None:
+                        valid_jets = truth_matched_4_btagged_jets[kin_var][:, i : i + 1]
+                        valid_events_mask = ~ak.is_none(valid_jets, axis=0)
+                        valid_jets = valid_jets[valid_events_mask]
                         hist.fill(
                             ak.to_numpy(ak.flatten(valid_jets)),
-                            weights=ak.to_numpy(weights[passed_trig][valid_jets_mask]),
+                            weights=ak.to_numpy(weights[valid_events_mask]),
                         )
-                    if "4_btags" in cat and trig is not None:
+                    elif "4_btags" in cat and trig is not None:
                         valid_jets = truth_matched_4_btagged_jets[kin_var][
                             passed_trig, i : i + 1
                         ]
-                        valid_jets_mask = ~ak.is_none(valid_jets)
-                        valid_jets = valid_jets[valid_jets_mask]
+                        valid_events_mask = ~ak.is_none(valid_jets, axis=0)
+                        valid_jets = valid_jets[valid_events_mask]
                         hist.fill(
                             ak.to_numpy(ak.flatten(valid_jets)),
-                            weights=ak.to_numpy(weights[passed_trig][valid_jets_mask]),
+                            weights=ak.to_numpy(
+                                weights[passed_trig][valid_events_mask]
+                            ),
                         )
-                    if "4_btags" in cat and trig is None:
-                        valid_jets = truth_matched_4_btagged_jets[kin_var][:, i : i + 1]
-                        valid_jets_mask = ~ak.is_none(valid_jets)
-                        valid_jets = valid_jets[valid_jets_mask]
+                    elif "n_btags" in cat and trig is not None:
+                        valid_jets = truth_matched_btagged_jets[kin_var][
+                            passed_trig, i : i + 1
+                        ]
+                        valid_events_mask = ~ak.is_none(valid_jets, axis=0)
+                        valid_jets = valid_jets[valid_events_mask]
                         hist.fill(
                             ak.to_numpy(ak.flatten(valid_jets)),
-                            weights=ak.to_numpy(weights[valid_jets_mask]),
+                            weights=ak.to_numpy(
+                                weights[passed_trig][valid_events_mask]
+                            ),
                         )
                     else:
                         valid_jets = truth_matched_jets[kin_var][passed_trig, i : i + 1]
-                        valid_jets_mask = ~ak.is_none(valid_jets)
-                        valid_jets = valid_jets[valid_jets_mask]
+                        valid_events_mask = ~ak.is_none(valid_jets)
+                        valid_jets = valid_jets[valid_events_mask]
                         hist.fill(
                             ak.to_numpy(ak.flatten(valid_jets)),
-                            weights=ak.to_numpy(weights[passed_trig][valid_jets_mask]),
+                            weights=ak.to_numpy(
+                                weights[passed_trig][valid_events_mask]
+                            ),
                         )
 
 

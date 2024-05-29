@@ -60,7 +60,11 @@ def draw_hists(
     for sample_type, sample_hists in hists_group.items():
         draw_truth_vs_reco_truth_matched(
             {sample_type: sample_hists},
-            ["hh_mass_truth_reco_matched", "hh_mass_reco_truth_matched"],
+            [
+                "hh_mass_truth_reco_matched",
+                "hh_mass_reco_truth_matched",
+                "hh_mass_reco_truth_matched_v2",
+            ],
             energy,
             luminosity=luminosity,
             xlabel="$m_{\mathrm{HH}}$ [GeV]",
@@ -68,7 +72,9 @@ def draw_hists(
             legend_labels={
                 "hh_mass_truth_reco_matched": f"Truth reco-matched",
                 "hh_mass_reco_truth_matched": f"Reco truth-matched",
+                "hh_mass_reco_truth_matched_v2": r"$\geq 4 \mathrm{HadronConeExclTruthLabelID} = 5$",
             },
+            legend_options={"loc": "upper right", "fontsize": "x-small"},
             third_exp_label=f"\n{sample_labels[sample_type]}"
             + "\nReco Truth-matched $\Delta R < 0.3$",
             xmin=0,
@@ -99,8 +105,8 @@ def draw_hists(
                         f"hh_jet_{i}_pt_truth_matched",
                         f"hh_jet_{i}_pt{cat}",
                         f"hh_jet_{i}_pt{cat}_n_btags",
-                        # f"hh_jet_{i}_pt{cat}_4_btags",
-                        # f"hh_jet_{i}_pt_truth_matched_4_btags",
+                        f"hh_jet_{i}_pt{cat}_4_btags",
+                        f"hh_jet_{i}_pt_truth_matched_4_btags",
                     ],
                     energy,
                     luminosity=luminosity,
@@ -111,8 +117,8 @@ def draw_hists(
                         f"hh_jet_{i}_pt_truth_matched": r"$\geq$ 4 jets with $p_{\mathrm{T}} > 25$ GeV, $|\eta| < 2.5$, JVT",
                         f"hh_jet_{i}_pt{cat}": "asym 2b2j trigger",
                         f"hh_jet_{i}_pt{cat}_n_btags": r"asym 2b2j and $\geq$ 2 jets passing GN2v01@77%",
-                        # f"hh_jet_{i}_pt{cat}_4_btags": r"asym 2b2j and $\geq$ 4 jets passing GN2v01@77%",
-                        # f"hh_jet_{i}_pt_truth_matched_4_btags": r"$\geq$ 4 jets passing GN2v01@77%",
+                        f"hh_jet_{i}_pt{cat}_4_btags": r"asym 2b2j and $\geq$ 4 jets passing GN2v01@77%",
+                        f"hh_jet_{i}_pt_truth_matched_4_btags": r"$\geq$ 4 jets passing GN2v01@77%",
                     },
                     legend_options={"loc": "center right", "fontsize": "small"},
                     third_exp_label=f"\n{sample_labels[sample_type]}"
