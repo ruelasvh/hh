@@ -143,7 +143,7 @@ def draw_truth_vs_reco_truth_matched(
     xlabel=None,
     ylabel="Frequency",
     legend_labels: dict = None,
-    legend_options=None,
+    legend_options: dict = {"loc": "upper right"},
     third_exp_label="",
     luminosity=None,
     yscale="linear",
@@ -152,6 +152,7 @@ def draw_truth_vs_reco_truth_matched(
     ynorm_binwidth=False,
     density=False,
     draw_errors=False,
+    draw_ratio=False,
     scale_factors=None,
     output_dir=Path("plots"),
 ):
@@ -166,11 +167,15 @@ def draw_truth_vs_reco_truth_matched(
             f"Expected {len(hist_prefixes)} labels, got {len(legend_labels)}."
         )
 
-    if legend_options is None:
-        legend_options = {"loc": "upper right"}
+    if draw_ratio:
+        fig = plt.figure()
+        gs = fig.add_gridspec(2, hspace=0, height_ratios=[3, 1])
+        ax, ax_ratio = gs.subplots(sharex=True)
+    else:
+        fig, ax = plt.subplots()
 
-    fig, ax = plt.subplots()
     for sample_type, sample_hists in hists_group.items():
+        base_hist_values = None
         for i, hist_prefix in enumerate(hist_prefixes):
             hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
             is_data = "data" in sample_type
@@ -196,25 +201,42 @@ def draw_truth_vs_reco_truth_matched(
                 scale_factor = scale_factors[i]
             hist_values = hist_values * scale_factor
             bin_norm = 1.0 / hist_values.sum() if density else bin_width
-            hplt.histplot(
-                hist_values * bin_norm,
-                hist_edges - bin_width * 0.5,
-                ax=ax,
-                yerr=hist_errors * bin_norm if draw_errors else None,
-                label=get_legend_label(
-                    hist_prefix,
-                    legend_labels,
-                    postfix=(
-                        r" ($\times$" + f"{scale_factor})" if scale_factor > 1 else None
-                    ),
+            hist_values = hist_values * bin_norm
+            label = get_legend_label(
+                hist_prefix,
+                legend_labels,
+                postfix=(
+                    r" ($\times$" + f"{scale_factor})" if scale_factor > 1 else None
                 ),
+            )
+            hplt.histplot(
+                hist_values,
+                hist_edges - bin_width * 0.5,
+                yerr=hist_errors * bin_norm if draw_errors else None,
+                label=label,
                 linewidth=2.0,
                 density=density,
+                color=f"C{i}",
+                ax=ax,
             )
             ax.set_ylabel(ylabel + " / %.2g" % bin_width if ynorm_binwidth else ylabel)
+            if draw_ratio:
+                if i == 0:
+                    base_hist_values = hist_values
+                else:
+                    hplt.histplot(
+                        hist_values / base_hist_values,
+                        hist_edges - bin_width * 0.5,
+                        color=f"C{i}",
+                        ax=ax_ratio,
+                    )
+                    ax_ratio.set_ylabel("Ratio")
+                    ax_ratio.set_ylim(-0.5, 1.5)
+                    ax_ratio.axhline(1, color="black", linestyle="--", linewidth=0.4)
+
     ax.legend(**legend_options)
     if xlabel:
-        ax.set_xlabel(xlabel)
+        ax.set_xlabel(xlabel) if not draw_ratio else ax_ratio.set_xlabel(xlabel)
     ax.set_yscale(yscale)
     _, ymax = ax.get_ylim()
     ax.set_ylim(ymin=0.1 if yscale == "log" else 0.0, ymax=ymax * 1.5)
@@ -230,7 +252,7 @@ def draw_truth_vs_reco_truth_matched(
         ax=ax,
         pad=0.01,
     )
-    plot_name = hist_prefix.replace("$", "")
+    plot_name = hist_prefixes[0].replace("$", "")
     plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close(fig)

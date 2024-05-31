@@ -83,31 +83,27 @@ def select_events_passing_triggers(
 def select_n_jets_events(jets, selection, do_jvt=True):
     """Selects events by applying the cuts specified in the selection."""
 
-    pt_cut = selection["pt"] if "pt" in selection else None
-    eta_cut = selection["eta"] if "eta" in selection else None
-    njets_cut = selection["count"] if "count" in selection else None
+    pt_sel = selection["pt"] if "pt" in selection else None
+    eta_sel = selection["eta"] if "eta" in selection else None
+    njets_sel = selection["count"] if "count" in selection else None
     # mask array for valid jets
     valid_jets_mask = np.ones_like(jets.pt, dtype=bool)
-    if pt_cut:
-        valid_jets_mask = valid_jets_mask & get_op(pt_cut["operator"])(
-            jets.pt, pt_cut["value"]
+    if pt_sel:
+        valid_jets_mask = valid_jets_mask & get_op(pt_sel["operator"])(
+            jets.pt, pt_sel["value"]
         )
-    if eta_cut:
-        valid_jets_mask = valid_jets_mask & get_op(eta_cut["operator"])(
-            np.abs(jets.eta), eta_cut["value"]
+    if eta_sel:
+        valid_jets_mask = valid_jets_mask & get_op(eta_sel["operator"])(
+            np.abs(jets.eta), eta_sel["value"]
         )
     if do_jvt:
-        jvttag_mask = jets.jvttag == 1
-        valid_jets_mask = valid_jets_mask & jvttag_mask
-    # mask array for valid events
-    valid_events_mask = np.ones(len(jets.pt), dtype=bool)
-    if njets_cut:
-        n_jets = ak.sum(valid_jets_mask, axis=1)
-        valid_events_mask = valid_events_mask & get_op(njets_cut["operator"])(
-            n_jets, njets_cut["value"]
+        valid_jets_mask = valid_jets_mask & jets.jvttag == 1
+    if njets_sel:
+        valid_events_mask = get_op(njets_sel["operator"])(
+            ak.sum(valid_jets_mask, axis=1), njets_sel["value"]
         )
-    valid_jets_mask = ak.where(valid_events_mask, valid_jets_mask, False)
-    return valid_jets_mask, valid_events_mask
+        valid_jets_mask = ak.mask(valid_jets_mask, valid_events_mask)
+    return valid_jets_mask
 
 
 def select_n_bjets_events(
@@ -116,22 +112,19 @@ def select_n_bjets_events(
 ):
     """Selects events by applying the cuts specified in the selection."""
 
-    # mask array for valid events
-    valid_jets_mask = (
-        jets[k]
-        if (k := "valid") in jets.fields
-        else np.ones_like((jets[jets.fields[0]]), dtype=bool)
-    )
-    valid_events_mask = np.ones(len(jets), dtype=bool)
-    btagged_jets_mask = valid_jets_mask & jets.btag == 1
+    # mask array for valid jets
+    if (k := "valid") in jets.fields:
+        valid_jets_mask = jets[k]
+    else:
+        valid_jets_mask = np.ones_like((jets[jets.fields[0]]), dtype=bool)
+    valid_jets_mask = valid_jets_mask & jets.btag == 1
     if "count" in selection:
         n_btags_cut = selection["count"]
-        n_btags = ak.sum(btagged_jets_mask, axis=1)
-        valid_events_mask = valid_events_mask & get_op(n_btags_cut["operator"])(
-            n_btags, n_btags_cut["value"]
+        valid_events_mask = get_op(n_btags_cut["operator"])(
+            ak.sum(valid_jets_mask, axis=1), n_btags_cut["value"]
         )
-    btagged_jets_mask = ak.where(valid_events_mask, btagged_jets_mask, False)
-    return btagged_jets_mask, valid_events_mask
+        valid_jets_mask = ak.mask(valid_jets_mask, valid_events_mask)
+    return valid_jets_mask
 
 
 def select_hc_jets(jets, njets_cut=4):
@@ -255,7 +248,7 @@ def select_correct_hh_pair_events(events, valid=None):
     return correct_hh_pairs_mask
 
 
-def select_truth_matched_jets(jets, hh_truth_jets_mask, valid_jets_mask=None):
+def select_truth_matched_jets(truth_matched_jets_mask, valid_jets_mask):
     """Selects jets that are truth-matched to the Higgs bosons.
 
     Jets marked with 1 or 2 are truth-matched to the Higgs bosons.
@@ -263,23 +256,18 @@ def select_truth_matched_jets(jets, hh_truth_jets_mask, valid_jets_mask=None):
     Jets marked with 3 are truth-matched to both Higgs bosons.
 
     Parameters:
-        jets: The jets in the event
-        hh_truth_jets_mask: The truth mask for the diHiggs jet candidates
+        truth_matched_jets_mask: The truth mask for the diHiggs jet candidates
         valid_jets_mask: The mask for valid jets
 
     Returns:
-        The truth-matched jets
+        The truth-matched jets mask
     """
-    truth_matched_jets_mask = (
-        (hh_truth_jets_mask & valid_jets_mask)
-        if valid_jets_mask is not None
-        else hh_truth_jets_mask
+    hh_truth_matched_jets_mask = ak.mask(
+        truth_matched_jets_mask,
+        ak.sum(truth_matched_jets_mask, axis=1) > 3,
     )
-    valid_events = ak.sum(truth_matched_jets_mask, axis=1) >= 4
-    truth_matched_jets = jets[truth_matched_jets_mask]
-    jets_pt_sorted = ak.argsort(truth_matched_jets.pt, axis=1, ascending=False)
-    truth_matched_jets = truth_matched_jets[jets_pt_sorted]
-    return ak.mask(truth_matched_jets, valid_events)
+    valid_truth_matched_jet_events = hh_truth_matched_jets_mask & valid_jets_mask
+    return valid_truth_matched_jet_events
 
 
 def get_W_t_p4(jets, hh_jet_idx, non_hh_jet_idx):

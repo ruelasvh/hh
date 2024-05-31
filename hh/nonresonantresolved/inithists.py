@@ -8,63 +8,9 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
 
     logger.info("Initializing hisotgrams")
     hists_dict = {}
-    binrange = {
-        "pt": [0, 1_600_000],
-        "eta": [-5, 5],
-        "phi": [-3, 3],
-        "mass": [0, 30_000],
-    }
     for sample in inputs:
         sample_name = sample["label"]
-        if any(k in sample_name for k in ["JZ", "dijets", "multijet"]):
-            binrange = {**binrange, "pt": [0, 3_900_000]}
-        # initialize histograms
         hists_dict[sample_name] = []
-        hists_dict[sample_name] += init_event_no_histograms()
-        hists_dict[sample_name] += init_event_weight_histograms()
-        hists_dict[sample_name] += init_event_weight_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_event_weight_histograms(
-            postfix="_baseline_control_region"
-        )
-        hists_dict[sample_name] += init_jet_kin_histograms()
-        hists_dict[sample_name] += init_jet_kin_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_jet_kin_histograms(
-            postfix="_baseline_control_region"
-        )
-        hists_dict[sample_name] += init_leading_jets_histograms()
-        hists_dict[sample_name] += init_leading_jets_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_leading_jets_histograms(
-            postfix="_baseline_control_region"
-        )
-        hists_dict[sample_name] += init_H_histograms(postfix="_baseline")
-        hists_dict[sample_name] += init_H_histograms(postfix="_baseline_signal_region")
-        hists_dict[sample_name] += init_H_histograms(postfix="_baseline_control_region")
-        hists_dict[sample_name] += init_reco_H_truth_jet_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_mH_2d_histograms(postfix="_baseline")
-        hists_dict[sample_name] += init_mH_2d_histograms(
-            postfix="_baseline_signal_region"
-        )
-        hists_dict[sample_name] += init_mH_2d_histograms(
-            postfix="_baseline_control_region"
-        )
-        hists_dict[sample_name] += init_HH_histograms(postfix="_baseline")
-        hists_dict[sample_name] += init_HH_histograms(postfix="_baseline_signal_region")
-        hists_dict[sample_name] += init_HH_histograms(
-            postfix="_baseline_control_region"
-        )
-        hists_dict[sample_name] += init_HH_deltaeta_histograms()
-        hists_dict[sample_name] += init_top_veto_histograms()
-        hists_dict[sample_name] += init_HH_mass_discrim_histograms()
-
-        ### Validation histograms ###
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth")
         hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched")
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth_reco_matched")
@@ -82,9 +28,6 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
             prefix="hh_jet", postfix="_truth_matched"
         )
         hists_dict[sample_name] += init_leading_jets_histograms(
-            prefix="hh_jet", postfix="_truth_matched_v2"
-        )
-        hists_dict[sample_name] += init_leading_jets_histograms(
             prefix="hh_jet", postfix="_truth_matched_4_btags"
         )
         hists_dict[sample_name] += init_leading_jets_histograms(
@@ -96,12 +39,6 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_leading_jets_histograms(
             prefix="hh_jet", postfix="_truth_matched_2b2j_asym_4_btags"
         )
-        # hists_dict[sample_name] += init_leading_jets_histograms(
-        #     prefix="hh_jet", postfix="_truth_matched_2b2j_sym"
-        # )
-        # hists_dict[sample_name] += init_leading_jets_histograms(
-        #     prefix="hh_jet", postfix="_truth_matched_2b1j"
-        # )
 
     return hists_dict
 
