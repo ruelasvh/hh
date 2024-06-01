@@ -108,6 +108,8 @@ def process_sample_worker(
         num_workers=args.num_workers,
         step_size=args.batch_size,
         allow_missing=False,
+        library="pd",
+        how="outer",
         report=True,
     ):
         logger.info(f"Processing batch: {batch_report}")
