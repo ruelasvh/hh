@@ -1,3 +1,4 @@
+import pandas as pd
 import awkward as ak
 import numpy as np
 from hh.shared.utils import (
@@ -15,11 +16,11 @@ from hh.nonresonantresolved.selection import (
 
 
 def process_batch(
-    events: ak.Record,
+    events: pd.DataFrame,
     selections: dict,
     sample_weight: float = 1.0,
     is_mc: bool = False,
-) -> ak.Record:
+) -> pd.DataFrame:
     """Apply analysis regions selections and append info to events."""
 
     logger.info("Initial Events: %s", len(events))
