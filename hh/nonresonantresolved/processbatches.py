@@ -6,7 +6,7 @@ from hh.shared.utils import (
     kin_labels,
 )
 from hh.nonresonantresolved.triggers import trig_sets
-from .selection import (
+from hh.nonresonantresolved.selection import (
     select_n_jets_events,
     select_n_bjets_events,
     select_events_passing_triggers,
