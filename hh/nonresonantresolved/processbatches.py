@@ -9,11 +9,6 @@ from hh.nonresonantresolved.triggers import trig_sets
 from .selection import (
     select_n_jets_events,
     select_n_bjets_events,
-    select_hc_jets,
-    select_hh_jet_pairs,
-    select_X_Wt_events,
-    select_hh_events,
-    select_correct_hh_pair_events,
     select_events_passing_triggers,
     select_truth_matched_jets,
 )
@@ -25,13 +20,13 @@ def process_batch(
     sample_weight: float = 1.0,
     is_mc: bool = False,
 ) -> ak.Record:
-    """Apply analysis regions selection and append info to events."""
+    """Apply analysis regions selections and append info to events."""
 
     logger.info("Initial Events: %s", len(events))
 
-    # check if selections is empty (i.e. no selection)
+    # return early if selections is empty
     if not selections:
-        logger.info("No objects selection applied.")
+        logger.info("Selections empty. No objects selection applied.")
         return events
 
     # set overall event filter, up to signal and background selections
@@ -46,11 +41,12 @@ def process_batch(
 
     # apply trigger selection
     if "trigs" in selections:
+        trig_sel = selections["trigs"]
         trig_set, trig_op = (
-            selections["trigs"].get("value"),
-            selections["trigs"].get("operator"),
+            trig_sel.get("value"),
+            trig_sel.get("operator"),
         )
-        assert trig_set, "Invalid trigger selection. Please provide a trigger set."
+        assert trig_set, "Invalid trigger set provided."
         passed_trigs_mask = select_events_passing_triggers(events, op=trig_op)
         events["valid_event"] = events.valid_event & passed_trigs_mask
         logger.info(
@@ -66,17 +62,9 @@ def process_batch(
     if "central_jets" in selections:
         central_jets_sel = selections["central_jets"]
         valid_central_jets = select_n_jets_events(
-            jets=ak.zip(
-                {
-                    k: events[v]
-                    for k, v in zip(
-                        ["pt", "eta", "jvttag"], ["jet_pt", "jet_eta", "jet_jvttag"]
-                    )
-                    if v in events.fields
-                }
-            ),
+            jets=ak.zip({k: events[f"jet_{v}"] for k in kin_labels.keys() + ["jvttag"]},
             selection=central_jets_sel,
-            do_jvt="jet_jvttag" in events.fields,
+            do_jvt=True,
         )
         events["valid_central_jets"] = valid_central_jets
         events["valid_event"] = events.valid_event & ~ak.is_none(valid_central_jets)
