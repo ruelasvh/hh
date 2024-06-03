@@ -5,12 +5,12 @@ from hh.shared.utils import (
     format_btagger_model_name,
     kin_labels,
 )
-from hh.nonresonantresolved.triggers import trig_sets
 from hh.nonresonantresolved.selection import (
     select_n_jets_events,
     select_n_bjets_events,
     select_events_passing_triggers,
     select_truth_matched_jets,
+    select_hh_jet_candidates,
 )
 
 
@@ -182,4 +182,10 @@ def process_batch(
                 ak.sum(~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0)),
             )
 
+    # apply different HH jet candidate pairings
+    hh_jet_idx, non_hh_jet_idx = select_hh_jet_candidates(
+        jets=ak.zip({k: events[f"jet_{k}"] for k in ["btag", *kin_labels.keys()]}),
+        valid_jets_mask=ak.mask(events.valid_central_jets, events.valid_event),
+    )
+    events["hh_jet_idx"] = hh_jet_idx
     return events

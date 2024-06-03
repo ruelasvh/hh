@@ -127,6 +127,28 @@ def select_n_bjets_events(
     return valid_jets_mask
 
 
+def select_hh_jet_candidates(jets, valid_jets_mask):
+    """Selects the 4 Higgs candidate jets in each event.
+
+    Returns:
+        The 4 Higgs candidate jets mask and non-Higgs candidates in each event
+    """
+    jet_idx = ak.local_index(jets)
+    valid_btag_jets_mask = valid_jets_mask & (jets.btag == 1)
+    valid_btag_jets_idx = jet_idx[valid_btag_jets_mask]
+    valid_no_btag_jets_mask = valid_jets_mask & (jets.btag == 0)
+    pt_sort = ak.argsort(jets.pt[valid_no_btag_jets_mask], axis=1, ascending=False)
+    valid_no_btag_jets_idx = jet_idx[valid_no_btag_jets_mask][pt_sort]
+    valid_jets_idx = ak.concatenate(
+        [valid_btag_jets_idx, valid_no_btag_jets_idx], axis=1
+    )
+    hh_jet_idx = valid_jets_idx[:, :4]
+    non_hh_jet_idx = ak.concatenate(
+        [valid_jets_idx[:, 4:], jet_idx[~valid_jets_mask]], axis=1
+    )
+    return hh_jet_idx, non_hh_jet_idx
+
+
 def select_hc_jets(jets, njets_cut=4):
     """Selects events by applying the cuts specified in the arguments.
     The HH system is reconstructed from two Higgs candidates, which are
