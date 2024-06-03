@@ -62,7 +62,9 @@ def process_batch(
     if "central_jets" in selections:
         central_jets_sel = selections["central_jets"]
         valid_central_jets = select_n_jets_events(
-            jets=ak.zip({k: events[f"jet_{v}"] for k in kin_labels.keys() + ["jvttag"]},
+            jets=ak.zip(
+                {k: events[f"jet_{k}"] for k in ["jvttag", *kin_labels.keys()]}
+            ),
             selection=central_jets_sel,
             do_jvt=True,
         )
