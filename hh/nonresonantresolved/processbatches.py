@@ -1,4 +1,5 @@
 import awkward as ak
+import vector as p4
 import numpy as np
 from hh.shared.utils import (
     logger,
@@ -11,6 +12,7 @@ from hh.nonresonantresolved.selection import (
     select_events_passing_triggers,
     select_truth_matched_jets,
     select_hh_jet_candidates,
+    reconstruct_hh_jet_pairs,
 )
 
 
@@ -138,7 +140,8 @@ def process_batch(
         if is_mc:
             events["reco_truth_matched_btagged_jets"] = select_truth_matched_jets(
                 events.truth_jet_H_parent_mask != 0,
-                events.valid_central_btagged_jets,
+                # events.valid_central_btagged_jets,
+                valid_jets_mask=ak.mask(events.valid_central_jets, events.valid_event),
             )
             logger.info(
                 "Events passing previous cuts and truth matched with %s %s btags: %s",
@@ -182,10 +185,23 @@ def process_batch(
                 ak.sum(~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0)),
             )
 
-    # apply different HH jet candidate pairings
-    hh_jet_idx, non_hh_jet_idx = select_hh_jet_candidates(
+    # select and save HH jet candidates
+    events["hh_jet_idx"], events["non_hh_jet_idx"] = select_hh_jet_candidates(
         jets=ak.zip({k: events[f"jet_{k}"] for k in ["btag", *kin_labels.keys()]}),
-        valid_jets_mask=ak.mask(events.valid_central_jets, events.valid_event),
+        valid_jets_mask=events.valid_central_4_btagged_jets,
+        # valid_jets_mask=ak.mask(
+        #     events.valid_central_4_btagged_jets,
+        #     ~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0),
+        # ),
     )
-    events["hh_jet_idx"] = hh_jet_idx
+
+    # apply different HH jet candidate pairings
+    events["H_leading_jet_idx"], events["H_subleading_jet_idx"] = (
+        reconstruct_hh_jet_pairs(
+            jets=p4.zip({v: events[f"jet_{v}"] for v in kin_labels}),
+            hh_jet_idx=events.hh_jet_idx,
+            loss=lambda j_1, j_2: j_1.deltaR(j_2),
+        )
+    )
+
     return events

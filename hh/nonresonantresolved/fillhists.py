@@ -22,7 +22,6 @@ def fill_hists(
     """Fill histograms for analysis regions"""
     if is_mc:
         ### Validation histograms ###
-        fill_reco_truth_matched_jets_histograms(events, hists)
         fill_HH_histograms(
             hh=p4.zip(
                 {
@@ -35,13 +34,14 @@ def fill_hists(
             weights=events.event_weight,
             hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_truth"),
         )
+        fill_reco_truth_matched_jets_histograms(events, hists)
         fill_reco_vs_truth_variable_response_histograms(
             events=events,
             vars=kin_labels,
             hists=hists,
         )
         fill_hh_jets_vs_trigs_histograms(events, hists)
-
+        fill_hh_jets_pairings_histograms(events, hists)
     return hists
 
 
@@ -287,6 +287,39 @@ def fill_hh_jets_vs_trigs_histograms(events, hists: list) -> None:
                             ak.to_numpy(ak.flatten(valid_jets)),
                             weights=ak.to_numpy(weights[valid_event]),
                         )
+
+
+def fill_hh_jets_pairings_histograms(events, hists: list) -> None:
+    """Fill reco truth matched jets histograms"""
+
+    jets_p4 = p4.zip({v: events[f"jet_{v}"] for v in kin_labels})
+    leading_h_jet_idx = events.H_leading_jet_idx
+    subleading_h_jet_idx = events.H_subleading_jet_idx
+    h1 = ak.firsts(
+        jets_p4[leading_h_jet_idx[:, 0, np.newaxis]]
+        + jets_p4[leading_h_jet_idx[:, 1, np.newaxis]]
+    )
+    h2 = ak.firsts(
+        jets_p4[subleading_h_jet_idx[:, 0, np.newaxis]]
+        + jets_p4[subleading_h_jet_idx[:, 1, np.newaxis]]
+    )
+    hh = h1 + h2
+    weights = events.event_weight
+    valid_event = ~ak.is_none(events.H_leading_jet_idx, axis=0)
+    fill_HH_histograms(
+        hh=hh[valid_event],
+        weights=weights[valid_event],
+        hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_reco_deltar_pairing"),
+    )
+
+    valid_event = ~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0)
+    fill_HH_histograms(
+        hh=hh[valid_event],
+        weights=weights[valid_event],
+        hists=find_hists_by_name(
+            hists, "hh_(pt|eta|phi|mass)_reco_truth_matched_deltar_pairing"
+        ),
+    )
 
 
 def fill_truth_matched_mjj_histograms(events, hists: list) -> None:

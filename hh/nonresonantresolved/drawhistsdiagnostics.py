@@ -128,6 +128,28 @@ def draw_hists(
                     output_dir=output_dir,
                 )
 
+        draw_truth_vs_reco_truth_matched(
+            {sample_type: sample_hists},
+            [
+                "hh_mass_reco_deltar_pairing",
+                "hh_mass_reco_truth_matched_deltar_pairing",
+            ],
+            energy,
+            luminosity=luminosity,
+            xlabel="$m_{\mathrm{HH}}$ [GeV]",
+            ylabel="Events",
+            legend_labels={
+                "hh_mass_reco_deltar_pairing": r"$\Delta R < 0.3$",
+                "hh_mass_reco_truth_matched_deltar_pairing": r"truth-matched $\Delta R < 0.3$",
+            },
+            legend_options={"loc": "center right", "fontsize": "small"},
+            third_exp_label=f"\n{sample_labels[sample_type]}"
+            + "\nReco truth-matched $\Delta R < 0.3$",
+            xmin=0,
+            # draw_errors=True,
+            draw_ratio=True,
+            output_dir=output_dir,
+        )
     #### Old plots ####
 
     # draw_1d_hists(

@@ -1,71 +1,14 @@
-import awkward as ak
+import itertools
 import numpy as np
 import vector as p4
-from hh.shared.utils import get_op, get_trigs_bitwise_op, kin_labels, inv_GeV
+import awkward as ak
+from hh.shared.utils import (
+    get_op,
+    get_trigs_bitwise_op,
+    kin_labels,
+    inv_GeV,
+)
 from hh.shared.selection import X_HH, R_CR, X_Wt
-
-
-def reconstruct_hh_mindeltar(jets, hh_jet_idx):
-    """Pair 4 Higgs candidate jets by pT and minimum deltaR.
-
-    Three possible pairing permutations of 4 jets into the two Higgs candidates:
-    ((0, 1), (2, 3)), ((0, 2), (1, 3)), ((0, 3), (1, 2))
-
-    For each pairing option, the leading Higgs candidate is the pair with the highest pT and the distance between its two jet constituents is dR_leading(jj).
-
-    The pairing option with the smallest dR_leading(jj) is chosen. The other two pairing options are used to construct the subleading Higgs candidate.
-
-    Signals with harder pT Higgs tend to have more collimated jet pairs, resulting in higher pairing accuracy. This is because the harder pT Higgs is more likely to have a larger pT jet in its pair, which is more likely to be the leading jet in the event.
-
-    Returns:
-        leading and subleading b-jet indices
-    """
-
-    jet_p4 = p4.zip(
-        {var: jets[f"{var}"][hh_jet_idx] for var in kin_labels.keys()},
-    )
-    jet_sorted_idx = ak.argsort(jet_p4.pt, axis=1, ascending=False)
-    jet_p4_sorted = jet_p4[jet_sorted_idx]
-    hc_jet_sorted_idx = hh_jet_idx[jet_sorted_idx]
-    leading_jets = jet_sorted_idx[:, :1]
-    subleading_jets = jet_sorted_idx[:, 1:]
-    jet_pairs = ak.cartesian([leading_jets, subleading_jets], axis=1)
-    leading_jet_idx, subleading_jet_idx = ak.unzip(jet_pairs)
-    deltar = jet_p4_sorted[leading_jet_idx].deltaR(jet_p4_sorted[subleading_jet_idx])
-    min_deltar = ak.argmin(deltar, axis=1, keepdims=True)
-    leading_h_jet_indices = jet_pairs[min_deltar]
-    leading_h_jet1_indices, leading_h_jet2_indices = ak.unzip(leading_h_jet_indices)
-    # do this to avoid ignoring invalid events when creating one-hot mask
-    leading_h_jet1_indices = ak.fill_none(leading_h_jet1_indices, [None], axis=0)
-    leading_h_jet2_indices = ak.fill_none(leading_h_jet2_indices, [None], axis=0)
-    # create one-hot mask for h leading jets
-    leading_h_jet1_one_hot = ak.from_numpy(np.eye(4))[
-        ak.flatten(leading_h_jet1_indices)
-    ]
-    leading_h_jet1_mask = leading_h_jet1_one_hot == 1
-    # create one-hot mask for h subleading jets
-    leading_h_jet2_one_hot = ak.from_numpy(np.eye(4))[
-        ak.flatten(leading_h_jet2_indices)
-    ]
-    leading_h_jet2_mask = leading_h_jet2_one_hot == 1
-    # create one-hot mask for h2 jets
-    leading_h_jet_idx_mask = leading_h_jet1_mask | leading_h_jet2_mask
-    subleading_h_jet_idx_mask = ~leading_h_jet_idx_mask
-    return (
-        hc_jet_sorted_idx[leading_h_jet_idx_mask],
-        hc_jet_sorted_idx[subleading_h_jet_idx_mask],
-    )
-
-
-def select_hh_jet_pairs(jets, hh_jet_idx, method=None):
-    if method == "min_delta_r":
-        h1_jet_idx, h2_jet_idx = reconstruct_hh_mindeltar(jets, hh_jet_idx)
-        return h1_jet_idx, h2_jet_idx
-    elif method is None:
-        hh_jet_idx_valid = ak.mask(hh_jet_idx, ak.num(hh_jet_idx) > 0)
-        return hh_jet_idx_valid[:, :2], hh_jet_idx_valid[:, 2:]
-    else:
-        raise ValueError(f"Invalid HH pairing method: {method}")
 
 
 def select_events_passing_triggers(
@@ -135,41 +78,39 @@ def select_hh_jet_candidates(jets, valid_jets_mask):
     """
     jet_idx = ak.local_index(jets)
     valid_btag_jets_mask = valid_jets_mask & (jets.btag == 1)
-    valid_btag_jets_idx = jet_idx[valid_btag_jets_mask]
+    pt_sort = ak.argsort(jets.pt[valid_btag_jets_mask], axis=1, ascending=False)
+    valid_btag_jets_idx = jet_idx[valid_btag_jets_mask][pt_sort]
     valid_no_btag_jets_mask = valid_jets_mask & (jets.btag == 0)
     pt_sort = ak.argsort(jets.pt[valid_no_btag_jets_mask], axis=1, ascending=False)
     valid_no_btag_jets_idx = jet_idx[valid_no_btag_jets_mask][pt_sort]
     valid_jets_idx = ak.concatenate(
         [valid_btag_jets_idx, valid_no_btag_jets_idx], axis=1
     )
+    valid_events_mask = ~ak.is_none(valid_jets_mask, axis=0)
     hh_jet_idx = valid_jets_idx[:, :4]
     non_hh_jet_idx = ak.concatenate(
         [valid_jets_idx[:, 4:], jet_idx[~valid_jets_mask]], axis=1
     )
+    hh_jet_idx = ak.mask(hh_jet_idx, valid_events_mask)
+    non_hh_jet_idx = ak.mask(non_hh_jet_idx, valid_events_mask)
     return hh_jet_idx, non_hh_jet_idx
 
 
-def select_hc_jets(jets, njets_cut=4):
-    """Selects events by applying the cuts specified in the arguments.
-    The HH system is reconstructed from two Higgs candidates, which are
-    themselves reconstructed from two jets each (four Higgs candidate jets in total).
-
-    Returns the 4 Higgs candidate jets in each event.
-    """
-
-    jet_idx = ak.local_index(jets)
-    invalid_hh_jet_idx = jet_idx[~jets.valid]
-    valid_hh_jet_idx = jet_idx[jets.valid]
-    valid_hh_jet_pt = jets.pt[jets.valid]
-    pt_sort_valid_hh_jet_idx = ak.argsort(valid_hh_jet_pt, ascending=False)
-    valid_hh_jet_idx = valid_hh_jet_idx[pt_sort_valid_hh_jet_idx]
-
-    hh_candidate_jet_idx = valid_hh_jet_idx[:, :njets_cut]
-    non_hh_candidate_jet_idx = valid_hh_jet_idx[:, njets_cut:]
-    non_hh_candidate_jet_idx = ak.concatenate(
-        [non_hh_candidate_jet_idx, invalid_hh_jet_idx], axis=1
+def reconstruct_hh_jet_pairs(jets, hh_jet_idx, loss):
+    jets = jets[hh_jet_idx]
+    pt_sort = ak.argsort(jets.pt, axis=1, ascending=False)
+    jets = jets[pt_sort]
+    hh_jet_idx = hh_jet_idx[pt_sort]
+    fourpairs = list(itertools.combinations(range(4), 2))
+    loss_values = np.transpose(
+        ak.Array(loss(jets[:, i], jets[:, j]) for i, j in fourpairs)
     )
-    return hh_candidate_jet_idx, non_hh_candidate_jet_idx
+    min_loss_idx = np.argmin(loss_values, axis=1, keepdims=True)
+    min_loss_idx = ak.mask(min_loss_idx, ~ak.is_none(jets, axis=0))
+    fourpairs = ak.argcombinations(jets, 2)
+    leading_h_jet_idx = ak.concatenate(ak.unzip(fourpairs[min_loss_idx]), axis=1)
+    subleading_h_jet_idx = ak.concatenate(ak.unzip(fourpairs[~min_loss_idx]), axis=1)
+    return hh_jet_idx[leading_h_jet_idx], hh_jet_idx[subleading_h_jet_idx]
 
 
 def select_X_Wt_events(events, selection):
@@ -284,6 +225,7 @@ def select_truth_matched_jets(truth_matched_jets_mask, valid_jets_mask):
     Returns:
         The truth-matched jets mask
     """
+    breakpoint()
     hh_truth_matched_jets_mask = ak.mask(
         truth_matched_jets_mask,
         ak.sum(truth_matched_jets_mask, axis=1) > 3,
