@@ -116,12 +116,7 @@ def process_batch(
         events["jet_btag"] = events[f"jet_btag_{btagger}"]
         # select and save events with >= n central b-jets
         valid_central_btagged_jets = select_n_bjets_events(
-            jets=ak.zip(
-                {
-                    "btag": events.jet_btag,
-                    "valid": events.valid_central_jets,
-                }
-            ),
+            jets=(events.valid_central_jets & (events.jet_btag == 1)),
             selection=bjets_sel,
         )
         events["valid_central_btagged_jets"] = valid_central_btagged_jets
@@ -157,12 +152,7 @@ def process_batch(
         ### baseline for 4 b-tagged jets ###
         bjets_sel_4_btags = {**bjets_sel, "count": {"operator": ">=", "value": 4}}
         valid_central_4_btagged_jets = select_n_bjets_events(
-            jets=ak.zip(
-                {
-                    "btag": events.jet_btag,
-                    "valid": events.valid_central_jets,
-                }
-            ),
+            jets=(events.valid_central_jets & (events.jet_btag == 1)),
             selection=bjets_sel_4_btags,
         )
         events["valid_central_4_btagged_jets"] = valid_central_4_btagged_jets
@@ -195,10 +185,6 @@ def process_batch(
     events["hh_jet_idx"], events["non_hh_jet_idx"] = select_hh_jet_candidates(
         jets=ak.zip({k: events[f"jet_{k}"] for k in ["btag", *kin_labels.keys()]}),
         valid_jets_mask=events.valid_central_4_btagged_jets,
-        # valid_jets_mask=ak.mask(
-        #     events.valid_central_4_btagged_jets,
-        #     ~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0),
-        # ),
     )
 
     # apply different HH jet candidate pairings

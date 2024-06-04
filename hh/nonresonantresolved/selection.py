@@ -53,20 +53,22 @@ def select_n_bjets_events(
     jets,
     selection,
 ):
-    """Selects events by applying the cuts specified in the selection."""
+    """Selects events by applying the cuts specified in the selection.
 
-    # mask array for valid jets
-    if (k := "valid") in jets.fields:
-        valid_jets_mask = jets[k]
-    else:
-        valid_jets_mask = np.ones_like((jets[jets.fields[0]]), dtype=bool)
-    valid_jets_mask = valid_jets_mask & jets.btag == 1
-    if "count" in selection:
-        n_btags_cut = selection["count"]
-        valid_events_mask = get_op(n_btags_cut["operator"])(
-            ak.sum(valid_jets_mask, axis=1), n_btags_cut["value"]
-        )
-        valid_jets_mask = ak.mask(valid_jets_mask, valid_events_mask)
+    Parameters:
+        jets: A mask of the valid in each event
+        selection: The selection criteria for the number of b-jets consisting of an operator and a value
+
+    Returns:
+        The mask for valid jets satisfying the selection
+
+    """
+    n_btags_operator, n_btags_value = (
+        selection["count"]["operator"],
+        selection["count"]["value"],
+    )
+    keep_events_mask = get_op(n_btags_operator)(ak.sum(jets, axis=1), n_btags_value)
+    valid_jets_mask = ak.mask(jets, keep_events_mask)
     return valid_jets_mask
 
 
@@ -226,15 +228,10 @@ def select_truth_matched_jets(truth_matched_jets_mask, valid_jets_mask):
         The truth-matched jets mask
     """
 
-    # hh_truth_matched_jets_mask = ak.mask(
-    #     truth_matched_jets_mask,
-    #     ak.sum(truth_matched_jets_mask, axis=1) > 3,
-    # )
-    # valid_truth_matched_jet_events = hh_truth_matched_jets_mask & valid_jets_mask
-    valid_truth_matched_jet_events = truth_matched_jets_mask & valid_jets_mask
-    mask = ak.sum(valid_truth_matched_jet_events, axis=1) > 3
-    valid_truth_matched_jet_events = ak.mask(valid_truth_matched_jet_events, mask)
-    return valid_truth_matched_jet_events
+    valid_truth_matched_jets = truth_matched_jets_mask & valid_jets_mask
+    keep_event_mask = ak.sum(valid_truth_matched_jets, axis=1) > 3
+    valid_truth_matched_jet_mask = ak.mask(valid_truth_matched_jets, keep_event_mask)
+    return valid_truth_matched_jet_mask
 
 
 def get_W_t_p4(jets, hh_jet_idx, non_hh_jet_idx):
