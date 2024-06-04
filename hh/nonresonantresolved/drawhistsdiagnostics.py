@@ -139,8 +139,8 @@ def draw_hists(
             xlabel="$m_{\mathrm{HH}}$ [GeV]",
             ylabel="Events",
             legend_labels={
-                "hh_mass_reco_deltar_pairing": r"$\Delta R < 0.3$",
-                "hh_mass_reco_truth_matched_deltar_pairing": r"truth-matched $\Delta R < 0.3$",
+                "hh_mass_reco_deltar_pairing": r"min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
+                "hh_mass_reco_truth_matched_deltar_pairing": "min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing and truth-matched",
             },
             legend_options={"loc": "center right", "fontsize": "small"},
             third_exp_label=f"\n{sample_labels[sample_type]}"

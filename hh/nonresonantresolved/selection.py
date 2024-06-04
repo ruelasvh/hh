@@ -225,12 +225,15 @@ def select_truth_matched_jets(truth_matched_jets_mask, valid_jets_mask):
     Returns:
         The truth-matched jets mask
     """
-    breakpoint()
-    hh_truth_matched_jets_mask = ak.mask(
-        truth_matched_jets_mask,
-        ak.sum(truth_matched_jets_mask, axis=1) > 3,
-    )
-    valid_truth_matched_jet_events = hh_truth_matched_jets_mask & valid_jets_mask
+
+    # hh_truth_matched_jets_mask = ak.mask(
+    #     truth_matched_jets_mask,
+    #     ak.sum(truth_matched_jets_mask, axis=1) > 3,
+    # )
+    # valid_truth_matched_jet_events = hh_truth_matched_jets_mask & valid_jets_mask
+    valid_truth_matched_jet_events = truth_matched_jets_mask & valid_jets_mask
+    mask = ak.sum(valid_truth_matched_jet_events, axis=1) > 3
+    valid_truth_matched_jet_events = ak.mask(valid_truth_matched_jet_events, mask)
     return valid_truth_matched_jet_events
 
 

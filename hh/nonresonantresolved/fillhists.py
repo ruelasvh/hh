@@ -137,38 +137,44 @@ def fill_leading_jets_histograms(events, hists: list) -> None:
 def fill_reco_truth_matched_jets_histograms(events, hists: list) -> None:
     """Fill reco truth matched jets histograms"""
 
-    valid_event = ~ak.is_none(events.reco_truth_matched_jets, axis=0)
     jets_p4 = p4.zip({v: events[f"jet_{v}"] for v in kin_labels})
-    jets_truth_matched_p4 = jets_p4[valid_event]
-    reco_hh_p4 = (
-        jets_truth_matched_p4[:, 0]
-        + jets_truth_matched_p4[:, 1]
-        + jets_truth_matched_p4[:, 2]
-        + jets_truth_matched_p4[:, 3]
-    )
+    # reconstruct HH using central jets selecting only events that have 4 central truth matched jets
+    truth_matched_jets_mask = events.reco_truth_matched_jets
+    jets_truth_matched_p4 = jets_p4[truth_matched_jets_mask]
+    reco_hh_p4 = ak.sum(jets_truth_matched_p4, axis=1)
+    # reco_hh_p4 = (
+    #     jets_truth_matched_p4[:, 0]
+    #     + jets_truth_matched_p4[:, 1]
+    #     + jets_truth_matched_p4[:, 2]
+    #     + jets_truth_matched_p4[:, 3]
+    # )
+    valid_event = ~ak.is_none(reco_hh_p4, axis=0)
+    reco_hh_p4 = reco_hh_p4[valid_event]
     weights = events.event_weight[valid_event]
     fill_HH_histograms(
         hh=reco_hh_p4,
         weights=weights,
         hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_reco_truth_matched"),
     )
-    truth_hh_p4 = p4.zip({v: events[f"hh_truth_{v}"] for v in kin_labels})
-    truth_hh_p4 = truth_hh_p4[valid_event]
+    truth_hh = p4.zip({v: events[f"hh_truth_{v}"] for v in kin_labels})
+    truth_hh = truth_hh[valid_event]
     fill_HH_histograms(
-        hh=truth_hh_p4,
+        hh=truth_hh,
         weights=weights,
         hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_truth_reco_matched"),
     )
     ### jets truth matched with HadronConeExclTruthLabelID ###
-    reco_truth_matched_jets_v2 = events.reco_truth_matched_jets_v2
-    valid_event = ~ak.is_none(reco_truth_matched_jets_v2, axis=0)
-    jets_truth_matched_p4 = jets_p4[valid_event]
-    reco_hh_p4 = (
-        jets_truth_matched_p4[:, 0]
-        + jets_truth_matched_p4[:, 1]
-        + jets_truth_matched_p4[:, 2]
-        + jets_truth_matched_p4[:, 3]
-    )
+    truth_matched_jets_mask = events.reco_truth_matched_jets_v2
+    jets_truth_matched_p4 = jets_p4[truth_matched_jets_mask]
+    reco_hh_p4 = ak.sum(jets_truth_matched_p4, axis=1)
+    # reco_hh_p4 = (
+    #     jets_truth_matched_p4[:, 0]
+    #     + jets_truth_matched_p4[:, 1]
+    #     + jets_truth_matched_p4[:, 2]
+    #     + jets_truth_matched_p4[:, 3]
+    # )
+    valid_event = ~ak.is_none(reco_hh_p4, axis=0)
+    reco_hh_p4 = reco_hh_p4[valid_event]
     weights = events.event_weight[valid_event]
     fill_HH_histograms(
         hh=reco_hh_p4,
@@ -192,10 +198,13 @@ def fill_reco_vs_truth_variable_response_histograms(
         List of histograms to fill.
     """
 
-    valid_event = ~ak.is_none(events.reco_truth_matched_jets, axis=0)
     jets_p4 = p4.zip({v: events[f"jet_{v}"] for v in kin_labels})
-    jets_truth_matched_p4 = jets_p4[valid_event]
+    # reconstruct HH using central jets selecting only events that have 4 central truth matched jets
+    truth_matched_jets_mask = events.reco_truth_matched_jets
+    jets_truth_matched_p4 = jets_p4[truth_matched_jets_mask]
     reco_hh_p4 = ak.sum(jets_truth_matched_p4, axis=1)
+    valid_event = ~ak.is_none(reco_hh_p4, axis=0)
+    reco_hh_p4 = reco_hh_p4[valid_event]
     reco_hh = ak.zip(
         {
             "pt": reco_hh_p4.pt,
@@ -204,12 +213,12 @@ def fill_reco_vs_truth_variable_response_histograms(
             "mass": reco_hh_p4.mass,
         }
     )
-    truth_HH_p4 = ak.zip({v: events[f"hh_truth_{v}"] for v in kin_labels})
-    truth_matched_HH_p4 = truth_HH_p4[valid_event]
+    truth_hh = ak.zip({v: events[f"hh_truth_{v}"] for v in kin_labels})
+    truth_matched_hh = truth_hh[valid_event]
     weights = events.event_weight[valid_event]
     for var in vars:
         hist = find_hist(hists, lambda h: f"hh_{var}_reco_vs_truth_response" in h.name)
-        var_res = (reco_hh[var] - truth_matched_HH_p4[var]) / truth_matched_HH_p4[var]
+        var_res = (reco_hh[var] - truth_matched_hh[var]) / truth_matched_hh[var]
         if hist:
             logger.debug(hist.name)
             hist.fill(ak.to_numpy(var_res) * 100, weights=ak.to_numpy(weights))
