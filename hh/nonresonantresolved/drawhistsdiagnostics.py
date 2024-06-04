@@ -79,6 +79,7 @@ def draw_hists(
             + "\nReco truth-matched $\Delta R < 0.3$",
             xmin=0,
             draw_errors=True,
+            draw_ratio=True,
             output_dir=output_dir,
         )
         draw_1d_hists(
