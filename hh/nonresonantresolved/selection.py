@@ -98,7 +98,7 @@ def select_hh_jet_candidates(jets, valid_jets_mask):
     return hh_jet_idx, non_hh_jet_idx
 
 
-def reconstruct_hh_jet_pairs(jets, hh_jet_idx, loss):
+def reconstruct_hh_jet_pairs(jets, hh_jet_idx, loss, optimizer=np.argmin):
     jets = jets[hh_jet_idx]
     pt_sort = ak.argsort(jets.pt, axis=1, ascending=False)
     jets = jets[pt_sort]
@@ -107,12 +107,12 @@ def reconstruct_hh_jet_pairs(jets, hh_jet_idx, loss):
     loss_values = np.transpose(
         ak.Array(loss(jets[:, i], jets[:, j]) for i, j in fourpairs)
     )
-    min_loss_idx = np.argmin(loss_values, axis=1, keepdims=True)
-    min_loss_idx = ak.mask(min_loss_idx, ~ak.is_none(jets, axis=0))
+    optimized_loss_idx = optimizer(loss_values, axis=1, keepdims=True)
+    optimized_loss_idx = ak.mask(optimized_loss_idx, ~ak.is_none(jets, axis=0))
     fourpairs = ak.argcombinations(jets, 2)
-    leading_h_jet_idx = ak.concatenate(ak.unzip(fourpairs[min_loss_idx]), axis=1)
-    subleading_h_jet_idx = ak.concatenate(ak.unzip(fourpairs[~min_loss_idx]), axis=1)
-    return hh_jet_idx[leading_h_jet_idx], hh_jet_idx[subleading_h_jet_idx]
+    h1_jet_idx = ak.concatenate(ak.unzip(fourpairs[optimized_loss_idx]), axis=1)
+    h2_jet_idx = ak.concatenate(ak.unzip(fourpairs[~optimized_loss_idx]), axis=1)
+    return hh_jet_idx[h1_jet_idx], hh_jet_idx[h2_jet_idx]
 
 
 def select_X_Wt_events(events, selection):
@@ -183,33 +183,21 @@ def select_hh_events(events, deltaeta_sel=None, mass_sel=None):
     return keep, hh_var
 
 
-######################
-### NEEDS REVISION ###
-######################
-def select_correct_hh_pair_events(events, valid=None):
-    if valid is None:
-        valid = np.ones(len(events), dtype=bool)
-    events_masked = ak.mask(events, valid)
-    jets_truth_matched_to_hh = events_masked.truth_jet_H_parent_mask
-    leading_h_truth_matched = jets_truth_matched_to_hh[events_masked.leading_h_jet_idx]
-    leading_h_jet1_truth_matched = leading_h_truth_matched[:, 0, np.newaxis]
-    leading_h_jet2_truth_matched = leading_h_truth_matched[:, 1, np.newaxis]
-    leading_h_jets_have_same_parent_mask = (
-        leading_h_jet1_truth_matched == leading_h_jet2_truth_matched
-    )
-    subleading_h_truth_matched = jets_truth_matched_to_hh[
-        events_masked.subleading_h_jet_idx
-    ]
-    subleading_h_jet1_truth_matched = subleading_h_truth_matched[:, 0, np.newaxis]
-    subleading_h_jet2_truth_matched = subleading_h_truth_matched[:, 1, np.newaxis]
-    subleading_h_jets_have_same_parent_mask = (
-        subleading_h_jet1_truth_matched == subleading_h_jet2_truth_matched
-    )
-    correct_hh_pairs_mask = ak.firsts(
-        leading_h_jets_have_same_parent_mask & subleading_h_jets_have_same_parent_mask
+def select_correct_hh_pair_events(h1_jets_idx, h2_jets_idx, truth_jet_H_parent_mask):
+    h1_truth_matched = truth_jet_H_parent_mask[h1_jets_idx]
+    h1_jet1_truth_matched = h1_truth_matched[:, 0]
+    h1_jet2_truth_matched = h1_truth_matched[:, 1]
+    h1_jets_have_same_parent_mask = h1_jet1_truth_matched == h1_jet2_truth_matched
+    # remove extra dimension
+    h2_truth_matched = truth_jet_H_parent_mask[h2_jets_idx]
+    h2_jet1_truth_matched = h2_truth_matched[:, 0]
+    h2_jet2_truth_matched = h2_truth_matched[:, 1]
+    h2_jets_have_same_parent_mask = h2_jet1_truth_matched == h2_jet2_truth_matched
+    correct_hh_pairs_mask = (
+        h1_jets_have_same_parent_mask & h2_jets_have_same_parent_mask
     )
     # convert to numpy array and replace None with False
-    correct_hh_pairs_mask = ak.fill_none(correct_hh_pairs_mask, False)
+    correct_hh_pairs_mask = ak.mask(correct_hh_pairs_mask, correct_hh_pairs_mask)
     return correct_hh_pairs_mask
 
 

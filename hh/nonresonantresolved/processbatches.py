@@ -13,6 +13,7 @@ from hh.nonresonantresolved.selection import (
     select_truth_matched_jets,
     select_hh_jet_candidates,
     reconstruct_hh_jet_pairs,
+    select_correct_hh_pair_events,
 )
 
 
@@ -187,13 +188,39 @@ def process_batch(
         valid_jets_mask=events.valid_central_4_btagged_jets,
     )
 
-    # apply different HH jet candidate pairings
-    events["H_leading_jet_idx"], events["H_subleading_jet_idx"] = (
-        reconstruct_hh_jet_pairs(
-            jets=p4.zip({v: events[f"jet_{v}"] for v in kin_labels}),
-            hh_jet_idx=events.hh_jet_idx,
-            loss=lambda j_1, j_2: j_1.deltaR(j_2),
-        )
+    ######
+    # Apply different HH jet candidate pairings
+    ######
+    ###### HH jet min deltaR pairing ######
+    events["H1_min_dR_jet_idx"], events["H2_min_dR_jet_idx"] = reconstruct_hh_jet_pairs(
+        jets=p4.zip({v: events[f"jet_{v}"] for v in kin_labels}),
+        hh_jet_idx=events.hh_jet_idx,
+        loss=lambda j_1, j_2: j_1.deltaR(j_2),
+    )
+    events["correct_hh_min_dR_pairs_mask"] = select_correct_hh_pair_events(
+        h1_jets_idx=events.H1_min_dR_jet_idx,
+        h2_jets_idx=events.H2_min_dR_jet_idx,
+        truth_jet_H_parent_mask=events.truth_jet_H_parent_mask,
+    )
+    logger.info(
+        "Events passing previous cuts and correct HH jet pairing with min deltaR: %s",
+        ak.sum(events.correct_hh_min_dR_pairs_mask),
     )
 
+    ###### HH jet max deltaR pairing ######
+    events["H1_max_dR_jet_idx"], events["H2_max_dR_jet_idx"] = reconstruct_hh_jet_pairs(
+        jets=p4.zip({v: events[f"jet_{v}"] for v in kin_labels}),
+        hh_jet_idx=events.hh_jet_idx,
+        loss=lambda j_1, j_2: j_1.deltaR(j_2),
+	optimizer=np.argmax,
+    )
+    events["correct_hh_max_dR_pairs_mask"] = select_correct_hh_pair_events(
+        h1_jets_idx=events.H1_max_dR_jet_idx,
+        h2_jets_idx=events.H2_max_dR_jet_idx,
+        truth_jet_H_parent_mask=events.truth_jet_H_parent_mask,
+    )
+    logger.info(
+        "Events passing previous cuts and correct HH jet pairing with max deltaR: %s",
+        ak.sum(events.correct_hh_max_dR_pairs_mask),
+    )
     return events

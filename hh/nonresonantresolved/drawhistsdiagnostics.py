@@ -141,11 +141,11 @@ def draw_hists(
             ylabel="Events",
             legend_labels={
                 "hh_mass_reco_deltar_pairing": r"min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
-                "hh_mass_reco_truth_matched_deltar_pairing": "min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing and truth-matched",
+                "hh_mass_reco_truth_matched_deltar_pairing": "min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing and parent truth-matched",
             },
             legend_options={"loc": "center right", "fontsize": "small"},
             third_exp_label=f"\n{sample_labels[sample_type]}"
-            + "\nReco truth-matched $\Delta R < 0.3$",
+            + "\nReco truth-matched $\Delta R < 0.3$ jets with parent barcode ID 25",
             xmin=0,
             # draw_errors=True,
             draw_ratio=True,
