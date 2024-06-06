@@ -22,10 +22,10 @@ def draw_hists(
     output_dir = args.output_dir
 
     sample_labels = {
-        "mc23d_ggF_k05": "kl=5 ggF MC23d",
         "mc23a_ggF_k01": "kl=1 ggF MC23a",
         "mc23a_ggF_k05": "kl=5 ggF MC23a",
         "mc23d_ggF_k01": "kl=1 ggF MC23d",
+        "mc23d_ggF_k05": "kl=5 ggF MC23d",
     }
 
     draw_1d_hists(
@@ -46,10 +46,10 @@ def draw_hists(
         hists_group,
         f"hh_mass_reco_truth_matched",
         energy,
-        xlabel="Reco Truth Matched HH mass [GeV]",
+        xlabel="Reconstructed Truth-Matched HH Mass [GeV]",
         ylabel="Events",
         legend_labels=sample_labels,
-        third_exp_label="\nReco truth-matched $\Delta R < 0.3$",
+        third_exp_label="\nTruth-matched jets $\Delta R < 0.3$",
         luminosity=luminosity,
         xmin=0,
         ggFk01_factor=10,
@@ -70,16 +70,15 @@ def draw_hists(
             xlabel="$m_{\mathrm{HH}}$ [GeV]",
             ylabel="Events",
             legend_labels={
-                "hh_mass_truth_reco_matched": f"Truth reco-matched",
-                "hh_mass_reco_truth_matched": f"Reco truth-matched",
+                "hh_mass_truth_reco_matched": "Truth (reco-matched)",
+                "hh_mass_reco_truth_matched": "Reco (truth-matched)",
                 "hh_mass_reco_truth_matched_v2": r"$\geq 4 \mathrm{HadronConeExclTruthLabelID} = 5$",
             },
             legend_options={"loc": "center right", "fontsize": "small"},
             third_exp_label=f"\n{sample_labels[sample_type]}"
-            + "\nReco truth-matched $\Delta R < 0.3$",
+            + "\nTruth-matched jets $\Delta R < 0.3$",
             xmin=0,
             draw_errors=True,
-            draw_ratio=True,
             output_dir=output_dir,
         )
         draw_1d_hists(
@@ -90,14 +89,12 @@ def draw_hists(
             # yscale="log",
             xlabel="HH mass response [%]",
             legend_labels={sample_type: sample_labels[sample_type]},
-            third_exp_label="\nReco truth-matched $\Delta R < 0.3$",
+            third_exp_label="\nTruth-matched jets $\Delta R < 0.3$",
             output_dir=output_dir,
         )
         for i in [1, 2, 3, 4]:
             categories = [
                 "_truth_matched_2b2j_asym",
-                # "_truth_matched_2b2j_sym",
-                # "_truth_matched_2b1j",
             ]
             for cat in categories:
                 draw_truth_vs_reco_truth_matched(
@@ -123,7 +120,7 @@ def draw_hists(
                     },
                     legend_options={"loc": "center right", "fontsize": "small"},
                     third_exp_label=f"\n{sample_labels[sample_type]}"
-                    + "\nReco truth-matched $\Delta R < 0.3$",
+                    + "\nTruth-matched jets $\Delta R < 0.3$",
                     # draw_errors=True,
                     draw_ratio=True,
                     output_dir=output_dir,
@@ -132,25 +129,49 @@ def draw_hists(
         draw_truth_vs_reco_truth_matched(
             {sample_type: sample_hists},
             [
-                "hh_mass_reco_deltar_pairing",
-                "hh_mass_reco_truth_matched_deltar_pairing",
+                "hh_mass_reco_min_deltar_pairing",
+                "hh_mass_reco_truth_matched_HH_parents_min_deltar_pairing",
             ],
             energy,
             luminosity=luminosity,
             xlabel="$m_{\mathrm{HH}}$ [GeV]",
             ylabel="Events",
             legend_labels={
-                "hh_mass_reco_deltar_pairing": r"min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
-                "hh_mass_reco_truth_matched_deltar_pairing": "min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing and parent truth-matched",
+                "hh_mass_reco_min_deltar_pairing": r"min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
+                "hh_mass_reco_truth_matched_HH_parents_min_deltar_pairing": r"min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing and truth-matched",
             },
             legend_options={"loc": "center right", "fontsize": "small"},
             third_exp_label=f"\n{sample_labels[sample_type]}"
-            + "\nReco truth-matched $\Delta R < 0.3$ jets with parent barcode ID 25",
-            xmin=0,
+            + "\nTruth-matched jets $\Delta R < 0.3$\nJet parent barcode ID 25",
+            xmin=200,
             # draw_errors=True,
             draw_ratio=True,
             output_dir=output_dir,
         )
+
+        draw_truth_vs_reco_truth_matched(
+            {sample_type: sample_hists},
+            [
+                "hh_mass_reco_max_deltar_pairing",
+                "hh_mass_reco_truth_matched_HH_parents_max_deltar_pairing",
+            ],
+            energy,
+            luminosity=luminosity,
+            xlabel="$m_{\mathrm{HH}}$ [GeV]",
+            ylabel="Events",
+            legend_labels={
+                "hh_mass_reco_max_deltar_pairing": r"max $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
+                "hh_mass_reco_truth_matched_HH_parents_max_deltar_pairing": r"max $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing and truth-matched",
+            },
+            legend_options={"loc": "center right", "fontsize": "small"},
+            third_exp_label=f"\n{sample_labels[sample_type]}"
+            + "\nTruth-matched jets $\Delta R < 0.3$\nJet parent barcode ID 25",
+            xmin=200,
+            # draw_errors=True,
+            draw_ratio=True,
+            output_dir=output_dir,
+        )
+
     #### Old plots ####
 
     # draw_1d_hists(

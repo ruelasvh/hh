@@ -188,7 +188,6 @@ def select_correct_hh_pair_events(h1_jets_idx, h2_jets_idx, truth_jet_H_parent_m
     h1_jet1_truth_matched = h1_truth_matched[:, 0]
     h1_jet2_truth_matched = h1_truth_matched[:, 1]
     h1_jets_have_same_parent_mask = h1_jet1_truth_matched == h1_jet2_truth_matched
-    # remove extra dimension
     h2_truth_matched = truth_jet_H_parent_mask[h2_jets_idx]
     h2_jet1_truth_matched = h2_truth_matched[:, 0]
     h2_jet2_truth_matched = h2_truth_matched[:, 1]
@@ -201,7 +200,9 @@ def select_correct_hh_pair_events(h1_jets_idx, h2_jets_idx, truth_jet_H_parent_m
     return correct_hh_pairs_mask
 
 
-def select_truth_matched_jets(truth_matched_jets_mask, valid_jets_mask):
+def select_truth_matched_jets(
+    truth_matched_jets_mask, valid_jets_mask, n_truth_matched=4
+):
     """Selects jets that are truth-matched to the Higgs bosons.
 
     Jets marked with 1 or 2 are truth-matched to the Higgs bosons.
@@ -216,8 +217,8 @@ def select_truth_matched_jets(truth_matched_jets_mask, valid_jets_mask):
         The truth-matched jets mask
     """
 
-    valid_truth_matched_jets = truth_matched_jets_mask & valid_jets_mask
-    keep_event_mask = ak.sum(valid_truth_matched_jets, axis=1) > 3
+    valid_truth_matched_jets = valid_jets_mask & truth_matched_jets_mask
+    keep_event_mask = ak.sum(valid_truth_matched_jets, axis=1) >= n_truth_matched
     valid_truth_matched_jet_mask = ak.mask(valid_truth_matched_jets, keep_event_mask)
     return valid_truth_matched_jet_mask
 
