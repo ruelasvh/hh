@@ -52,6 +52,12 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_HH_histograms(
             postfix="_reco_truth_matched_max_deltar_pairing_correct"
         )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_truth_matched_min_mass_pairing"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_truth_matched_min_mass_pairing_correct"
+        )
 
     return hists_dict
 

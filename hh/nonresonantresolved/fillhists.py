@@ -311,6 +311,27 @@ def fill_hh_jets_pairings_histograms(events, hists: list) -> None:
             hists, "hh_(pt|eta|phi|mass)_reco_truth_matched_max_deltar_pairing_correct"
         ),
     )
+    ### min mass pairing ###
+    h1_p4 = ak.sum(jets_p4[events.H1_min_mass_jet_idx], axis=1)
+    h2_p4 = ak.sum(jets_p4[events.H2_min_mass_jet_idx], axis=1)
+    hh = h1_p4 + h2_p4
+    valid_event = ~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0)
+    fill_HH_histograms(
+        hh=hh[valid_event],
+        weights=weights[valid_event],
+        hists=find_hists_by_name(
+            hists, "hh_(pt|eta|phi|mass)_reco_truth_matched_min_mass_pairing"
+        ),
+    )
+    valid_event = ~ak.is_none(events.correct_hh_min_mass_pairs_mask, axis=0)
+    fill_HH_histograms(
+        hh=hh[valid_event],
+        weights=weights[valid_event],
+        hists=find_hists_by_name(
+            hists, "hh_(pt|eta|phi|mass)_reco_truth_matched_min_mass_pairing_correct"
+        ),
+    )
+
 
 def fill_truth_matched_mjj_histograms(events, hists: list) -> None:
     """Fill reconstructed mjj invariant mass 1D histograms"""

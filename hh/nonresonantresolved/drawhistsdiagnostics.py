@@ -173,6 +173,28 @@ def draw_hists(
             draw_ratio=True,
             output_dir=output_dir,
         )
+        draw_truth_vs_reco_truth_matched(
+            {sample_type: sample_hists},
+            [
+                "hh_mass_reco_truth_matched_min_mass_pairing",
+                "hh_mass_reco_truth_matched_min_mass_pairing_correct",
+            ],
+            energy,
+            luminosity=luminosity,
+            xlabel="$m_{\mathrm{HH}}$ [GeV]",
+            ylabel="Events",
+            legend_labels={
+                "hh_mass_reco_truth_matched_min_mass_pairing": r"min mass pairing",
+                "hh_mass_reco_truth_matched_min_mass_pairing_correct": "min mass pairing and parent ID 25",
+            },
+            legend_options={"loc": "center right", "fontsize": "small"},
+            third_exp_label=f"\n{sample_labels[sample_type]}"
+            + "\nTruth-matched $\Delta R < 0.3$ jets",
+            xmin=0,
+            # draw_errors=True,
+            draw_ratio=True,
+            output_dir=output_dir,
+        )
     #### Old plots ####
 
     # draw_1d_hists(

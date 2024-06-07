@@ -107,9 +107,8 @@ def reconstruct_hh_jet_pairs(jets, hh_jet_idx, loss, optimizer=np.argmin):
     loss_values = np.transpose(
         ak.Array(loss(jets[:, i], jets[:, j]) for i, j in fourpairs)
     )
-    loss_values = ak.mask(loss_values, ~ak.is_none(jets, axis=0))
     optimized_loss_idx = optimizer(loss_values, axis=1, keepdims=True)
-    # optimized_loss_idx = ak.mask(optimized_loss_idx, ~ak.is_none(jets, axis=0))
+    optimized_loss_idx = ak.mask(optimized_loss_idx, ~ak.is_none(jets, axis=0))
     fourpairs = ak.argcombinations(jets, 2)
     h1_jet_idx = ak.concatenate(ak.unzip(fourpairs[optimized_loss_idx]), axis=1)
     h2_jet_idx = ak.concatenate(ak.unzip(fourpairs[~optimized_loss_idx]), axis=1)
