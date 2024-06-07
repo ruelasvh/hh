@@ -22,10 +22,10 @@ def draw_hists(
     output_dir = args.output_dir
 
     sample_labels = {
-        "mc23d_ggF_k05": "kl=5 ggF MC23d",
+        # "mc23d_ggF_k05": "kl=5 ggF MC23d",
         "mc23a_ggF_k01": "kl=1 ggF MC23a",
         "mc23a_ggF_k05": "kl=5 ggF MC23a",
-        "mc23d_ggF_k01": "kl=1 ggF MC23d",
+        # "mc23d_ggF_k01": "kl=1 ggF MC23d",
     }
 
     draw_1d_hists(
@@ -132,20 +132,42 @@ def draw_hists(
         draw_truth_vs_reco_truth_matched(
             {sample_type: sample_hists},
             [
-                "hh_mass_reco_deltar_pairing",
-                "hh_mass_reco_truth_matched_deltar_pairing",
+                "hh_mass_reco_truth_matched_min_deltar_pairing",
+                "hh_mass_reco_truth_matched_min_deltar_pairing_correct",
             ],
             energy,
             luminosity=luminosity,
             xlabel="$m_{\mathrm{HH}}$ [GeV]",
             ylabel="Events",
             legend_labels={
-                "hh_mass_reco_deltar_pairing": r"min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
-                "hh_mass_reco_truth_matched_deltar_pairing": "min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing and parent truth-matched",
+                "hh_mass_reco_truth_matched_min_deltar_pairing": r"min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
+                "hh_mass_reco_truth_matched_min_deltar_pairing_correct": "min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing and parent ID 25",
             },
             legend_options={"loc": "center right", "fontsize": "small"},
             third_exp_label=f"\n{sample_labels[sample_type]}"
-            + "\nReco truth-matched $\Delta R < 0.3$ jets with parent barcode ID 25",
+            + "\nTruth-matched $\Delta R < 0.3$ jets",
+            xmin=0,
+            # draw_errors=True,
+            draw_ratio=True,
+            output_dir=output_dir,
+        )
+        draw_truth_vs_reco_truth_matched(
+            {sample_type: sample_hists},
+            [
+                "hh_mass_reco_truth_matched_max_deltar_pairing",
+                "hh_mass_reco_truth_matched_max_deltar_pairing_correct",
+            ],
+            energy,
+            luminosity=luminosity,
+            xlabel="$m_{\mathrm{HH}}$ [GeV]",
+            ylabel="Events",
+            legend_labels={
+                "hh_mass_reco_truth_matched_max_deltar_pairing": r"max $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
+                "hh_mass_reco_truth_matched_max_deltar_pairing_correct": "max $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing and parent ID 25",
+            },
+            legend_options={"loc": "center right", "fontsize": "small"},
+            third_exp_label=f"\n{sample_labels[sample_type]}"
+            + "\nTruth-matched $\Delta R < 0.3$ jets",
             xmin=0,
             # draw_errors=True,
             draw_ratio=True,

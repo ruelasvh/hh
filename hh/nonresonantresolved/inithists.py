@@ -39,14 +39,18 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_leading_jets_histograms(
             prefix="hh_jet", postfix="_truth_matched_2b2j_asym_4_btags"
         )
-
-        hists_dict[sample_name] += init_HH_histograms(postfix="_reco_min_deltar_pairing")
+        ### Pairing histograms ###
         hists_dict[sample_name] += init_HH_histograms(
             postfix="_reco_truth_matched_min_deltar_pairing"
         )
-        hists_dict[sample_name] += init_HH_histograms(postfix="_reco_max_deltar_pairing")
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_truth_matched_min_deltar_pairing_correct"
+        )
         hists_dict[sample_name] += init_HH_histograms(
             postfix="_reco_truth_matched_max_deltar_pairing"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_truth_matched_max_deltar_pairing_correct"
         )
 
     return hists_dict
