@@ -1,6 +1,7 @@
 import awkward as ak
 import vector as p4
 import numpy as np
+import itertools
 from hh.shared.utils import (
     logger,
     format_btagger_model_name,
@@ -212,7 +213,7 @@ def process_batch(
         jets=p4.zip({v: events[f"jet_{v}"] for v in kin_labels}),
         hh_jet_idx=events.hh_jet_idx,
         loss=lambda j_1, j_2: j_1.deltaR(j_2),
-	optimizer=np.argmax,
+        optimizer=np.argmax,
     )
     events["correct_hh_max_dR_pairs_mask"] = select_correct_hh_pair_events(
         h1_jets_idx=events.H1_max_dR_jet_idx,
@@ -222,5 +223,43 @@ def process_batch(
     logger.info(
         "Events passing previous cuts and correct HH jet pairing with max deltaR: %s",
         ak.sum(events.correct_hh_max_dR_pairs_mask),
+    )
+
+    #####
+    # HH jet min deviation from Higgs mass pairing.
+    # Optimization is the minimization of the deviation from the Higgs mass given by
+    # x^2 = (m_H - m_j1j2)^2 - (m_H - m_j3j4)^2 and so on for all possible pairings (3 total)
+    #  ######
+    def optimizer(values, **kwargs):
+        fourpairs_combos = list(itertools.combinations(range(4), 2))
+        combos = [(fourpairs_combos[i], fourpairs_combos[~i]) for i in range(3)]
+        combos = ak.Array([combos] * len(values))
+        combos_loss = np.transpose(
+            ak.Array([values[:, i] + values[:, ~i] for i in range(3)])
+        )
+        breakpoint()
+        combos_loss_min_idx = np.argmin(combos_loss, axis=1, keepdims=True)
+        selected_hh_idx = combos[combos_loss_min_idx]
+        fourpairs_combos = ak.Array([fourpairs_combos] * len(values))
+        h_jj_idx, _ = ak.unzip(selected_hh_idx)
+        h_jj_idx = ak.mask(h_jj_idx, ~ak.is_none(values))
+        fourpairs_combos = ak.mask(fourpairs_combos, ~ak.is_none(values))
+        h_jj_mask, _ = ak.broadcast_arrays(h_jj_idx, fourpairs_combos, depth_limit=1)
+        return selected_hh_idx[:, 0]
+
+    events["H1_min_m_jet_idx"], events["H2_min_m_jet_idx"] = reconstruct_hh_jet_pairs(
+        jets=p4.zip({v: events[f"jet_{v}"] for v in kin_labels}),
+        hh_jet_idx=events.hh_jet_idx,
+        loss=lambda j_1, j_2: ((j_1 + j_2).mass - 125) ** 2,
+        optimizer=optimizer,
+    )
+    events["correct_hh_min_m_pairs_mask"] = select_correct_hh_pair_events(
+        h1_jets_idx=events.H1_min_m_jet_idx,
+        h2_jets_idx=events.H2_min_m_jet_idx,
+        truth_jet_H_parent_mask=events.truth_jet_H_parent_mask,
+    )
+    logger.info(
+        "Events passing previous cuts and correct HH jet pairing with min deviation from Higgs mass: %s",
+        ak.sum(events.correct_hh_min_m_pairs_mask),
     )
     return events
