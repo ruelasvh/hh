@@ -7,6 +7,7 @@ from hh.shared.drawhists import (
     draw_mH_1D_hists_v2,
     num_events_vs_sample,
     draw_truth_vs_reco_truth_matched,
+    draw_efficiency,
 )
 
 
@@ -129,6 +130,40 @@ def draw_hists(
                     output_dir=output_dir,
                 )
 
+        #### Pairing plots ####
+        draw_efficiency(
+            {sample_type: sample_hists},
+            [
+                [
+                    "hh_mass_reco_truth_matched_min_deltar_pairing",
+                    "hh_mass_reco_truth_matched_min_deltar_pairing_correct",
+                ],
+                [
+                    "hh_mass_reco_truth_matched_max_deltar_pairing",
+                    "hh_mass_reco_truth_matched_max_deltar_pairing_correct",
+                ],
+                [
+                    "hh_mass_reco_truth_matched_min_mass_pairing",
+                    "hh_mass_reco_truth_matched_min_mass_pairing_correct",
+                ],
+            ],
+            energy,
+            luminosity=luminosity,
+            xlabel="$m_{\mathrm{HH}}$ [GeV]",
+            ylabel="Events",
+            legend_labels={
+                "hh_mass_reco_truth_matched_min_deltar_pairing": r"min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
+                "hh_mass_reco_truth_matched_max_deltar_pairing": "max $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
+                "hh_mass_reco_truth_matched_min_mass_pairing": "min mass pairing",
+            },
+            legend_options={"loc": "upper right", "fontsize": "small"},
+            third_exp_label=f"\n{sample_labels[sample_type]}"
+            + "\nTruth-matched $\Delta R < 0.3$ jets",
+            xmin=200,
+            xmax=1000,
+            output_dir=output_dir,
+            plot_name="pairing_efficiency",
+        )
         draw_truth_vs_reco_truth_matched(
             {sample_type: sample_hists},
             [
@@ -195,6 +230,7 @@ def draw_hists(
             draw_ratio=True,
             output_dir=output_dir,
         )
+
     #### Old plots ####
 
     # draw_1d_hists(

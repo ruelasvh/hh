@@ -91,9 +91,9 @@ def process_batch(
 
         if is_mc:
             events["reco_truth_matched_jets"] = select_truth_matched_jets(
-                # events.truth_jet_H_parent_mask != 0,
-                (events.truth_jet_H_parent_mask == 1)
-                | (events.truth_jet_H_parent_mask == 2),
+                events.truth_jet_H_parent_mask != 0,
+                # (events.truth_jet_H_parent_mask == 1)
+                # | (events.truth_jet_H_parent_mask == 2),
                 events.valid_central_jets,
             )
             logger.info(
@@ -140,9 +140,9 @@ def process_batch(
         ### Do truth matching with b-tagging requirement ###
         if is_mc:
             events["reco_truth_matched_btagged_jets"] = select_truth_matched_jets(
-                # events.truth_jet_H_parent_mask != 0,
-                (events.truth_jet_H_parent_mask == 1)
-                | (events.truth_jet_H_parent_mask == 2),
+                events.truth_jet_H_parent_mask != 0,
+                # (events.truth_jet_H_parent_mask == 1)
+                # | (events.truth_jet_H_parent_mask == 2),
                 events.valid_central_btagged_jets,
             )
             logger.info(
@@ -172,9 +172,9 @@ def process_batch(
         if is_mc:
             ### baseline 4 b-tagged jets ###
             events["reco_truth_matched_4_btagged_jets"] = select_truth_matched_jets(
-                # events.truth_jet_H_parent_mask != 0,
-                (events.truth_jet_H_parent_mask == 1)
-                | (events.truth_jet_H_parent_mask == 2),
+                events.truth_jet_H_parent_mask != 0,
+                # (events.truth_jet_H_parent_mask == 1)
+                # | (events.truth_jet_H_parent_mask == 2),
                 events.valid_central_4_btagged_jets,
             )
             logger.info(
