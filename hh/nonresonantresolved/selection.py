@@ -216,7 +216,7 @@ def select_truth_matched_jets(truth_matched_jets_mask, valid_jets_mask):
         The truth-matched jets mask
     """
 
-    valid_truth_matched_jets = truth_matched_jets_mask & valid_jets_mask
+    valid_truth_matched_jets = valid_jets_mask & truth_matched_jets_mask
     keep_event_mask = ak.sum(valid_truth_matched_jets, axis=1) > 3
     valid_truth_matched_jet_mask = ak.mask(valid_truth_matched_jets, keep_event_mask)
     return valid_truth_matched_jet_mask

@@ -127,13 +127,12 @@ def process_batch(
             valid_central_btagged_jets
         )
         logger.info(
-            "Events passing previous cut and %s %s b-jets tagged with %s and %s efficiency: %s (from total %s)",
+            "Events passing previous cut and %s %s b-jets tagged with %s and %s efficiency: %s",
             bjets_sel["count"]["operator"],
             bjets_sel["count"]["value"],
             bjets_sel["model"],
             bjets_sel["efficiency"],
             ak.sum(events.valid_event),
-            ak.sum(~ak.is_none(valid_central_btagged_jets)),
         )
         if ak.sum(events.valid_event) == 0:
             return events
@@ -160,13 +159,12 @@ def process_batch(
         )
         events["valid_central_4_btagged_jets"] = valid_central_4_btagged_jets
         logger.info(
-            "Events passing previous cut and %s %s b-jets tagged with %s and %s efficiency: %s (from total %s)",
+            "Events passing previous cut and %s %s b-jets tagged with %s and %s efficiency: %s",
             bjets_sel_4_btags["count"]["operator"],
             bjets_sel_4_btags["count"]["value"],
             bjets_sel_4_btags["model"],
             bjets_sel_4_btags["efficiency"],
             ak.sum(events.valid_event & ~ak.is_none(valid_central_4_btagged_jets)),
-            ak.sum(~ak.is_none(valid_central_4_btagged_jets)),
         )
         ### Do truth matching with b-tagging requirement ###
         if is_mc:
@@ -183,6 +181,10 @@ def process_batch(
                 bjets_sel_4_btags["count"]["value"],
                 ak.sum(~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0)),
             )
+            j2b=events.valid_central_btagged_jets
+            j4b=events.valid_central_4_btagged_jets
+            j2b_4b=ak.mask(j2b,ak.sum(j2b,axis=1)>3)
+            j4b_4b=ak.mask(j4b,ak.sum(j4b,axis=1)>3)
 
     # select and save HH jet candidates
     events["hh_jet_idx"], events["non_hh_jet_idx"] = select_hh_jet_candidates(
