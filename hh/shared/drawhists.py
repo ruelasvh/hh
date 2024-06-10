@@ -258,6 +258,92 @@ def draw_truth_vs_reco_truth_matched(
     plt.close(fig)
 
 
+def draw_efficiency(
+    hists_group,
+    hist_prefixes,
+    energy,
+    xlabel=None,
+    ylabel="Efficiency",
+    legend_labels: dict = None,
+    legend_options: dict = {"loc": "upper right"},
+    third_exp_label="",
+    luminosity=None,
+    xmin=None,
+    xmax=None,
+    ymin=0,
+    ymax=1,
+    draw_errors=False,
+    output_dir=Path("plots"),
+    plot_name="efficiency",
+):
+    """Draw 1D histograms in one figure. The number of histograms in the figure is
+    determined by the number of samples in the hists_group dictionary. hist_prefix
+    is used to select the histograms to be drawn."""
+
+    # assert that legend_labels is either a list or "auto" with list size equal to the number of samples
+    if isinstance(legend_labels, dict):
+        assert len(legend_labels) == len(hist_prefixes), (
+            "legend_labels map must have the same size as the number of samples in hists_group."
+            f"Expected {len(hist_prefixes)} labels, got {len(legend_labels)}."
+        )
+
+    fig, ax = plt.subplots()
+
+    for sample_type, sample_hists in hists_group.items():
+        for i, hists in enumerate(hist_prefixes):
+            is_data = "data" in sample_type
+            hist_total_name = find_hist(sample_hists, lambda h: re.match(hists[0], h))
+            hist_total = sample_hists[hist_total_name]
+            hist_total_values = hist_total["values"]
+            hist_total_values = (
+                hist_total_values * luminosity
+                if luminosity and not is_data
+                else hist_total_values
+            )
+            hist_total_edges = hist_total["edges"]
+            hist_total_edges = (
+                hist_total_edges * inv_GeV
+                if xlabel is not None and "GeV" in xlabel
+                else hist_total_edges
+            )
+            label = get_legend_label(hist_total_name, legend_labels)
+            hist_pass_name = find_hist(sample_hists, lambda h: re.match(hists[1], h))
+            hist_pass = sample_hists[hist_pass_name]
+            hist_pass_values = hist_pass["values"]
+            hist_pass_values = (
+                hist_pass_values * luminosity
+                if luminosity and not is_data
+                else hist_pass_values
+            )
+            hplt.histplot(
+                hist_pass_values / hist_total_values,
+                hist_total_edges,
+                label=label,
+                color=f"C{i}",
+                ax=ax,
+            )
+
+    ax.legend(**legend_options)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_ylim(ymin=ymin, ymax=ymax * 1.5)
+    if xmin is not None:
+        ax.set_xlim(xmin=xmin)
+    if xmax is not None:
+        ax.set_xlim(xmax=xmax)
+    hplt.atlas.label(
+        label="Work In Progress",
+        data=True,  # prevents adding Simulation label, sim labels are added in legend
+        rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
+        loc=4,
+        ax=ax,
+        pad=0.01,
+    )
+    plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
+
+
 def draw_mH_1D_hists_v2(
     hists_group,
     hist_prefix,
