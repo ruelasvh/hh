@@ -15,6 +15,7 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched")
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth_reco_matched")
         hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched_v2")
+        hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched_v3")
         hists_dict[sample_name] += init_HH_histograms(
             postfix="_reco_vs_truth_response",
             binrange={
@@ -39,23 +40,24 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_leading_jets_histograms(
             prefix="hh_jet", postfix="_truth_matched_2b2j_asym_4_btags"
         )
+        ### Pairing histograms ###
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_truth_matched_HH_parents"
+            postfix="_reco_truth_matched_min_deltar_pairing"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_truth_reco_matched_HH_parents"
+            postfix="_reco_truth_matched_min_deltar_pairing_correct"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_min_deltar_pairing"
+            postfix="_reco_truth_matched_max_deltar_pairing"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_truth_matched_HH_parents_min_deltar_pairing"
+            postfix="_reco_truth_matched_max_deltar_pairing_correct"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_max_deltar_pairing"
+            postfix="_reco_truth_matched_min_mass_pairing"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_truth_matched_HH_parents_max_deltar_pairing"
+            postfix="_reco_truth_matched_min_mass_pairing_correct"
         )
 
     return hists_dict
