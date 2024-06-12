@@ -37,7 +37,7 @@ def draw_hists(
         ylabel="Events",
         legend_labels=sample_labels,
         luminosity=luminosity,
-        xmin=0,
+        xmin=100,
         ggFk01_factor=10,
         draw_errors=True,
         output_dir=output_dir,
@@ -52,7 +52,7 @@ def draw_hists(
         legend_labels=sample_labels,
         third_exp_label="\nTruth-matched jets $\Delta R < 0.3$",
         luminosity=luminosity,
-        xmin=0,
+        xmin=100,
         ggFk01_factor=10,
         draw_errors=True,
         output_dir=output_dir,
@@ -64,8 +64,6 @@ def draw_hists(
             [
                 "hh_mass_truth_reco_matched",
                 "hh_mass_reco_truth_matched",
-                "hh_mass_reco_truth_matched_v2",
-                "hh_mass_reco_truth_matched_v3",
             ],
             energy,
             luminosity=luminosity,
@@ -74,14 +72,36 @@ def draw_hists(
             legend_labels={
                 "hh_mass_truth_reco_matched": "Truth (reco-matched)",
                 "hh_mass_reco_truth_matched": "Reco (truth-matched)",
-                "hh_mass_reco_truth_matched_v2": r"$\geq 4$ HadronConeExclTruthLabelID = 5",
-                "hh_mass_reco_truth_matched_v3": f"Reco truth-matched central jets",
             },
             legend_options={"loc": "center right", "fontsize": "small"},
             third_exp_label=f"\n{sample_labels[sample_type]}"
             + "\nTruth-matched jets $\Delta R < 0.3$",
-            xmin=0,
+            xmin=100,
             draw_errors=True,
+            output_dir=output_dir,
+        )
+        draw_truth_vs_reco_truth_matched(
+            {sample_type: sample_hists},
+            [
+                "hh_mass_reco_truth_matched",
+                "hh_mass_reco_truth_matched_v2",
+            ],
+            energy,
+            luminosity=luminosity,
+            xlabel="$m_{\mathrm{HH}}$ [GeV]",
+            ylabel="Events",
+            legend_labels={
+                "hh_mass_reco_truth_matched": "Reco (truth-matched)",
+                "hh_mass_reco_truth_matched_v2": r"$\geq 4$ HadronConeExclTruthLabelID = 5",
+            },
+            legend_options={"loc": "center right", "fontsize": "small"},
+            third_exp_label=f"\n{sample_labels[sample_type]}"
+            + "\nTruth-matched jets $\Delta R < 0.3$",
+            xmin=100,
+            # draw_errors=True,
+            draw_ratio=True,
+            ymin_ratio=0.5,
+            ymax_ratio=2,
             output_dir=output_dir,
         )
         draw_1d_hists(
@@ -181,7 +201,7 @@ def draw_hists(
             legend_options={"loc": "center right", "fontsize": "small"},
             third_exp_label=f"\n{sample_labels[sample_type]}"
             + "\nTruth-matched $\Delta R < 0.3$ jets",
-            xmin=0,
+            xmin=100,
             # draw_errors=True,
             draw_ratio=True,
             output_dir=output_dir,
@@ -204,7 +224,7 @@ def draw_hists(
             legend_options={"loc": "center right", "fontsize": "small"},
             third_exp_label=f"\n{sample_labels[sample_type]}"
             + "\nTruth-matched $\Delta R < 0.3$ jets",
-            xmin=0,
+            xmin=100,
             # draw_errors=True,
             draw_ratio=True,
             output_dir=output_dir,
@@ -227,7 +247,7 @@ def draw_hists(
             legend_options={"loc": "center right", "fontsize": "small"},
             third_exp_label=f"\n{sample_labels[sample_type]}"
             + "\nTruth-matched $\Delta R < 0.3$ jets",
-            xmin=0,
+            xmin=100,
             # draw_errors=True,
             draw_ratio=True,
             output_dir=output_dir,

@@ -153,6 +153,8 @@ def draw_truth_vs_reco_truth_matched(
     density=False,
     draw_errors=False,
     draw_ratio=False,
+    ymin_ratio=-0.5,
+    ymax_ratio=1.5,
     scale_factors=None,
     output_dir=Path("plots"),
 ):
@@ -231,7 +233,7 @@ def draw_truth_vs_reco_truth_matched(
                         ax=ax_ratio,
                     )
                     ax_ratio.set_ylabel("Ratio")
-                    ax_ratio.set_ylim(-0.5, 1.5)
+                    ax_ratio.set_ylim(ymin_ratio, ymax_ratio)
                     ax_ratio.axhline(1, color="black", linestyle="--", linewidth=0.4)
 
     ax.legend(**legend_options)

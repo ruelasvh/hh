@@ -79,20 +79,19 @@ def select_hh_jet_candidates(jets, valid_jets_mask):
         The 4 Higgs candidate jets mask and non-Higgs candidates in each event
     """
     jet_idx = ak.local_index(jets)
-    valid_btag_jets_mask = valid_jets_mask & (jets.btag == 1)
+    jet_btag_mask = jets.btag == 1
+    valid_btag_jets_mask = valid_jets_mask & jet_btag_mask
     pt_sort = ak.argsort(jets.pt[valid_btag_jets_mask], axis=1, ascending=False)
     valid_btag_jets_idx = jet_idx[valid_btag_jets_mask][pt_sort]
-    valid_no_btag_jets_mask = valid_jets_mask & (jets.btag == 0)
+    valid_no_btag_jets_mask = valid_jets_mask & ~jet_btag_mask
     pt_sort = ak.argsort(jets.pt[valid_no_btag_jets_mask], axis=1, ascending=False)
     valid_no_btag_jets_idx = jet_idx[valid_no_btag_jets_mask][pt_sort]
     valid_jets_idx = ak.concatenate(
         [valid_btag_jets_idx, valid_no_btag_jets_idx], axis=1
     )
-    valid_events_mask = ~ak.is_none(valid_jets_mask, axis=0)
+    valid_events_mask = ~ak.is_none(valid_jets_mask)
     hh_jet_idx = valid_jets_idx[:, :4]
-    non_hh_jet_idx = ak.concatenate(
-        [valid_jets_idx[:, 4:], jet_idx[~valid_jets_mask]], axis=1
-    )
+    non_hh_jet_idx = valid_jets_idx[:, 4:]
     hh_jet_idx = ak.mask(hh_jet_idx, valid_events_mask)
     non_hh_jet_idx = ak.mask(non_hh_jet_idx, valid_events_mask)
     return hh_jet_idx, non_hh_jet_idx

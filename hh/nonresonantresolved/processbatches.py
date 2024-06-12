@@ -182,7 +182,7 @@ def process_batch(
     # select and save HH jet candidates
     events["hh_jet_idx"], events["non_hh_jet_idx"] = select_hh_jet_candidates(
         jets=ak.zip({k: events[f"jet_{k}"] for k in ["btag", *kin_labels.keys()]}),
-        valid_jets_mask=events.valid_central_4_btagged_jets,
+        valid_jets_mask=events.reco_truth_matched_4_btagged_jets,
     )
     events["correct_hh_nominal_pairs_mask"] = select_correct_hh_pair_events(
         h1_jets_idx=events.hh_jet_idx[:, 0:2],
