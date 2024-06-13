@@ -11,6 +11,7 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
     for sample in inputs:
         sample_name = sample["label"]
         hists_dict[sample_name] = []
+        hists_dict[sample_name] += init_H_histograms(postfix="_truth")
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth")
         hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched")
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth_reco_matched")
@@ -40,7 +41,30 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_leading_jets_histograms(
             prefix="hh_jet", postfix="_truth_matched_2b2j_asym_4_btags"
         )
-        ### Pairing histograms ###
+        ### Truth matched Pairing vs Reco HH histograms ###
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_min_deltar_pairing"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_min_deltar_pairing_correct"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_max_deltar_pairing"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_max_deltar_pairing_correct"
+        )
+        hists_dict[sample_name] += init_HH_histograms(postfix="_reco_min_mass_pairing")
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_min_mass_pairing_correct"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_min_mass_true_pairing"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_min_mass_true_pairing_correct"
+        )
+        ### Truth matched Pairing vs truth HH histograms ###
         hists_dict[sample_name] += init_HH_histograms(
             postfix="_reco_truth_matched_min_deltar_pairing"
         )
@@ -58,6 +82,24 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         )
         hists_dict[sample_name] += init_HH_histograms(
             postfix="_reco_truth_matched_min_mass_pairing_correct"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_truth_matched_min_mass_true_pairing"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_reco_truth_matched_min_mass_true_pairing_correct"
+        )
+        hists_dict[sample_name] += init_mH_2d_histograms(
+            postfix="_reco_min_deltar_pairing"
+        )
+        hists_dict[sample_name] += init_mH_2d_histograms(
+            postfix="_reco_max_deltar_pairing"
+        )
+        hists_dict[sample_name] += init_mH_2d_histograms(
+            postfix="_reco_min_mass_true_pairing"
+        )
+        hists_dict[sample_name] += init_mH_2d_histograms(
+            postfix="_reco_min_mass_pairing"
         )
 
     return hists_dict
@@ -166,11 +208,11 @@ def init_H_histograms(
     """Initialize H1 and H2 kinematics 1d histograms"""
 
     hists = []
-    for reco_h in [1, 2]:
+    for h in [1, 2]:
         for kin_var in kin_labels:
             hists += [
                 Histogram(
-                    f"h{reco_h}_{kin_var}{postfix if postfix else ''}",
+                    f"h{h}_{kin_var}{postfix if postfix else ''}",
                     binrange[kin_var],
                     bins,
                 )
@@ -230,7 +272,7 @@ def init_mH_2d_histograms(binrange=[0, 200_000], bins=50, postfix=None) -> list:
     hists = []
     hists += [
         Histogram2d(
-            f"mH_plane{postfix if postfix else ''}",
+            f"mHH_plane{postfix if postfix else ''}",
             binrange=binrange,
             bins=bins,
         )

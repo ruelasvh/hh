@@ -6,6 +6,7 @@ from hh.shared.utils import (
     format_btagger_model_name,
     kin_labels,
     optimizer_mass_pairing,
+    optimizer_mass_pairing_v2,
 )
 from hh.nonresonantresolved.selection import (
     select_n_jets_events,
@@ -179,7 +180,51 @@ def process_batch(
                 ak.sum(~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0)),
             )
 
-    # select and save HH jet candidates
+    # ###################################
+    # # select and save HH jet candidates
+    # ###################################
+    events["hh_no_truth_jet_idx"], events["non_hh_no_truth_jet_idx"] = (
+        select_hh_jet_candidates(
+            jets=ak.zip({k: events[f"jet_{k}"] for k in ["btag", *kin_labels.keys()]}),
+            valid_jets_mask=events.valid_central_4_btagged_jets,
+        )
+    )
+    events["H1_no_truth_min_dR_jet_idx"], events["H2_no_truth_min_dR_jet_idx"] = (
+        reconstruct_hh_jet_pairs(
+            jets=p4.zip({v: events[f"jet_{v}"] for v in kin_labels}),
+            hh_jet_idx=events.hh_no_truth_jet_idx,
+            loss=lambda j_1, j_2: j_1.deltaR(j_2),
+        )
+    )
+    events["H1_no_truth_max_dR_jet_idx"], events["H2_no_truth_max_dR_jet_idx"] = (
+        reconstruct_hh_jet_pairs(
+            jets=p4.zip({v: events[f"jet_{v}"] for v in kin_labels}),
+            hh_jet_idx=events.hh_no_truth_jet_idx,
+            loss=lambda j_1, j_2: j_1.deltaR(j_2),
+            optimizer=np.argmax,
+        )
+    )
+    (
+        events["H1_no_truth_min_mass_true_jet_idx"],
+        events["H2_no_truth_min_mass_true_jet_idx"],
+    ) = reconstruct_hh_jet_pairs(
+        jets=p4.zip({v: events[f"jet_{v}"] for v in kin_labels}),
+        hh_jet_idx=events.hh_no_truth_jet_idx,
+        loss=lambda j_1, j_2: ((j_1 + j_2).mass - 125) ** 2,
+        optimizer=optimizer_mass_pairing,
+    )
+    events["H1_no_truth_min_mass_jet_idx"], events["H2_no_truth_min_mass_jet_idx"] = (
+        reconstruct_hh_jet_pairs(
+            jets=p4.zip({v: events[f"jet_{v}"] for v in kin_labels}),
+            hh_jet_idx=events.hh_no_truth_jet_idx,
+            loss=lambda j_1, j_2: (j_1 + j_2).mass,
+            optimizer=optimizer_mass_pairing_v2,
+        )
+    )
+
+    ##########################################################
+    # select and save HH jet candidates that are truth-matched
+    ##########################################################
     events["hh_jet_idx"], events["non_hh_jet_idx"] = select_hh_jet_candidates(
         jets=ak.zip({k: events[f"jet_{k}"] for k in ["btag", *kin_labels.keys()]}),
         valid_jets_mask=events.reco_truth_matched_4_btagged_jets,
@@ -230,13 +275,32 @@ def process_batch(
         ak.sum(events.correct_hh_max_dR_pairs_mask),
     )
 
-    ###### HH jet min mass pairing ######
-    events["H1_min_mass_jet_idx"], events["H2_min_mass_jet_idx"] = (
+    ###### HH jet min mass from true HH mass pairing ######
+    events["H1_min_mass_true_jet_idx"], events["H2_min_mass_true_jet_idx"] = (
         reconstruct_hh_jet_pairs(
             jets=p4.zip({v: events[f"jet_{v}"] for v in kin_labels}),
             hh_jet_idx=events.hh_jet_idx,
             loss=lambda j_1, j_2: ((j_1 + j_2).mass - 125) ** 2,
             optimizer=optimizer_mass_pairing,
+        )
+    )
+    events["correct_hh_min_mass_true_pairs_mask"] = select_correct_hh_pair_events(
+        h1_jets_idx=events.H1_min_mass_true_jet_idx,
+        h2_jets_idx=events.H2_min_mass_true_jet_idx,
+        truth_jet_H_parent_mask=events.truth_jet_H_parent_mask,
+    )
+    logger.info(
+        "Events passing previous cuts and correct HH jet pairing with min deviation from Higgs mass: %s",
+        ak.sum(events.correct_hh_min_mass_true_pairs_mask),
+    )
+
+    ###### HH jet min mass pairing ######
+    events["H1_min_mass_jet_idx"], events["H2_min_mass_jet_idx"] = (
+        reconstruct_hh_jet_pairs(
+            jets=p4.zip({v: events[f"jet_{v}"] for v in kin_labels}),
+            hh_jet_idx=events.hh_jet_idx,
+            loss=lambda j_1, j_2: (j_1 + j_2).mass,
+            optimizer=optimizer_mass_pairing_v2,
         )
     )
     events["correct_hh_min_mass_pairs_mask"] = select_correct_hh_pair_events(
@@ -245,7 +309,7 @@ def process_batch(
         truth_jet_H_parent_mask=events.truth_jet_H_parent_mask,
     )
     logger.info(
-        "Events passing previous cuts and correct HH jet pairing with min deviation from Higgs mass: %s",
+        "Events passing previous cuts and correct HH jet pairing with min invariant mass: %s",
         ak.sum(events.correct_hh_min_mass_pairs_mask),
     )
 

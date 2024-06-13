@@ -25,8 +25,8 @@ def draw_hists(
     sample_labels = {
         "mc23a_ggF_k01": "kl=1 ggF MC23a",
         "mc23a_ggF_k05": "kl=5 ggF MC23a",
-        "mc23d_ggF_k01": "kl=1 ggF MC23d",
-        "mc23d_ggF_k05": "kl=5 ggF MC23d",
+        # "mc23d_ggF_k01": "kl=1 ggF MC23d",
+        # "mc23d_ggF_k05": "kl=5 ggF MC23d",
     }
 
     draw_1d_hists(
@@ -162,6 +162,10 @@ def draw_hists(
                     "hh_mass_reco_truth_matched_max_deltar_pairing_correct",
                 ],
                 [
+                    "hh_mass_reco_truth_matched_min_mass_true_pairing",
+                    "hh_mass_reco_truth_matched_min_mass_true_pairing_correct",
+                ],
+                [
                     "hh_mass_reco_truth_matched_min_mass_pairing",
                     "hh_mass_reco_truth_matched_min_mass_pairing_correct",
                 ],
@@ -173,6 +177,7 @@ def draw_hists(
             legend_labels={
                 "hh_mass_reco_truth_matched_min_deltar_pairing": r"min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
                 "hh_mass_reco_truth_matched_max_deltar_pairing": "max $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
+                "hh_mass_reco_truth_matched_min_mass_true_pairing": "min mass true pairing",
                 "hh_mass_reco_truth_matched_min_mass_pairing": "min mass pairing",
             },
             legend_options={"loc": "upper right", "fontsize": "small"},
@@ -252,6 +257,30 @@ def draw_hists(
             draw_ratio=True,
             output_dir=output_dir,
         )
+        # draw_mH_plane_2D_hists(
+        #     sample_hists,
+        #     sample_type,
+        #     "mHH_plane_reco_min_deltar_pairing",
+        #     energy,
+        #     luminosity=luminosity,
+        #     output_dir=output_dir,
+        # )
+        # draw_mH_plane_2D_hists(
+        #     sample_hists,
+        #     sample_type,
+        #     "mHH_plane_reco_max_deltar_pairing",
+        #     energy,
+        #     luminosity=luminosity,
+        #     output_dir=output_dir,
+        # )
+        # draw_mH_plane_2D_hists(
+        #     sample_hists,
+        #     sample_type,
+        #     "mHH_plane_reco_min_mass_pairing",
+        #     energy,
+        #     luminosity=luminosity,
+        #     output_dir=output_dir,
+        # )
 
     #### Old plots ####
 
