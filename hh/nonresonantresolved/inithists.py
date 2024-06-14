@@ -11,8 +11,16 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
     for sample in inputs:
         sample_name = sample["label"]
         hists_dict[sample_name] = []
+
+        ##################################################
+        ### Truth H(H) histograms ########################
+        ##################################################
         hists_dict[sample_name] += init_H_histograms(postfix="_truth")
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth")
+
+        ##################################################
+        ### Reco truth-matched H(H) histograms ###########
+        ##################################################
         hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched")
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth_reco_matched")
         hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched_v2")
@@ -26,6 +34,10 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
                 "mass": [-100, 100],
             },
         )
+
+        ######################################################
+        ### HH jet candidate selections cutflow histograms ###
+        ######################################################
         hists_dict[sample_name] += init_leading_jets_histograms(
             prefix="hh_jet", postfix="_truth_matched"
         )
@@ -41,7 +53,10 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_leading_jets_histograms(
             prefix="hh_jet", postfix="_truth_matched_2b2j_asym_4_btags"
         )
+
+        ###################################################
         ### Truth matched Pairing vs Reco HH histograms ###
+        ###################################################
         hists_dict[sample_name] += init_HH_histograms(
             postfix="_reco_min_deltar_pairing"
         )
@@ -64,7 +79,10 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_HH_histograms(
             postfix="_reco_min_mass_true_pairing_correct"
         )
-        ### Truth matched Pairing vs truth HH histograms ###
+
+        ####################################################
+        ### Truth matched Pairing efficiency histograms ####
+        ####################################################
         hists_dict[sample_name] += init_HH_histograms(
             postfix="_reco_truth_matched_min_deltar_pairing"
         )
@@ -89,6 +107,10 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_HH_histograms(
             postfix="_reco_truth_matched_min_mass_true_pairing_correct"
         )
+
+        ##################################################
+        ### Mass plane for pairing methods histograms ####
+        ##################################################
         hists_dict[sample_name] += init_mH_2d_histograms(
             postfix="_reco_min_deltar_pairing"
         )
