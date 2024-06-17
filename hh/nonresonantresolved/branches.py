@@ -29,7 +29,7 @@ JET_ALIASES = {
     "jet_btag_DL1dv01_pb": "recojet_antikt4PFlow_NOSYS_DL1dv01_pb",
     "jet_btag_DL1dv01_pc": "recojet_antikt4PFlow_NOSYS_DL1dv01_pc",
     "jet_btag_DL1dv01_pu": "recojet_antikt4PFlow_NOSYS_DL1dv01_pu",
-    "jet_btag_GN2v01_65": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_65",
+    # "jet_btag_GN2v01_65": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_65",
     "jet_btag_GN2v01_70": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_70",
     "jet_btag_GN2v01_77": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_77",
     "jet_btag_GN2v01_85": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_85",

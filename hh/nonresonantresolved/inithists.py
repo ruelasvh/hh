@@ -11,6 +11,15 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
     for sample in inputs:
         sample_name = sample["label"]
         hists_dict[sample_name] = []
+        hh_vars = ["pt", "eta", "phi", "mass", "sum_jet_pt", "delta_eta"]
+        hh_vars_binranges = {
+            "pt": [0, 500_000],
+            "eta": [-5, 5],
+            "phi": [-3, 3],
+            "mass": [0, 1_200_000],
+            "sum_jet_pt": [0, 500_000],
+            "delta_eta": [-5, 5],
+        }
 
         ##################################################
         ### Truth H(H) histograms ########################
@@ -27,12 +36,7 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched_v3")
         hists_dict[sample_name] += init_HH_histograms(
             postfix="_reco_vs_truth_response",
-            binrange={
-                "pt": [-100, 100],
-                "eta": [-100, 100],
-                "phi": [-100, 100],
-                "mass": [-100, 100],
-            },
+            binrange={v: [-100, 100] for v in kin_labels},
         )
 
         ######################################################
@@ -58,54 +62,66 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         ### Truth matched Pairing vs Reco HH histograms ###
         ###################################################
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_min_deltar_pairing"
+            hh_vars, hh_vars_binranges, postfix="_reco_min_deltar_pairing"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_min_deltar_pairing_correct"
+            hh_vars, hh_vars_binranges, postfix="_reco_min_deltar_pairing_correct"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_max_deltar_pairing"
+            hh_vars, hh_vars_binranges, postfix="_reco_max_deltar_pairing"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_max_deltar_pairing_correct"
-        )
-        hists_dict[sample_name] += init_HH_histograms(postfix="_reco_min_mass_pairing")
-        hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_min_mass_pairing_correct"
+            hh_vars, hh_vars_binranges, postfix="_reco_max_deltar_pairing_correct"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_min_mass_true_pairing"
+            hh_vars, hh_vars_binranges, postfix="_reco_min_mass_true_pairing"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_min_mass_true_pairing_correct"
+            hh_vars, hh_vars_binranges, postfix="_reco_min_mass_true_pairing_correct"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            hh_vars, hh_vars_binranges, postfix="_reco_min_mass_pairing"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            hh_vars, hh_vars_binranges, postfix="_reco_min_mass_pairing_correct"
         )
 
         ####################################################
         ### Truth matched Pairing efficiency histograms ####
         ####################################################
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_truth_matched_min_deltar_pairing"
+            hh_vars, hh_vars_binranges, postfix="_reco_truth_matched_min_deltar_pairing"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_truth_matched_min_deltar_pairing_correct"
+            hh_vars,
+            hh_vars_binranges,
+            postfix="_reco_truth_matched_min_deltar_pairing_correct",
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_truth_matched_max_deltar_pairing"
+            hh_vars, hh_vars_binranges, postfix="_reco_truth_matched_max_deltar_pairing"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_truth_matched_max_deltar_pairing_correct"
+            hh_vars,
+            hh_vars_binranges,
+            postfix="_reco_truth_matched_max_deltar_pairing_correct",
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_truth_matched_min_mass_pairing"
+            hh_vars,
+            hh_vars_binranges,
+            postfix="_reco_truth_matched_min_mass_true_pairing",
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_truth_matched_min_mass_pairing_correct"
+            hh_vars,
+            hh_vars_binranges,
+            postfix="_reco_truth_matched_min_mass_true_pairing_correct",
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_truth_matched_min_mass_true_pairing"
+            hh_vars, hh_vars_binranges, postfix="_reco_truth_matched_min_mass_pairing"
         )
         hists_dict[sample_name] += init_HH_histograms(
-            postfix="_reco_truth_matched_min_mass_true_pairing_correct"
+            hh_vars,
+            hh_vars_binranges,
+            postfix="_reco_truth_matched_min_mass_pairing_correct",
         )
 
         ##################################################
@@ -264,6 +280,7 @@ def init_reco_H_truth_jet_histograms(
 
 
 def init_HH_histograms(
+    vars=["pt", "eta", "phi", "mass"],
     binrange={
         "pt": [0, 500_000],
         "eta": [-5, 5],
@@ -276,11 +293,11 @@ def init_HH_histograms(
     """Initialize HH kinematics 1d histograms"""
 
     hists = []
-    for kin_var in kin_labels:
+    for var in vars:
         hists += [
             Histogram(
-                f"hh_{kin_var}{postfix if postfix else ''}",
-                binrange[kin_var],
+                f"hh_{var}{postfix if postfix else ''}",
+                binrange[var],
                 bins,
             )
         ]
