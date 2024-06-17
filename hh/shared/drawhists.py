@@ -136,7 +136,7 @@ def draw_1d_hists(
     plt.close(fig)
 
 
-def draw_truth_vs_reco_truth_matched(
+def draw_1d_hists_v2(
     hists_group,
     hist_prefixes,
     energy,
@@ -156,6 +156,7 @@ def draw_truth_vs_reco_truth_matched(
     ymin_ratio=-0.5,
     ymax_ratio=1.5,
     scale_factors=None,
+    plot_name="truth_vs_reco",
     output_dir=Path("plots"),
 ):
     """Draw 1D histograms in one figure. The number of histograms in the figure is
@@ -254,7 +255,6 @@ def draw_truth_vs_reco_truth_matched(
         ax=ax,
         pad=0.01,
     )
-    plot_name = hist_prefixes[0].replace("$", "")
     plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close(fig)
@@ -464,6 +464,7 @@ def draw_mH_plane_2D_hists(
     hist_prefix,
     energy,
     luminosity=None,
+    log_z=False,
     output_dir=Path("plots"),
 ):
     fig, ax = plt.subplots()
@@ -477,7 +478,7 @@ def draw_mH_plane_2D_hists(
     hist_values[hist_values > 2000] = 0
     bins_GeV = hist["edges"] * inv_GeV
     hplt.hist2dplot(
-        hist_values,
+        np.log1p(hist_values) if log_z else hist_values,
         bins_GeV,
         bins_GeV,
         ax=ax,

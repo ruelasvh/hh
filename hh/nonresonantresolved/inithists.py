@@ -28,6 +28,22 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth")
 
         ##################################################
+        ### Reco H(H) histograms ########################
+        ##################################################
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_truth_reco_central_jets_selection"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_truth_reco_central_btagged_jets_selection"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_truth_reco_central_btagged_4_plus_truth_matched_jets_selection"
+        )
+        hists_dict[sample_name] += init_HH_histograms(
+            postfix="_truth_reco_central_btagged_4_plus_truth_matched_jets_correct_min_deltar_pairing_selection"
+        )
+
+        ##################################################
         ### Reco truth-matched H(H) histograms ###########
         ##################################################
         hists_dict[sample_name] += init_HH_histograms(postfix="_reco_truth_matched")

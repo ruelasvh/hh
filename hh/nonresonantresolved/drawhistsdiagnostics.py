@@ -6,7 +6,7 @@ from hh.shared.drawhists import (
     draw_mH_plane_2D_hists,
     draw_mH_1D_hists_v2,
     num_events_vs_sample,
-    draw_truth_vs_reco_truth_matched,
+    draw_1d_hists_v2,
     draw_efficiency,
 )
 
@@ -70,7 +70,7 @@ def draw_hists(
     )
 
     for sample_type, sample_hists in hists_group.items():
-        draw_truth_vs_reco_truth_matched(
+        draw_1d_hists_v2(
             {sample_type: sample_hists},
             [
                 "hh_mass_truth_reco_matched",
@@ -88,10 +88,11 @@ def draw_hists(
             third_exp_label=f"\n{sample_labels[sample_type]}\n{legend_labels['truth_matching']}",
             xmin=100,
             draw_errors=True,
+            plot_name="hh_mass_truth_vs_reco_truth_matched",
             output_dir=output_dir,
         )
 
-        draw_truth_vs_reco_truth_matched(
+        draw_1d_hists_v2(
             {sample_type: sample_hists},
             [
                 "hh_mass_reco_truth_matched",
@@ -111,6 +112,7 @@ def draw_hists(
             draw_ratio=True,
             ymin_ratio=0.5,
             ymax_ratio=2,
+            plot_name="hh_mass_truth_matching_methods",
             output_dir=output_dir,
         )
 
@@ -125,12 +127,47 @@ def draw_hists(
             output_dir=output_dir,
         )
 
+        ###############################################
+        # Cutflow plots
+        ###############################################
+        draw_1d_hists_v2(
+            {sample_type: sample_hists},
+            [
+                "hh_mass_truth",
+                "hh_mass_truth_reco_central_jets_selection",
+                "hh_mass_truth_reco_central_btagged_jets_selection",
+                "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_selection",
+                "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_correct_min_deltar_pairing_selection",
+            ],
+            energy,
+            luminosity=luminosity,
+            xlabel="Truth $m_{\mathrm{HH}}$ [GeV]",
+            ylabel="Events",
+            legend_labels={
+                "hh_mass_truth": "Truth",
+                "hh_mass_truth_reco_central_jets_selection": r"$\geq$ 4 jets with $p_{\mathrm{T}} > 25$ GeV, $|\eta| < 2.5$, JVT",
+                "hh_mass_truth_reco_central_btagged_jets_selection": r"$\geq$ 4 b-tags with GN2v01@77%",
+                "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_selection": r"$\geq$ 4 truth-matched jets",
+                "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_correct_min_deltar_pairing_selection": r"correct pairs with min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$",
+            },
+            legend_options={"loc": "center right", "fontsize": "small"},
+            third_exp_label=f"\n{sample_labels[sample_type]}\n{legend_labels['truth_matching']}",
+            xmin=250,
+            draw_ratio=True,
+            ymin_ratio=0,
+            plot_name="hh_mass_truth_cutflow",
+            output_dir=output_dir,
+        )
+
+        ###############################################
+        # Trigger efficiency plots
+        ###############################################
         # for i in [1, 2, 3, 4]:
         #     categories = [
         #         "_truth_matched_2b2j_asym",
         #     ]
         #     for cat in categories:
-        #         draw_truth_vs_reco_truth_matched(
+        #         draw_1d_hists_v2(
         #             {sample_type: sample_hists},
         #             [
         #                 f"hh_jet_{i}_pt_truth_matched",
@@ -260,7 +297,7 @@ def draw_hists(
                 plot_name=f"pairing_efficiency_truth_{hh_var}",
             )
 
-        draw_truth_vs_reco_truth_matched(
+        draw_1d_hists_v2(
             {sample_type: sample_hists},
             [
                 "hh_mass_reco_truth_matched_min_deltar_pairing",
@@ -281,10 +318,11 @@ def draw_hists(
             xmin=100,
             # draw_errors=True,
             draw_ratio=True,
+            plot_name="hh_mass_reco_truth_matched_min_deltar_pairing",
             output_dir=output_dir,
         )
 
-        draw_truth_vs_reco_truth_matched(
+        draw_1d_hists_v2(
             {sample_type: sample_hists},
             [
                 "hh_mass_reco_truth_matched_max_deltar_pairing",
@@ -305,10 +343,11 @@ def draw_hists(
             xmin=100,
             # draw_errors=True,
             draw_ratio=True,
+            plot_name="hh_mass_reco_truth_matched_max_deltar_pairing",
             output_dir=output_dir,
         )
 
-        draw_truth_vs_reco_truth_matched(
+        draw_1d_hists_v2(
             {sample_type: sample_hists},
             [
                 "hh_mass_reco_truth_matched_min_mass_true_pairing",
@@ -328,10 +367,11 @@ def draw_hists(
             third_exp_label=f"\n{sample_labels[sample_type]}\n{legend_labels['truth_matching']}",
             xmin=100,
             draw_ratio=True,
+            plot_name="hh_mass_reco_truth_matched_min_mass_true_pairing",
             output_dir=output_dir,
         )
 
-        draw_truth_vs_reco_truth_matched(
+        draw_1d_hists_v2(
             {sample_type: sample_hists},
             [
                 "hh_mass_reco_truth_matched_min_mass_pairing",
@@ -351,6 +391,7 @@ def draw_hists(
             third_exp_label=f"\n{sample_labels[sample_type]}\n{legend_labels['truth_matching']}",
             xmin=100,
             draw_ratio=True,
+            plot_name="hh_mass_reco_truth_matched_min_mass_pairing",
             output_dir=output_dir,
         )
 
@@ -360,6 +401,7 @@ def draw_hists(
             "mHH_plane_reco_min_deltar_pairing",
             energy,
             luminosity=luminosity,
+            log_z=True,
             output_dir=output_dir,
         )
         draw_mH_plane_2D_hists(
@@ -368,6 +410,7 @@ def draw_hists(
             "mHH_plane_reco_max_deltar_pairing",
             energy,
             luminosity=luminosity,
+            log_z=True,
             output_dir=output_dir,
         )
         draw_mH_plane_2D_hists(
@@ -376,6 +419,7 @@ def draw_hists(
             "mHH_plane_reco_min_mass_true_pairing",
             energy,
             luminosity=luminosity,
+            log_z=True,
             output_dir=output_dir,
         )
         draw_mH_plane_2D_hists(
@@ -384,6 +428,7 @@ def draw_hists(
             "mHH_plane_reco_min_mass_pairing",
             energy,
             luminosity=luminosity,
+            log_z=True,
             output_dir=output_dir,
         )
 
