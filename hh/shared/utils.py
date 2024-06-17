@@ -321,9 +321,12 @@ def optimizer_mass_pairing(values, **kwargs):
     selected_fourpairs_combos_idx = combos_fourpairs_idx[combos_loss_min_idx]
     h1_jj_idx, h2_jj_idx = ak.unzip(selected_fourpairs_combos_idx)
     hh_jjjj_idx = ak.concatenate([h1_jj_idx, h2_jj_idx], axis=1)
-    min_h_idx = np.argmin(values[hh_jjjj_idx], axis=1, keepdims=True)
-    leading_h_jj_idx = hh_jjjj_idx[min_h_idx]
+    leading_h_jj_idx = hh_jjjj_idx[:, 0:1:2]
     return leading_h_jj_idx
+    ## The bottom leads to sculpting effects in the mass distribution
+    # min_h_idx = np.argmin(values[hh_jjjj_idx], axis=1, keepdims=True)
+    # leading_h_jj_idx = hh_jjjj_idx[min_h_idx]
+    # return leading_h_jj_idx
 
 
 def optimizer_mass_pairing_v2(values, **kwargs):
@@ -343,6 +346,9 @@ def optimizer_mass_pairing_v2(values, **kwargs):
     selected_fourpairs_combos_idx = combos_fourpairs_idx[combos_loss_min_idx]
     h1_jj_idx, h2_jj_idx = ak.unzip(selected_fourpairs_combos_idx)
     hh_jjjj_idx = ak.concatenate([h1_jj_idx, h2_jj_idx], axis=1)
-    min_h_idx = np.argmin(values[hh_jjjj_idx], axis=1, keepdims=True)
-    leading_h_jj_idx = hh_jjjj_idx[min_h_idx]
+    leading_h_jj_idx = hh_jjjj_idx[:, 0:1:2]
     return leading_h_jj_idx
+    ## The bottom leads to sculpting effects in the mass distribution
+    #    min_h_idx = np.argmin(values[hh_jjjj_idx], axis=1, keepdims=True)
+    #    leading_h_jj_idx = hh_jjjj_idx[min_h_idxb
+    #    return leading_h_jj_idx
