@@ -16,7 +16,7 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
             "pt": [0, 500_000],
             "eta": [-5, 5],
             "phi": [-3, 3],
-            "mass": [0, 1_200_000],
+            "mass": [200, 1_000_000],
             "sum_jet_pt": [0, 500_000],
             "delta_eta": [-5, 5],
         }

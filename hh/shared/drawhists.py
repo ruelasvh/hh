@@ -471,12 +471,12 @@ def draw_mH_plane_2D_hists(
     hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
     hist = sample_hists[hist_name]
     is_data = "data" in sample_name
+    bins_GeV = hist["edges"] * inv_GeV
     hist_values = (
         hist["values"] * luminosity if luminosity and not is_data else hist["values"]
     )
     # remove outliers from hist_values
     hist_values[hist_values > 2000] = 0
-    bins_GeV = hist["edges"] * inv_GeV
     hplt.hist2dplot(
         np.log1p(hist_values) if log_z else hist_values,
         bins_GeV,
@@ -484,6 +484,7 @@ def draw_mH_plane_2D_hists(
         ax=ax,
         cbarpad=0.15,
         cbarsize="5%",
+        flow=None,
     )
     ax.set_ylabel(r"$m_{H2}$ [GeV]")
     ax.set_xlabel(r"$m_{H1}$ [GeV]")
