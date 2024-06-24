@@ -127,13 +127,14 @@ def main():
     # Ask user if they want to overwrite the plots output directory, if not exit
     if args.output_dir.exists():
         overwrite = input(
-            f"Output directory '{args.output_dir}' already exists, do you want to overwrite it? (y/n) "
+            f"Output directory '{args.output_dir}' already exists, do you want to overwrite it? (Y/n) "
         )
-        if overwrite.lower() != "y":
-            exit(0)
-        else:
+        if overwrite == "" or overwrite.lower() == "y":
             shutil.rmtree(args.output_dir)
             args.output_dir.mkdir(parents=True)
+        else:
+            exit(0)
+
     else:
         args.output_dir.mkdir(parents=True)
         logger.info(f"Saving plots to '{args.output_dir}'")
