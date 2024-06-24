@@ -1,5 +1,7 @@
+import numpy as np
 from argparse import Namespace
-from hh.shared.utils import logger
+from hh.shared.utils import pairing_methods
+from hh.shared.selection import X_HH
 from hh.shared.drawhists import (
     draw_1d_hists,
     draw_kin_hists,
@@ -23,8 +25,8 @@ def draw_hists(
 
     sample_labels = {
         "mc23a_ggF_k01": "kl=1 ggF MC23a",
-        "mc23a_ggF_k05": "kl=5 ggF MC23a",
         "mc23d_ggF_k01": "kl=1 ggF MC23d",
+        "mc23a_ggF_k05": "kl=5 ggF MC23a",
         "mc23d_ggF_k05": "kl=5 ggF MC23d",
         "mc20a_multijet": "QCD b-filtered",
         "mc20a_ggF_k01": "kl=1 ggF MC20a",
@@ -38,17 +40,11 @@ def draw_hists(
         "hh_delta_eta": r"$\Delta\eta_{\mathrm{HH}}$",
     }
 
-    pairing_methods = {
-        "min_deltar_pairing": r"min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
-        "max_deltar_pairing": r"max $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
-        "min_mass_true_pairing": r"min $\Sigma(m_{jj}-m_\mathrm{H})^2$ pairing",
-        "min_mass_pairing": r"min $(m_{jj}-m_{jj})^2$ pairing",
-    }
-
     selections_labels = {
         "truth_matching": r"Truth-matched $\Delta R < 0.3$ jets",
         "central_jets": r"$\geq$ 4 jets with $p_{\mathrm{T}} > 25$ GeV, $|\eta| < 2.5$, JVT",
         "btagged_GN277_4_jets": r"$\geq$ 4 b-tags with GN2v01@77%",
+        # "truth_matched_4_plus_jets": r"${n_b}_\mathrm{match} \geq$ 4",
         "truth_matched_4_plus_jets": r"$\geq$ 4 truth-matched jets",
     }
 
@@ -163,9 +159,11 @@ def draw_hists(
             [
                 "hh_mass_truth",
                 "hh_mass_truth_reco_central_jets_selection",
+                "hh_mass_truth_reco_central_truth_matched_jets_selection",
                 "hh_mass_truth_reco_central_btagged_jets_selection",
                 "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_selection",
-                "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_correct_min_deltar_pairing_selection",
+                # "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_selection_v2",
+                # "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_correct_min_deltar_pairing_selection",
             ],
             energy,
             luminosity=luminosity,
@@ -176,21 +174,66 @@ def draw_hists(
                 "hh_mass_truth_reco_central_jets_selection": selections_labels[
                     "central_jets"
                 ],
+                "hh_mass_truth_reco_central_truth_matched_jets_selection": selections_labels[
+                    "truth_matched_4_plus_jets"
+                ],
                 "hh_mass_truth_reco_central_btagged_jets_selection": selections_labels[
                     "btagged_GN277_4_jets"
                 ],
                 "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_selection": selections_labels[
                     "truth_matched_4_plus_jets"
                 ],
-                "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_correct_min_deltar_pairing_selection": f"correct pairs with {pairing_methods['min_deltar_pairing']}",
+                # "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_selection_v2": r"$\geq$ 4 jets HadronConeExclTruthLabelID = 5",
+                # "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_correct_min_deltar_pairing_selection": f"correct pairs with {pairing_methods['min_deltar_pairing']}",
             },
             legend_options={"loc": "center right", "fontsize": "small"},
             third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
             xmin=200,
             xmax=1000,
             draw_ratio=True,
-            ymin_ratio=0,
+            ymin_ratio=-0.1,
+            ymax_ratio=1.2,
             plot_name="hh_mass_truth_cutflow",
+            output_dir=output_dir,
+        )
+
+        draw_1d_hists_v2(
+            {sample_type: sample_hists},
+            [
+                "hh_mass_truth_unweighted",
+                "hh_mass_truth_reco_central_jets_selection_unweighted",
+                "hh_mass_truth_reco_central_truth_matched_jets_selection_unweighted",
+                "hh_mass_truth_reco_central_btagged_jets_selection_unweighted",
+                "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_selection_unweighted",
+                "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_selection_v2_unweighted",
+            ],
+            energy,
+            luminosity=luminosity,
+            xlabel=f"Truth {hh_var_labels['hh_mass']}",
+            ylabel="Events",
+            legend_labels={
+                "hh_mass_truth_unweighted": "Truth",
+                "hh_mass_truth_reco_central_jets_selection_unweighted": selections_labels[
+                    "central_jets"
+                ],
+                "hh_mass_truth_reco_central_truth_matched_jets_selection_unweighted": selections_labels[
+                    "truth_matched_4_plus_jets"
+                ],
+                "hh_mass_truth_reco_central_btagged_jets_selection_unweighted": selections_labels[
+                    "btagged_GN277_4_jets"
+                ],
+                "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_selection_unweighted": selections_labels[
+                    "truth_matched_4_plus_jets"
+                ],
+                "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_selection_v2_unweighted": r"$\geq$ 4 jets HadronConeExclTruthLabelID = 5",
+            },
+            legend_options={"loc": "center right", "fontsize": "small"},
+            third_exp_label=f"\n{sample_labels[sample_type]} (unweighted)\n{selections_labels['truth_matching']}",
+            xmin=200,
+            xmax=1000,
+            draw_ratio=True,
+            ymin_ratio=0,
+            plot_name="hh_mass_truth_cutflow_unweighted",
             output_dir=output_dir,
         )
 
@@ -251,6 +294,8 @@ def draw_hists(
                     f"{hh_var}_reco_{method_id}": pairing_label
                     for method_id, pairing_label in pairing_methods.items()
                 },
+                xmin=150 if "hh_mass" == hh_var else None,
+                xmax=600 if "hh_pt" == hh_var else None,
                 legend_options={"loc": "upper right", "fontsize": "small"},
                 third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
                 output_dir=output_dir,
@@ -275,6 +320,8 @@ def draw_hists(
                     f"{hh_var}_reco_truth_matched_{method_id}": pairing_label
                     for method_id, pairing_label in pairing_methods.items()
                 },
+                xmin=200 if "hh_mass" == hh_var else None,
+                xmax=600 if "hh_pt" == hh_var else None,
                 legend_options={"loc": "upper right", "fontsize": "small"},
                 third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
                 output_dir=output_dir,
@@ -316,6 +363,63 @@ def draw_hists(
                 log_z=True,
                 output_dir=output_dir,
             )
+            draw_mH_plane_2D_hists(
+                sample_hists,
+                sample_type,
+                f"mHH_plane_reco_{method_id}_lt_300_GeV",
+                energy,
+                luminosity=luminosity,
+                log_z=False,
+                output_dir=output_dir,
+            )
+
+        #### X_HH plots for different pairing methods ####
+        # create flat 2D distributions for variables m_H1 and m_H2 using the
+        # bins from the m_HH plane 0-200 GeV and 50x50 bins
+        bins_GeV = np.linspace(0, 200, 50)
+        X, Y = np.meshgrid(bins_GeV, bins_GeV)
+        discrim = X_HH(X.flatten(), Y.flatten())
+        hist_X_HH, _ = np.histogram(discrim, np.linspace(0, 10, 51))
+        for region in ["signal", "control"]:
+            draw_1d_hists_v2(
+                {sample_type: sample_hists},
+                [
+                    f"hh_mass_discrim_reco_{region}_{pairing}"
+                    for pairing in pairing_methods
+                ],
+                energy,
+                luminosity=luminosity,
+                xlabel=r"$\mathrm{X}_{\mathrm{HH}}$",
+                baseline_hist=hist_X_HH,
+                density=True,
+                ylabel="Normalized To Unity",
+                legend_labels={
+                    f"hh_mass_discrim_reco_{region}_{pairing}": pairing_label
+                    for pairing, pairing_label in pairing_methods.items()
+                },
+                legend_options={"loc": "upper right", "fontsize": "small"},
+                third_exp_label=f"\n{sample_labels[sample_type]}",
+                output_dir=output_dir,
+                plot_name=f"hh_mass_discrim_reco_{region}",
+            )
+
+    # if args.split_jz:
+    #     for region in ["signal", "control"]:
+    #         num_events_vs_sample(
+    #             {
+    #                 key: value
+    #                 for key, value in sorted(hists_group.items())
+    #                 if "multijet" in key
+    #             },
+    #             f"mH_plane_baseline_{region}_region$",
+    #             energy,
+    #             ylabel=f"{region.capitalize()} Events",
+    #             xlabel="Multijet Samples",
+    #             luminosity=luminosity,
+    #             density=True,
+    #             third_exp_label=f"Signal Region",
+    #             output_dir=output_dir,
+    #         )
 
     #### Old plots ####
 

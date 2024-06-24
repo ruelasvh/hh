@@ -1,9 +1,12 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import mplhep as hplt
 import re
+import numpy as np
+import mplhep as hplt
 from pathlib import Path
-from .utils import (
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+from matplotlib.ticker import FormatStrFormatter, FuncFormatter
+from hh.shared.selection import X_HH, R_CR
+from hh.shared.utils import (
     find_hist,
     find_hists,
     inv_GeV,
@@ -12,7 +15,6 @@ from .utils import (
     jz_leading_jet_pt,
     get_legend_label,
 )
-from .selection import X_HH, R_CR
 
 np.seterr(divide="ignore", invalid="ignore")
 
@@ -132,6 +134,7 @@ def draw_1d_hists(
     )
     plot_name = hist_prefix.replace("$", "")
     plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
+    plt.tight_layout()
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close(fig)
 
@@ -142,6 +145,7 @@ def draw_1d_hists_v2(
     energy,
     xlabel=None,
     ylabel="Frequency",
+    baseline_hist=None,
     legend_labels: dict = None,
     legend_options: dict = {"loc": "upper right"},
     third_exp_label="",
@@ -155,6 +159,7 @@ def draw_1d_hists_v2(
     draw_ratio=False,
     ymin_ratio=-0.5,
     ymax_ratio=1.5,
+    ylabel_ratio="Ratio",
     scale_factors=None,
     plot_name="truth_vs_reco",
     output_dir=Path("plots"),
@@ -233,10 +238,25 @@ def draw_1d_hists_v2(
                         color=f"C{i}",
                         ax=ax_ratio,
                     )
-                    ax_ratio.set_ylabel("Ratio")
+                    ax_ratio.set_ylabel(ylabel_ratio, loc="center")
                     ax_ratio.set_ylim(ymin_ratio, ymax_ratio)
                     ax_ratio.axhline(1, color="black", linestyle="--", linewidth=0.4)
-
+                    # # Get the list of ytick labels
+                    # labels = ax_ratio.get_yticklabels()
+                    # # Hide the first and last label
+                    # labels[0].set_visible(False)
+                    # labels[-1].set_visible(False)
+        if baseline_hist is not None:
+            hplt.histplot(
+                baseline_hist,
+                hist_edges - bin_width * 0.5,
+                yerr=hist_errors * bin_norm if draw_errors else None,
+                label=r"Flat $m\mathrm{HH}$ distribution",
+                linewidth=2.0,
+                density=density,
+                color=f"C{i+1}",
+                ax=ax,
+            )
     ax.legend(**legend_options)
     if xlabel:
         ax.set_xlabel(xlabel) if not draw_ratio else ax_ratio.set_xlabel(xlabel)
@@ -256,6 +276,7 @@ def draw_1d_hists_v2(
         pad=0.01,
     )
     plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
+    plt.tight_layout()
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close(fig)
 
@@ -317,8 +338,9 @@ def draw_efficiency(
                 if luminosity and not is_data
                 else hist_pass_values
             )
+            eff = hist_pass_values / hist_total_values
             hplt.histplot(
-                hist_pass_values / hist_total_values,
+                eff,
                 hist_total_edges,
                 label=label,
                 color=f"C{i}",
@@ -342,6 +364,7 @@ def draw_efficiency(
         pad=0.01,
     )
     plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
+    plt.tight_layout()
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close(fig)
 
@@ -408,6 +431,7 @@ def draw_mH_1D_hists_v2(
                 pad=0.01,
             )
     plot_name = hist_prefix.replace("$", "")
+    plt.tight_layout()
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close(fig)
 
@@ -454,6 +478,7 @@ def draw_mH_1D_hists(
             ax=ax,
         )
     plot_name = f"{sample_name}_{hist_prefix.replace('$', '')}"
+    plt.tight_layout()
     fig.savefig(f"{output_dir}/mH_{plot_name}.png", bbox_inches="tight")
     plt.close(fig)
 
@@ -465,6 +490,7 @@ def draw_mH_plane_2D_hists(
     energy,
     luminosity=None,
     log_z=False,
+    label_z="Events",
     output_dir=Path("plots"),
 ):
     fig, ax = plt.subplots()
@@ -477,15 +503,33 @@ def draw_mH_plane_2D_hists(
     )
     # remove outliers from hist_values
     hist_values[hist_values > 2000] = 0
-    hplt.hist2dplot(
-        np.log1p(hist_values) if log_z else hist_values,
+    pcm, cbar, _ = hplt.hist2dplot(
+        hist_values,
         bins_GeV,
         bins_GeV,
         ax=ax,
-        cbarpad=0.15,
+        cbarpad=0.20,
         cbarsize="5%",
         flow=None,
+        cbarextend=True,
+        # cmap="PuBu_r",
+        cmap="RdBu_r",
     )
+    cbar.set_label(label_z)
+    cbar.ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: str(x)))
+    if log_z:
+        pcm.set_norm(
+            colors.SymLogNorm(
+                linthresh=0.015,
+                # linthresh=1,
+                # linscale=1,
+                vmin=hist_values.min(),
+                vmax=hist_values.max(),
+                base=10,
+            )
+        )
+        cbar.ax.yaxis.set_major_formatter(FormatStrFormatter("%.1E"))
+        cbar.set_label(label_z + " (Symmetric Log Scale)")
     ax.set_ylabel(r"$m_{H2}$ [GeV]")
     ax.set_xlabel(r"$m_{H1}$ [GeV]")
     ax.set_ylim(50, 200)
@@ -497,7 +541,7 @@ def draw_mH_plane_2D_hists(
         Y,
         signal_region,
         levels=[1.55, 1.6],
-        colors=["red", "black"],
+        colors=["tab:red", "black"],
         linestyles=["solid", "dashed"],
     )
     # line connecting SR and CR points x_ur, y_ur
@@ -553,6 +597,7 @@ def draw_mH_plane_2D_hists(
         loc=0, ax=ax, label=sample_name.replace("_", " "), com=energy, lumi=luminosity
     )
     plot_name = f"{sample_name}_{hist_name}"
+    plt.tight_layout()
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close(fig)
 
@@ -604,6 +649,7 @@ def draw_kin_hists(
         unit = "[GeV]" if kin_var in ["pt", "mass"] else ""
         ax.set_xlabel(f"{object} {kin_labels[kin_var]} {unit}".rstrip())
         plot_name = f"{sample_name}_{hist_name}"
+        plt.tight_layout()
         fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
         plt.close(fig)
 
@@ -648,6 +694,7 @@ def num_events_vs_sample(
     hplt.atlas.label(label=third_exp_label, loc=0, ax=ax, com=energy, lumi=luminosity)
     ymin, ymax = ax.get_ylim()
     ax.set_ylim(ymin=ymin, ymax=ymax * len(hists_group) * 0.3)
+    plt.tight_layout()
     fig.savefig(
         f"{output_dir}/{ylabel.lower().replace(' ', '_')}_{xlabel.lower().replace(' ', '_')}.png",
         bbox_inches="tight",

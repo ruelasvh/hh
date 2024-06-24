@@ -16,6 +16,21 @@
             ]
         },
         {
+            "label": "mc23d_ggF_k01",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603404.e8564_a911_r15224_p6026_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.603404.PhPy8EG_PDF4LHC21_HHbbbb_chhh1p0.deriv.DAOD_PHYS.e8564_a911_r15224_p6026",
+                    "genFiltEff": 1,
+                    "crossSection": 0.000030836,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
             "label": "mc23a_ggF_k05",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603405.e8564_a910_r14932_p6026_TREE/"
@@ -25,6 +40,21 @@
                     "logicalDatasetName": "mc23_13p6TeV.603405.PhPy8EG_PDF4LHC21_HHbbbb_chhh5p0.deriv.DAOD_PHYS.e8564_a910_r14932_p6026",
                     "genFiltEff": 1,
                     "crossSection": 0.00008414,
+                    "kFactor": 1.0,
+                    "luminosity": 1.0
+                }
+            ]
+        },
+        {
+            "label": "mc23d_ggF_k05",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603405.e8564_a911_r15224_p6026_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.603405.PhPy8EG_PDF4LHC21_HHbbbb_chhh5p0.deriv.DAOD_PHYS.e8564_a911_r15224_p6026",
+                    "genFiltEff": 1,
+                    "crossSection": 0.00064131,
                     "kFactor": 1.0,
                     "luminosity": 1.0
                 }
@@ -56,6 +86,24 @@
                 "operator": ">=",
                 "value": 2
             }
-        }
+        },
+        "hh_mass_discriminat": {
+            "signal": {
+                "inner_boundry": {
+                    "operator": "<",
+                    "value": 1.6
+                }
+            },
+            "control": {
+                "inner_boundry": {
+                    "operator": ">=",
+                    "value": 1.6
+                },
+                "outer_boundry": {
+                    "operator": "<=",
+                    "value": 45
+                }
+            }
+    }
     }
 }

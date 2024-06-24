@@ -103,3 +103,24 @@ class HistogramDynamic(Histogram):
         ax = hgroup.create_dataset("edges", data=edges, **self._compression)
         ax.make_scale("edges")
         hist.dims[0].attach_scale(ax)
+
+
+## Cutflow histograms ##
+class HistogramCategorical(Histogram):
+    def __init__(self, name, categories, compress=True):
+        self._name = name
+        self._categories = categories
+        self._hist = np.zeros(len(categories), dtype=float)
+        self._compression = dict(compression="gzip") if compress else {}
+
+    def fill(self, values):
+        # assert values has the same shape as categories
+        assert len(values) == len(self._categories)
+        self._hist = self._hist + values
+
+    def write(self, group, name=None):
+        hgroup = group.create_group(name or self._name)
+        hgroup.attrs["type"] = "float"
+        hist = hgroup.create_dataset("values", data=self._hist, **self._compression)
+        ax = hgroup.create_dataset("edges", data=self._categories, **self._compression)
+        hist.dims[0].attach_scale(ax)

@@ -191,6 +191,24 @@
                 "operator": ">=",
                 "value": 2
             }
+        },
+        "hh_mass_discriminat": {
+            "signal": {
+                "inner_boundry": {
+                    "operator": "<",
+                    "value": 1.6
+                }
+            },
+            "control": {
+                "inner_boundry": {
+                    "operator": ">=",
+                    "value": 1.6
+                },
+                "outer_boundry": {
+                    "operator": "<=",
+                    "value": 45
+                }
+            }
         }
     }
 }

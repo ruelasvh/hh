@@ -40,7 +40,9 @@ def select_n_jets_events(jets, selection, do_jvt=True):
             np.abs(jets.eta), eta_sel["value"]
         )
     if do_jvt:
-        valid_jets_mask = valid_jets_mask & jets.jvttag == 1
+        valid_jets_mask = (jets[valid_jets_mask].pt < 60_000) & (
+            jets.jvttag[valid_jets_mask] == 1
+        )
     if njets_sel:
         valid_events_mask = get_op(njets_sel["operator"])(
             ak.sum(valid_jets_mask, axis=1), njets_sel["value"]
@@ -114,7 +116,7 @@ def reconstruct_hh_jet_pairs(jets, hh_jet_idx, loss, optimizer=np.argmin):
     return hh_jet_idx[h1_jet_idx], hh_jet_idx[h2_jet_idx]
 
 
-def select_X_Wt_events(events, selection):
+def select_X_Wt_events_v2(jets, hh_jet_idx, non_hh_jet_idx, selection):
     """Selects events that pass the top-veto selection.
     Events are vetoed if the minimum X_Wt over all combinations is less than selection.
     Returns:
@@ -122,9 +124,9 @@ def select_X_Wt_events(events, selection):
     """
     # reconstruct W and top candidates
     W_candidates_p4, top_candidates_p4 = get_W_t_p4(
-        ak.zip({var: events[f"jet_{var}"] for var in list(kin_labels) + ["btag"]}),
-        events.hh_jet_idx,
-        events.non_hh_jet_idx,
+        jets,
+        hh_jet_idx,
+        non_hh_jet_idx,
     )
     # calculate X_Wt discriminant
     X_Wt_discriminant = X_Wt(
@@ -175,6 +177,35 @@ def select_hh_events(events, deltaeta_sel=None, mass_sel=None):
             )
         if "outer_boundry" in mass_sel:
             hh_var = R_CR(ak.firsts(h1.m) * inv_GeV, ak.firsts(h2.m) * inv_GeV)
+            keep = keep & get_op(mass_sel["outer_boundry"]["operator"])(
+                hh_var, mass_sel["outer_boundry"]["value"]
+            )
+    keep = ak.fill_none(keep, False)
+    return keep, hh_var
+
+
+def select_hh_events_v2(jets, h1_jet_idx, h2_jet_idx, deltaeta_sel=None, mass_sel=None):
+    """Selects events that pass the hh selection.
+
+    Returns:
+        Events that pass the hh selection
+    """
+    jet_p4 = p4.zip({v: jets[v] for v in kin_labels})
+    h1_p4 = ak.sum(jet_p4[h1_jet_idx], axis=1)
+    h2_p4 = ak.sum(jet_p4[h2_jet_idx], axis=1)
+    keep = np.ones(len(jet_p4), dtype=bool)
+    hh_var = np.array([])
+    if deltaeta_sel is not None:
+        hh_var = np.abs(h1_p4.eta - h2_p4.eta)
+        keep = keep & get_op(deltaeta_sel["operator"])(hh_var, deltaeta_sel["value"])
+    if mass_sel is not None:
+        if "inner_boundry" in mass_sel:
+            hh_var = X_HH(h1_p4.m * inv_GeV, h2_p4.m * inv_GeV)
+            keep = keep & get_op(mass_sel["inner_boundry"]["operator"])(
+                hh_var, mass_sel["inner_boundry"]["value"]
+            )
+        if "outer_boundry" in mass_sel:
+            hh_var = R_CR(h1_p4.m * inv_GeV, h2_p4.m * inv_GeV)
             keep = keep & get_op(mass_sel["outer_boundry"]["operator"])(
                 hh_var, mass_sel["outer_boundry"]["value"]
             )

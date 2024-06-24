@@ -18,6 +18,13 @@ nth = {1: "first", 2: "second", 3: "third", 4: "fourth"}
 
 kin_labels = {"pt": r"$p_T$", "eta": r"$\eta$", "phi": r"$\phi$", "mass": r"$m$"}
 
+pairing_methods = {
+    "min_deltar_pairing": r"min $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
+    "max_deltar_pairing": r"max $\Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
+    "min_mass_true_pairing": r"min $\Sigma(m_{jj}-m_\mathrm{H})^2$ pairing",
+    "min_mass_pairing": r"min $(m_{jj}-m_{jj})^2$ pairing",
+}
+
 jz_leading_jet_pt = {
     "min": {
         0: -1,
