@@ -75,10 +75,11 @@ def main():
     os.chdir(repo_path)
     if os.system("git diff --quiet"):
         build_response = input(
-            "The repo is dirty. Do you want to rebuild apptainer image? (y/n) "
+            "The repo is dirty. Do you want to rebuild apptainer image? (Y/n) "
         )
-        if build_response.lower() == "y":
-            os.system(f"apptainer build {args.image} Apptainer.def")
+        if build_response == "" or build_response.lower() == "y":
+            image_path = Path(os.getenv("APPTAINER_CACHEDIR")) / args.image.name
+            os.system(f"apptainer build -F {image_path} Apptainer.def")
     os.chdir(os.getenv("PWD"))
 
     # create directories for to store files

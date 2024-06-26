@@ -19,7 +19,7 @@ cd workdir
 hh4b_non_res_res_make_hists config.json -v
 ```
 
-For example, have a look in [this config file](hh/nonresonantresolved/configs/config-test.json).
+For example, have a look in [this config file](hh/nonresonantresolved/configs/config-4b-mc20-test.json).
 
 The output will be an `h5` file. To make the actual plots, do:
 
@@ -41,16 +41,21 @@ hh4b_dump config.json -v --output output.root
 ## Running jobs in parallel (htcondor)
 First you need to set up kerberos authentication, usually done with `kinit`.
 
-Then you need to create an image of the package with `apptainer` which contains all the depedencies:
+The Apptainer path should be set in the environment variable `APPTAINER_CACHEDIR`:
 ```bash
-apptainer hh.sif hh/Apptainer.def
+export APPTAINER_CACHEDIR=/path/to/apptainer_cache
+```
+
+Then you need to create an image that contains all the depedencies:
+```bash
+apptainer build $APPTAINER_CACHEDIR/hh.sif hh/Apptainer.def
 ```
 
 The container should be re-built every time jobs will be submitted to htcondor.
 
 Now everything's ready to submit jobs. Submit the jobs with:
 ```bash
-hh4b_submit hh.sif [hh4b_non_res_res_make_hists|hh4b_dump] config.json
+hh4b_submit $APPTAINER_CACHEDIR/hh.sif [hh4b_non_res_res_make_hists|hh4b_dump] config.json
 ```
 
 The output will be stored to the working directory.
