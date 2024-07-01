@@ -6,7 +6,7 @@ from hh.shared.utils import (
     get_op,
     get_trigs_bitwise_op,
     kin_labels,
-    inv_GeV,
+    GeV,
 )
 from hh.shared.selection import X_HH, R_CR, X_Wt
 
@@ -130,8 +130,8 @@ def select_X_Wt_events_v2(jets, hh_jet_idx, non_hh_jet_idx, selection):
     )
     # calculate X_Wt discriminant
     X_Wt_discriminant = X_Wt(
-        W_candidates_p4.mass * inv_GeV,
-        top_candidates_p4.mass * inv_GeV,
+        W_candidates_p4.mass * GeV,
+        top_candidates_p4.mass * GeV,
     )
     # select only the minimum X_Wt for each event
     X_Wt_discriminant_min = ak.min(X_Wt_discriminant, axis=1)
@@ -142,75 +142,26 @@ def select_X_Wt_events_v2(jets, hh_jet_idx, non_hh_jet_idx, selection):
     return passed_top_veto_mask, X_Wt_discriminant_min
 
 
-def select_hh_events(events, deltaeta_sel=None, mass_sel=None):
+def select_hh_events(discrim, deltaeta_sel=None, mass_sel=None):
     """Selects events that pass the hh selection.
 
     Returns:
         Events that pass the hh selection
     """
-
-    jet_p4 = p4.zip(
-        {var: events[f"jet_{var}"] for var in kin_labels.keys()},
-    )
-    h1_jets_idx = events.leading_h_jet_idx
-    h1_jet1_idx, h1_jet2_idx = (
-        h1_jets_idx[:, 0, np.newaxis],
-        h1_jets_idx[:, 1, np.newaxis],
-    )
-    h2_jets_idx = events.subleading_h_jet_idx
-    h2_jet1_idx, h2_jet2_idx = (
-        h2_jets_idx[:, 0, np.newaxis],
-        h2_jets_idx[:, 1, np.newaxis],
-    )
-    h1 = jet_p4[h1_jet1_idx] + jet_p4[h1_jet2_idx]
-    h2 = jet_p4[h2_jet1_idx] + jet_p4[h2_jet2_idx]
-    keep = np.ones(len(events), dtype=bool)
-    hh_var = np.array([])
+    keep = np.ones(len(discrim[0]), dtype=bool)
     if deltaeta_sel is not None:
-        hh_var = np.abs(ak.firsts(h1.eta) - ak.firsts(h2.eta))
-        keep = keep & get_op(deltaeta_sel["operator"])(hh_var, deltaeta_sel["value"])
+        keep = keep & get_op(deltaeta_sel["operator"])(discrim, deltaeta_sel["value"])
     if mass_sel is not None:
-        if "inner_boundry" in mass_sel:
-            hh_var = X_HH(ak.firsts(h1.m) * inv_GeV, ak.firsts(h2.m) * inv_GeV)
-            keep = keep & get_op(mass_sel["inner_boundry"]["operator"])(
-                hh_var, mass_sel["inner_boundry"]["value"]
+        if (boundry := "inner_boundry") in mass_sel:
+            keep = keep & get_op(mass_sel[boundry]["operator"])(
+                discrim[0], mass_sel[boundry]["value"]
             )
-        if "outer_boundry" in mass_sel:
-            hh_var = R_CR(ak.firsts(h1.m) * inv_GeV, ak.firsts(h2.m) * inv_GeV)
-            keep = keep & get_op(mass_sel["outer_boundry"]["operator"])(
-                hh_var, mass_sel["outer_boundry"]["value"]
+        if (boundry := "outer_boundry") in mass_sel:
+            keep = keep & get_op(mass_sel[boundry]["operator"])(
+                discrim[1], mass_sel[boundry]["value"]
             )
     keep = ak.fill_none(keep, False)
-    return keep, hh_var
-
-
-def select_hh_events_v2(jets, h1_jet_idx, h2_jet_idx, deltaeta_sel=None, mass_sel=None):
-    """Selects events that pass the hh selection.
-
-    Returns:
-        Events that pass the hh selection
-    """
-    jet_p4 = p4.zip({v: jets[v] for v in kin_labels})
-    h1_p4 = ak.sum(jet_p4[h1_jet_idx], axis=1)
-    h2_p4 = ak.sum(jet_p4[h2_jet_idx], axis=1)
-    keep = np.ones(len(jet_p4), dtype=bool)
-    hh_var = np.array([])
-    if deltaeta_sel is not None:
-        hh_var = np.abs(h1_p4.eta - h2_p4.eta)
-        keep = keep & get_op(deltaeta_sel["operator"])(hh_var, deltaeta_sel["value"])
-    if mass_sel is not None:
-        if "inner_boundry" in mass_sel:
-            hh_var = X_HH(h1_p4.m * inv_GeV, h2_p4.m * inv_GeV)
-            keep = keep & get_op(mass_sel["inner_boundry"]["operator"])(
-                hh_var, mass_sel["inner_boundry"]["value"]
-            )
-        if "outer_boundry" in mass_sel:
-            hh_var = R_CR(h1_p4.m * inv_GeV, h2_p4.m * inv_GeV)
-            keep = keep & get_op(mass_sel["outer_boundry"]["operator"])(
-                hh_var, mass_sel["outer_boundry"]["value"]
-            )
-    keep = ak.fill_none(keep, False)
-    return keep, hh_var
+    return keep
 
 
 def select_correct_hh_pair_events(h1_jets_idx, h2_jets_idx, truth_jet_H_parent_mask):

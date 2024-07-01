@@ -1,5 +1,6 @@
 from argparse import Namespace
-from hh.shared.utils import logger, kin_labels, pairing_methods
+from hh.shared.utils import logger, kin_labels
+from hh.nonresonantresolved.pairing import pairing_methods
 from hh.shared.hist import (
     Histogram,
     Histogram2d,
@@ -133,11 +134,14 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
             hists_dict[sample_name] += init_mH_2d_histograms(
                 postfix=f"_reco_{pairing}_lt_300_GeV"
             )
+            hists_dict[sample_name] += init_mH_2d_histograms(
+                postfix=f"_reco_{pairing}_geq_300_GeV"
+            )
 
         ##################################################
         ### X_HH histograms
         ##################################################
-        X_HH_regions = {"signal": [0, 10], "control": [0, 50]}
+        X_HH_regions = {"signal": [0, 10], "control": [0, 10]}
         for pairing in pairing_methods:
             ## Cutflow histograms ##
             # hists_dict[sample_name] += [
@@ -147,7 +151,7 @@ def init_hists(inputs: dict, args: Namespace) -> dict:
             # ]
             for region, binrange in X_HH_regions.items():
                 hists_dict[sample_name] += init_HH_mass_discrim_histograms(
-                    posfix=f"_reco_{region}_{pairing}", binrange=binrange
+                    posfix=f"_reco_{region}_{pairing}", binrange=binrange, bins=21
                 )
 
     return hists_dict

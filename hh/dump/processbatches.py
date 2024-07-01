@@ -3,7 +3,7 @@ import numpy as np
 import vector
 from hh.shared.utils import (
     logger,
-    inv_GeV,
+    GeV,
     make_4jet_comb_array,
     format_btagger_model_name,
     get_common,
@@ -234,8 +234,8 @@ def process_batch(
                     events.non_hh_jet_idx,
                 )
                 X_Wt_discriminant = X_Wt(
-                    W_candidates_p4.mass * inv_GeV,
-                    top_candidates_p4.mass * inv_GeV,
+                    W_candidates_p4.mass * GeV,
+                    top_candidates_p4.mass * GeV,
                 )
                 # select only the minimum X_Wt for each event
                 X_Wt_discriminant = ak.min(X_Wt_discriminant, axis=1)
@@ -259,7 +259,7 @@ def process_batch(
                 )
             if Features.EVENT_X_HH.value in feature_names:
                 events[Features.EVENT_X_HH.value] = X_HH(
-                    ak.firsts(h1.m) * inv_GeV, ak.firsts(h2.m) * inv_GeV
+                    ak.firsts(h1.m) * GeV, ak.firsts(h2.m) * GeV
                 )
 
     features_out = get_common(events.fields, feature_names)

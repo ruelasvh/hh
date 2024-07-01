@@ -3,17 +3,19 @@ import numpy as np
 import mplhep as hplt
 from pathlib import Path
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-from matplotlib.ticker import FormatStrFormatter, FuncFormatter
+import matplotlib.scale as mscale
+import matplotlib.colors as mcolors
+import matplotlib.ticker as mticker
 from hh.shared.selection import X_HH, R_CR
 from hh.shared.utils import (
     find_hist,
     find_hists,
-    inv_GeV,
+    GeV,
     kin_labels,
     get_com_lumi_label,
     jz_leading_jet_pt,
     get_legend_label,
+    register_bottom_offset,
 )
 
 np.seterr(divide="ignore", invalid="ignore")
@@ -26,14 +28,14 @@ def draw_1d_hists(
     hist_prefix,
     energy,
     xlabel: str = None,
-    ylabel: str = "Frequency",
+    ylabel: str = "Events",
     third_exp_label="",
     legend_labels: dict = None,
     luminosity=None,
     yscale="linear",
     xmin=None,
     xmax=None,
-    ynorm_binwidth=False,
+    binwidth_norm=False,
     xcut=None,
     density=False,
     draw_errors=False,
@@ -70,12 +72,9 @@ def draw_1d_hists(
         )
         hist_edges = hist["edges"]
         hist_edges = (
-            hist_edges * inv_GeV
-            if xlabel is not None and "GeV" in xlabel
-            else hist_edges
+            hist_edges * GeV if xlabel is not None and "GeV" in xlabel else hist_edges
         )
-        bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
-        scale_factor = 1.0
+        bin_width = hist_edges[1] - hist_edges[0]
         if ggFk01_factor and "ggF" in sample_type and "k01" in sample_type:
             scale_factor = ggFk01_factor
         if ggFk05_factor and "ggF" in sample_type and "k05" in sample_type:
@@ -85,12 +84,12 @@ def draw_1d_hists(
         if data2b_factor and "data" in sample_type and "2b" in sample_type:
             scale_factor = data2b_factor
         hist_values = hist_values * scale_factor
-        bin_norm = 1.0 / hist_values.sum() if density else bin_width
+        bin_centers = hist_edges + (bin_width * 0.5)
         hplt.histplot(
-            hist_values * bin_norm,
-            hist_edges - bin_width * 0.5,
+            hist_values,
+            bin_centers,
             ax=ax,
-            yerr=hist_errors * bin_norm if draw_errors else None,
+            yerr=hist_errors if draw_errors else None,
             label=get_legend_label(
                 sample_type,
                 legend_labels,
@@ -100,8 +99,9 @@ def draw_1d_hists(
             ),
             linewidth=2.0,
             density=density,
+            binwnorm=binwidth_norm,
         )
-        ax.set_ylabel(ylabel + " / %.2g" % bin_width if ynorm_binwidth else ylabel)
+        ax.set_ylabel(ylabel + " / %.2g" % bin_width if binwidth_norm else ylabel)
     ax.legend(loc="upper right")
     if xcut:
         ax.axvline(x=xcut, ymax=0.6, color="purple")
@@ -144,8 +144,8 @@ def draw_1d_hists_v2(
     hist_prefixes,
     energy,
     xlabel=None,
-    ylabel="Frequency",
-    baseline_hist=None,
+    ylabel="Events",
+    baseline=None,
     legend_labels: dict = None,
     legend_options: dict = {"loc": "upper right"},
     third_exp_label="",
@@ -153,7 +153,7 @@ def draw_1d_hists_v2(
     yscale="linear",
     xmin=None,
     xmax=None,
-    ynorm_binwidth=False,
+    binwidth_norm=None,
     density=False,
     draw_errors=False,
     draw_ratio=False,
@@ -161,6 +161,7 @@ def draw_1d_hists_v2(
     ymax_ratio=1.5,
     ylabel_ratio="Ratio",
     scale_factors=None,
+    rebin_factor=None,
     plot_name="truth_vs_reco",
     output_dir=Path("plots"),
 ):
@@ -199,17 +200,14 @@ def draw_1d_hists_v2(
             )
             hist_edges = hist["edges"]
             hist_edges = (
-                hist_edges * inv_GeV
+                hist_edges * GeV
                 if xlabel is not None and "GeV" in xlabel
                 else hist_edges
             )
-            bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
             scale_factor = 1.0
             if scale_factors:
                 scale_factor = scale_factors[i]
             hist_values = hist_values * scale_factor
-            bin_norm = 1.0 / hist_values.sum() if density else bin_width
-            hist_values = hist_values * bin_norm
             label = get_legend_label(
                 hist_prefix,
                 legend_labels,
@@ -217,43 +215,50 @@ def draw_1d_hists_v2(
                     r" ($\times$" + f"{scale_factor})" if scale_factor > 1 else None
                 ),
             )
+            bin_width = hist_edges[1] - hist_edges[0]
+            # bin_centers = hist_edges + (bin_width * 0.5)
+            bin_centers = hist_edges
+            if density and not binwidth_norm:
+                hist_values = hist_values / np.sum(hist_values)
             hplt.histplot(
-                hist_values,
-                hist_edges - bin_width * 0.5,
-                yerr=hist_errors * bin_norm if draw_errors else None,
+                hist_values[1:-1],
+                bin_centers,
+                yerr=hist_errors[1:-1] if draw_errors else None,
                 label=label,
                 linewidth=2.0,
-                density=density,
+                binwnorm=binwidth_norm,
                 color=f"C{i}",
                 ax=ax,
             )
-            ax.set_ylabel(ylabel + " / %.2g" % bin_width if ynorm_binwidth else ylabel)
+            ax.set_ylabel(ylabel + " / %.2g" % bin_width if binwidth_norm else ylabel)
             if draw_ratio:
                 if i == 0:
                     base_hist_values = hist_values
                 else:
                     hplt.histplot(
                         hist_values / base_hist_values,
-                        hist_edges - bin_width * 0.5,
+                        bin_centers,
                         color=f"C{i}",
                         ax=ax_ratio,
                     )
                     ax_ratio.set_ylabel(ylabel_ratio, loc="center")
                     ax_ratio.set_ylim(ymin_ratio, ymax_ratio)
                     ax_ratio.axhline(1, color="black", linestyle="--", linewidth=0.4)
-                    # # Get the list of ytick labels
-                    # labels = ax_ratio.get_yticklabels()
-                    # # Hide the first and last label
-                    # labels[0].set_visible(False)
-                    # labels[-1].set_visible(False)
-        if baseline_hist is not None:
+        if baseline is not None:
+            if density and not binwidth_norm:
+                infvar = np.array([np.inf])
+                edges_underflow_overflow = np.concatenate([-infvar, hist_edges, infvar])
+                baseline_hist, _ = np.histogramdd(
+                    baseline, bins=[edges_underflow_overflow]
+                )
+                baseline_hist = baseline_hist / np.sum(baseline_hist)
             hplt.histplot(
-                baseline_hist,
-                hist_edges - bin_width * 0.5,
-                yerr=hist_errors * bin_norm if draw_errors else None,
-                label=r"Flat $m\mathrm{HH}$ distribution",
+                baseline_hist[1:-1],
+                bin_centers,
+                yerr=hist_errors[1:-1] if draw_errors else None,
+                label=r"Flat $m_\mathrm{HH}$ distribution",
                 linewidth=2.0,
-                density=density,
+                binwnorm=binwidth_norm,
                 color=f"C{i+1}",
                 ax=ax,
             )
@@ -325,7 +330,7 @@ def draw_efficiency(
             )
             hist_total_edges = hist_total["edges"]
             hist_total_edges = (
-                hist_total_edges * inv_GeV
+                hist_total_edges * GeV
                 if xlabel is not None and "GeV" in xlabel
                 else hist_total_edges
             )
@@ -350,7 +355,8 @@ def draw_efficiency(
     ax.legend(**legend_options)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    ax.set_ylim(ymin=ymin, ymax=ymax * 1.5)
+    # scale y-axis so that the legend does not overlap with the plot
+    ax.set_ylim(ymin=ymin, ymax=ymax * (1 + 0.1 * len(hist_prefixes) + 0.1))
     if xmin is not None:
         ax.set_xlim(xmin=xmin)
     if xmax is not None:
@@ -363,6 +369,8 @@ def draw_efficiency(
         ax=ax,
         pad=0.01,
     )
+    # # Automatically scale y-axis up to fit in legend
+    # hplt.plot.yscale_legend(ax)
     plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
     plt.tight_layout()
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
@@ -377,8 +385,9 @@ def draw_mH_1D_hists_v2(
     xlims=None,
     ylims=None,
     third_exp_label="",
-    ylabel="Frequency",
-    ynorm_binwidth=False,
+    ylabel="Events",
+    density=False,
+    binwidth_norm=False,
     yscale="linear",
     ggFk01_factor=None,
     ggFk10_factor=None,
@@ -400,7 +409,7 @@ def draw_mH_1D_hists_v2(
                 else hist["values"]
             )
             hist_edges = hist["edges"]
-            bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
+            bin_width = hist_edges[1] - hist_edges[0]
             scale_factor = 1
             if ggFk01_factor and "ggF" in sample_type and "k01" in sample_type:
                 scale_factor = ggFk01_factor
@@ -408,11 +417,13 @@ def draw_mH_1D_hists_v2(
                 scale_factor = ggFk10_factor
             hplt.histplot(
                 hist_values * scale_factor * 1.0 / bin_width,
-                hist_edges * inv_GeV,
+                hist_edges * GeV,
                 histtype="step",
                 stack=False,
                 ax=ax,
                 label=sample_type,
+                density=density,
+                binwnorm=binwidth_norm,
                 # yerr=True,
             )
             ax.set_yscale(yscale)
@@ -423,7 +434,7 @@ def draw_mH_1D_hists_v2(
             ax.set_ylim(ylims[0], ylims[1] * 1.1)
             ax.legend()
             ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
-            ax.set_ylabel(ylabel + " / %.2g" % bin_width if ynorm_binwidth else ylabel)
+            ax.set_ylabel(ylabel + " / %.2g" % bin_width if binwidth_norm else ylabel)
             hplt.atlas.label(
                 rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
                 loc=4,
@@ -460,7 +471,7 @@ def draw_mH_1D_hists(
         )
         hplt.histplot(
             hist_values,
-            hist["edges"] * inv_GeV,
+            hist["edges"] * GeV,
             histtype="fill",
             stack=True,
             ax=ax,
@@ -471,7 +482,7 @@ def draw_mH_1D_hists(
             ax.set_xlim(*xlim)
         ax.legend()
         ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
-        ax.set_ylabel("Frequency")
+        ax.set_ylabel("Events")
         hplt.atlas.label(
             rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
             loc=4,
@@ -491,13 +502,16 @@ def draw_mH_plane_2D_hists(
     luminosity=None,
     log_z=False,
     label_z="Events",
+    xrange=(50, 200),
+    yrange=(50, 200),
+    third_exp_label="",
     output_dir=Path("plots"),
 ):
     fig, ax = plt.subplots()
     hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
     hist = sample_hists[hist_name]
     is_data = "data" in sample_name
-    bins_GeV = hist["edges"] * inv_GeV
+    bins_GeV = hist["edges"] * GeV
     hist_values = (
         hist["values"] * luminosity if luminosity and not is_data else hist["values"]
     )
@@ -512,28 +526,23 @@ def draw_mH_plane_2D_hists(
         cbarsize="5%",
         flow=None,
         cbarextend=True,
-        # cmap="PuBu_r",
         cmap="RdBu_r",
     )
     cbar.set_label(label_z)
-    cbar.ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: str(x)))
+    # move top bar "multiplier" so doesn't overlap with the plot labels
+    register_bottom_offset(cbar.ax.yaxis)
     if log_z:
-        pcm.set_norm(
-            colors.SymLogNorm(
-                linthresh=0.015,
-                # linthresh=1,
-                # linscale=1,
-                vmin=hist_values.min(),
-                vmax=hist_values.max(),
-                base=10,
-            )
+        cbar.ax.set_yscale(
+            "symlog",
+            base=10,
+            linthresh=100 if hist_values.max() > 100 else 0.015,
+            linscale=0.05 if hist_values.max() > 100 else 1,
+            subs=[2, 3, 4, 5, 6, 7, 8, 9],
         )
-        cbar.ax.yaxis.set_major_formatter(FormatStrFormatter("%.1E"))
-        cbar.set_label(label_z + " (Symmetric Log Scale)")
     ax.set_ylabel(r"$m_{H2}$ [GeV]")
     ax.set_xlabel(r"$m_{H1}$ [GeV]")
-    ax.set_ylim(50, 200)
-    ax.set_xlim(50, 200)
+    ax.set_ylim(*yrange)
+    ax.set_xlim(*xrange)
     X, Y = np.meshgrid(bins_GeV, bins_GeV)
     signal_region = X_HH(X, Y)
     ax.contour(
@@ -593,8 +602,14 @@ def draw_mH_plane_2D_hists(
         colors=["black"],
         linestyles=["dashed"],
     )
+    plot_label = sample_name.replace("_", " ")
+    plot_label = f"{plot_label}, {third_exp_label}" if third_exp_label else plot_label
     hplt.atlas.label(
-        loc=0, ax=ax, label=sample_name.replace("_", " "), com=energy, lumi=luminosity
+        loc=0,
+        ax=ax,
+        label=plot_label,
+        com=energy,
+        lumi=luminosity,
     )
     plot_name = f"{sample_name}_{hist_name}"
     plt.tight_layout()
@@ -610,7 +625,8 @@ def draw_kin_hists(
     luminosity=None,
     ylabel="Events",
     yscale="linear",
-    ynorm_binwidth=False,
+    density=False,
+    binwidth_norm=False,
     third_exp_label="",
     output_dir=Path("plots"),
 ):
@@ -627,15 +643,15 @@ def draw_kin_hists(
             if luminosity and not is_data
             else hist["values"]
         )
-        hist_edges = (
-            hist["edges"] * inv_GeV if kin_var in ["pt", "mass"] else hist["edges"]
-        )
-        bin_width = hist_edges[1] - hist_edges[0] if ynorm_binwidth else 1.0
+        hist_edges = hist["edges"] * GeV if kin_var in ["pt", "mass"] else hist["edges"]
+        bin_width = hist_edges[1] - hist_edges[0]
         hplt.histplot(
             hist_values * 1.0 / bin_width,
             hist_edges,
             ax=ax,
             label=sample_name.replace("_", " "),
+            density=density,
+            binwnorm=binwidth_norm,
         )
         hplt.atlas.label(
             rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
@@ -659,7 +675,7 @@ def num_events_vs_sample(
     hist_prefix,
     energy,
     xlabel="Samples",
-    ylabel="Frequency",
+    ylabel="Events",
     third_exp_label="",
     luminosity=None,
     density=False,

@@ -16,20 +16,38 @@ class BaseHistogram(ABC):
 class Histogram(BaseHistogram):
     def __init__(self, name, binrange, bins=100, compress=True):
         self._name = name
-        self._binning = np.linspace(*binrange, bins)
+        infvar = np.array([np.inf])
+        self._binning = np.concatenate(
+            [
+                -infvar,
+                np.linspace(*binrange, bins),
+                infvar,
+            ]
+        )
         self._hist = np.zeros(self._binning.size - 1, dtype=float)
         self._error = np.zeros(self._binning.size - 1, dtype=float)
         self._compression = dict(compression="gzip") if compress else {}
 
     def fill(self, values, weights=None):
-        hist, _ = np.histogram(values, bins=self._binning, weights=weights)
-        self._hist = self._hist + hist
+        hist, _ = np.histogramdd(values, bins=[self._binning], weights=weights)
+        self._hist += hist
         if weights is not None:
             self._error = propagate_errors(
                 self._error,
                 get_symmetric_bin_errors(values, weights, self._binning),
                 operation="+",
             )
+
+    def write(self, group, name=None):
+        hgroup = group.create_group(name or self._name)
+        hgroup.attrs["type"] = "float"
+        hist = hgroup.create_dataset("values", data=self._hist, **self._compression)
+        ax = hgroup.create_dataset(
+            "edges", data=self._binning[1:-1], **self._compression
+        )
+        ax.make_scale("edges")
+        hist.dims[0].attach_scale(ax)
+        hgroup.create_dataset("errors", data=self._error, **self._compression)
 
     @property
     def name(self):
@@ -42,15 +60,6 @@ class Histogram(BaseHistogram):
     @property
     def edges(self):
         return self._binning
-
-    def write(self, group, name=None):
-        hgroup = group.create_group(name or self._name)
-        hgroup.attrs["type"] = "float"
-        hist = hgroup.create_dataset("values", data=self._hist, **self._compression)
-        errors = hgroup.create_dataset("errors", data=self._error, **self._compression)
-        ax = hgroup.create_dataset("edges", data=self._binning, **self._compression)
-        ax.make_scale("edges")
-        hist.dims[0].attach_scale(ax)
 
 
 class Histogram2d(Histogram):

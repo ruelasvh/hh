@@ -4,10 +4,11 @@ import awkward as ak
 from hh.shared.utils import (
     logger,
     find_hist,
-    find_hists_by_name,
     kin_labels,
-    pairing_methods,
+    find_hists_by_name,
+    format_btagger_model_name,
 )
+from hh.nonresonantresolved.pairing import pairing_methods
 from .selection import (
     select_n_jets_events,
 )
@@ -16,7 +17,7 @@ from .selection import (
 def fill_hists(
     events: ak.Record,
     hists: list,
-    selection: dict,
+    selections: dict,
     is_mc: bool = True,
 ) -> list:
     """Fill histograms for analysis regions"""
@@ -36,13 +37,50 @@ def fill_hists(
             hh=p4.zip({v: events[f"hh_truth_{v}"] for v in kin_labels}),
             hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_truth_unweighted"),
         )
-        fill_reco_hh_histograms(events, hists)
-        fill_reco_truth_matched_jets_histograms(events, hists)
-        fill_reco_vs_truth_variable_response_histograms(events, hists, kin_labels)
-        # fill_hh_jets_vs_trigs_histograms(events, hists)
-        fill_hh_jets_pairings_histograms(events, hists)
-        fill_mHH_plane_vs_pairing_histograms(events, hists)
-        fill_X_HH_histograms(events, hists)
+        if "btagging" in selections:
+            bjets_sel = selections["btagging"]
+            if isinstance(bjets_sel, dict):
+                bjets_sel = [bjets_sel]
+            for i_bjets_sel in bjets_sel:
+                btag_model = i_bjets_sel["model"]
+                btag_eff = i_bjets_sel["efficiency"]
+                btag_count = i_bjets_sel["count"]["value"]
+                btag_op = i_bjets_sel["count"]["operator"]
+                btagger = format_btagger_model_name(
+                    btag_model,
+                    btag_eff,
+                )
+                events["valid_central_btagged_jets"] = events[
+                    f"valid_central_{btag_count}_btag_{btagger}_jets"
+                ]
+                events["reco_truth_matched_btagged_jets"] = events[
+                    f"reco_truth_matched_central_{btag_count}_btag_{btagger}_jets"
+                ]
+                events["reco_truth_matched_btagged_jets_v2"] = events[
+                    f"reco_truth_matched_central_{btag_count}_btag_{btagger}_jets_v2"
+                ]
+                for pairing in pairing_methods:
+                    events[f"H1_{pairing}_jet_idx"] = events[
+                        f"H1_{btag_count}b_{btagger}_{pairing}_jet_idx"
+                    ]
+                    events[f"H2_{pairing}_jet_idx"] = events[
+                        f"H2_{btag_count}b_{btagger}_{pairing}_jet_idx"
+                    ]
+                    events[f"correct_hh_{pairing}_mask"] = events[
+                        f"correct_hh_{btag_count}b_{btagger}_{pairing}_mask"
+                    ]
+                    events[f"X_HH_{pairing}_discrim"] = events[
+                        f"X_HH_{btag_count}b_{btagger}_{pairing}_discrim"
+                    ]
+                fill_reco_hh_histograms(events, hists)
+                fill_reco_truth_matched_jets_histograms(events, hists)
+                fill_reco_vs_truth_variable_response_histograms(
+                    events, hists, kin_labels
+                )
+                ## fill_hh_jets_vs_trigs_histograms(events, hists)
+                fill_hh_jets_pairings_histograms(events, hists)
+                fill_mHH_plane_vs_pairing_histograms(events, hists)
+                fill_X_HH_histograms(events, hists)
     return hists
 
 
@@ -104,7 +142,7 @@ def fill_reco_hh_histograms(events, hists) -> None:
             hists, "hh_(pt|eta|phi|mass)_truth_reco_central_jets_selection_unweighted"
         ),
     )
-    valid_event = ~ak.is_none(events.reco_truth_matched_jets, axis=0)
+    valid_event = ~ak.is_none(events.reco_truth_matched_central_jets, axis=0)
     fill_HH_histograms(
         hh=hh_truth_p4[valid_event],
         weights=weights[valid_event],
@@ -120,7 +158,7 @@ def fill_reco_hh_histograms(events, hists) -> None:
             "hh_(pt|eta|phi|mass)_truth_reco_central_truth_matched_jets_selection_unweighted",
         ),
     )
-    valid_event = ~ak.is_none(events.valid_central_4_btagged_jets, axis=0)
+    valid_event = ~ak.is_none(events.valid_central_btagged_jets, axis=0)
     fill_HH_histograms(
         hh=hh_truth_p4[valid_event],
         weights=weights[valid_event],
@@ -135,7 +173,7 @@ def fill_reco_hh_histograms(events, hists) -> None:
             "hh_(pt|eta|phi|mass)_truth_reco_central_btagged_jets_selection_unweighted",
         ),
     )
-    valid_event = ~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0)
+    valid_event = ~ak.is_none(events.reco_truth_matched_btagged_jets, axis=0)
     fill_HH_histograms(
         hh=hh_truth_p4[valid_event],
         weights=weights[valid_event],
@@ -167,10 +205,8 @@ def fill_reco_hh_histograms(events, hists) -> None:
             "hh_(pt|eta|phi|mass)_truth_reco_central_btagged_4_plus_truth_matched_jets_selection_v2_unweighted",
         ),
     )
-    for k, pairing in zip(
-        ["min_dR", "max_dR", "min_mass_true", "min_mass"], pairing_methods.keys()
-    ):
-        valid_event = ~ak.is_none(events[f"correct_hh_{k}_pairs_mask"], axis=0)
+    for pairing in pairing_methods:
+        valid_event = ~ak.is_none(events[f"correct_hh_{pairing}_mask"], axis=0)
         fill_HH_histograms(
             hh=hh_truth_p4[valid_event],
             weights=weights[valid_event],
@@ -187,7 +223,7 @@ def fill_reco_truth_matched_jets_histograms(events, hists: list) -> None:
     jets_p4 = p4.zip({v: events[f"jet_{v}"] for v in kin_labels})
     weights = events.event_weight
     # reconstruct HH using central jets selecting only events that have 4 central truth matched jets
-    truth_matched_jets_mask = events.reco_truth_matched_jets
+    truth_matched_jets_mask = events.reco_truth_matched_central_jets
     jets_truth_matched_p4 = jets_p4[truth_matched_jets_mask]
     reco_hh_p4 = ak.sum(
         jets_truth_matched_p4[:, 0:4], axis=1
@@ -205,7 +241,7 @@ def fill_reco_truth_matched_jets_histograms(events, hists: list) -> None:
         hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_truth_reco_matched"),
     )
     ### jets truth matched with HadronConeExclTruthLabelID ###
-    truth_matched_jets_mask = events.reco_truth_matched_jets_v2
+    truth_matched_jets_mask = events.reco_truth_matched_central_jets_v2
     jets_truth_matched_p4 = jets_p4[truth_matched_jets_mask]
     reco_hh_p4 = ak.sum(jets_truth_matched_p4[:, 0:4], axis=1)
     valid_event = ~ak.is_none(reco_hh_p4, axis=0)
@@ -233,7 +269,7 @@ def fill_reco_vs_truth_variable_response_histograms(
 
     jets_p4 = p4.zip({v: events[f"jet_{v}"] for v in kin_labels})
     # reconstruct HH using central jets selecting only events that have 4 central truth matched jets
-    truth_matched_jets_mask = events.reco_truth_matched_jets
+    truth_matched_jets_mask = events.reco_truth_matched_central_jets
     jets_truth_matched_p4 = jets_p4[truth_matched_jets_mask]
     reco_hh_p4 = ak.sum(jets_truth_matched_p4[:, 0:4], axis=1)
     valid_event = ~ak.is_none(reco_hh_p4, axis=0)
@@ -293,13 +329,13 @@ def fill_hh_jets_vs_trigs_histograms(events, hists: list) -> None:
                         )
                     elif "4_btags" in cat and trig is not None:
                         valid_jets = ak.mask(
-                            events.reco_truth_matched_4_btagged_jets, passed_trig
+                            events.reco_truth_matched_btagged_jets, passed_trig
                         )
                     elif "4_btags" in cat and trig is None:
-                        valid_jets = events.reco_truth_matched_4_btagged_jets
+                        valid_jets = events.reco_truth_matched_btagged_jets
                     else:
                         valid_jets = ak.mask(
-                            events.reco_truth_matched_jets, passed_trig
+                            events.reco_truth_matched_central_jets, passed_trig
                         )
 
                     # finally fill the histogram
@@ -324,221 +360,60 @@ def fill_hh_jets_pairings_histograms(events, hists: list) -> None:
             jets_p4[ak.concatenate([h1_jet_idx, h2_jet_idx], axis=1)].pt, axis=1
         )
 
-    ### min deltaR pairing ###
-    h1_p4 = ak.sum(jets_p4[events.H1_truth_matched_min_deltar_pairing_jet_idx], axis=1)
-    h2_p4 = ak.sum(jets_p4[events.H2_truth_matched_min_deltar_pairing_jet_idx], axis=1)
-    hh_reco_p4 = h1_p4 + h2_p4
-    hh_delta_eta = h1_p4.eta - h2_p4.eta
-    hh_sum_jet_pt = get_hh_sum_jet_pt(
-        events.H1_truth_matched_min_deltar_pairing_jet_idx,
-        events.H2_truth_matched_min_deltar_pairing_jet_idx,
-    )
-    valid_event = ~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0)
-    for cat in ["reco_truth_matched_min_deltar_pairing"]:
-        fill_HH_histograms(
-            hh=hh_truth_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
+    for pairing in pairing_methods:
+        h1_jet_idx = events[f"H1_{pairing}_jet_idx"]
+        h2_jet_idx = events[f"H2_{pairing}_jet_idx"]
+        h1_p4 = ak.sum(jets_p4[h1_jet_idx], axis=1)
+        h2_p4 = ak.sum(jets_p4[h2_jet_idx], axis=1)
+        hh_reco_p4 = h1_p4 + h2_p4
+        hh_delta_eta = h1_p4.eta - h2_p4.eta
+        hh_sum_jet_pt = get_hh_sum_jet_pt(h1_jet_idx, h2_jet_idx)
+        valid_event_paired = ~ak.is_none(events.reco_truth_matched_btagged_jets, axis=0)
+        valid_event_paired_correct = ~ak.is_none(
+            events[f"correct_hh_{pairing}_mask"], axis=0
         )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-    for cat in ["reco_min_deltar_pairing"]:
-        fill_HH_histograms(
-            hh=hh_reco_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-    # fill correct pairing histograms
-    valid_event = ~ak.is_none(events.correct_hh_min_dR_pairs_mask, axis=0)
-    for cat in ["reco_truth_matched_min_deltar_pairing_correct"]:
-        fill_HH_histograms(
-            hh=hh_truth_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-    for cat in ["reco_min_deltar_pairing_correct"]:
-        fill_HH_histograms(
-            hh=hh_reco_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-
-    ### max deltaR pairing ###
-    h1_p4 = ak.sum(jets_p4[events.H1_truth_matched_max_deltar_pairing_jet_idx], axis=1)
-    h2_p4 = ak.sum(jets_p4[events.H2_truth_matched_max_deltar_pairing_jet_idx], axis=1)
-    hh_reco_p4 = h1_p4 + h2_p4
-    hh_delta_eta = h1_p4.eta - h2_p4.eta
-    hh_sum_jet_pt = get_hh_sum_jet_pt(
-        events.H1_truth_matched_max_deltar_pairing_jet_idx,
-        events.H2_truth_matched_max_deltar_pairing_jet_idx,
-    )
-    valid_event = ~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0)
-    for cat in ["reco_truth_matched_max_deltar_pairing"]:
-        fill_HH_histograms(
-            hh=hh_truth_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-    for cat in ["reco_max_deltar_pairing"]:
-        fill_HH_histograms(
-            hh=hh_reco_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-    # fill correct pairing histograms
-    valid_event = ~ak.is_none(events.correct_hh_max_dR_pairs_mask, axis=0)
-    for cat in ["reco_truth_matched_max_deltar_pairing_correct"]:
-        fill_HH_histograms(
-            hh=hh_truth_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-    for cat in ["reco_max_deltar_pairing_correct"]:
-        fill_HH_histograms(
-            hh=hh_reco_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-
-    ### min mass true pairing ###
-    h1_p4 = ak.sum(
-        jets_p4[events.H1_truth_matched_min_mass_true_pairing_jet_idx], axis=1
-    )
-    h2_p4 = ak.sum(
-        jets_p4[events.H2_truth_matched_min_mass_true_pairing_jet_idx], axis=1
-    )
-    hh_reco_p4 = h1_p4 + h2_p4
-    hh_delta_eta = h1_p4.eta - h2_p4.eta
-    hh_sum_jet_pt = get_hh_sum_jet_pt(
-        events.H1_truth_matched_min_mass_true_pairing_jet_idx,
-        events.H2_truth_matched_min_mass_true_pairing_jet_idx,
-    )
-    valid_event = ~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0)
-    for cat in ["reco_truth_matched_min_mass_true_pairing"]:
-        fill_HH_histograms(
-            hh=hh_truth_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-    for cat in ["reco_min_mass_true_pairing"]:
-        fill_HH_histograms(
-            hh=hh_reco_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-    # fill correct pairing histograms
-    valid_event = ~ak.is_none(events.correct_hh_min_mass_true_pairs_mask, axis=0)
-    for cat in ["reco_truth_matched_min_mass_true_pairing_correct"]:
-        fill_HH_histograms(
-            hh=hh_truth_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-    for cat in ["reco_min_mass_true_pairing_correct"]:
-        fill_HH_histograms(
-            hh=hh_reco_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-
-    ### min mass pairing ###
-    h1_p4 = ak.sum(jets_p4[events.H1_truth_matched_min_mass_pairing_jet_idx], axis=1)
-    h2_p4 = ak.sum(jets_p4[events.H2_truth_matched_min_mass_pairing_jet_idx], axis=1)
-    hh_reco_p4 = h1_p4 + h2_p4
-    hh_delta_eta = h1_p4.eta - h2_p4.eta
-    hh_sum_jet_pt = get_hh_sum_jet_pt(
-        events.H1_truth_matched_min_mass_pairing_jet_idx,
-        events.H2_truth_matched_min_mass_pairing_jet_idx,
-    )
-    valid_event = ~ak.is_none(events.reco_truth_matched_4_btagged_jets, axis=0)
-    for cat in ["reco_truth_matched_min_mass_pairing"]:
-        fill_HH_histograms(
-            hh=hh_truth_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-    for cat in ["reco_min_mass_pairing"]:
-        fill_HH_histograms(
-            hh=hh_reco_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-    # fill correct pairing histograms
-    valid_event = ~ak.is_none(events.correct_hh_min_mass_pairs_mask, axis=0)
-    for cat in ["reco_truth_matched_min_mass_pairing_correct"]:
-        fill_HH_histograms(
-            hh=hh_truth_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
-    for cat in ["reco_min_mass_pairing_correct"]:
-        fill_HH_histograms(
-            hh=hh_reco_p4[valid_event],
-            weights=weights[valid_event],
-            hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
-        )
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_sum_jet_pt[valid_event]), weights=weights[valid_event])
-        hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
-        hist.fill(ak.to_numpy(hh_delta_eta[valid_event]), weights=weights[valid_event])
+        valid_events = [valid_event_paired, valid_event_paired_correct]
+        for cat, valid_event in zip(
+            [f"reco_{pairing}", f"reco_{pairing}_correct"],
+            valid_events,
+        ):
+            fill_HH_histograms(
+                hh=hh_reco_p4[valid_event],
+                weights=weights[valid_event],
+                hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
+            )
+            hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
+            hist.fill(
+                ak.to_numpy(hh_sum_jet_pt[valid_event]),
+                weights=ak.to_numpy(weights[valid_event]),
+            )
+            hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
+            hist.fill(
+                ak.to_numpy(hh_delta_eta[valid_event]),
+                weights=ak.to_numpy(weights[valid_event]),
+            )
+        for cat, valid_event in zip(
+            [
+                f"reco_truth_matched_{pairing}",
+                f"reco_truth_matched_{pairing}_correct",
+            ],
+            valid_events,
+        ):
+            fill_HH_histograms(
+                hh=hh_truth_p4[valid_event],
+                weights=weights[valid_event],
+                hists=find_hists_by_name(hists, f"hh_(pt|eta|phi|mass)_{cat}"),
+            )
+            hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[0]}_{cat}" in h.name)
+            hist.fill(
+                ak.to_numpy(hh_sum_jet_pt[valid_event]),
+                weights=ak.to_numpy(weights[valid_event]),
+            )
+            hist = find_hist(hists, lambda h: f"hh_{extra_hh_vars[1]}_{cat}" in h.name)
+            hist.fill(
+                ak.to_numpy(hh_delta_eta[valid_event]),
+                weights=ak.to_numpy(weights[valid_event]),
+            )
 
 
 def fill_mHH_plane_vs_pairing_histograms(events, hists: list) -> None:
@@ -561,16 +436,28 @@ def fill_mHH_plane_vs_pairing_histograms(events, hists: list) -> None:
                 lambda h: f"mHH_plane_reco_{pairing}" in h.name,
             ),
         )
-        valid_event_mask = ~ak.is_none(
+        lt_300_GeV_mask = ~ak.is_none(
             ak.mask(valid_event_mask, (h1_p4 + h2_p4).mass < 300_000), axis=0
         )
         fill_mH_2d_histograms(
-            mh1=h1_p4.mass[valid_event_mask],
-            mh2=h2_p4.mass[valid_event_mask],
-            weights=weights[valid_event_mask],
+            mh1=h1_p4.mass[lt_300_GeV_mask],
+            mh2=h2_p4.mass[lt_300_GeV_mask],
+            weights=weights[lt_300_GeV_mask],
             hist=find_hist(
                 hists,
                 lambda h: f"mHH_plane_reco_{pairing}_lt_300_GeV" in h.name,
+            ),
+        )
+        geq_300_GeV_mask = ~ak.is_none(
+            ak.mask(valid_event_mask, (h1_p4 + h2_p4).mass >= 300_000), axis=0
+        )
+        fill_mH_2d_histograms(
+            mh1=h1_p4.mass[geq_300_GeV_mask],
+            mh2=h2_p4.mass[geq_300_GeV_mask],
+            weights=weights[geq_300_GeV_mask],
+            hist=find_hist(
+                hists,
+                lambda h: f"mHH_plane_reco_{pairing}_geq_300_GeV" in h.name,
             ),
         )
 
@@ -586,27 +473,20 @@ def fill_mH_2d_histograms(mh1, mh2, weights, hist) -> None:
 
 def fill_X_HH_histograms(events, hists) -> None:
     """Fill X_HH histograms"""
-    regions = ["signal", "control"]
     for pairing in pairing_methods:
-        # hist = find_hist(
-        #     hists, lambda h: f"hh_mass_discrim_reco_{pairing}_regions" in h.name
-        # )
-        # if hist:
-        #     hist.fill(
-        #         [ak.sum(events[f"X_HH_{region}_{pairing}_mask"]) for region in regions]
-        #     )
-        for region in regions:
+        for region in ["signal", "control"]:
             hist = find_hist(
                 hists, lambda h: f"hh_mass_discrim_reco_{region}_{pairing}" in h.name
             )
             if hist:
                 logger.debug(hist.name)
-                hist_values = events[f"X_HH_{region}_{pairing}_discrim"]
+                hist_values = events[f"X_HH_{pairing}_discrim"]
                 valid_event = ~ak.is_none(hist_values, axis=0)
                 hist.fill(
                     ak.to_numpy(hist_values[valid_event]),
                     weights=ak.to_numpy(events.event_weight[valid_event]),
                 )
+                breakpoint()
 
 
 #### Old plotting functions ####
