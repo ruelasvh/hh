@@ -298,7 +298,7 @@ def get_jet_branch_alias_names(aliases):
     return jet_alias_names
 
 
-def get_legend_label(sample_id, sample_dict, prefix=None, postfix=None):
+def get_legend_label(sample_id, sample_dict=None, prefix=None, postfix=None):
     label = sample_dict[sample_id] if sample_dict else sample_id
     label = label if not prefix else prefix + label
     label = label if not postfix else label + postfix

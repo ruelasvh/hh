@@ -270,26 +270,6 @@ def process_batch(
                         R_CR_discrim
                     )
                     hh_mass_discrim_sel = selections["hh_mass_discriminat"]
-                    # for region in regions:
-                    #     if region in hh_mass_discrim_sel:
-                    #         X_HH_mask, X_HH_discrim = select_hh_events(
-                    #             jets_p4,
-                    #             H1_jet_idx,
-                    #             H2_jet_idx,
-                    #             mass_sel=hh_mass_discrim_sel[region],
-                    #         )
-                    #         events[
-                    #             f"X_HH_{region}_{btag_count}b_{btagger}_{pairing}_mask"
-                    #         ] = X_HH_mask
-                    #         events[
-                    #             f"X_HH_{region}_{btag_count}b_{btagger}_{pairing}_discrim"
-                    #         ] = X_HH_discrim
-                    #         logger.info(
-                    #             "Events passing previous cuts and X_HH veto for %s region with %s pairing: %s",
-                    #             region,
-                    #             pairing.replace("_", " "),
-                    #             ak.sum(X_HH_mask),
-                    #         )
                     for region in regions:
                         if region in hh_mass_discrim_sel:
                             X_HH_mask = select_hh_events(

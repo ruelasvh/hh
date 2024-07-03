@@ -486,7 +486,6 @@ def fill_X_HH_histograms(events, hists) -> None:
                     ak.to_numpy(hist_values[valid_event]),
                     weights=ak.to_numpy(events.event_weight[valid_event]),
                 )
-                breakpoint()
 
 
 #### Old plotting functions ####
