@@ -55,6 +55,11 @@ class HistPlottable:
         self.legend_label = legend_label
 
     def plot(self, ax, **kwargs):
+        self.bins = (
+            self.bins * GeV
+            if self.xlabel is not None and "GeV" in self.xlabel
+            else self.bins
+        )
         if self.normalize:
             self.counts = self.counts / np.sum(self.counts)
             self.binwidth_norm = None
@@ -68,8 +73,14 @@ class HistPlottable:
             )
             self.binwidth_norm = bin_widths[0]
             ax.set_ylabel(
-                rf"{self.ylabel} / {self.binwidth_norm:.2g}"
-                + (" GeV" if "GeV" in self.xlabel else "")
+                rf"{self.ylabel} / {self.binwidth_norm:.2g} "
+                + "".join(
+                    [
+                        unit
+                        for unit in ["MeV", "GeV", "%"]
+                        if self.xlabel is not None and unit in self.xlabel
+                    ]
+                )
             )
         if self.legend_label:
             self.legend_label = get_legend_label(
@@ -89,135 +100,6 @@ class HistPlottable:
             ax=ax,
             **kwargs,
         )
-
-
-# def draw_1d_hists(
-#     hists_group,
-#     hist_prefix,
-#     energy,
-#     xlabel: str = None,
-#     ylabel: str = "Entries",
-#     third_exp_label="",
-#     legend_labels: dict = None,
-#     luminosity=None,
-#     yscale="linear",
-#     xmin=None,
-#     xmax=None,
-#     normalize=False,
-#     binwidth_norm=True,
-#     xcut=None,
-#     draw_errors=False,
-#     ggFk01_factor=None,
-#     ggFk10_factor=None,
-#     ggFk05_factor=None,
-#     data2b_factor=None,
-#     output_dir=Path("plots"),
-# ):
-#     """Draw 1D histograms in one figure. The number of histograms in the figure is
-#     determined by the number of samples in the hists_group dictionary. hist_prefix
-#     is used to select the histograms to be drawn."""
-
-#     # assert that legend_labels is either a list or "auto" with list size equal to the number of samples
-#     if isinstance(legend_labels, dict):
-#         assert len(legend_labels) == len(hists_group), (
-#             "legend_labels map must have the same size as the number of samples in hists_group."
-#             f"Expected {len(hists_group)} labels, got {len(legend_labels)}."
-#         )
-
-#     fig, ax = plt.subplots()
-#     for sample_type, sample_hists in hists_group.items():
-#         hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
-#         is_data = "data" in sample_type
-#         hist = sample_hists[hist_name]
-#         hist_values = (
-#             hist["values"] * luminosity
-#             if luminosity and not is_data
-#             else hist["values"]
-#         )
-#         hist_errors = hist["errors"] if draw_errors else np.zeros_like(hist_values)
-#         hist_errors = (
-#             hist_errors * luminosity if luminosity and not is_data else hist_errors
-#         )
-#         hist_edges = hist["edges"]
-#         hist_edges = (
-#             hist_edges * GeV if xlabel is not None and "GeV" in xlabel else hist_edges
-#         )
-#         if ggFk01_factor and "ggF" in sample_type and "k01" in sample_type:
-#             scale_factor = ggFk01_factor
-#         if ggFk05_factor and "ggF" in sample_type and "k05" in sample_type:
-#             scale_factor = ggFk05_factor
-#         if ggFk10_factor and "ggF" in sample_type and "k10" in sample_type:
-#             scale_factor = ggFk10_factor
-#         if data2b_factor and "data" in sample_type and "2b" in sample_type:
-#             scale_factor = data2b_factor
-#         label = get_legend_label(
-#             sample_type,
-#             legend_labels,
-#             postfix=(r" ($\times$" + f"{scale_factor})" if scale_factor > 1 else None),
-#         )
-#         hist_values = hist_values * scale_factor
-#         if normalized:
-#             hist_values = hist_values / np.sum(hist_values)
-#             binwidth_norm = None
-#             ax.set_ylabel(f"{ylabel} / N")
-#         elif binwidth_norm:
-#             bin_widths = np.diff(hist_edges)
-#             # check that they are the same widths, else throw an error and say bins need to be uniform
-#             assert np.all(bin_widths == bin_widths[0]), (
-#                 "Bins need to be uniform to use bin width normalization. "
-#                 f"Got bin widths: {bin_widths}"
-#             )
-#             binwidth_norm = bin_widths[0]
-#             ax.set_ylabel(
-#                 rf"{ylabel} / {binwidth_norm:.2g}" + ("GeV" if "GeV" in xlabel else "")
-#             )
-#         bin_width = hist_edges[1] - hist_edges[0]
-#         bin_centers = hist_edges + (bin_width * 0.5)
-#         hplt.histplot(
-#             hist_values[1:-1],
-#             bin_centers,
-#             ax=ax,
-#             yerr=hist_errors[1:-1] if draw_errors else None,
-#             label=label,
-#             linewidth=2.0,
-#             binwnorm=binwidth_norm,
-#         )
-#         ax.set_ylabel(ylabel + " / %.2g" % bin_width if binwidth_norm else ylabel)
-#     ax.legend(loc="upper right")
-#     if xcut:
-#         ax.axvline(x=xcut, ymax=0.6, color="purple")
-#         ax.text(
-#             xcut,
-#             0.55,
-#             f"{xcut}",
-#             color="purple",
-#             rotation=90,
-#             va="baseline",
-#             ha="right",
-#             transform=ax.get_xaxis_transform(),
-#         )
-#     if xlabel:
-#         ax.set_xlabel(xlabel)
-#     ax.set_yscale(yscale)
-#     _, ymax = ax.get_ylim()
-#     ax.set_ylim(ymin=0.1 if yscale == "log" else 0.0, ymax=ymax * 1.5)
-#     if xmin is not None:
-#         ax.set_xlim(xmin=xmin)
-#     if xmax is not None:
-#         ax.set_xlim(xmax=xmax)
-#     hplt.atlas.label(
-#         label="Work In Progress",
-#         data=True,  # prevents adding Simulation label, sim labels are added in legend
-#         rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
-#         loc=4,
-#         ax=ax,
-#         pad=0.01,
-#     )
-#     plot_name = hist_prefix.replace("$", "")
-#     plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
-#     plt.tight_layout()
-#     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
-#     plt.close(fig)
 
 
 def draw_1d_hists(
@@ -260,9 +142,6 @@ def draw_1d_hists(
         hist = sample_hists[hist_name]
         hist_values = hist["values"]
         hist_edges = hist["edges"]
-        hist_edges = (
-            hist_edges * GeV if xlabel is not None and "GeV" in xlabel else hist_edges
-        )
         hist_errors = hist["errors"] if draw_errors else None
         scale_factor = None
         if ggFk01_factor and "ggF" in sample_type and "k01" in sample_type:
@@ -325,173 +204,6 @@ def draw_1d_hists(
     plt.close(fig)
 
 
-# def draw_1d_hists_v2(
-#     hists_group,
-#     hist_prefixes,
-#     energy,
-#     xlabel=None,
-#     ylabel="Entries",
-#     baseline=None,
-#     legend_labels: dict = None,
-#     legend_options: dict = {"loc": "upper right"},
-#     third_exp_label="",
-#     luminosity=None,
-#     yscale="linear",
-#     xmin=None,
-#     xmax=None,
-#     binwidth_norm=True,
-#     normalized=False,
-#     draw_errors=False,
-#     draw_ratio=False,
-#     ymin_ratio=-0.5,
-#     ymax_ratio=1.5,
-#     ylabel_ratio="Ratio",
-#     scale_factors=None,
-#     plot_name="truth_vs_reco",
-#     output_dir=Path("plots"),
-# ):
-#     """Draw 1D histograms in one figure. The number of histograms in the figure is
-#     determined by the number of samples in the hists_group dictionary. hist_prefix
-#     is used to select the histograms to be drawn."""
-
-#     # assert that legend_labels is either a list or "auto" with list size equal to the number of samples
-#     if isinstance(legend_labels, dict):
-#         assert len(legend_labels) == len(hist_prefixes), (
-#             "legend_labels map must have the same size as the number of samples in hists_group."
-#             f"Expected {len(hist_prefixes)} labels, got {len(legend_labels)}."
-#         )
-
-#     if draw_ratio:
-#         fig = plt.figure()
-#         gs = fig.add_gridspec(2, hspace=0, height_ratios=[3, 1])
-#         ax, ax_ratio = gs.subplots(sharex=True)
-#     else:
-#         fig, ax = plt.subplots()
-
-#     for sample_type, sample_hists in hists_group.items():
-#         base_hist_values = None
-#         for i, hist_prefix in enumerate(hist_prefixes):
-#             hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
-#             is_data = "data" in sample_type
-#             hist = sample_hists[hist_name]
-#             hist_plot = HistPlottable(
-#                 hist["values"],
-#                 hist["edges"],
-#                 errors=hist["errors"] if draw_errors else None,
-#                 scale_factor=scale_factors[i] if scale_factors else None,
-#                 luminosity=luminosity if not is_data else None,
-#                 normalized=normalized,
-#                 binwidth_norm=binwidth_norm,
-#                 legend_label=legend_labels[hist_prefix] if legend_labels else None,
-#             )
-#             hist_values = hist["values"]
-#             hist_values = (
-#                 hist_values * luminosity if luminosity and not is_data else hist_values
-#             )
-#             hist_errors = hist["errors"] if draw_errors else np.zeros_like(hist_values)
-#             hist_errors = (
-#                 hist_errors * luminosity if luminosity and not is_data else hist_errors
-#             )
-#             hist_edges = hist["edges"]
-#             hist_edges = (
-#                 hist_edges * GeV
-#                 if xlabel is not None and "GeV" in xlabel
-#                 else hist_edges
-#             )
-#             scale_factor = None
-#             if scale_factors:
-#                 scale_factor = scale_factors[i]
-#             hist_values = hist_values * scale_factor if scale_factor else hist_values
-#             label = get_legend_label(
-#                 hist_prefix,
-#                 legend_labels,
-#                 prefix=(
-#                     rf"${scale_factor}\times$ " if scale_factor is not None else None
-#                 ),
-#             )
-#             if normalized:
-#                 hist_values = hist_values / np.sum(hist_values)
-#                 binwidth_norm = None
-#                 ax.set_ylabel(f"{ylabel} / N")
-#             elif binwidth_norm:
-#                 bin_widths = np.diff(hist_edges)
-#                 # check that they are the same widths, else throw an error and say bins need to be uniform
-#                 assert np.all(bin_widths == bin_widths[0]), (
-#                     "Bins need to be uniform to use bin width normalization. "
-#                     f"Got bin widths: {bin_widths}"
-#                 )
-#                 binwidth_norm = bin_widths[0]
-#                 ax.set_ylabel(
-#                     rf"{ylabel} / {binwidth_norm:.2g}"
-#                     + ("GeV" if "GeV" in xlabel else "")
-#                 )
-#             # bin_centers = hist_edges + (bin_width * 0.5)
-#             # bin_centers = hist_edges[:-1] + np.diff(hist_edges) / 2
-#             bin_centers = hist_edges
-#             hplt.histplot(
-#                 hist_values[1:-1],
-#                 bin_centers,
-#                 yerr=hist_errors[1:-1] if draw_errors else None,
-#                 label=label,
-#                 linewidth=2.0,
-#                 binwnorm=binwidth_norm,
-#                 color=f"C{i}",
-#                 ax=ax,
-#             )
-#             if draw_ratio:
-#                 if i == 0:
-#                     base_hist_values = hist_values
-#                 else:
-#                     hplt.histplot(
-#                         hist_values / base_hist_values,
-#                         bin_centers,
-#                         color=f"C{i}",
-#                         ax=ax_ratio,
-#                     )
-#                     ax_ratio.set_ylabel(ylabel_ratio, loc="center")
-#                     ax_ratio.set_ylim(ymin_ratio, ymax_ratio)
-#                     ax_ratio.axhline(1, color="black", linestyle="--", linewidth=0.4)
-#         if baseline is not None:
-#             infvar = np.array([np.inf])
-#             edges_underflow_overflow = np.concatenate([-infvar, hist_edges, infvar])
-#             baseline_hist, _ = np.histogramdd(baseline, bins=[edges_underflow_overflow])
-#             if normalized:
-#                 baseline_hist = baseline_hist / np.sum(baseline_hist)
-#                 binwidth_norm = None
-#             hplt.histplot(
-#                 baseline_hist[1:-1],
-#                 bin_centers,
-#                 yerr=hist_errors[1:-1] if draw_errors else None,
-#                 label=r"Flat $m_\mathrm{HH}$ distribution",
-#                 linewidth=2.0,
-#                 binwnorm=binwidth_norm,
-#                 color=f"C{i+1}",
-#                 ax=ax,
-#             )
-#     ax.legend(**legend_options)
-#     if xlabel:
-#         ax.set_xlabel(xlabel) if not draw_ratio else ax_ratio.set_xlabel(xlabel)
-#     ax.set_yscale(yscale)
-#     _, ymax = ax.get_ylim()
-#     ax.set_ylim(ymin=0.1 if yscale == "log" else 0.0, ymax=ymax * 1.5)
-#     if xmin is not None:
-#         ax.set_xlim(xmin=xmin)
-#     if xmax is not None:
-#         ax.set_xlim(xmax=xmax)
-#     hplt.atlas.label(
-#         label="Work In Progress",
-#         data=True,  # prevents adding Simulation label, sim labels are added in legend
-#         rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
-#         loc=4,
-#         ax=ax,
-#         pad=0.01,
-#     )
-#     plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
-#     plt.tight_layout()
-#     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
-#     plt.close(fig)
-
-
 def draw_1d_hists_v2(
     hists_group,
     hist_prefixes,
@@ -543,11 +255,6 @@ def draw_1d_hists_v2(
             hist = sample_hists[hist_name]
             hist_values = hist["values"]
             hist_edges = hist["edges"]
-            hist_edges = (
-                hist_edges * GeV
-                if xlabel is not None and "GeV" in xlabel
-                else hist_edges
-            )
             hist_errors = hist["errors"] if draw_errors else None
             hist_main = HistPlottable(
                 hist_values,
@@ -569,6 +276,8 @@ def draw_1d_hists_v2(
                     hist_ratio = HistPlottable(
                         hist_values / base_hist_values,
                         hist_edges,
+                        xlabel=xlabel,
+                        ylabel=ylabel,
                     )
                     hist_ratio.plot(ax=ax_ratio, color=f"C{i}")
         if baseline is not None:
@@ -648,38 +357,22 @@ def draw_efficiency(
 
     for sample_type, sample_hists in hists_group.items():
         for i, hists in enumerate(hist_prefixes):
-            is_data = "data" in sample_type
             hist_total_name = find_hist(sample_hists, lambda h: re.match(hists[0], h))
             hist_total = sample_hists[hist_total_name]
             hist_total_values = hist_total["values"]
-            hist_total_values = (
-                hist_total_values * luminosity
-                if luminosity and not is_data
-                else hist_total_values
-            )
             hist_total_edges = hist_total["edges"]
-            hist_total_edges = (
-                hist_total_edges * GeV
-                if xlabel is not None and "GeV" in xlabel
-                else hist_total_edges
-            )
-            label = get_legend_label(hist_total_name, legend_labels)
             hist_pass_name = find_hist(sample_hists, lambda h: re.match(hists[1], h))
             hist_pass = sample_hists[hist_pass_name]
             hist_pass_values = hist_pass["values"]
-            hist_pass_values = (
-                hist_pass_values * luminosity
-                if luminosity and not is_data
-                else hist_pass_values
-            )
             eff = hist_pass_values / hist_total_values
-            hplt.histplot(
+            hist_main = HistPlottable(
                 eff,
                 hist_total_edges,
-                label=label,
-                color=f"C{i}",
-                ax=ax,
+                legend_label=legend_labels[hist_total_name] if legend_labels else None,
+                xlabel=xlabel,
+                ylabel=ylabel,
             )
+            hist_main.plot(ax=ax, color=f"C{i}")
 
     ax.legend(**legend_options)
     ax.set_xlabel(xlabel)
@@ -698,8 +391,6 @@ def draw_efficiency(
         ax=ax,
         pad=0.01,
     )
-    # # Automatically scale y-axis up to fit in legend
-    # hplt.plot.yscale_legend(ax)
     plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
     plt.tight_layout()
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
@@ -853,7 +544,7 @@ def draw_mH_plane_2D_hists(
         bins_GeV,
         bins_GeV,
         ax=ax,
-        cbarpad=0.20,
+        cbarpad=0.15,
         cbarsize="5%",
         flow=None,
         cbarextend=True,
