@@ -44,11 +44,11 @@
                 "value": 6
             }
         },
-        "top_veto": {
+        "X_Wt_discriminant": {
             "operator": ">",
             "value": 1.5
         },
-        "hh_deltaeta_veto": {
+        "Delta_eta_HH_discriminant": {
             "operator": "<",
             "value": 1.5
         },

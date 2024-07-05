@@ -7,7 +7,7 @@ from hh.shared.utils import (
     kin_labels,
     GeV,
 )
-from hh.shared.selection import X_HH, R_CR, X_Wt
+from hh.shared.selection import X_HH, R_CR, X_Wt, get_W_t_p4, classify_control_events
 from hh.nonresonantresolved.pairing import pairing_methods
 from hh.nonresonantresolved.selection import (
     select_n_jets_events,
@@ -17,7 +17,7 @@ from hh.nonresonantresolved.selection import (
     select_hh_jet_candidates,
     reconstruct_hh_jet_pairs,
     select_correct_hh_pair_events,
-    select_hh_events,
+    select_discrim_events,
 )
 
 
@@ -199,6 +199,37 @@ def process_batch(
                 non_hh_truth_matched_jet_idx
             )
             ############################################
+            ## Apply top veto
+            ############################################
+            if "X_Wt_discriminant" in selections:
+                top_veto_sel = selections["X_Wt_discriminant"]
+                # reconstruct W and top candidates
+                W_candidates_p4, top_candidates_p4 = get_W_t_p4(
+                    jets,
+                    hh_jet_idx,
+                    non_hh_jet_idx,
+                )
+                # calculate X_Wt discriminant
+                X_Wt_discrim = X_Wt(
+                    W_candidates_p4.mass * GeV,
+                    top_candidates_p4.mass * GeV,
+                )
+                # select only the minimum X_Wt for each event
+                X_Wt_discrim = ak.min(X_Wt_discrim, axis=1)
+                X_Wt_mask = select_discrim_events(
+                    (X_Wt_discrim,), selection=top_veto_sel
+                )
+                events[f"X_Wt_{btag_count}b_{btagger}_mask"] = X_Wt_mask
+                # events = ak.mask(events, X_Wt_mask)
+                logger.info(
+                    "Events passing previous cuts and X_Wt %s %s: %s",
+                    top_veto_sel["operator"],
+                    top_veto_sel["value"],
+                    ak.sum(X_Wt_mask),
+                )
+                if ak.sum(X_Wt_mask) == 0:
+                    return events
+            ############################################
             # Apply different HH jet candidate pairings
             ############################################
             ###### HH jet nominal pairing ######
@@ -216,6 +247,7 @@ def process_batch(
                     ak.sum(correct_hh_nominal_pairs_mask),
                 )
             for pairing, pairing_info in pairing_methods.items():
+                ## NEED TO MASK THE EVENTS WITH THE X_Wt MASK ##
                 ###### reconstruct H1 and H2 ######
                 H1_jet_idx, H2_jet_idx = reconstruct_hh_jet_pairs(
                     jets=jets_p4,
@@ -256,11 +288,31 @@ def process_batch(
                 #################################################
                 # Perform event selection for each pairing method
                 #################################################
-                regions = ["signal", "control"]
-                ###### X_HH mass veto ######
                 h1_p4 = ak.sum(jets_p4[H1_jet_idx], axis=1)
                 h2_p4 = ak.sum(jets_p4[H2_jet_idx], axis=1)
-                if "hh_mass_discriminat" in selections:
+                ###### Delta eta ∆𝜂 HH veto ######
+                if "Delta_eta_HH_discriminant" in selections:
+                    deltaeta_HH_discrim_sel = selections["Delta_eta_HH_discriminant"]
+                    deltaeta_HH = np.abs(h1_p4.eta - h2_p4.eta)
+                    events[f"deltaeta_HH_{btag_count}b_{btagger}_{pairing}_discrim"] = (
+                        deltaeta_HH
+                    )
+                    deltaeta_HH_mask = select_discrim_events(
+                        (deltaeta_HH,),
+                        selection=deltaeta_HH_discrim_sel,
+                    )
+                    events[f"deltaeta_HH_{btag_count}b_{btagger}_{pairing}_mask"] = (
+                        deltaeta_HH_mask
+                    )
+                    logger.info(
+                        "Events passing previous cuts and ∆𝜂 HH veto with %s pairing: %s",
+                        pairing.replace("_", " "),
+                        ak.sum(deltaeta_HH_mask),
+                    )
+                ###### X_HH mass veto ######
+                regions = ["signal", "control"]
+                if "X_HH_discriminant" in selections:
+                    hh_mass_discrim_sel = selections["X_HH_discriminant"]
                     X_HH_discrim = X_HH(h1_p4.m * GeV, h2_p4.m * GeV)
                     events[f"X_HH_{btag_count}b_{btagger}_{pairing}_discrim"] = (
                         X_HH_discrim
@@ -269,21 +321,43 @@ def process_batch(
                     events[f"R_CR_{btag_count}b_{btagger}_{pairing}_discrim"] = (
                         R_CR_discrim
                     )
-                    hh_mass_discrim_sel = selections["hh_mass_discriminat"]
                     for region in regions:
                         if region in hh_mass_discrim_sel:
-                            X_HH_mask = select_hh_events(
+                            region_mask = select_discrim_events(
                                 (X_HH_discrim, R_CR_discrim),
-                                mass_sel=hh_mass_discrim_sel[region],
+                                selection=hh_mass_discrim_sel[region],
                             )
                             events[
-                                f"X_HH_{region}_{btag_count}b_{btagger}_{pairing}_mask"
-                            ] = X_HH_mask
+                                f"{region}_{btag_count}b_{btagger}_{pairing}_mask"
+                            ] = region_mask
                             logger.info(
                                 "Events passing previous cuts and X_HH veto for %s region with %s pairing: %s",
                                 region,
                                 pairing.replace("_", " "),
-                                ak.sum(X_HH_mask),
+                                ak.sum(region_mask),
                             )
+                    control_regions = ["CR1_top", "CR2_left", "CR1_bottom", "CR2_right"]
+                    # for each region in the control regions select events that fall in the region. The regions are split by 2 perpendicular lines that intersect at the center of the m_HH plane and are 45 degrees from the x-axis.
+                    control_events_mask = events[
+                        f"control_{btag_count}b_{btagger}_{pairing}_mask"
+                    ]
+                    points = np.transpose(
+                        [h1_p4.m[control_events_mask], h2_p4.m[control_events_mask]]
+                    )
+                    points *= GeV
+                    events_quadrants = classify_control_events(points)
+                    for i, region in zip(events_quadrants, control_regions):
+                        quadrant_events = ak.copy(control_events_mask).to_numpy()
+                        ind = np.where(quadrant_events)[0]
+                        quadrant_events[ind] = events_quadrants[i]
+                        events[f"{region}_{btag_count}b_{btagger}_{pairing}_mask"] = (
+                            quadrant_events
+                        )
+                        logger.info(
+                            "Events passing previous cuts and %s region with %s pairing: %s",
+                            region,
+                            pairing.replace("_", " "),
+                            ak.sum(quadrant_events),
+                        )
 
     return events

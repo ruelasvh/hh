@@ -8,7 +8,7 @@ from hh.shared.utils import (
     kin_labels,
     GeV,
 )
-from hh.shared.selection import X_HH, R_CR, X_Wt
+from hh.shared.selection import X_Wt, get_W_t_p4
 
 
 def select_events_passing_triggers(
@@ -116,7 +116,7 @@ def reconstruct_hh_jet_pairs(jets, hh_jet_idx, loss, optimizer=np.argmin):
     return hh_jet_idx[h1_jet_idx], hh_jet_idx[h2_jet_idx]
 
 
-def select_X_Wt_events_v2(jets, hh_jet_idx, non_hh_jet_idx, selection):
+def select_top_veto_events(jets, hh_jet_idx, non_hh_jet_idx, selection):
     """Selects events that pass the top-veto selection.
     Events are vetoed if the minimum X_Wt over all combinations is less than selection.
     Returns:
@@ -142,24 +142,20 @@ def select_X_Wt_events_v2(jets, hh_jet_idx, non_hh_jet_idx, selection):
     return passed_top_veto_mask, X_Wt_discriminant_min
 
 
-def select_hh_events(discrim, deltaeta_sel=None, mass_sel=None):
-    """Selects events that pass the hh selection.
+def select_discrim_events(discrim, selection=None):
+    """Selects events that pass the selection for the given discriminant.
 
     Returns:
-        Events that pass the hh selection
+        Events that pass the discriminant selection
     """
     keep = np.ones(len(discrim[0]), dtype=bool)
-    if deltaeta_sel is not None:
-        keep = keep & get_op(deltaeta_sel["operator"])(discrim, deltaeta_sel["value"])
-    if mass_sel is not None:
-        if (boundry := "inner_boundry") in mass_sel:
-            keep = keep & get_op(mass_sel[boundry]["operator"])(
-                discrim[0], mass_sel[boundry]["value"]
-            )
-        if (boundry := "outer_boundry") in mass_sel:
-            keep = keep & get_op(mass_sel[boundry]["operator"])(
-                discrim[1], mass_sel[boundry]["value"]
-            )
+    if selection is not None:
+        if all([k in selection for k in ["operator", "value"]]):
+            keep = keep & get_op(selection["operator"])(discrim[0], selection["value"])
+        else:
+            for i, sel in enumerate(selection.values()):
+                if isinstance(sel, dict):
+                    keep = keep & select_discrim_events((discrim[i],), sel)
     keep = ak.fill_none(keep, False)
     return keep
 
@@ -202,64 +198,6 @@ def select_truth_matched_jets(
     keep_event_mask = ak.sum(valid_truth_matched_jets, axis=1) >= n_truth_matched
     valid_truth_matched_jet_mask = ak.mask(valid_truth_matched_jets, keep_event_mask)
     return valid_truth_matched_jet_mask
-
-
-def get_W_t_p4(jets, hh_jet_idx, non_hh_jet_idx):
-    jet_idx = ak.concatenate([hh_jet_idx, non_hh_jet_idx], axis=1)
-    jets = jets[jet_idx]
-    jet_p4 = p4.zip({var: jets[var] for var in kin_labels})
-    bjet_p4 = jet_p4[:, :4][jets.btag[:, :4] == 1]
-    bjet_idx = ak.local_index(bjet_p4, axis=1)
-    # for one event with hc_jet_indices with 4 jets, remaining_jets with 2 jets
-    # jet_indices -> [[0, 1, 2, 3, 4, 5], ...]
-    # hc_jet_indices -> [[0, 2, 3, 5], ...]
-    jet_pair_combinations_indices = ak.argcombinations(
-        jet_p4, 2, axis=1
-    )  # [[(0, 1), (0, 2), (0, 3), (0, 4), (...), ..., (2, 5), (3, 4), (3, 5), (4, 5)], ...]
-    top_candidate_indices = ak.cartesian(
-        [bjet_idx, jet_pair_combinations_indices], axis=1
-    )  # [[(0, (0, 1)), (0, (0, 2)), (0, (0, 3)), (0, (0, 4)), (0, (0, 5)), (0, (1, 2)), (0, (1, 3)), (0, (1, 4)), (0, (1, 5)), (0, (2, 3)), (0, (2, 4)), (0, (2, 5)), (0, (3, 4)), (0, (3, 5)), (0, (4, 5))], ...]
-    top_jet3_indices, top_jet12_indices = ak.unzip(
-        top_candidate_indices
-    )  # [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...]], [[(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (1, 2), ...]]
-    top_jet1_indices, top_jet2_indices = ak.unzip(
-        top_jet12_indices
-    )  # [[0, 0, 0, 0, 0, 1, 1, 1, 1, 2, ...]], [[1, 2, 3, 4, 5, 2, 3, 4, 5, 3, ...]]
-    valid_top_candidate_mask = (top_jet3_indices != top_jet2_indices) & (
-        top_jet3_indices != top_jet1_indices
-    )  # [[False, False, False, False, False, True, True, True, True, True, ...]]
-    top_jet1_indices = top_jet1_indices[valid_top_candidate_mask]
-    top_jet2_indices = top_jet2_indices[valid_top_candidate_mask]
-    top_jet3_indices = top_jet3_indices[valid_top_candidate_mask]
-    W_candidates_p4 = jet_p4[top_jet1_indices] + jet_p4[top_jet2_indices]
-    top_candidates_p4 = W_candidates_p4 + jet_p4[top_jet3_indices]
-    return W_candidates_p4, top_candidates_p4
-
-
-def get_hh_p4(jets, leading_h_jet_idx, subleading_h_jet_idx):
-    """
-    Gets the 4-momentum of the HH system from the 4 Higgs candidate jets.
-
-    Returns:
-        The 4-momentum of the HH system
-    """
-    jet_p4 = p4.zip(
-        {var: jets[var].tolist() for var in kin_labels.keys()},
-    )
-    h1_jets_idx = leading_h_jet_idx
-    h1_jet1_idx, h1_jet2_idx = (
-        h1_jets_idx[:, 0, np.newaxis],
-        h1_jets_idx[:, 1, np.newaxis],
-    )
-    h2_jets_idx = subleading_h_jet_idx
-    h2_jet1_idx, h2_jet2_idx = (
-        h2_jets_idx[:, 0, np.newaxis],
-        h2_jets_idx[:, 1, np.newaxis],
-    )
-    h1 = jet_p4[h1_jet1_idx] + jet_p4[h1_jet2_idx]
-    h2 = jet_p4[h2_jet1_idx] + jet_p4[h2_jet2_idx]
-
-    return h1[:, 0], h2[:, 0]
 
 
 def calculate_scale_factors(events):

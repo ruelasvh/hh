@@ -194,7 +194,7 @@
                 }
             }
         ],
-        "hh_mass_discriminat": {
+        "X_HH_discriminant": {
             "signal": {
                 "inner_boundry": {
                     "operator": "<",

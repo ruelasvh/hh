@@ -89,7 +89,15 @@
                 }
             }
         ],
-        "hh_mass_discriminat": {
+        "X_Wt_discriminant": {
+            "operator": ">",
+            "value": 1.5
+        },
+        "Delta_eta_HH_discriminant": {
+            "operator": "<",
+            "value": 1.5
+        },
+        "X_HH_discriminant": {
             "signal": {
                 "inner_boundry": {
                     "operator": "<",
