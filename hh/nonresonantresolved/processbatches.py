@@ -124,7 +124,8 @@ def process_batch(
             jet_btag_key = f"jet_btag_{btagger}"
             # select and save events with >= n central b-jets
             valid_central_btagged_jets = select_n_bjets_events(
-                jets=(events.valid_central_jets & (events[jet_btag_key] == 1)),
+                jets=events.valid_central_jets,
+                where=events[jet_btag_key] == 1,
                 selection=i_bjets_sel,
             )
             events[f"valid_central_{btag_count}_btag_{btagger}_jets"] = (

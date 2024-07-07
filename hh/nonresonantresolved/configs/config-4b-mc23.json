@@ -85,6 +85,14 @@
                 "efficiency": 0.77,
                 "count": {
                     "operator": ">=",
+                    "value": 2
+                }
+            },
+            {
+                "model": "GN2v01",
+                "efficiency": 0.77,
+                "count": {
+                    "operator": ">=",
                     "value": 4
                 }
             }
