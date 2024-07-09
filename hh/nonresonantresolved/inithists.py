@@ -153,6 +153,21 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                             bins=21,
                         )
 
+        ##################################################
+        ### Background estimate histograms
+        ##################################################
+        for pairing in pairing_methods:
+            hists_dict[sample_name] += init_HH_histograms(
+                hh_vars,
+                hh_vars_binranges,
+                postfix=f"_reco_{pairing}_bkgest_before",
+            )
+            hists_dict[sample_name] += init_HH_histograms(
+                hh_vars,
+                hh_vars_binranges,
+                postfix=f"_reco_{pairing}_bkgest_after",
+            )
+
     return hists_dict
 
 

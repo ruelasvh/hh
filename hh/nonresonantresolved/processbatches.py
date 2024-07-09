@@ -311,7 +311,6 @@ def process_batch(
                         ak.sum(deltaeta_HH_mask),
                     )
                 ###### X_HH mass veto ######
-                regions = ["signal", "control"]
                 if "X_HH_discriminant" in selections:
                     hh_mass_discrim_sel = selections["X_HH_discriminant"]
                     X_HH_discrim = X_HH(h1_p4.m * GeV, h2_p4.m * GeV)
@@ -322,6 +321,7 @@ def process_batch(
                     events[f"R_CR_{btag_count}b_{btagger}_{pairing}_discrim"] = (
                         R_CR_discrim
                     )
+                    regions = ["signal", "control"]
                     for region in regions:
                         if region in hh_mass_discrim_sel:
                             region_mask = select_discrim_events(
@@ -347,18 +347,57 @@ def process_batch(
                     )
                     points *= GeV
                     events_quadrants = classify_control_events(points)
-                    for i, region in zip(events_quadrants, control_regions):
+                    for i, c_region in zip(events_quadrants, control_regions):
                         quadrant_events = ak.copy(control_events_mask).to_numpy()
                         ind = np.where(quadrant_events)[0]
                         quadrant_events[ind] = events_quadrants[i]
-                        events[f"{region}_{btag_count}b_{btagger}_{pairing}_mask"] = (
+                        events[f"{c_region}_{btag_count}b_{btagger}_{pairing}_mask"] = (
                             quadrant_events
                         )
                         logger.info(
                             "Events passing previous cuts and %s region with %s pairing: %s",
-                            region,
+                            c_region,
                             pairing.replace("_", " "),
                             ak.sum(quadrant_events),
                         )
+                ###### Calculate background estimate using ABCD method ######
+                low_btag_region = bjets_sel[0]["count"]["value"]
+                high_btag_region = bjets_sel[1]["count"]["value"]
+                if all(
+                    f in events.fields
+                    for f in [
+                        f"control_{low_btag_region}b_{btagger}_{pairing}_mask",
+                        f"control_{high_btag_region}b_{btagger}_{pairing}_mask",
+                    ]
+                ):
+                    # Calculate SR_4b(prediction) = SR_2b * (CR_4b / CR_2b)
+                    # D = C * (B / A)
+                    N_A = np.zeros(1, dtype=float)
+                    control_regions = ["CR1_top", "CR1_bottom"]
+                    for c_region in control_regions:
+                        quadrant_mask = events[
+                            f"{c_region}_{low_btag_region}b_{btagger}_{pairing}_mask"
+                        ]
+                        N_A += ak.sum(events.event_weight[quadrant_mask])
+                    N_B = np.zeros(1, dtype=float)
+                    for c_region in control_regions:
+                        quadrant_mask = events[
+                            f"{c_region}_{high_btag_region}b_{btagger}_{pairing}_mask"
+                        ]
+                        N_B += ak.sum(events.event_weight[quadrant_mask])
+                    N_C = events[f"signal_{low_btag_region}b_{btagger}_{pairing}_mask"]
+                    N_C = ak.sum(events.event_weight[N_C])
+                    N_D = N_C * (N_B / N_A)
+                    sigma_D = N_D * np.sqrt(
+                        (np.sqrt(N_A) / N_A) ** 2
+                        + (np.sqrt(N_B) / N_B) ** 2
+                        + (np.sqrt(N_C) / N_C) ** 2
+                    )
+                    logger.info(
+                        "Estimated number of events in SR_4b using ABCD method for %s pairing: %s ± %s",
+                        pairing.replace("_", " "),
+                        N_D,
+                        sigma_D,
+                    )
 
     return events

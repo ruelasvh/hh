@@ -147,17 +147,19 @@ def propagate_errors(
 
     if "+" in operation or "-" in operation:
         error = np.sqrt(np.power(sigmaA, 2) + np.power(sigmaB, 2))
-    if "*" in operation:
+    elif "*" in operation:
         error = np.abs(A * B) * np.sqrt(
             np.power(np.divide(sigmaA, A, out=np.zeros_like(sigmaA), where=A != 0), 2)
             + np.power(np.divide(sigmaB, B, out=np.zeros_like(sigmaB), where=B != 0), 2)
         )
-    if "/" in operation:
+    elif "/" in operation:
         error = np.abs(A / B) * np.sqrt(
             np.power(np.divide(sigmaA, A, out=np.zeros_like(sigmaA), where=A != 0), 2)
             + np.power(np.divide(sigmaB, B, out=np.zeros_like(sigmaB), where=B != 0), 2)
         )
-    if "^" in operation:
+    elif "^" in operation:
         error = np.abs(np.power(A, exp) / A * (exp * sigmaA))
+    else:
+        raise ValueError("Operation not supported")
 
     return error
