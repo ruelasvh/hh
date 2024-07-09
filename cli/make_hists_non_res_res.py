@@ -150,7 +150,7 @@ def main():
         config = resolve_project_paths(config=json.load(cf))
 
     samples, event_selection = config["samples"], config["event_selection"]
-    hists = init_hists(samples, args)
+    hists = init_hists(samples, event_selection, args)
 
     worker_items = [
         (
