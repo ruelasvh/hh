@@ -1,0 +1,52 @@
+General:
+  Measurement: "minimal_example"
+  POI: "Signal_norm"
+  HistogramFolder: "histograms/"
+  InputPath: "inputs/histograms.root:{RegionPath}/{SamplePath}/{VariationPath}"
+  VariationPath: "Nominal"
+
+Regions:
+  - Name: "Signal_region"
+    RegionPath: "SR"
+
+Samples:
+  - Name: "Data"
+    SamplePath: "Data"
+    Data: True
+
+  - Name: "Signal"
+    SamplePath: "Signal"
+    DisableStaterror: True
+
+  - Name: "Background"
+    SamplePath: "Background"
+
+Systematics:
+  - Name: "Luminosity"
+    Up:
+      Normalization: 0.05
+    Down:
+      Normalization: -0.05
+    Type: "Normalization"
+
+  - Name: "Modeling"
+    Up:
+      VariationPath: "Modeling_Up"
+    Down:
+      Symmetrize: True
+    Samples: "Background"
+    Type: "NormPlusShape"
+
+  - Name: "WeightBasedModeling"
+    Up:
+      VariationPath: "WeightBasedModeling_Up"
+    Down:
+      VariationPath: "WeightBasedModeling_Down"
+    Samples: "Background"
+    Type: "NormPlusShape"
+
+NormFactors:
+  - Name: "Signal_norm"
+    Samples: "Signal"
+    Nominal: 1
+    Bounds: [0, 10]
