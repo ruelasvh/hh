@@ -226,7 +226,7 @@
             "operator": "<",
             "value": 1.5
         },
-        "hh_mass_veto": {
+        "X_HH_discriminant": {
             "signal": {
                 "inner_boundry": {
                     "operator": "<",

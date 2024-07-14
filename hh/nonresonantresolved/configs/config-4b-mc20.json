@@ -361,14 +361,16 @@
                 "value": 4
             }
         },
-        "btagging": {
-            "model": "GN2v01",
-            "efficiency": 0.77,
-            "count": {
-                "operator": ">=",
-                "value": 4
+        "btagging": [
+            {
+                "model": "GN2v01",
+                "efficiency": 0.77,
+                "count": {
+                    "operator": ">=",
+                    "value": 4
+                }
             }
-        },
+        ],
         "X_Wt_discriminant": {
             "operator": ">",
             "value": 1.5
@@ -377,7 +379,7 @@
             "operator": "<",
             "value": 1.5
         },
-        "hh_mass_veto": {
+        "X_HH_discriminant": {
             "signal": {
                 "inner_boundry": {
                     "operator": "<",

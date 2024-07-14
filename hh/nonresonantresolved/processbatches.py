@@ -361,43 +361,49 @@ def process_batch(
                             ak.sum(quadrant_events),
                         )
                 ###### Calculate background estimate using ABCD method ######
-                low_btag_region = bjets_sel[0]["count"]["value"]
-                high_btag_region = bjets_sel[1]["count"]["value"]
-                if all(
-                    f in events.fields
-                    for f in [
-                        f"control_{low_btag_region}b_{btagger}_{pairing}_mask",
-                        f"control_{high_btag_region}b_{btagger}_{pairing}_mask",
-                    ]
-                ):
-                    # Calculate SR_4b(prediction) = SR_2b * (CR_4b / CR_2b)
-                    # D = C * (B / A)
-                    N_A = np.zeros(1, dtype=float)
-                    control_regions = ["CR1_top", "CR1_bottom"]
-                    for c_region in control_regions:
-                        quadrant_mask = events[
-                            f"{c_region}_{low_btag_region}b_{btagger}_{pairing}_mask"
+                if "background_estimate" in selections:
+                    bkg_est_sel = selections["background_estimate"]
+                    low_btag_region = bkg_est_sel["low_btag_region"]["btagging_index"]
+                    low_btag_region = bjets_sel[low_btag_region]["count"]["value"]
+                    high_btag_region = bkg_est_sel["high_btag_region"]["btagging_index"]
+                    high_btag_region = bjets_sel[high_btag_region]["count"]["value"]
+                    if all(
+                        f in events.fields
+                        for f in [
+                            f"control_{low_btag_region}b_{btagger}_{pairing}_mask",
+                            f"control_{high_btag_region}b_{btagger}_{pairing}_mask",
                         ]
-                        N_A += ak.sum(events.event_weight[quadrant_mask])
-                    N_B = np.zeros(1, dtype=float)
-                    for c_region in control_regions:
-                        quadrant_mask = events[
-                            f"{c_region}_{high_btag_region}b_{btagger}_{pairing}_mask"
+                    ):
+                        # Calculate SR_4b(prediction) = SR_2b * (CR_4b / CR_2b)
+                        # D = C * (B / A)
+                        N_A = np.zeros(1, dtype=float)
+                        control_regions = ["CR1_top", "CR1_bottom"]
+                        for c_region in control_regions:
+                            quadrant_mask = events[
+                                f"{c_region}_{low_btag_region}b_{btagger}_{pairing}_mask"
+                            ]
+                            N_A += ak.sum(events.event_weight[quadrant_mask])
+                        N_B = np.zeros(1, dtype=float)
+                        for c_region in control_regions:
+                            quadrant_mask = events[
+                                f"{c_region}_{high_btag_region}b_{btagger}_{pairing}_mask"
+                            ]
+                            N_B += ak.sum(events.event_weight[quadrant_mask])
+                        N_C = events[
+                            f"signal_{low_btag_region}b_{btagger}_{pairing}_mask"
                         ]
-                        N_B += ak.sum(events.event_weight[quadrant_mask])
-                    N_C = events[f"signal_{low_btag_region}b_{btagger}_{pairing}_mask"]
-                    N_C = ak.sum(events.event_weight[N_C])
-                    N_D = N_C * (N_B / N_A)
-                    sigma_D = N_D * np.sqrt(
-                        (np.sqrt(N_A) / N_A) ** 2
-                        + (np.sqrt(N_B) / N_B) ** 2
-                        + (np.sqrt(N_C) / N_C) ** 2
-                    )
-                    logger.info(
-                        "Estimated number of events in SR_4b using ABCD method for %s pairing: %s ± %s",
-                        pairing.replace("_", " "),
-                        N_D,
-                        sigma_D,
-                    )
+                        N_C = ak.sum(events.event_weight[N_C])
+                        N_D = N_C * (N_B / N_A)
+                        sigma_D = N_D * np.sqrt(
+                            (np.sqrt(N_A) / N_A) ** 2
+                            + (np.sqrt(N_B) / N_B) ** 2
+                            + (np.sqrt(N_C) / N_C) ** 2
+                        )
+                        logger.info(
+                            "Estimated number of events in SR_4b using ABCD method for %s pairing: %s ± %s",
+                            pairing.replace("_", " "),
+                            N_D,
+                            sigma_D,
+                        )
 
     return events
