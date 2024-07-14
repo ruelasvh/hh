@@ -132,6 +132,7 @@
                 "high_btag_region": {
                     "btagging_index": 1
                 }
+            }
         }
     }
 }
