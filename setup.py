@@ -30,6 +30,7 @@ setup(
             "hh4b_non_res_res_draw_hists = cli.draw_hists_non_res_res:main",
             "hh4b_submit = cli.submit_jobs:main",
             "hh4b_dump = cli.dump:main",
+            "hh4b_fit = cli.fit:main",
         ]
     },
     zip_safe=False,

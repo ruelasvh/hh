@@ -152,6 +152,42 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                             binrange=binrange,
                             bins=21,
                         )
+                ############################################################
+                ### Signal and Control region histograms after analysis cuts
+                ############################################################
+                bins = 6
+                for pairing in pairing_methods:
+                    for region in ["signal", "control"]:
+                        hists_dict[sample_name] += init_HH_histograms(
+                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}",
+                            binrange={
+                                "pt": [50_000, 500_000],
+                                "eta": [-5, 5],
+                                "phi": [-3, 3],
+                                "mass": [60_000, 1_000_000],
+                            },
+                            bins=bins,
+                        )
+                        hists_dict[sample_name] += init_HH_histograms(
+                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_lt_300_GeV",
+                            binrange={
+                                "pt": [50_000, 500_000],
+                                "eta": [-5, 5],
+                                "phi": [-3, 3],
+                                "mass": [60_000, 300_000],
+                            },
+                            bins=bins,
+                        )
+                        hists_dict[sample_name] += init_HH_histograms(
+                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_geq_300_GeV",
+                            binrange={
+                                "pt": [50_000, 500_000],
+                                "eta": [-5, 5],
+                                "phi": [-3, 3],
+                                "mass": [300_000, 1_000_000],
+                            },
+                            bins=bins,
+                        )
 
         ##################################################
         ### Background estimate histograms

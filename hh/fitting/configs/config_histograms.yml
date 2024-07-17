@@ -2,51 +2,63 @@ General:
   Measurement: "minimal_example"
   POI: "Signal_norm"
   HistogramFolder: "histograms/"
-  InputPath: "inputs/histograms.root:{RegionPath}/{SamplePath}/{VariationPath}"
+  InputPath: "inputs_v6/histograms.root:{RegionPath}/{SamplePath}/{VariationPath}"
   VariationPath: "Nominal"
 
 Regions:
-  - Name: "Signal_region"
+  # - Name: "Signal_region"
+  - Name: "m_HH"
     RegionPath: "SR"
+    Binning: [0.0, 160000.0, 320000.0, 480000.0, 640000.0, 800000.0] # v6
+    # Binning: [160000.0, 320000.0, 480000.0, 640000.0, 800000.0] # hardcoded hist
 
 Samples:
-  - Name: "Data"
+  - Name: "Data" # background
     SamplePath: "Data"
-    Data: True
+    Data: True # setting asimov=True so this histogram is empty
 
-  - Name: "Signal"
+
+  # - Name: "Signal"
+  - Name: "mc20_ggF_k01/hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing"
     SamplePath: "Signal"
     DisableStaterror: True
 
-  - Name: "Background"
-    SamplePath: "Background"
+  # - Name: "Background"
+  - Name: "mc20_multijet/hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing"
+    SamplePath: "Background_multijet"
+    # DisableStaterror: true
+
+  # - Name: "Background"
+  - Name: "mc20_ttbar/hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing"
+    SamplePath: "Background_ttbar"
+    # DisableStaterror: true
+
+NormFactors:
+  - Name: "Signal_norm"
+    Samples: "mc20_ggF_k01/hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing"
+    Nominal: 0.1
+    Bounds: [0, 100]
 
 Systematics:
-  - Name: "Luminosity"
+  - Name: Luminosity
     Up:
       Normalization: 0.05
     Down:
       Normalization: -0.05
-    Type: "Normalization"
+    Type: Normalization
 
-  - Name: "Modeling"
-    Up:
-      VariationPath: "Modeling_Up"
-    Down:
-      Symmetrize: True
-    Samples: "Background"
-    Type: "NormPlusShape"
+#   - Name: "Modeling"
+#     Up:
+#       VariationPath: "Modeling_Up"
+#     Down:
+#       Symmetrize: True
+#     Samples: "Background"
+#     Type: "NormPlusShape"
 
-  - Name: "WeightBasedModeling"
-    Up:
-      VariationPath: "WeightBasedModeling_Up"
-    Down:
-      VariationPath: "WeightBasedModeling_Down"
-    Samples: "Background"
-    Type: "NormPlusShape"
-
-NormFactors:
-  - Name: "Signal_norm"
-    Samples: "Signal"
-    Nominal: 1
-    Bounds: [0, 10]
+#   - Name: "WeightBasedModeling"
+#     Up:
+#       VariationPath: "WeightBasedModeling_Up"
+#     Down:
+#       VariationPath: "WeightBasedModeling_Down"
+#     Samples: "Background"
+#     Type: "NormPlusShape"

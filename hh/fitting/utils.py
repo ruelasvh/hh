@@ -1,14 +1,26 @@
 import uproot
+import numpy as np
 
 
 def convert_hists_2_root(hists, config):
-    output_dir = config["General"]["InputPath"]
-    for sample_name, hist_dict in hists.items():
-        for hist_name, hist in hist_dict.items():
-            hist_path = output_dir / f"{sample_name}_{hist_name}.root"
-            with uproot.recreate(hist_path) as f:
-                f["edges"] = hist["edges"]
-                f["values"] = hist["values"]
-                if "errors" in hist:
-                    f["errors"] = hist["errors"]
+    hist_path = config["General"]["InputPath"].split(":")[0]
+    with uproot.recreate(hist_path) as f:
+        for region in config["Regions"]:
+            hist_edges = np.array(region["Binning"])
+            for sample in config["Samples"]:
+                if sample.get("Data", False):
+                    f[
+                        f"{region['RegionPath']}/{sample['SamplePath']}/{config['General']['VariationPath']}"
+                    ] = (np.zeros(len(hist_edges) - 1), hist_edges)
+                else:
+                    sample_hist_name = sample["Name"].split("/")
+                    f[
+                        f"{region['RegionPath']}/{sample['SamplePath']}/{config['General']['VariationPath']}"
+                    ] = (
+                        hists[sample_hist_name[0]][sample_hist_name[1]]["values"][
+                            1:-1
+                        ],  # Remove underflow and overflow bins
+                        hist_edges,
+                    )
+
     return

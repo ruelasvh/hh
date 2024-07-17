@@ -1,5 +1,6 @@
 import os
 import re
+import h5py
 import glob
 import types
 import uproot
@@ -10,7 +11,9 @@ import awkward as ak
 from pathlib import Path
 import logging, coloredlogs
 from functools import reduce
+from collections import defaultdict
 from hh.dump.output import Features, Labels
+from hh.shared.error import propagate_errors
 
 
 logger = logging.getLogger("hh4b-analysis")
@@ -313,3 +316,63 @@ def bottom_offset(self, bboxes, bboxes2):
 
 def register_bottom_offset(axis, func=bottom_offset):
     axis._update_offset_text_position = types.MethodType(func, axis)
+
+
+def merge_sample_files(inputs, hists=None, merge_jz_regex=None):
+    """Merges histograms from multiple h5 files into a single dictionary."""
+    signal_counts = 0.0
+
+    _hists = (
+        hists
+        if hists is not None
+        else defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: None)))
+    )
+    # checks if JZ0-9 is in the sample name
+    for input in inputs:
+        if input.is_dir():
+            files_in_dir = input.glob("*.h5")
+            merge_sample_files(files_in_dir, _hists, merge_jz_regex)
+            continue
+        with h5py.File(input, "r") as hists_file:
+            for sample_name in hists_file:
+                if sample_name == "mc20_ggF_k01":
+                    signal_counts += np.sum(
+                        hists_file[sample_name][
+                            "hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing"
+                        ]["values"][:]
+                    )
+                    print(signal_counts)
+                    print(
+                        hists_file[sample_name][
+                            "hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing"
+                        ]["edges"][:]
+                    )
+
+                if merge_jz_regex and merge_jz_regex.search(sample_name):
+                    merged_sample_name = "_".join(sample_name.split("_")[:-2])
+                else:
+                    merged_sample_name = sample_name
+                for hist_name in hists_file[sample_name]:
+                    hist_edges = hists_file[sample_name][hist_name]["edges"][:]
+                    hist_values = hists_file[sample_name][hist_name]["values"][:]
+                    _hists[merged_sample_name][hist_name]["edges"] = hist_edges
+                    if _hists[merged_sample_name][hist_name]["values"] is None:
+                        _hists[merged_sample_name][hist_name]["values"] = hist_values
+                    else:
+                        _hists[merged_sample_name][hist_name]["values"] += hist_values
+                    if "errors" in hists_file[sample_name][hist_name]:
+                        hist_errors = hists_file[sample_name][hist_name]["errors"][:]
+                        if _hists[merged_sample_name][hist_name]["errors"] is None:
+                            _hists[merged_sample_name][hist_name][
+                                "errors"
+                            ] = hist_errors
+                        else:
+                            _hists[merged_sample_name][hist_name]["errors"] = (
+                                propagate_errors(
+                                    _hists[merged_sample_name][hist_name]["errors"],
+                                    hist_errors,
+                                    operation="+",
+                                )
+                            )
+
+    return _hists

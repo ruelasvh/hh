@@ -217,6 +217,7 @@ def process_batch(
                 )
                 # select only the minimum X_Wt for each event
                 X_Wt_discrim = ak.min(X_Wt_discrim, axis=1)
+                events[f"X_Wt_{btag_count}b_{btagger}_discrim"] = X_Wt_discrim
                 X_Wt_mask = select_discrim_events(
                     (X_Wt_discrim,), selection=top_veto_sel
                 )
@@ -298,17 +299,17 @@ def process_batch(
                     events[f"deltaeta_HH_{btag_count}b_{btagger}_{pairing}_discrim"] = (
                         deltaeta_HH
                     )
-                    deltaeta_HH_mask = select_discrim_events(
+                    Delta_eta_HH_mask = select_discrim_events(
                         (deltaeta_HH,),
                         selection=deltaeta_HH_discrim_sel,
                     )
                     events[f"deltaeta_HH_{btag_count}b_{btagger}_{pairing}_mask"] = (
-                        deltaeta_HH_mask
+                        Delta_eta_HH_mask
                     )
                     logger.info(
                         "Events passing previous cuts and ∆𝜂 HH veto with %s pairing: %s",
                         pairing.replace("_", " "),
-                        ak.sum(deltaeta_HH_mask),
+                        ak.sum(Delta_eta_HH_mask),
                     )
                 ###### X_HH mass veto ######
                 if "X_HH_discriminant" in selections:
@@ -335,7 +336,11 @@ def process_batch(
                                 "Events passing previous cuts and X_HH veto for %s region with %s pairing: %s",
                                 region,
                                 pairing.replace("_", " "),
-                                ak.sum(region_mask),
+                                ak.sum(
+                                    events[
+                                        f"{region}_{btag_count}b_{btagger}_{pairing}_mask"
+                                    ]
+                                ),
                             )
                     control_regions = ["CR1_top", "CR2_left", "CR1_bottom", "CR2_right"]
                     # for each region in the control regions select events that fall in the region. The regions are split by 2 perpendicular lines that intersect at the center of the m_HH plane and are 45 degrees from the x-axis.

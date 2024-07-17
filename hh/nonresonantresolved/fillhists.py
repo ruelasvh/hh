@@ -53,6 +53,7 @@ def fill_hists(
                 fill_hh_jets_pairings_histograms(events, hists, btag_count, btagger)
                 fill_mHH_plane_vs_pairing_histograms(events, hists, btag_count, btagger)
                 fill_X_HH_histograms(events, hists, btag_count, btagger)
+                fill_mHH_regions_histograms(events, hists, btag_count, btagger)
     return hists
 
 
@@ -370,6 +371,51 @@ def fill_hh_jets_pairings_histograms(
             hist.fill(
                 ak.to_numpy(hh_delta_eta[valid_event]),
                 weights=ak.to_numpy(weights[valid_event]),
+            )
+
+
+def fill_mHH_regions_histograms(events, hists: list, n_btag: int, btagger: str) -> None:
+    jet_p4 = p4.zip(
+        {var: events[f"jet_{var}"] for var in kin_labels},
+    )
+    weights = events.event_weight
+    for pairing in pairing_methods:
+        h1_jets_idx = events[f"H1_{n_btag}b_{btagger}_{pairing}_jet_idx"]
+        h2_jets_idx = events[f"H2_{n_btag}b_{btagger}_{pairing}_jet_idx"]
+        h1_p4 = ak.sum(jet_p4[h1_jets_idx], axis=1)
+        h2_p4 = ak.sum(jet_p4[h2_jets_idx], axis=1)
+        hh_reco_p4 = h1_p4 + h2_p4
+        for region in ["signal", "control"]:
+            region_mask = events[f"{region}_{n_btag}b_{btagger}_{pairing}_mask"]
+            fill_HH_histograms(
+                hh=hh_reco_p4[region_mask],
+                weights=weights[region_mask],
+                hists=find_hists_by_name(
+                    hists,
+                    f"hh_(pt|eta|phi|mass)_reco_{region}_{n_btag}b_{btagger}_{pairing}",
+                ),
+            )
+            lt_300_GeV_mask = ~ak.is_none(
+                ak.mask(region_mask, (hh_reco_p4).mass < 300_000), axis=0
+            )
+            fill_HH_histograms(
+                hh=hh_reco_p4[lt_300_GeV_mask],
+                weights=weights[lt_300_GeV_mask],
+                hists=find_hists_by_name(
+                    hists,
+                    f"hh_(pt|eta|phi|mass)_reco_{region}_{n_btag}b_{btagger}_{pairing}_lt_300_GeV",
+                ),
+            )
+            geq_300_GeV_mask = ~ak.is_none(
+                ak.mask(region_mask, (hh_reco_p4).mass >= 300_000), axis=0
+            )
+            fill_HH_histograms(
+                hh=hh_reco_p4[geq_300_GeV_mask],
+                weights=weights[geq_300_GeV_mask],
+                hists=find_hists_by_name(
+                    hists,
+                    f"hh_(pt|eta|phi|mass)_reco_{region}_{n_btag}b_{btagger}_{pairing}_geq_300_GeV",
+                ),
             )
 
 
