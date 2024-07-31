@@ -4,6 +4,7 @@ import h5py
 import glob
 import types
 import uproot
+import builtins
 import operator
 import itertools
 import numpy as np
@@ -75,12 +76,18 @@ def setup_logger(loglevel, filename=None):
     return logger
 
 
-def get_com_lumi_label(lumi, com=13.6):
-    com_label = r"$\sqrt{s} = \mathrm{" + str(com) + "\ TeV}"
-    lumi_label = (
-        ",\ " + str(format(lumi, ".1f")) + r"\ \mathrm{fb}^{-1}$" if lumi else "$"
+def get_com_lumi_label(lumi=None, com=13.6):
+    label = ", ".join(
+        [
+            f"${s}$"
+            for s in [
+                f"\sqrt{{s}} = {com}\ \mathrm{{TeV}}",
+                f"{lumi:.4f}\ \mathrm{{fb}}^{{-1}}" if lumi else "",
+            ]
+            if s
+        ]
     )
-    return com_label + lumi_label
+    return label
 
 
 def concatenate_cutbookkeepers(sample_path):
@@ -140,8 +147,8 @@ def get_op(op):
         "<=": operator.le,
         "==": operator.eq,
         "!=": operator.ne,
-        "and": operator.and_,
-        "or": operator.or_,
+        "and": np.logical_and,
+        "or": np.logical_or,
     }[op]
 
 
@@ -182,7 +189,15 @@ def find_hists_by_name(hists, delimeter):
     return list(filter(lambda h: prog.match(h.name), hists))
 
 
-def get_trigs_bitwise_op(events, trigs, op="or", skip_trig=None):
+def get_trigs_logical_op(events, trigs, op="or", skip_trig=None):
+    """Returns the decision of all trigs except skip_trig using bitwise operations"""
+    trigs = list(filter(lambda trig: trig != skip_trig, trigs))
+    trig_decisions = events[trigs]
+    trig_decisions_or_mask = reduce(get_op(op), trig_decisions)
+    return trig_decisions_or_mask
+
+
+def get_trigs_logical_op(events, trigs, op="or", skip_trig=None):
     """Returns the OR decision of all trigs except skip_trig"""
     trigs = list(filter(lambda trig: trig != skip_trig, trigs))
     return reduce(
@@ -318,9 +333,43 @@ def register_bottom_offset(axis, func=bottom_offset):
     axis._update_offset_text_position = types.MethodType(func, axis)
 
 
-def merge_sample_files(inputs, hists=None, merge_jz_regex=None):
+def save_to_h5(hists, name="histograms.h5", compress=True):
+    """Convert a dictionary of sample histograms to a HDF5 file."""
+    compression = dict(compression="gzip") if compress else {}
+    with h5py.File(name, "w") as out_h5:
+        for sample_key, sample_hists in hists.items():
+            sgroup = out_h5.create_group(sample_key)
+            sgroup.attrs["type"] = "sample_type"
+            for sample_hist_key, sample_hist in sample_hists.items():
+                hgroup = sgroup.create_group(sample_hist_key)
+                hgroup.attrs["type"] = "float"
+                hist = hgroup.create_dataset(
+                    "values", data=sample_hist["values"], **compression
+                )
+                ax = hgroup.create_dataset(
+                    "edges", data=sample_hist["edges"], **compression
+                )
+                ax.make_scale("edges")
+                hist.dims[0].attach_scale(ax)
+                if "errors" in sample_hist:
+                    hgroup.create_dataset(
+                        "errors", data=sample_hist["errors"], **compression
+                    )
+
+
+def merge_sample_files(
+    inputs, hists=None, merge_jz_regex=None, save_to="merged_histograms.h5"
+):
     """Merges histograms from multiple h5 files into a single dictionary."""
-    signal_counts = 0.0
+
+    # check that file doesn't already exist
+    if save_to and Path(save_to).exists():
+        # print warning and ask user if they want to overwrite
+        overwrite = builtins.input(
+            f"Output file '{save_to}' already exists, do you want to overwrite it? (N/y) "
+        )
+        if not (overwrite == "" or overwrite.lower() == "n"):
+            save_to = None
 
     _hists = (
         hists
@@ -335,19 +384,6 @@ def merge_sample_files(inputs, hists=None, merge_jz_regex=None):
             continue
         with h5py.File(input, "r") as hists_file:
             for sample_name in hists_file:
-                if sample_name == "mc20_ggF_k01":
-                    signal_counts += np.sum(
-                        hists_file[sample_name][
-                            "hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing"
-                        ]["values"][:]
-                    )
-                    print(signal_counts)
-                    print(
-                        hists_file[sample_name][
-                            "hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing"
-                        ]["edges"][:]
-                    )
-
                 if merge_jz_regex and merge_jz_regex.search(sample_name):
                     merged_sample_name = "_".join(sample_name.split("_")[:-2])
                 else:
@@ -374,5 +410,8 @@ def merge_sample_files(inputs, hists=None, merge_jz_regex=None):
                                     operation="+",
                                 )
                             )
+
+    if save_to:
+        save_to_h5(_hists, name=save_to)
 
     return _hists

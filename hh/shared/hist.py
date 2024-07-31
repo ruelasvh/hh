@@ -14,23 +14,23 @@ class BaseHistogram(ABC):
 
 
 class Histogram(BaseHistogram):
-    def __init__(self, name, binrange, bins=100, compress=True):
+    def __init__(self, name, binrange, bins=100, bins_logscale=False, compress=True):
         self._name = name
         infvar = np.array([np.inf])
-        self._binning = np.concatenate(
-            [
-                -infvar,
-                np.linspace(*binrange, bins),
-                infvar,
-            ]
+        binning = (
+            np.linspace(*binrange, bins)
+            if not bins_logscale
+            else np.logspace(*np.log10(binrange), bins)
         )
-        self._hist = np.zeros(self._binning.size - 1, dtype=float)
+        # add underflow and overflow bins
+        self._binning = np.concatenate([-infvar, binning, infvar])
+        self._counts = np.zeros(self._binning.size - 1, dtype=float)
         self._error = np.zeros(self._binning.size - 1, dtype=float)
         self._compression = dict(compression="gzip") if compress else {}
 
     def fill(self, values, weights=None):
-        hist, _ = np.histogramdd(values, bins=[self._binning], weights=weights)
-        self._hist += hist
+        counts, _ = np.histogramdd(values, bins=[self._binning], weights=weights)
+        self._counts += counts
         if weights is not None:
             self._error = propagate_errors(
                 self._error,
@@ -41,12 +41,12 @@ class Histogram(BaseHistogram):
     def write(self, group, name=None):
         hgroup = group.create_group(name or self._name)
         hgroup.attrs["type"] = "float"
-        hist = hgroup.create_dataset("values", data=self._hist, **self._compression)
+        counts = hgroup.create_dataset("values", data=self._counts, **self._compression)
         ax = hgroup.create_dataset(
             "edges", data=self._binning[1:-1], **self._compression
         )
         ax.make_scale("edges")
-        hist.dims[0].attach_scale(ax)
+        counts.dims[0].attach_scale(ax)
         hgroup.create_dataset("errors", data=self._error, **self._compression)
 
     @property
@@ -55,7 +55,7 @@ class Histogram(BaseHistogram):
 
     @property
     def values(self):
-        return self._hist
+        return self._counts
 
     @property
     def edges(self):
@@ -66,21 +66,21 @@ class Histogram2d(Histogram):
     def __init__(self, name, binrange, bins=100, compress=True):
         self._name = name
         self._binning = np.linspace(*binrange, bins)
-        self._hist = np.zeros(
+        self._counts = np.zeros(
             (self._binning.size - 1, self._binning.size - 1), dtype=float
         )
         self._compression = dict(compression="gzip") if compress else {}
 
     def fill(self, vals, weights=None):
-        hist = np.histogramdd(
+        counts = np.histogramdd(
             vals, bins=(self._binning, self._binning), weights=weights
         )[0]
-        self._hist = self._hist + hist
+        self._counts = self._counts + counts
 
     def write(self, group, name=None):
         hgroup = group.create_group(name or self._name)
         hgroup.attrs["type"] = "float"
-        hist = hgroup.create_dataset("values", data=self._hist, **self._compression)
+        hist = hgroup.create_dataset("values", data=self._counts, **self._compression)
         ax = hgroup.create_dataset("edges", data=self._binning, **self._compression)
         ax.make_scale("edges")
         hist.dims[0].attach_scale(ax)
@@ -103,12 +103,12 @@ class HistogramDynamic(Histogram):
         data = np.array(self._data, dtype=self._dtype)
         if np.issubdtype(self._dtype, int):
             bin_size = int(np.ceil((data.max() - data.min()) / self._bins))
-            hist, edges = np.histogram(
+            counts, edges = np.histogram(
                 self._data, bins=range(data.min(), data.max() + bin_size, bin_size)
             )
         else:
-            hist, edges = np.histogram(self._data, bins=self._bins)
-        hist = hgroup.create_dataset("values", data=hist, **self._compression)
+            counts, edges = np.histogram(self._data, bins=self._bins)
+        hist = hgroup.create_dataset("values", data=counts, **self._compression)
         ax = hgroup.create_dataset("edges", data=edges, **self._compression)
         ax.make_scale("edges")
         hist.dims[0].attach_scale(ax)
@@ -119,17 +119,17 @@ class HistogramCategorical(Histogram):
     def __init__(self, name, categories, compress=True):
         self._name = name
         self._categories = categories
-        self._hist = np.zeros(len(categories), dtype=float)
+        self._counts = np.zeros(len(categories), dtype=float)
         self._compression = dict(compression="gzip") if compress else {}
 
     def fill(self, values):
         # assert values has the same shape as categories
         assert len(values) == len(self._categories)
-        self._hist = self._hist + values
+        self._counts = self._counts + values
 
     def write(self, group, name=None):
         hgroup = group.create_group(name or self._name)
         hgroup.attrs["type"] = "float"
-        hist = hgroup.create_dataset("values", data=self._hist, **self._compression)
+        hist = hgroup.create_dataset("values", data=self._counts, **self._compression)
         ax = hgroup.create_dataset("edges", data=self._categories, **self._compression)
         hist.dims[0].attach_scale(ax)

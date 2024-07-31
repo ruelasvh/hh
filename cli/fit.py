@@ -1,25 +1,32 @@
 #!/usr/bin/env python3
 
 import re
+import copy
 import time
 import shutil
 import logging
 import argparse
 import cabinetry
-import numpy as np
 from pathlib import Path
+import hh.fitting as fitting
+from hh.shared.labels import sample_labels, sample_types
+from hh.nonresonantresolved.pairing import pairing_methods
 from hh.shared.utils import logger, setup_logger, merge_sample_files
 
 
 def get_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "histograms", type=Path, nargs="+", help="Path to directory with histograms"
-    )
-    parser.add_argument(
         "config",
         type=Path,
         help="Cabinetry fitting config file for existing template histograms",
+    )
+    parser.add_argument(
+        "-i",
+        "--histograms",
+        type=Path,
+        nargs="+",
+        help="Path to directory with histograms to merge",
     )
     parser.add_argument(
         "-o",
@@ -39,7 +46,7 @@ def get_args():
         "-e",
         "--energy",
         type=float,
-        default=13.0,
+        default=13,
         help="Center of mass energy in TeV (default: %(default)s)",
     )
     parser.add_argument(
@@ -85,87 +92,118 @@ def main():
         args.output_dir.mkdir(parents=True)
         logger.info(f"Saving plots to '{args.output_dir}'")
 
-    # # # Merge h5 histograms from multiple files
-    # hists = merge_sample_files(
-    #     args.histograms,
-    #     merge_jz_regex=re.compile(r"JZ[0-9]"),
-    # )
-    # hists = {
-    #     "mc20_ggF_k01": {
-    #         "hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing": {
-    #             "values": np.array(
-    #                 [
-    #                     0,
-    #                     0.013758369810071391,
-    #                     0.8187499569821232,
-    #                     0.6288284511376767,
-    #                     0.21472926142753618,
-    #                     0,
-    #                 ]
-    #             )
-    #         }
-    #     },
-    #     "mc20_multijet": {
-    #         "hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing": {
-    #             "values": np.array(
-    #                 [
-    #                     0,
-    #                     70.90728876386044,
-    #                     342.2130848865363,
-    #                     57.76969233717141,
-    #                     12.232545468438332,
-    #                     0,
-    #                 ]
-    #             )
-    #         }
-    #     },
-    #     "mc20_ttbar": {
-    #         "hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing": {
-    #             "values": np.array(
-    #                 [
-    #                     0,
-    #                     0.21922563621774316,
-    #                     2.2289197265927214,
-    #                     0.9012602276197867,
-    #                     0.18140052212402225,
-    #                     0,
-    #                 ]
-    #             )
-    #         }
-    #     },
-    # }
-
     # Load cabinetry config for already made histograms
-    cabinetry_config_histograms = cabinetry.configuration.load(args.config)
-    cabinetry.configuration.print_overview(cabinetry_config_histograms)
-    # Convert h5 histograms to ROOT format
-    # fitting.utils.convert_hists_2_root(hists, cabinetry_config_histograms)
-    cabinetry.templates.collect(cabinetry_config_histograms, method="uproot")
-    # Postprocess template histograms
-    cabinetry.templates.postprocess(cabinetry_config_histograms)
-    # Load workspace
-    workspace_path = args.output_dir / "cabinetry_workspace.json"
-    ws = cabinetry.workspace.build(cabinetry_config_histograms)
-    cabinetry.workspace.save(ws, workspace_path)
-    # Load data and model
-    ws = cabinetry.workspace.load(workspace_path)
-    model, data = cabinetry.model_utils.model_and_data(ws, asimov=True)
-    cabinetry.visualize.modifier_grid(model)
+    cabinetry_config_base = cabinetry.configuration.load(args.config)
+    # Get the path to the merged input histograms
+    input_hist_path = Path(cabinetry_config_base["General"]["InputPath"].split(":")[0])
+    if (not input_hist_path.exists()) and (not args.histograms):
+        raise FileNotFoundError(
+            f"No merged input histograms found at {input_hist_path}. "
+            f"A path to the histograms to merge must be provided."
+        )
+    if not input_hist_path.exists() and args.histograms:
+        # Merge h5 histograms from multiple files
+        hists = merge_sample_files(
+            args.histograms,
+            merge_jz_regex=re.compile(r"JZ[0-9]"),
+            save_to="merged_histograms.h5",
+        )
+        fitting.save_to_root(hists, cabinetry_config_base)
+    for pairing in pairing_methods:
+        # Create a new cabinetry config for each pairing method
+        cabinetry_config_pairing = copy.deepcopy(cabinetry_config_base)
+        regions = [
+            region
+            for region in cabinetry_config_pairing["Regions"]
+            if region["Name"] == pairing
+        ]
+        cabinetry_config_pairing["Regions"] = regions
+        cabinetry_config_pairing["General"]["HistogramFolder"] = (
+            args.output_dir / f"histograms_{pairing}"
+        )
+        signal_sample = [
+            sample
+            for sample in cabinetry_config_pairing["Samples"]
+            if sample["SamplePath"].lower() == "signal"
+        ][0]
+        # Set bounds for max ΔR specifically
+        if pairing == "max_deltar_pairing":
+            cabinetry_config_pairing["NormFactors"][0]["Bounds"] = [0, 10]  # kl=1
+            # cabinetry_config_pairing["NormFactors"][0]["Bounds"] = [0, 100]  # kl=10
 
-    # visualize templates
-    model_pred = cabinetry.model_utils.prediction(model)
-    cabinetry.visualize.data_mc(model_pred, data, config=cabinetry_config_histograms)
+        # region_path = (
+        #     f"{cabinetry_config_pairing['Regions'][0]['RegionPath']}_{pairing}"
+        # )
+        # cabinetry_config_pairing["Regions"][0]["RegionPath"] = region_path
+        # cabinetry_config_pairing["General"]["HistogramFolder"] = (
+        #     args.output_dir / f"histograms_{pairing}"
+        # )
+        # # Set bounds for max ΔR specifically
+        # if pairing == "max_deltar_pairing":
+        #     cabinetry_config_pairing["NormFactors"][0]["Bounds"] = [0, 4000]
 
-    # fit!
-    tolerance = 100
-    fit_results = cabinetry.fit.fit(
-        model, data, goodness_of_fit=True, tolerance=tolerance
-    )
-    data = cabinetry.model_utils.asimov_data(model=model, fit_results=fit_results)
-    # pull plot
-    cabinetry.visualize.pulls(fit_results, exclude=["Signal_norm"])
-    limit_results = cabinetry.fit.limit(model, data, tolerance=tolerance)
-    cabinetry.visualize.limit(limit_results)
+        # Print overview of the configuration if in debug mode
+        cabinetry.configuration.print_overview(cabinetry_config_pairing)
+
+        # Postprocess template histograms
+        cabinetry.templates.collect(cabinetry_config_pairing, method="uproot")
+        cabinetry.templates.postprocess(cabinetry_config_pairing)
+
+        # Load workspace
+        workspace_path = args.output_dir / f"cabinetry_workspace_{pairing}.json"
+        ws = cabinetry.workspace.build(cabinetry_config_pairing)
+        cabinetry.workspace.save(ws, workspace_path)
+
+        # Load data and model
+        ws = cabinetry.workspace.load(workspace_path)
+        model, data = cabinetry.model_utils.model_and_data(ws)
+        # print("pairing", pairing)
+        # print("Data", data)
+        # data = cabinetry.model_utils.asimov_data(model)
+        # print("Asimov data", data)
+        # print("------------")
+        plots_path = args.output_dir / pairing
+        cabinetry.visualize.modifier_grid(model, figure_folder=plots_path)
+
+        # visualize templates
+        model_pred = cabinetry.model_utils.prediction(model)
+        cabinetry.visualize.data_mc(
+            model_pred,
+            data,
+            config=cabinetry_config_pairing,
+            figure_folder=plots_path,
+        )
+
+        # # fit!
+        # tolerance = 1
+        # fit_results = cabinetry.fit.fit(
+        #     model, data, goodness_of_fit=True, tolerance=tolerance
+        # )
+        # data = cabinetry.model_utils.asimov_data(model=model, fit_results=fit_results)
+        # # pull plot
+        # cabinetry.visualize.pulls(
+        #     fit_results,
+        #     exclude=["Signal_norm"],
+        #     figure_folder=plots_path,
+        # )
+
+        limit_results = cabinetry.fit.limit(model, data)
+        plot_details = (
+            "\nMC20 2015-2018\n"
+            + sample_types[signal_sample["Name"]]
+            + r", $b$-filtered mulitjet and $t\bar{t}$"
+        )
+        # plot_details = f", MC20 2015-2018\n"
+        # plot_details += sample_labels[signal_sample["Name"]].replace(" MC20", ", ")
+        # plot_details += r", $b$-filtered mulitjet and $t\bar{t}$"
+        fitting.plot_limits(
+            limit_results,
+            exp_label=plot_details,
+            plot_label=pairing_methods[pairing]["label"],
+            luminosity=args.luminosity,
+            energy=args.energy,
+            figure_folder=plots_path,
+        )
 
     if logger.level == logging.DEBUG:
         logger.debug(

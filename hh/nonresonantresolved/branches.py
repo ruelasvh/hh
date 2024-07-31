@@ -3,9 +3,9 @@ from .triggers import (
 )
 
 CAMPAIGNS = {
-    2016: ["r13167"],
-    2017: ["r13144"],
-    2018: ["r13145"],
+    2016: ["r13167", "r14859"],
+    2017: ["r13144", "r14860"],
+    2018: ["r13145", "r14861"],
     2022: ["r14622", "r14932"],
     2023: ["r15224"],
 }
@@ -21,7 +21,8 @@ JET_ALIASES = {
     "jet_phi": "recojet_antikt4PFlow_NOSYS_phi",
     "jet_mass": "recojet_antikt4PFlow_NOSYS_m",
     "jet_NNJvt": "recojet_antikt4PFlow_NOSYS_NNJvt",
-    "jet_jvttag": "recojet_antikt4PFlow_NOSYS_NNJvtPass",
+    # "jet_jvttag": "recojet_antikt4PFlow_NOSYS_NNJvtPass", # Not available in dataset ID 603404
+    "jet_jvttag": "recojet_antikt4PFlow_NOSYS_jvt_selection",  # also recojet_antikt4PFlow_NOSYS_NNJvt, recojet_antikt4PFlow_NOSYS_Jvt, recojet_antikt4PFlow_NOSYS_JvtRpt, recojet_antikt4PFlow_NOSYS_NNJvtRpt, recojet_antikt4PFlow_NOSYS_jvt_selection
     "jet_truth_label_ID": "recojet_antikt4PFlow_NOSYS_HadronConeExclTruthLabelID",
     "jet_btag_DL1dv01_70": "recojet_antikt4PFlow_NOSYS_ftag_select_DL1dv01_FixedCutBEff_70",
     "jet_btag_DL1dv01_77": "recojet_antikt4PFlow_NOSYS_ftag_select_DL1dv01_FixedCutBEff_77",

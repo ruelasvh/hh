@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="hh",
@@ -8,7 +8,7 @@ setup(
     author="Victor Ruelas",
     author_email="victor.hugo.ruelas.rivera@cern.ch",
     license="MIT",
-    packages=[""],
+    packages=find_packages(include=["hh", "hh.*"]),
     python_requires=">=3.8",
     install_requires=[
         "awkward>=2.3.3",

@@ -116,12 +116,13 @@ def process_sample_worker(
         processed_batch = process_batch(
             batch_events,
             selections,
-            sample_weight,
             is_mc,
         )
         # if no events pass the selection, skip filling histograms
         if len(processed_batch) == 0:
             continue
+        # apply sample weight
+        processed_batch["event_weight"] = processed_batch.event_weight * sample_weight
         # fill histograms
         fill_hists(processed_batch, hists[sample_name], selections, is_mc)
         # save histograms to file

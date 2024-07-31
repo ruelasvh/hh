@@ -86,8 +86,8 @@ class HistPlottable:
             self.legend_label = get_legend_label(
                 self.legend_label,
                 None,
-                prefix=(
-                    rf"${self.scale_factor}\times$ "
+                postfix=(
+                    rf" ($\times{self.scale_factor}$)"
                     if self.scale_factor is not None
                     else None
                 ),
@@ -199,6 +199,92 @@ def draw_1d_hists(
     )
     plot_name = hist_prefix.replace("$", "")
     plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
+    plt.tight_layout()
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
+
+
+def draw_signal_vs_background(
+    var_name,
+    signal,
+    background,
+    xlabel,
+    luminosity,
+    energy,
+    ylabel: str = "Entries",
+    legend_labels: dict = None,
+    legend_options: dict = {"loc": "upper right"},
+    third_exp_label: str = "",
+    show_counts: bool = False,
+    plot_name: str = "signal_vs_background",
+    output_dir: Path = Path("plots"),
+    **kwargs,
+):
+    sig = {}
+    for sig_hists in signal.values():
+        hist_name = find_hist(sig_hists, lambda h: var_name == h)
+        sig = sig_hists[hist_name]
+    bkg = {}
+    for bkg_hists in background.values():
+        hist_name = find_hist(bkg_hists, lambda h: var_name == h)
+        hist = bkg_hists[hist_name]
+        if "edges" not in background:
+            bkg["edges"] = hist["edges"]
+        if "values" not in background:
+            bkg["values"] = hist["values"]
+        else:
+            bkg["values"] += hist["values"]
+        if "errors" not in background:
+            bkg["errors"] = hist["errors"]
+        else:
+            bkg["errors"] = np.sqrt(bkg["errors"] ** 2 + hist["errors"] ** 2)
+    bkg = {"Background MC": bkg}
+    sig = {k: sig for k in signal}
+    samples = {**sig, **bkg}
+    fig, ax = plt.subplots()
+    for sample_name in samples:
+        hist = samples[sample_name]
+        if hist:
+            hist_main = HistPlottable(
+                hist["values"],
+                hist["edges"],
+                errors=hist["errors"],
+                legend_label=legend_labels.get(sample_name, sample_name),
+                scale_factor=2 if "ggF" in sample_name else None,
+                binwidth_norm=False,
+                xlabel=xlabel,
+            )
+            hist_main.plot(ax=ax, linewidth=2.0)
+    hplt.atlas.label(
+        label="Work In Progress",
+        data=True,  # prevents adding Simulation label, sim labels are added in legend
+        rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
+        loc=4,
+        ax=ax,
+        pad=0.01,
+    )
+    if show_counts:
+        countsstr = "\n".join(
+            [
+                f"{legend_labels.get(s, s)}: {(np.sum(h['values'])):.2f}"
+                for s, h in samples.items()
+                if h
+            ]
+        )
+        ax.text(
+            0.5,
+            0.5,
+            countsstr,
+            transform=ax.transAxes,
+            fontsize=14,
+            verticalalignment="top",
+        )
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    xmin, xmax = ax.get_xlim()
+    ax.set_xlim(xmin=xmin, xmax=1100)
+    ax.set_ylim(ymin=0, ymax=ax.get_ylim()[1] * 1.5)
+    ax.legend(**legend_options)
     plt.tight_layout()
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close(fig)

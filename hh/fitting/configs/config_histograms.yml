@@ -1,51 +1,66 @@
 General:
-  Measurement: "minimal_example"
+  Measurement: "pairing_limits"
   POI: "Signal_norm"
   HistogramFolder: "histograms/"
-  InputPath: "inputs_v6/histograms.root:{RegionPath}/{SamplePath}/{VariationPath}"
-  VariationPath: "Nominal"
+  InputPath: "inputs/histograms.root:{RegionPath}/{SamplePath}/{VariationPath}"
+  VariationPath: "hh_mass_reco_signal_4b_GN2v01_77"
 
 Regions:
-  # - Name: "Signal_region"
-  - Name: "m_HH"
-    RegionPath: "SR"
-    Binning: [0.0, 160000.0, 320000.0, 480000.0, 640000.0, 800000.0] # v6
-    # Binning: [160000.0, 320000.0, 480000.0, 640000.0, 800000.0] # hardcoded hist
+  - Name: "min_deltar_pairing"
+    RegionPath: "SR_min_deltar_pairing"
+  - Name: "max_deltar_pairing"
+    RegionPath: "SR_max_deltar_pairing"
+  - Name: "min_mass_true_pairing"
+    RegionPath: "SR_min_mass_true_pairing"
+  - Name: "min_mass_diff_pairing"
+    RegionPath: "SR_min_mass_diff_pairing"
+  - Name: "min_mass_center_pairing"
+    RegionPath: "SR_min_mass_center_pairing"
+
+# Regions:
+#   - Name: "m_HH"
+#     RegionPath: "SR"
+#     # Binning: [0.0, 160000.0, 320000.0, 480000.0, 640000.0, 800000.0]
+#     # Binning: [160000.0, 320000.0, 480000.0, 640000.0, 800000.0]
 
 Samples:
-  - Name: "Data" # background
-    SamplePath: "Data"
-    Data: True # setting asimov=True so this histogram is empty
-
+  - Name: "Data"
+    SamplePath: "Background"
+    Data: True
 
   # - Name: "Signal"
-  - Name: "mc20_ggF_k01/hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing"
+  - Name: "ggF_k01"
     SamplePath: "Signal"
-    DisableStaterror: True
+    DisableStaterror: False
 
-  # - Name: "Background"
-  - Name: "mc20_multijet/hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing"
-    SamplePath: "Background_multijet"
-    # DisableStaterror: true
+  - Name: "Background"
+    SamplePath: "Background"
+    DisableStaterror: False
 
-  # - Name: "Background"
-  - Name: "mc20_ttbar/hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing"
-    SamplePath: "Background_ttbar"
-    # DisableStaterror: true
+  # # - Name: "Background"
+  # - Name: "mc20_multijet"
+  #   SamplePath: "Background_multijet"
+  #   # DisableStaterror: true
+
+  # # - Name: "Background"
+  # - Name: "mc20_ttbar"
+  #   SamplePath: "Background_ttbar"
+  #   # DisableStaterror: true
 
 NormFactors:
   - Name: "Signal_norm"
-    Samples: "mc20_ggF_k01/hh_mass_reco_signal_4b_GN2v01_77_min_deltar_pairing"
+    Samples: "ggF_k01"
     Nominal: 0.1
-    Bounds: [0, 100]
+    Bounds: [0, 2] # works for the rest of the pairings
+    # Bounds: [0, 4000] # works only for max ΔR pairing
 
-Systematics:
-  - Name: Luminosity
-    Up:
-      Normalization: 0.05
-    Down:
-      Normalization: -0.05
-    Type: Normalization
+# Systematics:
+#   - Name: Luminosity
+#     Up:
+#       Normalization: 0.008
+#     Down:
+#       Normalization: -0.008
+#     Type: Normalization
 
 #   - Name: "Modeling"
 #     Up:

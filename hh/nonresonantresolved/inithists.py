@@ -1,6 +1,10 @@
 from argparse import Namespace
-from hh.shared.utils import logger, kin_labels, format_btagger_model_name
 from hh.nonresonantresolved.pairing import pairing_methods
+from hh.shared.utils import (
+    logger,
+    kin_labels,
+    format_btagger_model_name,
+)
 from hh.shared.hist import (
     Histogram,
     Histogram2d,
@@ -17,7 +21,6 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
     for sample in inputs:
         sample_name = sample["label"]
         hists_dict[sample_name] = []
-        hh_vars = ["pt", "eta", "phi", "mass", "sum_jet_pt", "delta_eta"]
         hh_vars_binranges = {
             "pt": [20_000, 1_000_000],
             "eta": [-5, 5],
@@ -104,12 +107,10 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                 ###################################################
                 for pairing in pairing_methods:
                     hists_dict[sample_name] += init_HH_histograms(
-                        hh_vars,
                         hh_vars_binranges,
                         postfix=f"_reco_{btag_count}_btag_{btagger}_{pairing}",
                     )
                     hists_dict[sample_name] += init_HH_histograms(
-                        hh_vars,
                         hh_vars_binranges,
                         postfix=f"_reco_{btag_count}_btag_{btagger}_{pairing}_correct",
                     )
@@ -119,12 +120,10 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                 ####################################################
                 for pairing in pairing_methods:
                     hists_dict[sample_name] += init_HH_histograms(
-                        hh_vars,
                         hh_vars_binranges,
                         postfix=f"_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing}",
                     )
                     hists_dict[sample_name] += init_HH_histograms(
-                        hh_vars,
                         hh_vars_binranges,
                         postfix=f"_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing}_correct",
                     )
@@ -155,51 +154,61 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                 ############################################################
                 ### Signal and Control region histograms after analysis cuts
                 ############################################################
-                bins = 6
                 for pairing in pairing_methods:
                     for region in ["signal", "control"]:
                         hists_dict[sample_name] += init_HH_histograms(
                             postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}",
                             binrange={
-                                "pt": [50_000, 500_000],
+                                "pt": [40_000, 500_000],
                                 "eta": [-5, 5],
                                 "phi": [-3, 3],
-                                "mass": [60_000, 1_000_000],
+                                "mass": [200_000, 1_100_000],
                             },
-                            bins=bins,
+                            bins=20,
                         )
                         hists_dict[sample_name] += init_HH_histograms(
-                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_lt_300_GeV",
+                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_bins_logscale",
                             binrange={
-                                "pt": [50_000, 500_000],
-                                "eta": [-5, 5],
-                                "phi": [-3, 3],
-                                "mass": [60_000, 300_000],
+                                "pt": [40_000, 500_000],
+                                "mass": [200_000, 1_100_000],
                             },
-                            bins=bins,
+                            bins=20,
+                            bins_logscale=True,
                         )
-                        hists_dict[sample_name] += init_HH_histograms(
-                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_geq_300_GeV",
-                            binrange={
-                                "pt": [50_000, 500_000],
-                                "eta": [-5, 5],
-                                "phi": [-3, 3],
-                                "mass": [300_000, 1_000_000],
-                            },
-                            bins=bins,
-                        )
+                        ##################################################
+                        # This histograms should be for studies for MC23
+                        # to study low-mass regions with new triggers
+                        ##################################################
+                        # hists_dict[sample_name] += init_HH_histograms(
+                        #     postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_lt_300_GeV",
+                        #     binrange={
+                        #         "pt": [50_000, 500_000],
+                        #         "eta": [-5, 5],
+                        #         "phi": [-3, 3],
+                        #         "mass": [60_000, 300_000],
+                        #     },
+                        #     bins=bins,
+                        # )
+                        # hists_dict[sample_name] += init_HH_histograms(
+                        #     postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_geq_300_GeV",
+                        #     binrange={
+                        #         "pt": [50_000, 500_000],
+                        #         "eta": [-5, 5],
+                        #         "phi": [-3, 3],
+                        #         "mass": [300_000, 1_000_000],
+                        #     },
+                        #     bins=bins,
+                        # )
 
         ##################################################
         ### Background estimate histograms
         ##################################################
         for pairing in pairing_methods:
             hists_dict[sample_name] += init_HH_histograms(
-                hh_vars,
                 hh_vars_binranges,
                 postfix=f"_reco_{pairing}_bkgest_before",
             )
             hists_dict[sample_name] += init_HH_histograms(
-                hh_vars,
                 hh_vars_binranges,
                 postfix=f"_reco_{pairing}_bkgest_after",
             )
@@ -344,7 +353,6 @@ def init_reco_H_truth_jet_histograms(
 
 
 def init_HH_histograms(
-    vars=["pt", "eta", "phi", "mass"],
     binrange={
         "pt": [0, 500_000],
         "eta": [-5, 5],
@@ -352,17 +360,19 @@ def init_HH_histograms(
         "mass": [0, 1_200_000],
     },
     bins=100,
+    bins_logscale=False,
     postfix=None,
 ) -> list:
     """Initialize HH kinematics 1d histograms"""
 
     hists = []
-    for var in vars:
+    for var, var_range in binrange.items():
         hists += [
             Histogram(
                 f"hh_{var}{postfix if postfix else ''}",
-                binrange[var],
+                var_range,
                 bins,
+                bins_logscale=bins_logscale,
             )
         ]
 

@@ -68,16 +68,19 @@ pairing_methods = {
     "min_mass_true_pairing": {
         "label": r"$\mathrm{arg\,min\,} \Sigma(m_{jj}-m_\mathrm{H})^2$ pairing",
         "loss": lambda j_1, j_2: ((j_1 + j_2).mass - 125 * MeV) ** 2,
-        "optimizer": optimizer_mass_pairing,
+        # "optimizer": optimizer_mass_pairing,
+        "optimizer": np.argmin,
     },
     "min_mass_diff_pairing": {
         "label": r"$\mathrm{arg\,min} (m_{jj}-m_{jj})^2$ pairing",
         "loss": lambda j_1, j_2: (j_1 + j_2).mass,
-        "optimizer": optimizer_mass_pairing_v2,
+        # "optimizer": optimizer_mass_pairing_v2,
+        "optimizer": np.argmin,
     },
     "min_mass_center_pairing": {
         "label": r"$\mathrm{arg\,min}(m_{jj}^2+m_{jj}^2)$ pairing",
         "loss": lambda j_1, j_2: ((j_1 + j_2).mass - 0.125 * MeV) ** 2,
-        "optimizer": optimizer_mass_pairing,
+        # "optimizer": optimizer_mass_pairing,
+        "optimizer": np.argmin,
     },
 }

@@ -1,9 +1,10 @@
 {
     "samples": [
         {
-            "label": "mc23a_ggF_k01",
+            "label": "mc23_ggF_k01",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603404.e8564_a910_r14932_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603404.e8564_a910_r14932_p6026_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603404.e8564_a911_r15224_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -12,15 +13,7 @@
                     "crossSection": 2.9875E-05,
                     "kFactor": 1.0,
                     "luminosity": 1.0
-                }
-            ]
-        },
-        {
-            "label": "mc23d_ggF_k01",
-            "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603404.e8564_a911_r15224_p6026_TREE/"
-            ],
-            "metadata": [
+                },
                 {
                     "logicalDatasetName": "mc23_13p6TeV.603404.PhPy8EG_PDF4LHC21_HHbbbb_chhh1p0.deriv.DAOD_PHYS.e8564_a911_r15224_p6026",
                     "genFiltEff": 1,
@@ -33,7 +26,8 @@
         {
             "label": "mc23a_ggF_k05",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603405.e8564_a910_r14932_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603405.e8564_a910_r14932_p6026_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603405.e8564_a911_r15224_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -42,15 +36,7 @@
                     "crossSection": 8.3827E-05,
                     "kFactor": 1.0,
                     "luminosity": 1.0
-                }
-            ]
-        },
-        {
-            "label": "mc23d_ggF_k05",
-            "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603405.e8564_a911_r15224_p6026_TREE/"
-            ],
-            "metadata": [
+                },
                 {
                     "logicalDatasetName": "mc23_13p6TeV.603405.PhPy8EG_PDF4LHC21_HHbbbb_chhh5p0.deriv.DAOD_PHYS.e8564_a911_r15224_p6026",
                     "genFiltEff": 1,
@@ -80,14 +66,6 @@
             }
         },
         "btagging": [
-            {
-                "model": "GN2v01",
-                "efficiency": 0.77,
-                "count": {
-                    "operator": ">=",
-                    "value": 2
-                }
-            },
             {
                 "model": "GN2v01",
                 "efficiency": 0.77,
