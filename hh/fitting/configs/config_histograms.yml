@@ -50,9 +50,9 @@ Samples:
 NormFactors:
   - Name: "Signal_norm"
     Samples: "ggF_k01"
-    Nominal: 0.1
-    Bounds: [0, 2] # works for the rest of the pairings
-    # Bounds: [0, 4000] # works only for max ΔR pairing
+    Nominal: 1
+    Bounds: [0, 20] # works for the rest of the pairings
+    # Bounds: [0, 100] # works only for max ΔR pairing
 
 # Systematics:
 #   - Name: Luminosity

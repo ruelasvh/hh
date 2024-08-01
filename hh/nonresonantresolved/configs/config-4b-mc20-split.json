@@ -9,9 +9,9 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13167_p6026",
                     "genFiltEff": 1.0,
-                    "crossSection": 2.7882E-05,
+                    "crossSection": 1.0437184e-05,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
@@ -24,9 +24,9 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13144_p6026",
                     "genFiltEff": 1.0,
-                    "crossSection": 2.7882E-05,
+                    "crossSection": 1.0437184e-05,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
@@ -39,9 +39,9 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13145_p6026",
                     "genFiltEff": 1.0,
-                    "crossSection": 2.7882E-05,
+                    "crossSection": 1.0437184e-05,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         },
@@ -54,9 +54,9 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600464.PhPy8EG_PDF4LHC15_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8222_s3681_r13167_p6026",
                     "genFiltEff": 1,
-                    "crossSection": 5.8388E-04,
+                    "crossSection": 2.1749504E-5,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
@@ -69,9 +69,9 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600464.PhPy8EG_PDF4LHC15_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8222_s3681_r13144_p6026",
                     "genFiltEff": 1,
-                    "crossSection": 5.8388E-04,
+                    "crossSection": 2.1749504E-5,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
@@ -84,9 +84,9 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600464.PhPy8EG_PDF4LHC15_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8222_s3681_r13145_p6026",
                     "genFiltEff": 1,
-                    "crossSection": 5.8388E-04,
+                    "crossSection": 2.1749504E-5,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         },
@@ -101,7 +101,7 @@
                     "crossSection": 8.9550E+07,
                     "genFiltEff": 3.113989E-06,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
@@ -116,7 +116,7 @@
                     "crossSection": 8.9550E+07,
                     "genFiltEff": 3.113989E-06,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
@@ -131,7 +131,7 @@
                     "crossSection": 8.9550E+07,
                     "genFiltEff": 3.113989E-06,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         },
@@ -146,7 +146,7 @@
                     "crossSection": 2.4332E+06,
                     "genFiltEff": 6.015065E-05,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
@@ -161,7 +161,7 @@
                     "crossSection": 2.4332E+06,
                     "genFiltEff": 6.015065E-05,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
@@ -176,7 +176,7 @@
                     "crossSection": 2.4332E+06,
                     "genFiltEff": 6.015065E-05,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         },
@@ -191,7 +191,7 @@
                     "crossSection": 2.6454E+04,
                     "genFiltEff": 2.814666E-04,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
@@ -206,7 +206,7 @@
                     "crossSection": 2.6454E+04,
                     "genFiltEff": 2.814666E-04,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
@@ -221,7 +221,7 @@
                     "crossSection": 2.6454E+04,
                     "genFiltEff": 2.814666E-04,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         },
@@ -236,7 +236,7 @@
                     "crossSection": 2.5463E+02,
                     "genFiltEff": 5.257662E-04,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
@@ -251,7 +251,7 @@
                     "crossSection": 2.5463E+02,
                     "genFiltEff": 5.257662E-04,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
@@ -266,7 +266,7 @@
                     "crossSection": 2.5463E+02,
                     "genFiltEff": 5.257662E-04,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         },
@@ -281,7 +281,7 @@
                     "crossSection": 4.5535E+00,
                     "genFiltEff": 6.406074E-04,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
@@ -296,7 +296,7 @@
                     "crossSection": 4.5535E+00,
                     "genFiltEff": 6.406074E-04,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
@@ -311,7 +311,7 @@
                     "crossSection": 4.5535E+00,
                     "genFiltEff": 6.406074E-04,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         },
@@ -326,7 +326,7 @@
                     "crossSection": 2.5753E-01,
                     "genFiltEff": 4.088869E-04,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
@@ -341,7 +341,7 @@
                     "crossSection": 2.5753E-01,
                     "genFiltEff": 4.088869E-04,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
@@ -356,7 +356,7 @@
                     "crossSection": 2.5753E-01,
                     "genFiltEff": 4.088869E-04,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         },
@@ -371,7 +371,7 @@
                     "crossSection": 1.6215E-02,
                     "genFiltEff": 4.460816E-04,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
@@ -386,7 +386,7 @@
                     "crossSection": 1.6215E-02,
                     "genFiltEff": 4.460816E-04,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
@@ -401,7 +401,7 @@
                     "crossSection": 1.6215E-02,
                     "genFiltEff": 4.460816E-04,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         },
@@ -416,7 +416,7 @@
                     "crossSection": 6.2504E-04,
                     "genFiltEff": 3.593166E-04,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
@@ -431,7 +431,7 @@
                     "crossSection": 6.2504E-04,
                     "genFiltEff": 3.593166E-04,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
@@ -446,7 +446,7 @@
                     "crossSection": 6.2504E-04,
                     "genFiltEff": 3.593166E-04,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         },
@@ -461,7 +461,7 @@
                     "crossSection": 1.9639E-05,
                     "genFiltEff": 3.793071E-04,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
@@ -476,7 +476,7 @@
                     "crossSection": 1.9639E-05,
                     "genFiltEff": 3.793071E-04,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
@@ -491,7 +491,7 @@
                     "crossSection": 1.9639E-05,
                     "genFiltEff": 3.793071E-04,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         },
@@ -506,7 +506,7 @@
                     "crossSection": 7.2977E-01,
                     "genFiltEff": 4.562069E-01,
                     "kFactor": 1.13974074379,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
@@ -521,7 +521,7 @@
                     "crossSection": 7.2977E-01,
                     "genFiltEff": 4.562069E-01,
                     "kFactor": 1.13974074379,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
@@ -536,7 +536,7 @@
                     "crossSection": 7.2977E-01,
                     "genFiltEff": 4.562069E-01,
                     "kFactor": 1.13974074379,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         }
@@ -546,7 +546,7 @@
             "operator": "or",
             "value": "Run 2"
         },
-        "central_jets": {
+        "jets": {
             "pt": {
                 "operator": ">",
                 "value": 40000
@@ -558,24 +558,24 @@
             "count": {
                 "operator": ">=",
                 "value": 4
-            }
-        },
-        "btagging": [
-            {
-                "model": "GN2v01",
-                "efficiency": 0.77,
-                "count": {
-                    "operator": ">=",
-                    "value": 4
+            },
+            "btagging": [
+                {
+                    "model": "GN2v01",
+                    "efficiency": 0.77,
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    }
                 }
-            }
-        ],
-        "X_Wt_discriminant": {
-            "operator": ">",
-            "value": 1.5
+            ]
         },
         "Delta_eta_HH_discriminant": {
             "operator": "<",
+            "value": 1.5
+        },
+        "X_Wt_discriminant": {
+            "operator": ">",
             "value": 1.5
         },
         "X_HH_discriminant": {

@@ -51,7 +51,7 @@
             "operator": "or",
             "value": "Run 2"
         },
-        "central_jets": {
+        "jets": {
             "pt": {
                 "operator": ">",
                 "value": 40000
@@ -63,24 +63,24 @@
             "count": {
                 "operator": ">=",
                 "value": 4
-            }
-        },
-        "btagging": [
-            {
-                "model": "GN2v01",
-                "efficiency": 0.77,
-                "count": {
-                    "operator": ">=",
-                    "value": 4
+            },
+            "btagging": [
+                {
+                    "model": "GN2v01",
+                    "efficiency": 0.77,
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    }
                 }
-            }
-        ],
-        "X_Wt_discriminant": {
-            "operator": ">",
-            "value": 1.5
+            ]
         },
         "Delta_eta_HH_discriminant": {
             "operator": "<",
+            "value": 1.5
+        },
+        "X_Wt_discriminant": {
+            "operator": ">",
             "value": 1.5
         },
         "X_HH_discriminant": {

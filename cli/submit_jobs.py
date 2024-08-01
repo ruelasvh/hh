@@ -52,7 +52,7 @@ def get_args():
         "--memory",
         type=str,
         help="Memory request for the job (default: %(default)s)",
-        default="500 MB",
+        default="1 GB",
         metavar="",
     )
     parser.add_argument(

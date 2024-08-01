@@ -49,12 +49,13 @@
     ],
     "event_selection": {
         "trigs": {
+            "operator": "or",
             "value": "Run 3 Experimental"
         },
-        "central_jets": {
+        "jets": {
             "pt": {
                 "operator": ">",
-                "value": 25000
+                "value": 40000
             },
             "eta": {
                 "operator": "<",
@@ -63,24 +64,24 @@
             "count": {
                 "operator": ">=",
                 "value": 4
-            }
-        },
-        "btagging": [
-            {
-                "model": "GN2v01",
-                "efficiency": 0.77,
-                "count": {
-                    "operator": ">=",
-                    "value": 4
+            },
+            "btagging": [
+                {
+                    "model": "GN2v01",
+                    "efficiency": 0.77,
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    }
                 }
-            }
-        ],
-        "X_Wt_discriminant": {
-            "operator": ">",
-            "value": 1.5
+            ]
         },
         "Delta_eta_HH_discriminant": {
             "operator": "<",
+            "value": 1.5
+        },
+        "X_Wt_discriminant": {
+            "operator": ">",
             "value": 1.5
         },
         "X_HH_discriminant": {
@@ -100,6 +101,6 @@
                     "value": 45
                 }
             }
-    }
+        }
     }
 }

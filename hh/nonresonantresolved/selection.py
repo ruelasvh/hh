@@ -102,20 +102,24 @@ def select_hh_jet_candidates(jets, valid_jets_mask, n_jets=4):
     return hh_jet_idx, non_hh_jet_idx
 
 
-def reconstruct_hh_jet_pairs_v0(
-    jets_p4, hh_jet_idx, loss, optimizer=np.argmin, n_jets=4, n_pairs=2
-):
-    hh_jets = jets_p4[hh_jet_idx]
-    pairings = list(itertools.combinations(range(n_jets), n_pairs))
-    loss_values = np.transpose(
-        ak.Array(loss(hh_jets[:, i], hh_jets[:, j]) for i, j in pairings)
-    )
-    optimized_loss_idx = optimizer(loss_values, axis=1, keepdims=True)
-    optimized_loss_idx = ak.mask(optimized_loss_idx, ~ak.is_none(hh_jets))
-    pairings = ak.argcombinations(hh_jets, n_pairs)
-    h1_jet_idx = ak.concatenate(ak.unzip(pairings[optimized_loss_idx]), axis=1)
-    h2_jet_idx = ak.concatenate(ak.unzip(pairings[~optimized_loss_idx]), axis=1)
-    return hh_jet_idx[h1_jet_idx], hh_jet_idx[h2_jet_idx]
+# def reconstruct_hh_jet_pairs(
+#     jets_p4, hh_jet_idx, loss, optimizer=np.argmin, n_jets=4, n_pairs=2
+# ):
+#     hh_jets = jets_p4[hh_jet_idx]
+#     pairings = list(itertools.combinations(range(n_jets), n_pairs))
+#     loss_values = np.transpose(
+#         ak.Array(loss(hh_jets[:, i], hh_jets[:, j]) for i, j in pairings)
+#     )
+#     loss_values = ak.mask(loss_values, ~ak.is_none(hh_jets))
+#     pt_values = np.transpose(
+#         ak.Array((hh_jets[:, i] + hh_jets[:, j]).pt for i, j in pairings)
+#     )
+#     optimized_loss_idx = optimizer(loss_values, pt_values, axis=1, keepdims=True)
+#     optimized_loss_idx = ak.mask(optimized_loss_idx, ~ak.is_none(hh_jets))
+#     pairings = ak.argcombinations(hh_jets, n_pairs)
+#     h1_jet_idx = ak.concatenate(ak.unzip(pairings[optimized_loss_idx]), axis=1)
+#     h2_jet_idx = ak.concatenate(ak.unzip(pairings[~optimized_loss_idx]), axis=1)
+#     return hh_jet_idx[h1_jet_idx], hh_jet_idx[h2_jet_idx]
 
 
 def reconstruct_hh_jet_pairs(
@@ -141,7 +145,7 @@ def reconstruct_hh_jet_pairs(
     hc_jets = jets_p4[hh_jet_idx]
     valid_event_mask = ~ak.is_none(hc_jets, axis=0)
     chosen_pair = optimizer(
-        np.vstack([pairing_lead(hc_jets, i) for i in range(3)]), axis=0
+        np.vstack([pairing_lead(hc_jets, i) for i in range(n_pairs + 1)]), axis=0
     )
     chosen_pair = ak.mask(chosen_pair, ~ak.is_none(hc_jets, axis=0))
 

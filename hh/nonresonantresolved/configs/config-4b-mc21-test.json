@@ -40,9 +40,9 @@
     "event_selection": {
         "trigs": {
             "operator": "or",
-            "value": "Main physics stream"
+            "value": "Run 3"
         },
-        "central_jets": {
+        "jets": {
             "pt": {
                 "operator": ">",
                 "value": 40000
@@ -54,36 +54,24 @@
             "count": {
                 "operator": ">=",
                 "value": 4
-            }
-        },
-        "btagging": {
-            "model": "DL1dv01",
-            "efficiency": 0.77,
-            "count": {
-                "operator": ">=",
-                "value": 4
-            }
-        },
-        "forward_jets": {
-            "pt": {
-                "operator": ">",
-                "value": 30000
             },
-            "eta": {
-                "operator": ">",
-                "value": 2.5
-            },
-            "count": {
-                "operator": ">=",
-                "value": 6
-            }
-        },
-        "X_Wt_discriminant": {
-            "operator": ">",
-            "value": 1.5
+            "btagging": [
+                {
+                    "model": "GN2v01",
+                    "efficiency": 0.77,
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    }
+                }
+            ]
         },
         "Delta_eta_HH_discriminant": {
             "operator": "<",
+            "value": 1.5
+        },
+        "X_Wt_discriminant": {
+            "operator": ">",
             "value": 1.5
         },
         "X_HH_discriminant": {

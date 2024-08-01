@@ -36,8 +36,8 @@ def fill_hists(
         fill_reco_truth_matched_jets_histograms(events, hists)
         fill_reco_vs_truth_variable_response_histograms(events, hists, kin_labels)
         ## fill_hh_jets_vs_trigs_histograms(events, hists)
-        if "btagging" in selections:
-            bjets_sel = selections["btagging"]
+        if "jets" in selections and "btagging" in selections["jets"]:
+            bjets_sel = selections["jets"]["btagging"]
             if isinstance(bjets_sel, dict):
                 bjets_sel = [bjets_sel]
             for i_bjets_sel in bjets_sel:

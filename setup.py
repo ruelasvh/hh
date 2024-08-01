@@ -23,6 +23,7 @@ setup(
         "pandas>=2.1.0",
         "tables>=3.9.2",
         "htcondor>=23.0.6",
+        "cabinetry>=0.6.0",
     ],
     entry_points={
         "console_scripts": [

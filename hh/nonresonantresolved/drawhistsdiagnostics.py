@@ -24,6 +24,7 @@ def draw_hists(
     luminosity = args.luminosity
     energy = args.energy
     output_dir = args.output_dir
+    btagging = {"GN2v01_77": 4}
 
     ###############################################
     # Truth HH mass plots
@@ -62,7 +63,8 @@ def draw_hists(
     ################################################
     # Plot backgrounds vs signal
     ################################################
-    mc_campaigns = {"mc20a": 24.5556, "mc20d": 43.65, "mc20e": 57.6966}
+    # mc_campaigns = {"mc20a": 24.5556, "mc20d": 43.65, "mc20e": 57.6966}
+    mc_campaigns = {"mc20a": 36.64674, "mc20d": 44.6306, "mc20e": 58.7916}
     # mc_campaigns = ["mc20"]
     for mc, lumi in mc_campaigns.items():
         mc_samples = {
@@ -100,43 +102,6 @@ def draw_hists(
                     output_dir=output_dir,
                     show_counts=True,
                 )
-
-    # mc20a_samples = {
-    #     sample: hists for sample, hists in hists_group.items() if "mc20a" in sample
-    # }
-    # mc20a_kl1_sample = {
-    #     sample: hists for sample, hists in mc20a_samples.items() if "ggF_k01" in sample
-    # }
-    # mc20a_background_samples = {
-    #     sample: hists
-    #     for sample, hists in mc20a_samples.items()
-    #     if any(bkg in sample for bkg in ["ttbar", "multijet"])
-    # }
-    # for region in ["signal", "control"]:
-    #     for pairing in pairing_methods:
-    #         draw_signal_vs_background(
-    #             f"hh_mass_reco_{region}_4b_GN2v01_77_{pairing}_bins_logscale",
-    #             signal=mc20a_kl1_sample,
-    #             background=mc20a_background_samples,
-    #             energy=energy,
-    #             luminosity=24.5556,
-    #             xlabel=hh_var_labels["hh_mass"],
-    #             legend_labels={
-    #                 **{key: sample_labels[key] for key in mc20a_kl1_sample.keys()},
-    #                 "Background MC": "Background MC 2016",
-    #             },
-    #             third_exp_label="\n".join(
-    #                 [
-    #                     f"\n4b {region.capitalize()} Region",
-    #                     f"{pairing_methods[pairing]['label']}",
-    #                 ]
-    #             ),
-    #             plot_name=f"mc20a_sig_vs_bkg_{region}_region_4b_GN2v01_77_{pairing}_bins_logscale",
-    #             output_dir=output_dir,
-    #             show_counts=True,
-    #         )
-
-    return
 
     for sample_type, sample_hists in hists_group.items():
         ########################################################
@@ -205,6 +170,127 @@ def draw_hists(
             third_exp_label=f"\n{selections_labels['truth_matching']}",
             output_dir=output_dir,
         )
+
+        #### HH mass plane plots for different pairing methods ####
+        for pairing_id, pairing_info in pairing_methods.items():
+            for btagger, btag_count in btagging.items():
+                draw_mH_plane_2D_hists(
+                    sample_hists,
+                    sample_type,
+                    f"mHH_plane_reco_{btag_count}b_{btagger}_{pairing_id}",
+                    energy,
+                    third_exp_label=pairing_info["label"].replace("pairing", "pairs"),
+                    log_z=True,
+                    output_dir=output_dir,
+                )
+                draw_mH_plane_2D_hists(
+                    sample_hists,
+                    sample_type,
+                    f"mHH_plane_reco_{btag_count}b_{btagger}_{pairing_id}_lt_300_GeV",
+                    energy,
+                    third_exp_label=pairing_info["label"].replace("pairing", "pairs"),
+                    log_z=False,
+                    output_dir=output_dir,
+                )
+                draw_mH_plane_2D_hists(
+                    sample_hists,
+                    sample_type,
+                    f"mHH_plane_reco_{btag_count}b_{btagger}_{pairing_id}_geq_300_GeV",
+                    energy,
+                    third_exp_label=pairing_info["label"].replace("pairing", "pairs"),
+                    log_z=False,
+                    output_dir=output_dir,
+                )
+
+        # ##############################################
+        # #### Pairing efficiency plots ################
+        # ##############################################
+
+        # #### Pairing plots vs reco variables ####
+        # for pairing_id, pairing_info in pairing_methods.items():
+        #     for btagger, btag_count in btagging.items():
+        #         for hh_var, hh_var_label in hh_var_labels.items():
+        #             draw_efficiency(
+        #                 {sample_type: sample_hists},
+        #                 [
+        #                     [
+        #                         f"{hh_var}_reco_{btag_count}_btag_{btagger}_{pairing_id}",
+        #                         f"{hh_var}_reco_{btag_count}_btag_{btagger}_{pairing_id}_correct",
+        #                     ]
+        #                     for pairing_id in pairing_methods
+        #                 ],
+        #                 energy,
+        #                 luminosity=luminosity,
+        #                 xlabel=f"Reco {hh_var_label}",
+        #                 legend_labels={
+        #                     f"{hh_var}_reco_{pairing_id}": pairing_info["label"]
+        #                     for pairing_id, pairing_info in pairing_methods.items()
+        #                 },
+        #                 xmin=150 if "hh_mass" == hh_var else None,
+        #                 xmax=600 if "hh_pt" == hh_var else None,
+        #                 legend_options={"loc": "upper right", "fontsize": "small"},
+        #                 third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
+        #                 output_dir=output_dir,
+        #                 plot_name=f"pairing_efficiency_reco_{hh_var}",
+        #             )
+
+        # #### Pairing plots vs truth variables ####
+        # for pairing_id, pairing_info in pairing_methods.items():
+        #     for btagger, btag_count in btagging.items():
+        #         for hh_var, hh_var_label in hh_var_labels.items():
+        #             draw_efficiency(
+        #                 {sample_type: sample_hists},
+        #                 [
+        #                     [
+        #                         f"{hh_var}_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_id}",
+        #                         f"{hh_var}_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_id}_correct",
+        #                     ]
+        #                     for pairing_id in pairing_methods
+        #                 ],
+        #                 energy,
+        #                 luminosity=luminosity,
+        #                 xlabel=f"Truth {hh_var_label}",
+        #                 legend_labels={
+        #                     f"{hh_var}_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_id}": pairing_info[
+        #                         "label"
+        #                     ]
+        #                     for pairing_id, pairing_info in pairing_methods.items()
+        #                 },
+        #                 xmin=200 if "hh_mass" == hh_var else None,
+        #                 xmax=600 if "hh_pt" == hh_var else None,
+        #                 legend_options={"loc": "upper right", "fontsize": "small"},
+        #                 third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
+        #                 output_dir=output_dir,
+        #                 plot_name=f"pairing_efficiency_truth_{hh_var}",
+        #             )
+
+        # #### Pairing plots fraction of correct pairs vs m_HH ####
+        # for pairing_id, pairing_info in pairing_methods.items():
+        #     for btagger, btag_count in btagging.items():
+        #         for pairing_id, pairing_info in pairing_methods.items():
+        #             draw_1d_hists_v2(
+        #                 {sample_type: sample_hists},
+        #                 [
+        #                     f"hh_mass_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_id}",
+        #                     f"hh_mass_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_id}_correct",
+        #                 ],
+        #                 energy,
+        #                 luminosity=luminosity,
+        #                 xlabel=hh_var_labels["hh_mass"],
+        #                 ylabel="Events",
+        #                 legend_labels={
+        #                     f"hh_mass_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_id}": pairing_info[
+        #                         "label"
+        #                     ],
+        #                     f"hh_mass_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_id}_correct": f"{pairing_info['label']} and parent ID 25",
+        #                 },
+        #                 legend_options={"loc": "center right", "fontsize": "small"},
+        #                 third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
+        #                 xmin=100,
+        #                 draw_ratio=True,
+        #                 output_dir=output_dir,
+        #                 plot_name=f"hh_mass_reco_truth_matched_pairing_efficiency_{pairing_id}",
+        #             )
 
         ###############################################
         # TODO: Refactor for dynamic b-tagging WP
@@ -292,116 +378,6 @@ def draw_hists(
         #     plot_name="hh_mass_truth_cutflow_unweighted",
         #     output_dir=output_dir,
         # )
-
-        ###############################################
-        # Pairing efficiency plots
-        ###############################################
-
-        # #### Pairing plots vs reco variables ####
-        # for hh_var, hh_var_label in hh_var_labels.items():
-        #     draw_efficiency(
-        #         {sample_type: sample_hists},
-        #         [
-        #             [
-        #                 f"{hh_var}_reco_{pairing_id}",
-        #                 f"{hh_var}_reco_{pairing_id}_correct",
-        #             ]
-        #             for pairing_id in pairing_methods
-        #         ],
-        #         energy,
-        #         luminosity=luminosity,
-        #         xlabel=f"Reco {hh_var_label}",
-        #         legend_labels={
-        #             f"{hh_var}_reco_{pairing_id}": pairing_info["label"]
-        #             for pairing_id, pairing_info in pairing_methods.items()
-        #         },
-        #         xmin=150 if "hh_mass" == hh_var else None,
-        #         xmax=600 if "hh_pt" == hh_var else None,
-        #         legend_options={"loc": "upper right", "fontsize": "small"},
-        #         third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
-        #         output_dir=output_dir,
-        #         plot_name=f"pairing_efficiency_reco_{hh_var}",
-        #     )
-
-        # #### Pairing plots vs truth variables ####
-        # for hh_var, hh_var_label in hh_var_labels.items():
-        #     draw_efficiency(
-        #         {sample_type: sample_hists},
-        #         [
-        #             [
-        #                 f"{hh_var}_reco_truth_matched_{pairing_id}",
-        #                 f"{hh_var}_reco_truth_matched_{pairing_id}_correct",
-        #             ]
-        #             for pairing_id in pairing_methods
-        #         ],
-        #         energy,
-        #         luminosity=luminosity,
-        #         xlabel=f"Truth {hh_var_label}",
-        #         legend_labels={
-        #             f"{hh_var}_reco_truth_matched_{pairing_id}": pairing_info["label"]
-        #             for pairing_id, pairing_info in pairing_methods.items()
-        #         },
-        #         xmin=200 if "hh_mass" == hh_var else None,
-        #         xmax=600 if "hh_pt" == hh_var else None,
-        #         legend_options={"loc": "upper right", "fontsize": "small"},
-        #         third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
-        #         output_dir=output_dir,
-        #         plot_name=f"pairing_efficiency_truth_{hh_var}",
-        #     )
-
-        # #### Pairing plots fraction of correct pairs vs m_HH ####
-        # for pairing_id, pairing_info in pairing_methods.items():
-        #     draw_1d_hists_v2(
-        #         {sample_type: sample_hists},
-        #         [
-        #             f"hh_mass_reco_truth_matched_{pairing_id}",
-        #             f"hh_mass_reco_truth_matched_{pairing_id}_correct",
-        #         ],
-        #         energy,
-        #         luminosity=luminosity,
-        #         xlabel=hh_var_labels["hh_mass"],
-        #         ylabel="Events",
-        #         legend_labels={
-        #             f"hh_mass_reco_truth_matched_{pairing_id}": pairing_info["label"],
-        #             f"hh_mass_reco_truth_matched_{pairing_id}_correct": f"{pairing_info['label']} and parent ID 25",
-        #         },
-        #         legend_options={"loc": "center right", "fontsize": "small"},
-        #         third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
-        #         xmin=100,
-        #         draw_ratio=True,
-        #         output_dir=output_dir,
-        #         plot_name=f"hh_mass_reco_truth_matched_pairing_efficiency_{pairing_id}",
-        #     )
-
-        # #### HH mass plane plots for different pairing methods ####
-        # for pairing_id, pairing_info in pairing_methods.items():
-        #     draw_mH_plane_2D_hists(
-        #         sample_hists,
-        #         sample_type,
-        #         f"mHH_plane_reco_{pairing_id}",
-        #         energy,
-        #         third_exp_label=pairing_info["label"].replace("pairing", "pairs"),
-        #         log_z=True,
-        #         output_dir=output_dir,
-        #     )
-        #     draw_mH_plane_2D_hists(
-        #         sample_hists,
-        #         sample_type,
-        #         f"mHH_plane_reco_{pairing_id}_lt_300_GeV",
-        #         energy,
-        #         third_exp_label=pairing_info["label"].replace("pairing", "pairs"),
-        #         log_z=False,
-        #         output_dir=output_dir,
-        #     )
-        #     draw_mH_plane_2D_hists(
-        #         sample_hists,
-        #         sample_type,
-        #         f"mHH_plane_reco_{pairing_id}_geq_300_GeV",
-        #         energy,
-        #         third_exp_label=pairing_info["label"].replace("pairing", "pairs"),
-        #         log_z=False,
-        #         output_dir=output_dir,
-        #     )
 
         # #### X_HH plots for different pairing methods ####
         # # create flat 2D distributions for variables m_H1 and m_H2 using the

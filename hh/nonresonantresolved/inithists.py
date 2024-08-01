@@ -77,8 +77,8 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
         #     prefix="hh_jet", postfix="_truth_matched_2b2j_asym_4_btags"
         # )
 
-        if "btagging" in selections:
-            bjets_sel = selections["btagging"]
+        if "jets" in selections and "btagging" in selections["jets"]:
+            bjets_sel = selections["jets"]["btagging"]
             if isinstance(bjets_sel, dict):
                 bjets_sel = [bjets_sel]
             for i_bjets_sel in bjets_sel:
