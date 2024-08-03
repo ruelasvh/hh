@@ -16,7 +16,7 @@ def plot_limits(
     textstr = "\n".join(
         (
             plot_label,
-            r"Upper limit (obs): $\mu=%.4f$" % (limits.observed_limit,),
+            r"Upper limit (exp): $\mu=%.4f$" % (limits.observed_limit,),
         )
     )
     # Plot details label

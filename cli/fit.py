@@ -128,8 +128,9 @@ def main():
         ][0]
         # Set bounds for max ΔR specifically
         if pairing == "max_deltar_pairing":
-            cabinetry_config_pairing["NormFactors"][0]["Bounds"] = [0, 100]  # kl=1
-            # cabinetry_config_pairing["NormFactors"][0]["Bounds"] = [0, 100]  # kl=10
+            cabinetry_config_pairing["NormFactors"][0]["Bounds"] = [
+                v * 2 for v in cabinetry_config_pairing["NormFactors"][0]["Bounds"]
+            ]
 
         # region_path = (
         #     f"{cabinetry_config_pairing['Regions'][0]['RegionPath']}_{pairing}"

@@ -52,7 +52,9 @@ def save_to_root(hists, config):
                     continue
                 sample_key = sample["Name"]
                 if "ggF" in sample_key:
-                    signal_sample_keys = [key for key in hists.keys() if "ggF" in key]
+                    signal_sample_keys = [
+                        key for key in hists.keys() if sample_key in key
+                    ]
                     signal_counts = np.sum(
                         [
                             hists[key][variation_path_region]["values"][1:-1]
