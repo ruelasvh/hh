@@ -30,7 +30,6 @@ class HistPlottable:
         bins,
         errors=None,
         scale_factor=None,
-        luminosity=None,
         normalize=False,
         binwidth_norm=True,
         ylabel="Entries",
@@ -40,14 +39,13 @@ class HistPlottable:
 
         self.counts = counts
         self.counts = self.counts * scale_factor if scale_factor else self.counts
-        self.counts = self.counts * luminosity if luminosity else self.counts
+        self.counts = self.counts
         self.bins = bins
         self.errors = errors
         if self.errors is not None:
             self.errors = self.errors * scale_factor if scale_factor else self.errors
-            self.errors = self.errors * luminosity if luminosity else self.errors
+            self.errors = self.errors
         self.scale_factor = scale_factor
-        self.luminosity = luminosity
         self.normalize = normalize
         self.binwidth_norm = binwidth_norm
         self.ylabel = ylabel
@@ -159,7 +157,6 @@ def draw_1d_hists(
             bin_centers,
             errors=hist_errors,
             scale_factor=scale_factor,
-            luminosity=luminosity if not is_data else None,
             normalize=normalize,
             binwidth_norm=binwidth_norm,
             ylabel=ylabel,
@@ -228,13 +225,13 @@ def draw_signal_vs_background(
     for bkg_hists in background.values():
         hist_name = find_hist(bkg_hists, lambda h: var_name == h)
         hist = bkg_hists[hist_name]
-        if "edges" not in background:
+        if "edges" not in bkg:
             bkg["edges"] = hist["edges"]
-        if "values" not in background:
+        if "values" not in bkg:
             bkg["values"] = hist["values"]
         else:
             bkg["values"] += hist["values"]
-        if "errors" not in background:
+        if "errors" not in bkg:
             bkg["errors"] = hist["errors"]
         else:
             bkg["errors"] = np.sqrt(bkg["errors"] ** 2 + hist["errors"] ** 2)
@@ -250,7 +247,7 @@ def draw_signal_vs_background(
                 hist["edges"],
                 errors=hist["errors"],
                 legend_label=legend_labels.get(sample_name, sample_name),
-                scale_factor=2 if "ggF" in sample_name else None,
+                scale_factor=100 if "ggF" in sample_name else None,
                 binwidth_norm=False,
                 xlabel=xlabel,
             )
@@ -347,7 +344,6 @@ def draw_1d_hists_v2(
                 hist_edges,
                 errors=hist_errors,
                 scale_factor=scale_factors[i] if scale_factors else None,
-                luminosity=luminosity if not is_data else None,
                 normalize=normalize,
                 binwidth_norm=binwidth_norm,
                 legend_label=legend_labels[hist_prefix] if legend_labels else None,

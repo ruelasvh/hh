@@ -70,17 +70,14 @@ def get_args():
 def main():
     args, restargs = get_args()
 
-    # check if the repo is dirty and ask if the user wants to rebuild the image for this package
-    repo_path = Path(__file__).resolve().parent.parent
-    os.chdir(repo_path)
-    if os.system("git diff --quiet"):
-        build_response = input(
-            "The repo is dirty. Do you want to rebuild apptainer image? (Y/n) "
-        )
-        if build_response == "" or build_response.lower() == "y":
-            image_path = Path(os.getenv("APPTAINER_CACHEDIR")) / args.image.name
-            os.system(f"apptainer build -F {image_path} Apptainer.def")
-    os.chdir(os.getenv("PWD"))
+    build_response = input("Do you want to rebuild the apptainer image? (Y/n) ")
+    if build_response == "" or build_response.lower() == "y":
+        # get the path to the repo
+        repo_path = Path(__file__).resolve().parent.parent
+        os.chdir(repo_path)
+        image_path = Path(os.getenv("APPTAINER_CACHEDIR")) / args.image.name
+        os.system(f"apptainer build -F {image_path} Apptainer.def")
+        os.chdir(os.getenv("PWD"))
 
     # create directories for to store files
     CWD = Path(os.getenv("PWD"))

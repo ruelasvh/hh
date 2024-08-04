@@ -25,6 +25,7 @@ def draw_hists(
     energy = args.energy
     output_dir = args.output_dir
     btagging = {"GN2v01_77": 4}
+    mc_campaigns = {"mc20a": 36.64674, "mc20d": 44.6306, "mc20e": 58.7916}
 
     ###############################################
     # Truth HH mass plots
@@ -35,7 +36,7 @@ def draw_hists(
         energy,
         xlabel=f"Truth {hh_var_labels['hh_mass']}",
         legend_labels={key: sample_labels[key] for key in hists_group.keys()},
-        luminosity=luminosity,
+        luminosity=sum(mc_campaigns.values()),
         xmin=100,
         ggFk01_factor=10,
         draw_errors=True,
@@ -53,7 +54,7 @@ def draw_hists(
         ylabel="Events",
         legend_labels={key: sample_labels[key] for key in hists_group.keys()},
         third_exp_label=f"\n{selections_labels['truth_matching']}",
-        luminosity=luminosity,
+        luminosity=sum(mc_campaigns.values()),
         xmin=100,
         ggFk01_factor=10,
         draw_errors=True,
@@ -63,9 +64,6 @@ def draw_hists(
     ################################################
     # Plot backgrounds vs signal
     ################################################
-    # mc_campaigns = {"mc20a": 24.5556, "mc20d": 43.65, "mc20e": 57.6966}
-    mc_campaigns = {"mc20a": 36.64674, "mc20d": 44.6306, "mc20e": 58.7916}
-    # mc_campaigns = ["mc20"]
     for mc, lumi in mc_campaigns.items():
         mc_samples = {
             sample: hists for sample, hists in hists_group.items() if mc in sample
@@ -104,6 +102,7 @@ def draw_hists(
                 )
 
     for sample_type, sample_hists in hists_group.items():
+        sample_lumi = [mc_campaigns[mc] for mc in mc_campaigns if mc in sample_type][0]
         ########################################################
         # HH mass plots truth reco-matched vs reco truth-matched
         ########################################################
@@ -114,7 +113,7 @@ def draw_hists(
                 "hh_mass_reco_truth_matched",
             ],
             energy,
-            luminosity=luminosity,
+            luminosity=sample_lumi,
             xlabel=hh_var_labels["hh_mass"],
             ylabel="Events",
             legend_labels={
@@ -140,7 +139,7 @@ def draw_hists(
                 "hh_mass_reco_truth_matched_v2",
             ],
             energy,
-            luminosity=luminosity,
+            luminosity=sample_lumi,
             xlabel=hh_var_labels["hh_mass"],
             ylabel="Events",
             legend_labels={
@@ -164,7 +163,7 @@ def draw_hists(
             {sample_type: sample_hists},
             "hh_mass_reco_vs_truth_response",
             energy,
-            luminosity=luminosity,
+            luminosity=sample_lumi,
             xlabel="HH mass response [%]",
             legend_labels={sample_type: sample_labels[sample_type]},
             third_exp_label=f"\n{selections_labels['truth_matching']}",
@@ -220,7 +219,7 @@ def draw_hists(
                             for pairing_id in pairing_methods
                         ],
                         energy,
-                        luminosity=luminosity,
+                        luminosity=sample_lumi,
                         xlabel=f"Reco {hh_var_label}",
                         legend_labels={
                             f"{hh_var}_reco_{btag_count}_btag_{btagger}_{pairing_id}": pairing_info[
@@ -250,7 +249,7 @@ def draw_hists(
                             for pairing_id in pairing_methods
                         ],
                         energy,
-                        luminosity=luminosity,
+                        luminosity=sample_lumi,
                         xlabel=f"Truth {hh_var_label}",
                         legend_labels={
                             f"{hh_var}_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_id}": pairing_info[
@@ -277,7 +276,7 @@ def draw_hists(
                             f"hh_mass_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_id}_correct",
                         ],
                         energy,
-                        luminosity=luminosity,
+                        luminosity=sample_lumi,
                         xlabel=hh_var_labels["hh_mass"],
                         ylabel="Events",
                         legend_labels={
@@ -311,7 +310,7 @@ def draw_hists(
                                 for pairing in pairing_methods
                             ],
                             energy,
-                            luminosity=luminosity,
+                            luminosity=sample_lumi,
                             xlabel=r"$\mathrm{X}_{\mathrm{HH}}$",
                             baseline=base_discrim,
                             normalize=True,
@@ -347,7 +346,7 @@ def draw_hists(
                     # "hh_mass_truth_reco_central_btagged_4_plus_truth_matched_jets_correct_min_deltar_pairing_selection",
                 ],
                 energy,
-                luminosity=luminosity,
+                luminosity=sample_lumi,
                 xlabel=f"Truth {hh_var_labels['hh_mass']}",
                 ylabel="Events",
                 legend_labels={
@@ -396,7 +395,7 @@ def draw_hists(
         #                 # f"hh_jet_{i}_pt_truth_matched_4_btags",
         #             ],
         #             energy,
-        #             luminosity=luminosity,
+        #             luminosity=sample_lumi,
         #             xmin=0,
         #             xlabel="HH jet$_" + str(i) + "$ $p_{\mathrm{T}}$ [GeV]",
         #             ylabel="Events",
@@ -425,7 +424,7 @@ def draw_hists(
     #             energy,
     #             ylabel=f"{region.capitalize()} Events",
     #             xlabel="Multijet Samples",
-    #             luminosity=luminosity,
+    #             luminosity=sample_lumi,
     #             density=True,
     #             third_exp_label=f"Signal Region",
     #             output_dir=output_dir,
