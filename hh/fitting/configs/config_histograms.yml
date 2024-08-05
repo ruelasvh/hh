@@ -17,18 +17,11 @@ Regions:
   - Name: "min_mass_center_pairing"
     RegionPath: "SR_min_mass_center_pairing"
 
-# Regions:
-#   - Name: "m_HH"
-#     RegionPath: "SR"
-#     # Binning: [0.0, 160000.0, 320000.0, 480000.0, 640000.0, 800000.0]
-#     # Binning: [160000.0, 320000.0, 480000.0, 640000.0, 800000.0]
-
 Samples:
   - Name: "Data"
     SamplePath: "Background"
     Data: True
 
-  # - Name: "Signal"
   - Name: "ggF_k01"
     SamplePath: "Signal"
     DisableStaterror: False
@@ -37,22 +30,11 @@ Samples:
     SamplePath: "Background"
     DisableStaterror: False
 
-  # # - Name: "Background"
-  # - Name: "mc20_multijet"
-  #   SamplePath: "Background_multijet"
-  #   # DisableStaterror: true
-
-  # # - Name: "Background"
-  # - Name: "mc20_ttbar"
-  #   SamplePath: "Background_ttbar"
-  #   # DisableStaterror: true
-
 NormFactors:
   - Name: "Signal_norm"
     Samples: "ggF_k01"
     Nominal: 1
-    Bounds: [0, 300] # ggF_k01
-    # Bounds: [0, 80] # ggF_k10
+    Bounds: [0, 20]
 
 # Systematics:
 #   - Name: Luminosity
