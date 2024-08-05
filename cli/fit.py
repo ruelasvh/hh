@@ -120,7 +120,6 @@ def main():
             }
             for region in cabinetry_config_pairing["Regions"]
         ]
-        breakpoint()
         cabinetry_config_pairing["Regions"] = regions
         cabinetry_config_pairing["General"]["HistogramFolder"] = (
             args.output_dir / f"histograms_{pairing}"
