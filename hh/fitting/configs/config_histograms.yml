@@ -6,16 +6,8 @@ General:
   VariationPath: "hh_mass_reco_signal_4b_GN2v01_77"
 
 Regions:
-  - Name: "min_deltar_pairing"
-    RegionPath: "SR_min_deltar_pairing"
-  - Name: "max_deltar_pairing"
-    RegionPath: "SR_max_deltar_pairing"
-  - Name: "min_mass_true_pairing"
-    RegionPath: "SR_min_mass_true_pairing"
-  - Name: "min_mass_diff_pairing"
-    RegionPath: "SR_min_mass_diff_pairing"
-  - Name: "min_mass_center_pairing"
-    RegionPath: "SR_min_mass_center_pairing"
+  - Name: "Signal_region"
+    RegionPath: "SR"
 
 Samples:
   - Name: "Data"
@@ -35,27 +27,3 @@ NormFactors:
     Samples: "ggF_k01"
     Nominal: 1
     Bounds: [0, 20]
-
-# Systematics:
-#   - Name: Luminosity
-#     Up:
-#       Normalization: 0.008
-#     Down:
-#       Normalization: -0.008
-#     Type: Normalization
-
-#   - Name: "Modeling"
-#     Up:
-#       VariationPath: "Modeling_Up"
-#     Down:
-#       Symmetrize: True
-#     Samples: "Background"
-#     Type: "NormPlusShape"
-
-#   - Name: "WeightBasedModeling"
-#     Up:
-#       VariationPath: "WeightBasedModeling_Up"
-#     Down:
-#       VariationPath: "WeightBasedModeling_Down"
-#     Samples: "Background"
-#     Type: "NormPlusShape"

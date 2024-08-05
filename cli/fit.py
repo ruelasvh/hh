@@ -113,10 +113,14 @@ def main():
         # Create a new cabinetry config for each pairing method
         cabinetry_config_pairing = copy.deepcopy(cabinetry_config_base)
         regions = [
-            region
+            {
+                **region,
+                "Name": f"{region['Name']}_{pairing}",
+                "RegionPath": f"{region['RegionPath']}_{pairing}",
+            }
             for region in cabinetry_config_pairing["Regions"]
-            if region["Name"] == pairing
         ]
+        breakpoint()
         cabinetry_config_pairing["Regions"] = regions
         cabinetry_config_pairing["General"]["HistogramFolder"] = (
             args.output_dir / f"histograms_{pairing}"
@@ -131,17 +135,6 @@ def main():
             cabinetry_config_pairing["NormFactors"][0]["Bounds"] = [
                 v * 200 for v in cabinetry_config_pairing["NormFactors"][0]["Bounds"]
             ]
-
-        # region_path = (
-        #     f"{cabinetry_config_pairing['Regions'][0]['RegionPath']}_{pairing}"
-        # )
-        # cabinetry_config_pairing["Regions"][0]["RegionPath"] = region_path
-        # cabinetry_config_pairing["General"]["HistogramFolder"] = (
-        #     args.output_dir / f"histograms_{pairing}"
-        # )
-        # # Set bounds for max ΔR specifically
-        # if pairing == "max_deltar_pairing":
-        #     cabinetry_config_pairing["NormFactors"][0]["Bounds"] = [0, 4000]
 
         # Print overview of the configuration if in debug mode
         cabinetry.configuration.print_overview(cabinetry_config_pairing)
@@ -158,11 +151,6 @@ def main():
         # Load data and model
         ws = cabinetry.workspace.load(workspace_path)
         model, data = cabinetry.model_utils.model_and_data(ws)
-        # print("pairing", pairing)
-        # print("Data", data)
-        # data = cabinetry.model_utils.asimov_data(model)
-        # print("Asimov data", data)
-        # print("------------")
         plots_path = args.output_dir / pairing
         cabinetry.visualize.modifier_grid(model, figure_folder=plots_path)
 
@@ -175,28 +163,12 @@ def main():
             figure_folder=plots_path,
         )
 
-        # # fit!
-        # tolerance = 1
-        # fit_results = cabinetry.fit.fit(
-        #     model, data, goodness_of_fit=True, tolerance=tolerance
-        # )
-        # data = cabinetry.model_utils.asimov_data(model=model, fit_results=fit_results)
-        # # pull plot
-        # cabinetry.visualize.pulls(
-        #     fit_results,
-        #     exclude=["Signal_norm"],
-        #     figure_folder=plots_path,
-        # )
-
         limit_results = cabinetry.fit.limit(model, data)
         plot_details = (
             "\nMC20 2015-2018\n"
             + sample_types[signal_sample["Name"]]
             + r", $b$-filtered mulitjet and $t\bar{t}$"
         )
-        # plot_details = f", MC20 2015-2018\n"
-        # plot_details += sample_labels[signal_sample["Name"]].replace(" MC20", ", ")
-        # plot_details += r", $b$-filtered mulitjet and $t\bar{t}$"
         fitting.plot_limits(
             limit_results,
             exp_label=plot_details,
