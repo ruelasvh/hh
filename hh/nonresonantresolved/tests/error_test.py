@@ -64,7 +64,6 @@ if __name__ == "__main__":
 #         weights=np.concatenate([weights, weights2]),
 #         bins=bins,
 #     )
-#     breakpoint()
 #     axs[1].set_title("Wgts concatenated", fontsize=18)
 #     hep.histplot(hist, bins, yerr=errors, ax=axs[1])
 

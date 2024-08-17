@@ -4,7 +4,7 @@
     },
     "samples": [
         {
-            "label": "4b_mc20_ttbar",
+            "label": "mc20_4b_ttbar",
             "class_label": "label_ttbar",
             "selections": {
                 "jets": {

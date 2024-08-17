@@ -93,9 +93,9 @@ def process_sample_worker(
 ) -> None:
     is_mc = "data" not in sample_name
     trig_set = None
-    if "events" in selections and "trigs" in selections["events"]:
-        trig_set = selections["events"]["trigs"]["value"]
-    branch_aliases = get_branch_aliases(is_mc, trig_set)
+    if "trigs" in selections:
+        trig_set = selections["trigs"]["value"]
+    branch_aliases = get_branch_aliases(is_mc, trig_set, sample_metadata)
     if args.sample_weight is None and is_mc:
         cbk = concatenate_cutbookkeepers(sample_path)
         sample_weight = get_sample_weight(sample_metadata, cbk)

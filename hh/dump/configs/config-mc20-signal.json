@@ -4,7 +4,7 @@
     },
     "samples": [
         {
-            "label": "4b_mc20_ggF_k01",
+            "label": "mc20_4b_ggF_k01",
             "class_label": "label_HH",
             "selections": {
                 "jets": {

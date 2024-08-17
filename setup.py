@@ -2,8 +2,8 @@ from setuptools import setup, find_packages
 
 setup(
     name="hh",
-    version="0.1",
-    description="Code to plot the R21 and R22 HH4b analysis",
+    version="0.2",
+    description="Code to plot the HH4b analysis",
     url="https://github.com/ruelasvh/hh.git",
     author="Victor Ruelas",
     author_email="victor.hugo.ruelas.rivera@cern.ch",

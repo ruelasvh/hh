@@ -4,19 +4,17 @@
     },
     "samples": [
         {
-            "label": "4b_mc21_ggF_k01",
+            "label": "mc20e_4b_ggF_k01",
             "class_label": "label_HH",
             "selections": {
-                "events": {
-                    "trigs": {
-                        "operator": "or",
-                        "value": "Main physics stream"
-                    }
+                "trigs": {
+                    "operator": "or",
+                    "value": "Run 2"
                 },
                 "jets": {
                     "pt": {
                         "operator": ">",
-                        "value": 40000
+                        "value": 25000
                     },
                     "eta": {
                         "operator": "<",
@@ -28,7 +26,7 @@
                     },
                     "btagging": {
                         "model": "DL1dv01",
-                        "efficiency": 0.85,
+                        "efficiency": 0.77,
                         "count": {
                             "operator": ">=",
                             "value": 4
@@ -37,13 +35,13 @@
                 }
             },
             "paths": [
-                "hh/nonresonantresolved/tests/test-data/mc21ggF-k01/"
+                "hh/nonresonantresolved/tests/test-data/mc20-ggF-af3-k01/user.caiyi.af3_fs_comp_resolved_nofilter.2024_06_03_T114933.603404.e8564_a907_r14861_p6026_TREE/"
             ],
             "metadata": [
                 {
-                    "logicalDatasetName": "mc21_13p6TeV.601479.PhPy8EG_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8472_s3873_r13829_p5631",
+                    "logicalDatasetName": "mc20_13TeV.603404.PhPy8EG_PDF4LHC21_HHbbbb_chhh1p0.deriv.DAOD_PHYS.e8564_e8455_a907_r14861_r14919_p6026",
                     "genFiltEff": 1,
-                    "crossSection": 0.000030836,
+                    "crossSection": 1.0437184e-05,
                     "kFactor": 1.0,
                     "luminosity": 1.0
                 }

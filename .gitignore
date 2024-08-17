@@ -22,3 +22,7 @@ plots/
 
 # Comparisons with other codes
 compare/
+
+# virtual environment
+venv/
+.venv/

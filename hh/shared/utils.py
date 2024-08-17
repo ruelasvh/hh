@@ -81,8 +81,8 @@ def get_com_lumi_label(lumi=None, com=13.6):
         [
             f"${s}$"
             for s in [
-                f"\sqrt{{s}} = {com}\ \mathrm{{TeV}}",
-                f"{lumi:.4f}\ \mathrm{{fb}}^{{-1}}" if lumi else "",
+                rf"\sqrt{{s}} = {com} \mathrm{{TeV}}",
+                rf"{lumi:.4f} \mathrm{{fb}}^{{-1}}" if lumi else "",
             ]
             if s
         ]

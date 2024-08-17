@@ -4,7 +4,7 @@
     },
     "samples": [
         {
-            "label": "4b_mc20_multijet_2bjets_JZ1",
+            "label": "mc20_4b_multijet_2bjets_JZ1",
             "class_label": "label_QCD",
             "selections": {
                 "jets": {
@@ -60,7 +60,7 @@
             ]
         },
         {
-            "label": "4b_mc20_multijet_2bjets_JZ2",
+            "label": "mc20_4b_multijet_2bjets_JZ2",
             "class_label": "label_QCD",
             "selections": {
                 "jets": {
@@ -116,7 +116,7 @@
             ]
         },
         {
-            "label": "4b_mc20_multijet_2bjets_JZ3",
+            "label": "mc20_4b_multijet_2bjets_JZ3",
             "class_label": "label_QCD",
             "selections": {
                 "jets": {
@@ -172,7 +172,7 @@
             ]
         },
         {
-            "label": "4b_mc20_multijet_2bjets_JZ4",
+            "label": "mc20_4b_multijet_2bjets_JZ4",
             "class_label": "label_QCD",
             "selections": {
                 "jets": {
@@ -228,7 +228,7 @@
             ]
         },
         {
-            "label": "4b_mc20_multijet_2bjets_JZ5",
+            "label": "mc20_4b_multijet_2bjets_JZ5",
             "class_label": "label_QCD",
             "selections": {
                 "jets": {
@@ -284,7 +284,7 @@
             ]
         },
         {
-            "label": "4b_mc20_multijet_2bjets_JZ6",
+            "label": "mc20_4b_multijet_2bjets_JZ6",
             "class_label": "label_QCD",
             "selections": {
                 "jets": {
@@ -340,7 +340,7 @@
             ]
         },
         {
-            "label": "4b_mc20_multijet_2bjets_JZ7",
+            "label": "mc20_4b_multijet_2bjets_JZ7",
             "class_label": "label_QCD",
             "selections": {
                 "jets": {
@@ -396,7 +396,7 @@
             ]
         },
         {
-            "label": "4b_mc20_multijet_2bjets_JZ8",
+            "label": "mc20_4b_multijet_2bjets_JZ8",
             "class_label": "label_QCD",
             "selections": {
                 "jets": {
@@ -452,7 +452,7 @@
             ]
         },
         {
-            "label": "4b_mc20_multijet_2bjets_JZ9",
+            "label": "mc20_4b_multijet_2bjets_JZ9",
             "class_label": "label_QCD",
             "selections": {
                 "jets": {

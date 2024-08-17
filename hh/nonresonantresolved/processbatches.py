@@ -292,7 +292,6 @@ def process_batch(
                         hh_jet_idx=hh_jet_idx,
                         loss=pairing_info["loss"],
                         optimizer=pairing_info["optimizer"],
-                        # separation=pairing_info["separation"],
                     )
                     events[f"H1_{n_btags}b_{btagger}_{pairing}_jet_idx"] = H1_jet_idx
                     events[f"H2_{n_btags}b_{btagger}_{pairing}_jet_idx"] = H2_jet_idx
@@ -304,7 +303,6 @@ def process_batch(
                                 hh_jet_idx=hh_truth_matched_jet_idx,
                                 loss=pairing_info["loss"],
                                 optimizer=pairing_info["optimizer"],
-                                # separation=pairing_info["separation"],
                             )
                         )
                         events[
