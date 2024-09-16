@@ -267,9 +267,9 @@ def get_feature_types():
     type_dict[Features.JET_ETA.value] = "var * float32"
     type_dict[Features.JET_PHI.value] = "var * float32"
     type_dict[Features.JET_MASS.value] = "var * float32"
-    type_dict[Features.JET_X.value] = "var * float32"
-    type_dict[Features.JET_Y.value] = "var * float32"
-    type_dict[Features.JET_Z.value] = "var * float32"
+    type_dict[Features.JET_PX.value] = "var * float32"
+    type_dict[Features.JET_PY.value] = "var * float32"
+    type_dict[Features.JET_PZ.value] = "var * float32"
     type_dict[Features.EVENT_M_4B.value] = "f4"
     type_dict[Features.EVENT_BB_RMH.value] = ("f8", 6)
     type_dict[Features.EVENT_BB_DR.value] = ("f8", 6)

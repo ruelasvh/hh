@@ -68,7 +68,7 @@ def process_batch(
     jets_p4 = get_jet_p4(events)
     # convert jets to cartesian coordinates and save them
     for f, v in zip(
-        [Features.JET_X, Features.JET_Y, Features.JET_Z],
+        [Features.JET_PX, Features.JET_PY, Features.JET_PZ],
         [jets_p4.px, jets_p4.py, jets_p4.pz],
     ):
         events[f.value] = v
