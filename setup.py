@@ -8,7 +8,7 @@ setup(
     author="Victor Ruelas",
     author_email="victor.hugo.ruelas.rivera@cern.ch",
     license="MIT",
-    packages=find_packages(include=["hh", "hh.*"]),
+    packages=find_packages(include=["hh", "hh.*", "cli", "cli.*"]),
     python_requires=">=3.8",
     install_requires=[
         "awkward>=2.3.3",
@@ -24,6 +24,8 @@ setup(
         "tables>=3.9.2",
         "htcondor>=23.0.6",
         "cabinetry>=0.6.0",
+        "pyarrow>=17.0.0",
+        "hist>=2.8.0",
     ],
     entry_points={
         "console_scripts": [
