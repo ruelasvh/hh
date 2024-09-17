@@ -14,7 +14,9 @@ import os
 import json
 import argparse
 import htcondor
+from htcondor import dags
 from pathlib import Path
+import shutil
 from hh.shared.utils import (
     resolve_project_paths,
     concatenate_cutbookkeepers,
@@ -112,32 +114,7 @@ def main():
                 # get the cutbookkeepers for the sample
                 cbk = concatenate_cutbookkeepers(sample_path)
                 sample_weight = get_sample_weight(sample_metadata, cbk)
-            # === Iterate over each file and create a config file for each sample ===
-            # # create a config file for each sample
-            # config_file = CONFIG_DIR / f"config-{sample['label']}-{i_sample}.json"
-            # configs.append(
-            #     {
-            #         "config_file": config_file.as_posix(),
-            #         "sample_weight": str(sample_weight),
-            #     }
-            # )
-            # with open(config_file, "w") as file:
-            #     # write the sample and event_selection objects to the new config file
-            #     json.dump(
-            #         {
-            #             **config,
-            #             "samples": [
-            #                 {
-            #                     **sample,
-            #                     "paths": [sample_path],
-            #                     "metadata": [sample_metadata],
-            #                 }
-            #             ],
-            #         },
-            #         file,
-            #         indent=4,
-            #     )
-            # === Iterate over each file in the sample path for faster processing ===
+            # iterate over each file in the sample path for faster processing
             files = list(Path(sample_path).glob("*.root"))
             for file_path in files:
                 # create a config file for each file
@@ -180,7 +157,7 @@ def main():
     credd.add_user_cred(htcondor.CredTypes.Kerberos, None)
 
     # create a submit object using htcondor.Submit
-    sub = htcondor.Submit(
+    hh_sub = htcondor.Submit(
         {
             "executable": "/usr/bin/apptainer",
             "arguments": f"exec {args.image} {args.exec} $(config_file) -o {OUTPUT_DIR}/{args.output.stem}_$(ClusterId)_$(ProcId){args.output.suffix} -w $(sample_weight) -v {' '.join(restargs)}",
@@ -195,16 +172,55 @@ def main():
         }
     )
 
-    # create a schedd object using htcondor.Schedd
+    dag = dags.Dag()
+
+    main_layer = dag.layer(
+        name="hh_cmd",
+        submit_description=hh_sub,
+        vars=configs,
+    )
+
+    merge_sub = htcondor.Submit(
+        {
+            "executable": "/usr/bin/apptainer",
+            "arguments": f"exec hh4b_merge {OUTPUT_DIR} -o {args.output.stem}_$(ClusterId)_$(ProcId)_merged.parquet}",
+            "output": f"{CONDOR_OUTPUT_DIR}/merge-$(ClusterId).$(ProcId).log",
+            "error": f"{CONDOR_ERROR_DIR}/merge-$(ClusterId).$(ProcId).log",
+            "log": f"{CONDOR_LOG_DIR}/merge-$(ClusterId).$(ProcId).log",
+            "request_memory": args.memory,
+            "request_cpus": args.cpus,
+            "should_transfer_files": "no",
+            "my.sendcredential": "true",
+            "getenv": "false",
+        }
+    )
+
+    merge_layer = dag.layer(
+        name="merge_cmd",
+        submit_description=merge_sub,
+    )
+
+    # write the DAG to disk
+    dag_dir = (CWD / 'hh-dag').absolute()
+
+    # blow away any old files
+    shutil.rmtree(dag_dir, ignore_errors=True)
+
+    # make the magic happen!
+    dag_file = dags.write_dag(dag, dag_dir)
+
+    # submit the DAG
+    dag_submit = htcondor.Submit.from_dag(str(dag_file), {'force': 1})
+
+    print(dag_submit)
+
+    # now we can enter the DAG directory and submit the DAGMan job, which will execute the graph
+    os.chdir(dag_dir)
     schedd = htcondor.Schedd()
-    # submit one job for each item in the configs
-    submit_result = schedd.submit(sub, itemdata=iter(configs))
+    submit_result = schedd.submit(dag_submit)
 
-    with open(f"submitted-jobs-{submit_result.cluster()}.log", "w") as f:
-        # write the cluster id and number of processes to a file
-        f.write(f"ClusterID: {submit_result.cluster()}\n")
-        f.write(f"Number of submitted jobs: {submit_result.num_procs()}\n")
-
+    dag_job_log = f"{dag_file}.dagman.log"
+    print(f"DAG job log file is {dag_job_log}")
 
 if __name__ == "__main__":
     main()

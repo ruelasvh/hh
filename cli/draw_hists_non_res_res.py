@@ -7,7 +7,7 @@ import logging
 import argparse
 from pathlib import Path
 from hh.nonresonantresolved import drawhistsdiagnostics
-from hh.shared.utils import logger, setup_logger, merge_sample_files
+from hh.shared.utils import logger, setup_logger, h5_output_merger
 
 
 def get_args():
@@ -91,10 +91,10 @@ def main():
         args.output_dir.mkdir(parents=True)
         logger.info(f"Saving plots to '{args.output_dir}'")
 
-    hists = merge_sample_files(
+    hists = h5_output_merger(
         args.hists_files,
-        merge_jz_regex=None if args.split_jz else re.compile(r"JZ[0-9]"),
         save_to="merged_histograms.h5",
+        merge_jz_regex=None if args.split_jz else re.compile(r"JZ[0-9]"),
     )
 
     drawhistsdiagnostics.draw_hists(hists, args)

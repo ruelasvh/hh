@@ -9,6 +9,7 @@ import operator
 import itertools
 import numpy as np
 import awkward as ak
+from tqdm import tqdm
 from pathlib import Path
 import logging, coloredlogs
 from functools import reduce
@@ -357,8 +358,11 @@ def save_to_h5(hists, name="histograms.h5", compress=True):
                     )
 
 
-def merge_sample_files(
-    inputs, hists=None, merge_jz_regex=None, save_to="merged_histograms.h5"
+def h5_output_merger(
+    inputs,
+    save_to: Path = "merged_histograms.h5",
+    hists=None,
+    merge_jz_regex=None,
 ):
     """Merges histograms from multiple h5 files into a single dictionary."""
 
@@ -380,7 +384,7 @@ def merge_sample_files(
     for input in inputs:
         if input.is_dir():
             files_in_dir = input.glob("*.h5")
-            merge_sample_files(files_in_dir, _hists, merge_jz_regex)
+            h5_output_merger(files_in_dir, _hists, merge_jz_regex)
             continue
         with h5py.File(input, "r") as hists_file:
             for sample_name in hists_file:
@@ -415,3 +419,57 @@ def merge_sample_files(
         save_to_h5(_hists, name=save_to)
 
     return _hists
+
+
+def root_output_merger(
+    inputs,
+    save_to: Path = "merged_output.root",
+    start_event=0,
+    stop_event=None,
+    verbose=False,
+):
+    """
+    Load root filenames in batches and concatenate them. Saves as parquet file.
+
+    Parameters
+    ----------
+    inputs : list of strings
+        List of root filenames to load.
+    start_event : int
+        Starting event number.
+    stop_event : int
+        Stopping event number.
+    save_to : Path
+        Path to save the concatenated data.
+    """
+
+    dataset = []
+    # concatenate all the feature names into one list
+    sample_couts = {}
+    for raw_path in tqdm(
+        inputs,
+        total=len(inputs),
+        ncols=80,
+        desc="Loading data",
+    ):
+        with uproot.open(raw_path) as root_file:
+            for tree_name in root_file.keys():
+                tree = root_file[tree_name]
+                if raw_path not in sample_couts:
+                    sample_couts[raw_path] = tree.num_entries
+                else:
+                    sample_couts[raw_path] += tree.num_entries
+                data = tree.arrays(
+                    tree.keys(),
+                    entry_start=start_event,
+                    entry_stop=stop_event,
+                    library="ak",
+                )
+        dataset.append(data)
+    dataset = ak.concatenate(dataset, axis=0)
+    # Save dataset
+    ak.to_parquet(dataset, save_to)
+    if verbose:
+        print("Number of samples available in each file:")
+        for raw_path, count in sample_couts.items():
+            print(f"{raw_path}: {count}")

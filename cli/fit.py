@@ -11,7 +11,7 @@ from pathlib import Path
 import hh.fitting as fitting
 from hh.shared.labels import sample_labels, sample_types
 from hh.nonresonantresolved.pairing import pairing_methods
-from hh.shared.utils import logger, setup_logger, merge_sample_files
+from hh.shared.utils import logger, setup_logger, h5_output_merger
 
 
 def get_args():
@@ -103,10 +103,10 @@ def main():
         )
     if not input_hist_path.exists() and args.histograms:
         # Merge h5 histograms from multiple files
-        hists = merge_sample_files(
+        hists = h5_output_merger(
             args.histograms,
-            merge_jz_regex=re.compile(r"JZ[0-9]"),
             save_to="merged_histograms.h5",
+            merge_jz_regex=re.compile(r"JZ[0-9]"),
         )
         fitting.save_to_root(hists, cabinetry_config_base)
     for pairing in pairing_methods:
