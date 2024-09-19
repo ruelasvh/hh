@@ -4,12 +4,17 @@ From: python:3.9-slim-bookworm
 %files
     . /opt/hh
 
+%environment
+    export LANG=C.UTF-8
+    export LC_ALL=C.UTF-8
+    export PIP_ROOT_USER_ACTION=ignore
+    export PIP_NO_CACHE_DIR=false
+    export DEBIAN_FRONTEND=noninteractive
+
 %post
     apt-get update && apt-get install -y git git-lfs h5utils wget vim build-essential
     python3 -m pip install --upgrade pip
     python3 -m pip install --no-cache-dir -e /opt/hh
-
-%environment
 
 %labels
     Victor Ruelas
