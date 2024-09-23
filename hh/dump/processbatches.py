@@ -16,7 +16,6 @@ from hh.nonresonantresolved.selection import (
     select_n_bjets_events,
     select_hh_jet_candidates,
     reconstruct_hh_jet_pairs,
-    select_correct_hh_pair_events,
 )
 from hh.nonresonantresolved.triggers import trig_sets
 from hh.shared.selection import X_HH, X_Wt, get_W_t_p4
@@ -179,6 +178,11 @@ def process_batch(
                 events[Features.EVENT_BB_DETA.value] = make_4jet_comb_array(
                     four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
                 )
+
+            # # Pairing agnostic hh jet consituents
+            # events["leading_h_jet_idx"] = hh_jet_idx[:, 0:2]
+            # events["subleading_h_jet_idx"] = hh_jet_idx[:, 2:4]
+
             # reconstruct higgs candidates using the minimum deltaR
             pairing_info = pairing_methods["min_deltar_pairing"]
             H1_jet_idx, H2_jet_idx = reconstruct_hh_jet_pairs(
@@ -189,24 +193,6 @@ def process_batch(
             )
             events["leading_h_jet_idx"] = H1_jet_idx
             events["subleading_h_jet_idx"] = H2_jet_idx
-
-            # correctly paired Higgs bosons to further clean up labels
-            if is_mc:
-                # correct_hh_pairs_from_truth = select_correct_hh_pair_events(events)
-                correct_hh_pairs_from_truth = select_correct_hh_pair_events(
-                    h1_jets_idx=H1_jet_idx,
-                    h2_jets_idx=H2_jet_idx,
-                    truth_jet_H_parent_mask=events.truth_jet_H_parent_mask,
-                )
-                valid_events_mask = ~ak.is_none(correct_hh_pairs_from_truth, axis=0)
-                events = events[valid_events_mask]
-                logger.info(
-                    "Events passing previous cuts and truth-matched to HH: %s",
-                    ak.sum(valid_events_mask),
-                )
-                if ak.sum(valid_events_mask) == 0:
-                    features_out = get_common(events.fields, feature_names)
-                    return events[[*features_out, *label_names]]
 
             # calculate X_Wt
             if Features.EVENT_X_WT.value in feature_names:
