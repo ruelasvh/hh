@@ -189,7 +189,7 @@ def draw_1d_hists(
     hplt.atlas.label(
         label="Work In Progress",
         data=True,  # prevents adding Simulation label, sim labels are added in legend
-        rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
+        rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
         loc=4,
         ax=ax,
         pad=0.01,
@@ -255,7 +255,7 @@ def draw_signal_vs_background(
     hplt.atlas.label(
         label="Work In Progress",
         data=True,  # prevents adding Simulation label, sim labels are added in legend
-        rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
+        rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
         loc=4,
         ax=ax,
         pad=0.01,
@@ -395,7 +395,7 @@ def draw_1d_hists_v2(
     hplt.atlas.label(
         label="Work In Progress",
         data=True,  # prevents adding Simulation label, sim labels are added in legend
-        rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
+        rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
         loc=4,
         ax=ax,
         pad=0.01,
@@ -468,7 +468,7 @@ def draw_efficiency(
     hplt.atlas.label(
         label="Work In Progress",
         data=True,  # prevents adding Simulation label, sim labels are added in legend
-        rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
+        rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
         loc=4,
         ax=ax,
         pad=0.01,
@@ -540,7 +540,7 @@ def draw_mH_1D_hists_v2(
             ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
             ax.set_ylabel(ylabel + " / %.2g" % bin_width if binwidth_norm else ylabel)
             hplt.atlas.label(
-                rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
+                rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
                 loc=4,
                 ax=ax,
                 pad=0.01,
@@ -588,7 +588,7 @@ def draw_mH_1D_hists(
         ax.set_xlabel("$m_{H" + str(i + 1) + "}$ [GeV]")
         ax.set_ylabel("Entries")
         hplt.atlas.label(
-            rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
+            rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
             loc=4,
             ax=ax,
         )
@@ -758,7 +758,7 @@ def draw_kin_hists(
             binwnorm=binwidth_norm,
         )
         hplt.atlas.label(
-            rlabel=get_com_lumi_label(luminosity, energy) + third_exp_label,
+            rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
             loc=4,
             ax=ax,
             pad=0.01,

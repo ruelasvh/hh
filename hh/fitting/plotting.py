@@ -13,10 +13,15 @@ def plot_limits(
         limits, close_figure=False, save_figure=False, **kwargs
     )
     ax = fig.gca()
+    expected_lim = limits.expected_limit
     textstr = "\n".join(
         (
             plot_label,
-            r"Upper limit (exp): $\mu=%.4f$" % (limits.observed_limit,),
+            r"$-2 \sigma$ (expected): %.4f" % (expected_lim[0],),
+            r"$-1 \sigma$ (expected): %.4f" % (expected_lim[1],),
+            r"Expected limit $\mu$: %.4f" % (expected_lim[2],),
+            r"$+1 \sigma$ (expected): %.4f" % (expected_lim[3],),
+            r"$+2 \sigma$ (expected): %.4f" % (expected_lim[4],),
         )
     )
     # Plot details label
@@ -31,7 +36,7 @@ def plot_limits(
     # Experiemental label
     hplt.atlas.label(
         # label="Work In Progress",
-        rlabel=get_com_lumi_label(luminosity, energy) + exp_label,
+        rlabel=get_com_lumi_label(energy, luminosity) + exp_label,
         loc=4,
         ax=ax,
         pad=0.01,

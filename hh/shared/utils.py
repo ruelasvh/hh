@@ -76,18 +76,15 @@ def setup_logger(loglevel, filename=None):
     return logger
 
 
-def get_com_lumi_label(lumi=None, com=13.6):
-    label = ", ".join(
-        [
-            f"${s}$"
-            for s in [
-                rf"\sqrt{{s}} = {com} \mathrm{{TeV}}",
-                rf"{lumi:.4f} \mathrm{{fb}}^{{-1}}" if lumi else "",
-            ]
-            if s
-        ]
-    )
-    return label
+def get_com_lumi_label(com=13, lumi=None):
+    com_label = r"$\sqrt{s} = \mathrm{" + str(com) + "\ TeV}"
+    if lumi is not None:
+        lumi_label = (
+            ",\ " + str(format(lumi, ".1f")) + r"\ \mathrm{fb}^{-1}$" if lumi else "$"
+        )
+    else:
+        lumi_label = "$"
+    return com_label + lumi_label
 
 
 def concatenate_cutbookkeepers(sample_path):
