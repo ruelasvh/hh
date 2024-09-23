@@ -279,6 +279,7 @@ def get_feature_types():
     type_dict[Features.EVENT_X_HH.value] = "f4"
     type_dict[Features.EVENT_WEIGHT.value] = "float64"
     type_dict[Features.MC_EVENT_WEIGHT.value] = "float64"
+    type_dict[Features.EVENT_NUMBER.value] = "i8"
     type_dict[Labels.LABEL_HH.value] = "i4"
     type_dict[Labels.LABEL_TTBAR.value] = "i4"
     type_dict[Labels.LABEL_QCD.value] = "i4"
