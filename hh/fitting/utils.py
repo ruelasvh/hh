@@ -38,168 +38,80 @@ def create_hist_v2(counts, binning, errors=None):
     return hist
 
 
-def save_to_root(hists, config):
+def save_to_root(hists, config, regions):
     """Convert a dictionary of sample histograms to a ROOT file."""
     hist_path = config["General"]["InputPath"].split(":")[0]
     with uproot.recreate(hist_path) as file_root:
-        for region in config["Regions"]:
-            region_name = region["Name"]
-            region_path = region["RegionPath"]
-            variation_path = config["General"]["VariationPath"]
-            variation_path_region = f"{variation_path}_{region_name}"
-            for sample in config["Samples"]:
-                if sample.get("Data", False):
-                    continue
-                sample_key = sample["Name"]
-                if "Background" == sample_key:
-                    bkg_keys = ["multijet", "ttbar"]
-                    bkg_keys = [
-                        k for k in hists.keys() if any([bkg in k for bkg in bkg_keys])
-                    ]
-                    background_counts = np.sum(
-                        [
-                            hists[k][variation_path_region]["values"][1:-1]
-                            for k in bkg_keys
-                        ],
-                        axis=0,
-                    )
-                    background_errors = np.sqrt(
-                        np.sum(
+        for base_reg in config["Regions"]:
+            for reg in regions:
+                region_path = f"{base_reg['RegionPath']}_{reg}"
+                variation_path = f"{config['General']['VariationPath']}_{reg}"
+                for sample in config["Samples"]:
+                    if sample.get("Data", False):
+                        continue
+                    sample_name = sample["Name"]
+                    sample_path = sample["SamplePath"]
+                    if "Background" == sample_name:
+                        bkg_keys = ["multijet", "ttbar"]
+                        bkg_keys = [
+                            k
+                            for k in hists.keys()
+                            if any([bkg in k for bkg in bkg_keys])
+                        ]
+                        background_counts = np.sum(
                             [
-                                hists[k][variation_path_region]["errors"][1:-1] ** 2
+                                hists[k][variation_path]["values"][1:-1]
                                 for k in bkg_keys
                             ],
                             axis=0,
                         )
-                    )
-                    binning = hists[bkg_keys[0]][variation_path_region]["edges"]
-                    file_root[f"{region_path}/{sample_key}/{variation_path}"] = (
-                        create_hist(
-                            background_counts,
-                            binning,
-                            background_errors,
-                            name=sample_key,
+                        background_errors = np.sqrt(
+                            np.sum(
+                                [
+                                    hists[k][variation_path]["errors"][1:-1] ** 2
+                                    for k in bkg_keys
+                                ],
+                                axis=0,
+                            )
                         )
-                    )
-                else:
-                    merged_sample_keys = [
-                        key for key in hists.keys() if sample_key in key
-                    ]
-                    merged_counts = np.sum(
-                        [
-                            hists[key][variation_path_region]["values"][1:-1]
-                            for key in merged_sample_keys
-                        ],
-                        axis=0,
-                    )
-                    merged_errors = np.sqrt(
-                        np.sum(
+                        binning = hists[bkg_keys[0]][variation_path]["edges"]
+                        file_root[f"{region_path}/{sample_path}/{variation_path}"] = (
+                            create_hist(
+                                background_counts,
+                                binning,
+                                background_errors,
+                                name=sample_path,
+                            )
+                        )
+                    else:
+                        merged_sample_names = [
+                            key for key in hists.keys() if sample_name in key
+                        ]
+                        merged_counts = np.sum(
                             [
-                                hists[key][variation_path_region]["errors"][1:-1] ** 2
-                                for key in merged_sample_keys
+                                hists[key][variation_path]["values"][1:-1]
+                                for key in merged_sample_names
                             ],
                             axis=0,
                         )
-                    )
-                    binning = hists[merged_sample_keys[0]][variation_path_region][
-                        "edges"
-                    ]
-                    file_root[
-                        f"{region_path}/{sample['SamplePath']}/{variation_path}"
-                    ] = create_hist(
-                        merged_counts,
-                        binning,
-                        merged_errors,
-                        name=sample_key,
-                    )
-
-
-# def save_to_root(hists, config):
-#     """Convert a dictionary of sample histograms to a ROOT file."""
-#     hist_path = config["General"]["InputPath"].split(":")[0]
-#     with uproot.recreate(hist_path) as file_root:
-#         for region in config["Regions"]:
-#             region_name = region["Name"]
-#             region_path = region["RegionPath"]
-#             variation_path = config["General"]["VariationPath"]
-#             variation_path_region = f"{variation_path}_{region_name}"
-#             for sample in config["Samples"]:
-#                 if sample.get("Data", False):
-#                     continue
-#                 sample_key = sample["Name"]
-#                 if "ggF" in sample_key:
-#                     hist = hists[sample_key][variation_path_region]
-#                     hist_counts = hist["values"][1:-1]
-#                     hist_edges = hist["edges"]
-#                     hist_errors = hist["errors"][1:-1]
-#                     file_root[
-#                         f"{region_path}/{sample['SamplePath']}/{variation_path}"
-#                     ] = create_hist(
-#                         hist_counts,
-#                         hist_edges,
-#                         hist_errors,
-#                         name=sample_key,
-#                     )
-#                 if "Background" == sample_key:
-#                     bkg_keys = ["multijet", "ttbar"]
-#                     bkg_keys = [
-#                         k for k in hists.keys() if any([bkg in k for bkg in bkg_keys])
-#                     ]
-#                     background_hist_counts = []
-#                     background_hist_errors = []
-#                     for k in bkg_keys:
-#                         hist = hists[k][variation_path_region]
-#                         hist_edges = hist["edges"]
-#                         if len(background_hist_counts) == 0:
-#                             background_hist_counts = hist["values"][1:-1]
-#                             background_hist_errors = hist["errors"][1:-1]
-#                         else:
-#                             background_hist_counts += hist["values"][1:-1]
-#                             background_hist_errors = propagate_errors(
-#                                 background_hist_errors,
-#                                 hist["errors"][1:-1],
-#                                 operation="+",
-#                             )
-#                     file_root[f"{region_path}/{sample_key}/{variation_path}"] = (
-#                         create_hist(
-#                             background_hist_counts,
-#                             hist_edges,
-#                             background_hist_errors,
-#                             name=sample_key,
-#                         )
-#                     )
-
-
-# def save_to_root(hists, config, regions):
-#     hist_path = config["General"]["InputPath"].split(":")[0]
-#     with uproot.recreate(hist_path) as f:
-#         for region in config["Regions"]:
-#             variation_path = config["General"]["VariationPath"]
-#             hist_edges = np.array(region["Binning"])
-#             for region_name in regions:
-#                 for sample in config["Samples"]:
-#                     sample_name = sample["Name"]
-#                     variation_path_region = f"{variation_path}_{region_name}"
-#                     if sample.get("Data", False):
-#                         continue
-#                         f[
-#                             f"{region['RegionPath']}_{reg}/{sample['SamplePath']}/{config['General']['VariationPath']}"
-#                         ] = (np.zeros(len(hist_edges) - 1), hist_edges)
-#                     else:
-#                         sample_hist_name = (
-#                             sample["Name"],
-#                             f"{variation_path}_{region_name}",
-#                         )
-#                         f[
-#                             f"{region['RegionPath']}_{region_name}/{sample['SamplePath']}/{variation_path}"
-#                         ] = (
-#                             hists[sample_hist_name[0]][sample_hist_name[1]]["values"][
-#                                 2:-1
-#                             ],  # Remove underflow and overflow bins
-#                             hist_edges,
-#                         )
-
-#     return
+                        merged_errors = np.sqrt(
+                            np.sum(
+                                [
+                                    hists[key][variation_path]["errors"][1:-1] ** 2
+                                    for key in merged_sample_names
+                                ],
+                                axis=0,
+                            )
+                        )
+                        binning = hists[merged_sample_names[0]][variation_path]["edges"]
+                        file_root[f"{region_path}/{sample_path}/{variation_path}"] = (
+                            create_hist(
+                                merged_counts,
+                                binning,
+                                merged_errors,
+                                name=sample_path,
+                            )
+                        )
 
 
 def save_to_h5(hists, name="histograms.h5", compress=True):

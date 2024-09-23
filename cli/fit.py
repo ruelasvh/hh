@@ -108,10 +108,16 @@ def main():
             merge_jz_regex=re.compile(r"JZ[0-9]"),
             save_to="merged_histograms.h5",
         )
-        fitting.save_to_root(hists, cabinetry_config_base)
+        fitting.save_to_root(hists, cabinetry_config_base, pairing_methods)
     for pairing in pairing_methods:
         # Create a new cabinetry config for each pairing method
         cabinetry_config_pairing = copy.deepcopy(cabinetry_config_base)
+        cabinetry_config_pairing["General"]["HistogramFolder"] = (
+            args.output_dir / f"histograms_{pairing}"
+        )
+        cabinetry_config_pairing["General"][
+            "VariationPath"
+        ] = f"{cabinetry_config_pairing['General']['VariationPath']}_{pairing}"
         regions = [
             {
                 **region,
@@ -121,9 +127,6 @@ def main():
             for region in cabinetry_config_pairing["Regions"]
         ]
         cabinetry_config_pairing["Regions"] = regions
-        cabinetry_config_pairing["General"]["HistogramFolder"] = (
-            args.output_dir / f"histograms_{pairing}"
-        )
         signal_sample = [
             sample
             for sample in cabinetry_config_pairing["Samples"]
