@@ -13,15 +13,17 @@ def plot_limits(
         limits, close_figure=False, save_figure=False, **kwargs
     )
     ax = fig.gca()
-    expected_lim = limits.expected_limit
+    minus_2_sigma, minus_1_sigma, mu, plus_1_sigma, plus_2_sigma = expected_lim = (
+        limits.expected_limit
+    )
     textstr = "\n".join(
         (
             plot_label,
-            r"$-2 \sigma$ (expected): %.4f" % (expected_lim[0],),
-            r"$-1 \sigma$ (expected): %.4f" % (expected_lim[1],),
-            r"Expected limit $\mu$: %.4f" % (expected_lim[2],),
-            r"$+1 \sigma$ (expected): %.4f" % (expected_lim[3],),
-            r"$+2 \sigma$ (expected): %.4f" % (expected_lim[4],),
+            r"Expected $\mu$: %.4f" % (mu,),
+            r"$-2 \sigma$: %.4f (%.4f)" % (minus_2_sigma, mu - minus_2_sigma),
+            r"$-1 \sigma$: %.4f (%.4f)" % (minus_1_sigma, mu - minus_1_sigma),
+            r"$+1 \sigma$: %.4f (%.4f)" % (plus_1_sigma, plus_1_sigma - mu),
+            r"$+2 \sigma$: %.4f (%.4f)" % (plus_2_sigma, plus_2_sigma - mu),
         )
     )
     # Plot details label
