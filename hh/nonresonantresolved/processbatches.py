@@ -15,7 +15,7 @@ from hh.shared.selection import (
     get_W_t_p4,
     classify_control_events,
 )
-from hh.nonresonantresolved.pairing import pairing_methods
+from hh.nonresonantresolved.pairing import pairing_methods, scan_m_X
 from hh.nonresonantresolved.selection import (
     select_n_jets_events,
     select_n_bjets_events,
@@ -283,15 +283,34 @@ def process_batch(
                             ak.sum(correct_hh_nominal_pairs_mask),
                             ak.sum(events.event_weight[correct_hh_nominal_pairs_mask]),
                         )
+
                 for pairing, pairing_info in pairing_methods.items():
+                    pairing_loss = pairing_info["loss"]
+                    pairing_optimizer = pairing_info["optimizer"]
+                    if (
+                        pairing_info["label"]
+                        == pairing_methods["min_mass_optimized_pairing"]["label"]
+                    ):
+                        # Step 1: Initial scan of m_X_lead and m_X_sub ranges from 100 to 150 GeV
+                        m_X_lead_range = np.linspace(100_000, 150_000, 50)
+                        m_X_sub_range = np.linspace(
+                            90_000, 130_000, 50
+                        )  # Adjust range for subleading Higgs
+                        hc_jets = jets_p4[hh_jet_idx]
+                        valid_event_mask = ~ak.is_none(hc_jets, axis=0)
+                        best_m_X_lead_1, best_m_X_sub_1 = scan_m_X(
+                            hc_jets[valid_event_mask], m_X_lead_range, m_X_sub_range
+                        )
+                        # reassign pairing_info["loss"] to use the optimized m_X_lead and m_X_sub
+                        pairing_loss = pairing_loss(best_m_X_lead_1, best_m_X_sub_1)
                     ## NEED TO MASK THE EVENTS WITH THE X_Wt MASK ##
                     valid_events_pairing = np.copy(valid_events)
                     ###### reconstruct H1 and H2 ######
                     H1_jet_idx, H2_jet_idx = reconstruct_hh_jet_pairs(
                         jets_p4=jets_p4,
                         hh_jet_idx=hh_jet_idx,
-                        loss=pairing_info["loss"],
-                        optimizer=pairing_info["optimizer"],
+                        loss=pairing_loss,
+                        optimizer=pairing_optimizer,
                     )
                     events[f"H1_{n_btags}b_{btagger}_{pairing}_jet_idx"] = H1_jet_idx
                     events[f"H2_{n_btags}b_{btagger}_{pairing}_jet_idx"] = H2_jet_idx
@@ -301,8 +320,8 @@ def process_batch(
                             reconstruct_hh_jet_pairs(
                                 jets_p4=jets_p4,
                                 hh_jet_idx=hh_truth_matched_jet_idx,
-                                loss=pairing_info["loss"],
-                                optimizer=pairing_info["optimizer"],
+                                loss=pairing_loss,
+                                optimizer=pairing_optimizer,
                             )
                         )
                         events[

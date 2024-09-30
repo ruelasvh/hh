@@ -1,4 +1,4 @@
-import itertools
+import itertools as it
 import numpy as np
 import vector as p4
 import awkward as ak
@@ -8,8 +8,10 @@ from hh.shared.utils import (
     get_trigs_logical_op,
     kin_labels,
     GeV,
+    MeV,
 )
 from hh.shared.selection import X_Wt, get_W_t_p4
+from hh.nonresonantresolved.pairing import scan_m_X
 
 
 def select_events_passing_triggers(
@@ -106,20 +108,27 @@ def reconstruct_hh_jet_pairs(
     jets_p4, hh_jet_idx, loss, optimizer=np.argmin, n_jets=4, n_pairs=2
 ):
     """Reconstructs the Higgs candidate jets in each event."""
-    # for n_jets = 4, n_pairs = 2
-    # pair_to_idx = {0: ((0, 1), (2, 3)), 1: ((0, 2), (1, 3)), 2: ((0, 3), (1, 2))}
-    pairings = list(itertools.combinations(range(n_jets), n_pairs))
-    pair_to_idx = {i: (pairings[i], pairings[~i]) for i in range(n_pairs + 1)}
+    jet_pairs = list(
+        it.combinations(range(n_jets), n_pairs)
+    )  # [(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)] for n_jets=4, n_pairs=2
+    jet_pairs_combos = [
+        (jet_pairs[i], jet_pairs[~i]) for i in range(n_pairs + 1)
+    ]  # [((0, 1), (2, 3)), ((0, 2), (1, 3)), ((0, 3), (1, 2))] for n_jets=4, n_pairs=2
 
     hc_jets = jets_p4[hh_jet_idx]
     valid_event_mask = ~ak.is_none(hc_jets, axis=0)
-    chosen_pair = optimizer(
-        np.vstack([loss(hc_jets, pair_to_idx[i]) for i in range(n_pairs + 1)]), axis=0
+    chosen_pairs = optimizer(
+        np.vstack(
+            [
+                loss(hc_jets, jet_pair_1, jet_pair_2)
+                for jet_pair_1, jet_pair_2 in jet_pairs_combos
+            ]
+        ),
+        axis=0,
     )
-    chosen_pair = ak.mask(chosen_pair, valid_event_mask)
-    combos = [(pairings[i], pairings[~i]) for i in range(n_pairs + 1)]
-    combos = ak.Array(combos * len(chosen_pair))
-    hc_selected_idx = combos[chosen_pair]
+    chosen_pairs = ak.mask(chosen_pairs, valid_event_mask)
+    jet_pairs_combos_arr = ak.Array(jet_pairs_combos * len(chosen_pairs))
+    hc_selected_idx = jet_pairs_combos_arr[chosen_pairs]
     hc1_idx, hc2_idx = ak.unzip(hc_selected_idx)
     hc1_jet1_idx, hc1_jet2_idx = ak.unzip(hc1_idx)
     hc2_jet1_idx, hc2_jet2_idx = ak.unzip(hc2_idx)
@@ -131,11 +140,11 @@ def reconstruct_hh_jet_pairs(
         ak.concatenate([hc2_jet1_idx[:, None], hc2_jet2_idx[:, None]], axis=1),
         valid_event_mask,
     )
-    hca = ak.sum(hc_jets[hc1_jet_idx], axis=1)
-    hcb = ak.sum(hc_jets[hc2_jet_idx], axis=1)
+    hc1_p4 = ak.sum(hc_jets[hc1_jet_idx], axis=1)
+    hc2_p4 = ak.sum(hc_jets[hc2_jet_idx], axis=1)
     # The scalar candidate with the mass closest to the Higgs mass
     # will be the Higgs candidate
-    sort_mask = hca.pt > hcb.pt
+    sort_mask = hc1_p4.pt > hc2_p4.pt
     hc1_jet1_selected_idx = ak.where(sort_mask, hc1_jet1_idx, hc2_jet1_idx)
     hc1_jet2_selected_idx = ak.where(sort_mask, hc1_jet2_idx, hc2_jet2_idx)
     hc2_jet1_selected_idx = ak.where(sort_mask, hc2_jet1_idx, hc1_jet1_idx)
