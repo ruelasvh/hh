@@ -116,16 +116,12 @@ pairing_methods = {
         "optimizer": np.argmin,
     },
     "min_mass_optimized_pairing": {
-        "label": r"$\mathrm{arg\,min\,} (m_{jj}^{lead}-m_\mathrm{X}^{lead})^2 + (m_{jj}^{sub}-m_\mathrm{X}^{sub})^2$ pairing",
+        "label": r"$\mathrm{arg\,min\,} ((m_{jj}^{lead}-m_\mathrm{X}^{lead})^2 + (m_{jj}^{sub}-m_\mathrm{X}^{sub})^2)$ pairing",
         "loss": lambda m_X_lead, m_X_sub: lambda jet_p4, jet_pair_1, jet_pair_2: (
             ((jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass - m_X_lead) ** 2
             + ((jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass - m_X_sub)
             ** 2
         ),
-        # "loss": lambda m_X_lead, m_X_sub: lambda m_1, m_2: (
-        #     (np.maximum(m_1, m_2) - m_X_lead) ** 2
-        #     + (np.minimum(m_1, m_2) - m_X_sub) ** 2
-        # ),
         "optimizer": np.argmin,
     },
 }
