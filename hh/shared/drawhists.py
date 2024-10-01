@@ -17,6 +17,7 @@ from hh.shared.utils import (
     get_legend_label,
     register_bottom_offset,
 )
+from hh.nonresonantresolved.pairing import pairing_methods
 
 np.seterr(divide="ignore", invalid="ignore")
 
@@ -479,6 +480,121 @@ def draw_efficiency(
     plt.close(fig)
 
 
+def draw_efficiency_scan_2d(
+    hists_group,
+    hist_prefixes,
+    energy,
+    xlabel=None,
+    ylabel="Efficiency",
+    legend_labels: dict = None,
+    legend_options: dict = {"loc": "upper right"},
+    third_exp_label="",
+    luminosity=None,
+    xmin=None,
+    xmax=None,
+    ymin=0,
+    ymax=1,
+    draw_errors=False,
+    output_dir=Path("plots"),
+    plot_name="efficiency",
+):
+    """Draw 1D histograms in one figure. The number of histograms in the figure is
+    determined by the number of samples in the hists_group dictionary. hist_prefix
+    is used to select the histograms to be drawn."""
+
+    # assert that legend_labels is either a list or "auto" with list size equal to the number of samples
+    if isinstance(legend_labels, dict):
+        assert len(legend_labels) == len(hist_prefixes), (
+            "legend_labels map must have the same size as the number of samples in hists_group."
+            f"Expected {len(hist_prefixes)} labels, got {len(legend_labels)}."
+        )
+
+    fig, ax = plt.subplots()
+    effs = []
+    for sample_type, sample_hists in hists_group.items():
+        for i, hists in enumerate(hist_prefixes):
+            hist_total_name = find_hist(sample_hists, lambda h: re.match(hists[0], h))
+            hist_total = sample_hists[hist_total_name]
+            hist_total_values = hist_total["values"]
+            hist_total_edges = hist_total["edges"]
+            hist_pass_name = find_hist(sample_hists, lambda h: re.match(hists[1], h))
+            hist_pass = sample_hists[hist_pass_name]
+            hist_pass_values = hist_pass["values"]
+            eff = np.divide(
+                hist_pass_values,
+                hist_total_values,
+                out=np.zeros_like(hist_pass_values),
+                where=hist_total_values != 0,
+            )
+            eff_int = hist_pass_values.sum() / hist_total_values.sum()
+            effs.append(eff_int)
+            hist_main = HistPlottable(
+                eff,
+                hist_total_edges,
+                legend_label=legend_labels[hist_total_name] if legend_labels else None,
+                xlabel=xlabel,
+                ylabel=ylabel,
+            )
+            hist_main.plot(ax=ax, color=f"C{i}")
+    effs = np.array(effs)
+    ax.legend(**legend_options)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    # scale y-axis so that the legend does not overlap with the plot
+    ax.set_ylim(ymin=ymin, ymax=ymax * (1 + 0.1 * len(hist_prefixes) + 0.1))
+    if xmin is not None:
+        ax.set_xlim(xmin=xmin)
+    if xmax is not None:
+        ax.set_xlim(xmax=xmax)
+    hplt.atlas.label(
+        label="Work In Progress",
+        data=True,  # prevents adding Simulation label, sim labels are added in legend
+        rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
+        loc=4,
+        ax=ax,
+        pad=0.01,
+    )
+    plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
+    plt.tight_layout()
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
+
+    # 2D efficiency scan, basically a heat map of the efficiency where the efficiency is the integral of the efficiency calculated in the 1D histograms
+    pairing_key = "min_mass_optimized_pairing"
+    pairing_info = pairing_methods[pairing_key]
+    m_X_lead_range, m_X_sub_range = (
+        pairing_info["m_X_lead_range"],
+        pairing_info["m_X_sub_range"],
+    )
+    hist_2d_values = effs.reshape(len(m_X_lead_range), len(m_X_sub_range))
+    # get the midpoints of the bin edges and add values to the beginning and end
+    x_bins = m_X_lead_range
+    y_bins = m_X_sub_range
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(hist_2d_values, cmap="RdBu_r")
+    # Show all ticks and label them with the respective list entries
+    ax.set_xticks(np.arange(len(x_bins)), labels=x_bins)
+    ax.set_yticks(np.arange(len(y_bins)), labels=y_bins)
+    # Create colorbar
+    cbar = ax.figure.colorbar(im, ax=ax)
+    cbar.ax.set_ylabel("Efficiency")
+    ax.set_xlabel(r"$m_{X}^{lead}$ [GeV]")
+    ax.set_ylabel(r"$m_{X}^{sub}$ [GeV]")
+    hplt.atlas.label(
+        label="Work In Progress",
+        data=True,  # prevents adding Simulation label, sim labels are added in legend
+        rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
+        loc=4,
+        ax=ax,
+        pad=0.01,
+    )
+    plot_name += f"_2d" if len(hists_group) == 1 else ""
+    plt.tight_layout()
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
+
+
 def draw_mH_1D_hists_v2(
     hists_group,
     hist_prefix,
@@ -706,6 +822,62 @@ def draw_mH_plane_2D_hists(
         colors=["black"],
         linestyles=["dashed"],
     )
+    plot_label = sample_name.replace("_", " ")
+    plot_label = f"{plot_label}, {third_exp_label}" if third_exp_label else plot_label
+    hplt.atlas.label(
+        loc=0,
+        ax=ax,
+        label=plot_label,
+        com=energy,
+        lumi=luminosity,
+    )
+    plot_name = f"{sample_name}_{hist_name}"
+    plt.tight_layout()
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
+
+
+def draw_mH_plane_mX_scan_hists(
+    sample_hists,
+    sample_name,
+    hist_prefix,
+    energy,
+    luminosity=None,
+    log_z=False,
+    label_z="Entries",
+    xrange=(50, 200),
+    yrange=(50, 200),
+    third_exp_label="",
+    output_dir=Path("plots"),
+):
+    fig, ax = plt.subplots()
+    hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
+    hist = sample_hists[hist_name]
+    is_data = "data" in sample_name
+    bins_GeV = hist["edges"] * GeV
+    hist_values = (
+        hist["values"] * luminosity if luminosity and not is_data else hist["values"]
+    )
+    # remove outliers from hist_values
+    hist_values[hist_values > 2000] = 0
+    pcm, cbar, _ = hplt.hist2dplot(
+        hist_values,
+        bins_GeV,
+        bins_GeV,
+        ax=ax,
+        cbarpad=0.15,
+        cbarsize="5%",
+        flow=None,
+        cbarextend=True,
+        cmap="RdBu_r",
+    )
+    cbar.set_label(label_z)
+    # move top bar "multiplier" so doesn't overlap with the plot labels
+    register_bottom_offset(cbar.ax.yaxis)
+    ax.set_ylabel(r"$m_{H2}$ [GeV]")
+    ax.set_xlabel(r"$m_{H1}$ [GeV]")
+    ax.set_ylim(*yrange)
+    ax.set_xlim(*xrange)
     plot_label = sample_name.replace("_", " ")
     plot_label = f"{plot_label}, {third_exp_label}" if third_exp_label else plot_label
     hplt.atlas.label(

@@ -67,61 +67,76 @@ def scan_m_X(jets, m_X_lead_range, m_X_sub_range, n_jets=4, n_pairs=2):
 
 
 pairing_methods = {
-    "min_deltar_pairing": {
-        "label": r"$\mathrm{arg\,min\,} \Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
-        "loss": lambda jet_p4, jet_pair_1, jet_pair_2: np.where(
-            (jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).pt
-            > (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).pt,
-            jet_p4[:, jet_pair_1[0]].deltaR(jet_p4[:, jet_pair_1[1]]),
-            jet_p4[:, jet_pair_2[0]].deltaR(jet_p4[:, jet_pair_2[1]]),
-        ),
-        "optimizer": np.argmin,
-    },
-    "max_deltar_pairing": {
-        "label": r"$\mathrm{arg\,max\,} \Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
-        "loss": lambda jet_p4, jet_pair_1, jet_pair_2: np.where(
-            (jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).pt
-            > (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).pt,
-            jet_p4[:, jet_pair_1[0]].deltaR(jet_p4[:, jet_pair_1[1]]),
-            jet_p4[:, jet_pair_2[0]].deltaR(jet_p4[:, jet_pair_2[1]]),
-        ),
-        "optimizer": np.argmax,
-    },
-    "min_mass_true_pairing": {
-        "label": r"$\mathrm{arg\,min\,} \Sigma(m_{jj}-m_\mathrm{H})^2$ pairing",
-        "loss": lambda jet_p4, jet_pair_1, jet_pair_2: (
-            ((jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass - 125 * MeV)
-            ** 2
-            + ((jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass - 125 * MeV)
-            ** 2
-        ),
-        "optimizer": np.argmin,
-    },
-    "min_mass_diff_pairing": {
-        "label": r"$\mathrm{arg\,min} (m_{jj}-m_{jj})^2$ pairing",
-        "loss": lambda jet_p4, jet_pair_1, jet_pair_2: (
-            (jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass
-            - (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[0]]).mass
-        )
-        ** 2,
-        "optimizer": np.argmin,
-    },
-    "min_mass_center_pairing": {
-        "label": r"$\mathrm{arg\,min}(m_{jj}^2+m_{jj}^2)$ pairing",
-        "loss": lambda jet_p4, jet_pair_1, jet_pair_2: (
-            jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]
-        ).mass
-        ** 2
-        + (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass ** 2,
-        "optimizer": np.argmin,
-    },
+    # "min_deltar_pairing": {
+    #     "label": r"$\mathrm{arg\,min\,} \Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
+    #     "loss": lambda jet_p4, jet_pair_1, jet_pair_2: np.where(
+    #         (jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).pt
+    #         > (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).pt,
+    #         jet_p4[:, jet_pair_1[0]].deltaR(jet_p4[:, jet_pair_1[1]]),
+    #         jet_p4[:, jet_pair_2[0]].deltaR(jet_p4[:, jet_pair_2[1]]),
+    #     ),
+    #     "optimizer": np.argmin,
+    # },
+    # "max_deltar_pairing": {
+    #     "label": r"$\mathrm{arg\,max\,} \Delta R_{\mathrm{jj}}^{\mathrm{HC1}}$ pairing",
+    #     "loss": lambda jet_p4, jet_pair_1, jet_pair_2: np.where(
+    #         (jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).pt
+    #         > (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).pt,
+    #         jet_p4[:, jet_pair_1[0]].deltaR(jet_p4[:, jet_pair_1[1]]),
+    #         jet_p4[:, jet_pair_2[0]].deltaR(jet_p4[:, jet_pair_2[1]]),
+    #     ),
+    #     "optimizer": np.argmax,
+    # },
+    # "min_mass_true_pairing": {
+    #     "label": r"$\mathrm{arg\,min\,} \Sigma(m_{jj}-m_\mathrm{H})^2$ pairing",
+    #     "loss": lambda jet_p4, jet_pair_1, jet_pair_2: (
+    #         ((jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass - 125 * MeV)
+    #         ** 2
+    #         + ((jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass - 125 * MeV)
+    #         ** 2
+    #     ),
+    #     "optimizer": np.argmin,
+    # },
+    # "min_mass_diff_pairing": {
+    #     "label": r"$\mathrm{arg\,min} (m_{jj}-m_{jj})^2$ pairing",
+    #     "loss": lambda jet_p4, jet_pair_1, jet_pair_2: (
+    #         (jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass
+    #         - (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[0]]).mass
+    #     )
+    #     ** 2,
+    #     "optimizer": np.argmin,
+    # },
+    # "min_mass_center_pairing": {
+    #     "label": r"$\mathrm{arg\,min}(m_{jj}^2+m_{jj}^2)$ pairing",
+    #     "loss": lambda jet_p4, jet_pair_1, jet_pair_2: (
+    #         jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]
+    #     ).mass
+    #     ** 2
+    #     + (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass ** 2,
+    #     "optimizer": np.argmin,
+    # },
     "min_mass_optimized_pairing": {
         "label": r"$\mathrm{arg\,min\,} ((m_{jj}^{lead}-m_\mathrm{X}^{lead})^2 + (m_{jj}^{sub}-m_\mathrm{X}^{sub})^2)$ pairing",
         "loss": lambda m_X_lead, m_X_sub: lambda jet_p4, jet_pair_1, jet_pair_2: (
-            ((jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass - m_X_lead) ** 2
-            + ((jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass - m_X_sub)
+            (
+                np.maximum(
+                    (jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass,
+                    (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass,
+                )
+                - m_X_lead
+            )
+            ** 2
+            + (
+                np.minimum(
+                    (jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass,
+                    (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass,
+                )
+                - m_X_sub
+            )
             ** 2
         ),
         "optimizer": np.argmin,
+        "m_X_lead_range": np.linspace(100, 150, 3),
+        "m_X_sub_range": np.linspace(90, 130, 3),
     },
 }
