@@ -20,6 +20,9 @@ trigs_long = [
     "HLT_j110_gsc150_boffperf_split_2j45_gsc55_bmv2c1070_split_L1J85_3J30",  # run2 2018 2b1j
     "HLT_2j45_gsc55_bmv2c1050_split_ht300_L1HT190_J15s5pETA21",  # run2 2018 2bHT
     "HLT_2j35_bmv2c1060_split_2j35_L14J15p0ETA25",  # run2 2018 2b2j
+    "HLT_j80c_020jvt_j55c_020jvt_j28c_020jvt_j20c_020jvt_SHARED_2j20c_020jvt_bdl1d77_pf_ftf_presel2c20XX2c20b85_L1J45p0ETA21_3J15p0ETA25",  # run 3 2022 asymmetric
+    "HLT_j80c_020jvt_j55c_020jvt_j28c_020jvt_j20c_020jvt_SHARED_2j20c_020jvt_bgn177_pf_ftf_presel2c20XX2c20b85_L1J45p0ETA21_3J15p0ETA25",  # run 3 2023 asymmetric
+    "HLT_j75c_020jvt_j50c_020jvt_j25c_020jvt_j20c_020jvt_SHARED_2j20c_020jvt_bgn177_pf_ftf_presel2c20XX2c20b85_L1J45p0ETA21_3J15p0ETA25",  # run 3 2023 asymmetric
 ]
 
 trigs_short = [
@@ -44,6 +47,9 @@ trigs_short = [
     "2b1j",
     "2bHT",
     "2b2j",
+    "assym_2b2j_delayed_dl1d",
+    "assym_2b2j_high_delayed_gn1",
+    "assym_2b2j_low_delayed_gn1",
 ]
 
 trigs_labels = [
@@ -68,6 +74,9 @@ trigs_labels = [
     "2b1j",  # run2 2018
     "2bHT",  # run2 2018
     "2b2j",  # run2 2018
+    "Asymm 2b2j DL1d@77% (Delayed)",
+    "Asymm 2b2j High GN1d@77% (Delayed)",
+    "Asymm 2b2j Low GN1d@77% (Delayed)",
 ]
 
 run3_2022_main_stream_idx = [1, 2, 3, 4]
@@ -80,6 +89,8 @@ run2_reoptimized_idx = [3, 4, 5]
 run2_2016_idx = [9, 10, 11, 12]
 run2_2017_idx = [13, 14, 15, 16]
 run2_2018_idx = [17, 18, 19, 20]
+run3_2022_idx = [21]
+run3_2023_idx = [22, 23]
 
 
 def _get_triggers(idx):
@@ -96,6 +107,8 @@ run2_reoptimized = _get_triggers(run2_reoptimized_idx)
 run2_2016 = _get_triggers(run2_2016_idx)
 run2_2017 = _get_triggers(run2_2017_idx)
 run2_2018 = _get_triggers(run2_2018_idx)
+run3_2022_asymm = _get_triggers(run3_2022_idx)
+run3_2023_asymm = _get_triggers(run3_2023_idx)
 all = dict(zip(trigs_labels, trigs_long))
 
 trig_sets = {
@@ -109,4 +122,6 @@ trig_sets = {
     "Run 3 Asymm L1 all": run3_2022_asymm_L1_all,
     "Run 3 Experimental 2022": run3_2022_main_stream + run3_2022_delayed_stream,
     "Run 3 Experimental 2023": run3_2023_main_stream + run3_2023_delayed_stream,
+    "Run 3 Asymm 2022": run3_2022_asymm,
+    "Run 3 Asymm 2023": run3_2023_asymm,
 }

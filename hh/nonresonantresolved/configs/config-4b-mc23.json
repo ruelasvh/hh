@@ -3,8 +3,8 @@
         {
             "label": "mc23_ggF_k01",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603404.e8564_a910_r14932_p6026_TREE/",
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603404.e8564_a911_r15224_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603404.e8564_a910_r14932_p6026_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603404.e8564_a911_r15224_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -24,10 +24,10 @@
             ]
         },
         {
-            "label": "mc23a_ggF_k05",
+            "label": "mc23_ggF_k05",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603405.e8564_a910_r14932_p6026_TREE/",
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_13p6TeV.hh4b.ggF/output/user.viruelas.EJ_2024_05_15_mc23_HHbbbb.2024_05_15_T093803.603405.e8564_a911_r15224_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603405.e8564_a910_r14932_p6026_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603405.e8564_a911_r15224_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -50,7 +50,7 @@
     "event_selection": {
         "trigs": {
             "operator": "or",
-            "value": "Run 3 Experimental"
+            "value": "Run 3 Asymm"
         },
         "jets": {
             "pt": {

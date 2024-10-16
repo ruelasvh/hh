@@ -102,10 +102,34 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                 #     hists_dict[sample_name] += init_HH_histograms(
                 #         postfix=f"_truth_reco_central_{btag_count}b_{btagger}_4_plus_truth_matched_jets_correct_{pairing}_selection"
                 #     )
+                ######################################################
+                ### Pairint efficiency for m_X scan
+                ######################################################
+                pairing_key = "min_mass_optimized_1d_pairing"
+                pairing_info = pairing_methods[pairing_key]
+                m_X_range = pairing_info["m_X_range"]
+                for m_X in m_X_range:
+                    pairing_id = f"{pairing_key}_m_X_{m_X}"
+                    hists_dict[sample_name] += init_HH_histograms(
+                        hh_vars_binranges,
+                        postfix=f"_reco_{btag_count}_btag_{btagger}_{pairing_id}",
+                    )
+                    hists_dict[sample_name] += init_HH_histograms(
+                        hh_vars_binranges,
+                        postfix=f"_reco_{btag_count}_btag_{btagger}_{pairing_id}_correct",
+                    )
+                    hists_dict[sample_name] += init_HH_histograms(
+                        hh_vars_binranges,
+                        postfix=f"_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_id}",
+                    )
+                    hists_dict[sample_name] += init_HH_histograms(
+                        hh_vars_binranges,
+                        postfix=f"_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_id}_correct",
+                    )
 
-                ###################################################
-                ### Pairint efficiency for mX scan ###
-                ###################################################
+                ######################################################
+                ### Pairint efficiency for m_X_lead and m_X_sub scan
+                ######################################################
                 pairing_key = "min_mass_optimized_pairing"
                 pairing_info = pairing_methods[pairing_key]
                 m_X_lead_range, m_X_sub_range = (

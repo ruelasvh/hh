@@ -378,7 +378,7 @@ def merge_sample_files(
     for input in inputs:
         if input.is_dir():
             files_in_dir = input.glob("*.h5")
-            merge_sample_files(files_in_dir, _hists, merge_jz_regex)
+            merge_sample_files(files_in_dir, _hists, merge_jz_regex, save_to)
             continue
         with h5py.File(input, "r") as hists_file:
             for sample_name in hists_file:

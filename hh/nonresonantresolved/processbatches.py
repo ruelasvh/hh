@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import vector as p4
 import awkward as ak
+import itertools as it
 from hh.shared.utils import (
     logger,
     format_btagger_model_name,
@@ -287,6 +288,60 @@ def process_batch(
 
                 ############################################
                 # Perform HH jet candidate pairing for scan
+                # values of m_X
+                ############################################
+                pairing_key = "min_mass_optimized_1d_pairing"
+                pairing_info = pairing_methods[pairing_key]
+                m_X_range = pairing_info["m_X_range"]
+                for m_X in m_X_range:
+                    pairing_id = f"{pairing_key}_m_X_{m_X}"
+                    selection_name = f"{n_btags}b_{btagger}_{pairing_id}"
+                    # use the m_X to scan over all possible pairings
+                    pairing_loss = pairing_info["loss"](m_X * MeV)
+                    ###### reconstruct H1 and H2 ######
+                    H1_jet_idx, H2_jet_idx = reconstruct_hh_jet_pairs(
+                        jets_p4=jets_p4,
+                        hh_jet_idx=hh_jet_idx,
+                        loss=pairing_loss,
+                        optimizer=pairing_info["optimizer"],
+                    )
+                    events[f"H1_{selection_name}_jet_idx"] = H1_jet_idx
+                    events[f"H2_{selection_name}_jet_idx"] = H2_jet_idx
+                    if is_mc:
+                        ###### Truth match the H1 and H2 ######
+                        H1_truth_matched_jet_idx, H2_truth_matched_jet_idx = (
+                            reconstruct_hh_jet_pairs(
+                                jets_p4=jets_p4,
+                                hh_jet_idx=hh_truth_matched_jet_idx,
+                                loss=pairing_loss,
+                                optimizer=pairing_info["optimizer"],
+                            )
+                        )
+                        events[f"H1_{selection_name}_truth_matched_jet_idx"] = (
+                            H1_truth_matched_jet_idx
+                        )
+                        events[f"H2_{selection_name}_truth_matched_jet_idx"] = (
+                            H2_truth_matched_jet_idx
+                        )
+
+                        correct_hh_pairs_mask = select_correct_hh_pair_events(
+                            h1_jets_idx=H1_truth_matched_jet_idx,
+                            h2_jets_idx=H2_truth_matched_jet_idx,
+                            truth_jet_H_parent_mask=events.truth_jet_H_parent_mask,
+                        )
+                        events[f"correct_hh_{selection_name}_mask"] = (
+                            correct_hh_pairs_mask
+                        )
+                        if logger.level == logging.DEBUG:
+                            logger.info(
+                                "Events passing previous cuts and correct H1 and H2 jet pairs with %s: %s (weighted: %s)",
+                                pairing_id.replace("_", " "),
+                                ak.sum(correct_hh_pairs_mask),
+                                ak.sum(events.event_weight[correct_hh_pairs_mask]),
+                            )
+
+                ############################################
+                # Perform HH jet candidate pairing for scan
                 # values of m_X_lead and m_X_sub
                 ############################################
                 pairing_key = "min_mass_optimized_pairing"
@@ -295,256 +350,251 @@ def process_batch(
                     pairing_info["m_X_lead_range"],
                     pairing_info["m_X_sub_range"],
                 )
-                for m_X_lead in m_X_lead_range:
-                    for m_X_sub in m_X_sub_range:
-                        pairing_id = (
-                            f"{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}"
+                for m_X_lead, m_X_sub in it.product(m_X_lead_range, m_X_sub_range):
+                    pairing_id = f"{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}"
+                    selection_name = f"{n_btags}b_{btagger}_{pairing_id}"
+                    # use the m_X_lead and m_X_sub to scan over all possible pairings
+                    pairing_loss = pairing_info["loss"](m_X_lead * MeV, m_X_sub * MeV)
+                    ## NEED TO MASK THE EVENTS WITH THE X_Wt MASK ##
+                    valid_events_pairing = np.copy(valid_events)
+                    ###### reconstruct H1 and H2 ######
+                    H1_jet_idx, H2_jet_idx = reconstruct_hh_jet_pairs(
+                        jets_p4=jets_p4,
+                        hh_jet_idx=hh_jet_idx,
+                        loss=pairing_loss,
+                        optimizer=pairing_info["optimizer"],
+                    )
+                    events[f"H1_{selection_name}_jet_idx"] = H1_jet_idx
+                    events[f"H2_{selection_name}_jet_idx"] = H2_jet_idx
+                    if is_mc:
+                        ###### Truth match the H1 and H2 ######
+                        H1_truth_matched_jet_idx, H2_truth_matched_jet_idx = (
+                            reconstruct_hh_jet_pairs(
+                                jets_p4=jets_p4,
+                                hh_jet_idx=hh_truth_matched_jet_idx,
+                                loss=pairing_loss,
+                                optimizer=pairing_info["optimizer"],
+                            )
                         )
-                        selection_name = f"{n_btags}b_{btagger}_{pairing_id}"
-                        # use the m_X_lead and m_X_sub to scan over all possible pairings
-                        pairing_loss = pairing_info["loss"](
-                            m_X_lead * MeV, m_X_sub * MeV
+                        events[f"H1_{selection_name}_truth_matched_jet_idx"] = (
+                            H1_truth_matched_jet_idx
                         )
-                        ## NEED TO MASK THE EVENTS WITH THE X_Wt MASK ##
-                        valid_events_pairing = np.copy(valid_events)
-                        ###### reconstruct H1 and H2 ######
-                        H1_jet_idx, H2_jet_idx = reconstruct_hh_jet_pairs(
-                            jets_p4=jets_p4,
-                            hh_jet_idx=hh_jet_idx,
-                            loss=pairing_loss,
-                            optimizer=pairing_info["optimizer"],
+                        events[f"H2_{selection_name}_truth_matched_jet_idx"] = (
+                            H2_truth_matched_jet_idx
                         )
-                        events[f"H1_{selection_name}_jet_idx"] = H1_jet_idx
-                        events[f"H2_{selection_name}_jet_idx"] = H2_jet_idx
-                        if is_mc:
-                            ###### Truth match the H1 and H2 ######
-                            H1_truth_matched_jet_idx, H2_truth_matched_jet_idx = (
-                                reconstruct_hh_jet_pairs(
-                                    jets_p4=jets_p4,
-                                    hh_jet_idx=hh_truth_matched_jet_idx,
-                                    loss=pairing_loss,
-                                    optimizer=pairing_info["optimizer"],
-                                )
-                            )
-                            events[f"H1_{selection_name}_truth_matched_jet_idx"] = (
-                                H1_truth_matched_jet_idx
-                            )
-                            events[f"H2_{selection_name}_truth_matched_jet_idx"] = (
-                                H2_truth_matched_jet_idx
+
+                        correct_hh_pairs_mask = select_correct_hh_pair_events(
+                            h1_jets_idx=H1_truth_matched_jet_idx,
+                            h2_jets_idx=H2_truth_matched_jet_idx,
+                            truth_jet_H_parent_mask=events.truth_jet_H_parent_mask,
+                        )
+                        events[f"correct_hh_{selection_name}_mask"] = (
+                            correct_hh_pairs_mask
+                        )
+                        if logger.level == logging.DEBUG:
+                            logger.info(
+                                "Events passing previous cuts and correct H1 and H2 jet pairs with %s: %s (weighted: %s)",
+                                pairing_id.replace("_", " "),
+                                ak.sum(correct_hh_pairs_mask),
+                                ak.sum(events.event_weight[correct_hh_pairs_mask]),
                             )
 
-                            correct_hh_pairs_mask = select_correct_hh_pair_events(
-                                h1_jets_idx=H1_truth_matched_jet_idx,
-                                h2_jets_idx=H2_truth_matched_jet_idx,
-                                truth_jet_H_parent_mask=events.truth_jet_H_parent_mask,
-                            )
-                            events[f"correct_hh_{selection_name}_mask"] = (
-                                correct_hh_pairs_mask
-                            )
-                            if logger.level == logging.DEBUG:
-                                logger.info(
-                                    "Events passing previous cuts and correct H1 and H2 jet pairs with %s: %s (weighted: %s)",
-                                    pairing_id.replace("_", " "),
-                                    ak.sum(correct_hh_pairs_mask),
-                                    ak.sum(events.event_weight[correct_hh_pairs_mask]),
-                                )
+                    # #################################################
+                    # # Perform event selection for each pairing method
+                    # #################################################
+                    # h1_p4 = ak.sum(jets_p4[H1_jet_idx], axis=1)
+                    # h2_p4 = ak.sum(jets_p4[H2_jet_idx], axis=1)
 
-                        # #################################################
-                        # # Perform event selection for each pairing method
-                        # #################################################
-                        # h1_p4 = ak.sum(jets_p4[H1_jet_idx], axis=1)
-                        # h2_p4 = ak.sum(jets_p4[H2_jet_idx], axis=1)
+                    # ###### Delta eta ∆𝜂 HH veto ######
+                    # if "Delta_eta_HH_discriminant" in selections:
+                    #     deltaeta_HH_discrim_sel = selections[
+                    #         "Delta_eta_HH_discriminant"
+                    #     ]
+                    #     deltaeta_HH = np.abs(h1_p4.eta - h2_p4.eta)
+                    #     events[f"deltaeta_HH_{selection_name}_discrim"] = (
+                    #         deltaeta_HH
+                    #     )
+                    #     Delta_eta_HH_mask = select_discrim_events(
+                    #         (deltaeta_HH,),
+                    #         selection=deltaeta_HH_discrim_sel,
+                    #     )
+                    #     events[f"deltaeta_HH_{selection_name}_mask"] = (
+                    #         Delta_eta_HH_mask
+                    #     )
+                    #     valid_events_pairing = (
+                    #         valid_events_pairing & Delta_eta_HH_mask
+                    #     )
+                    #     logger.info(
+                    #         "Events passing previous cuts and ∆𝜂 HH %s %s with %s: %s (weighted: %s)",
+                    #         deltaeta_HH_discrim_sel["operator"],
+                    #         deltaeta_HH_discrim_sel["value"],
+                    #         pairing_id.replace("_", " "),
+                    #         ak.sum(valid_events_pairing),
+                    #         ak.sum(events.event_weight[valid_events_pairing]),
+                    #     )
+                    #     if ak.sum(valid_events_pairing) == 0:
+                    #         return events
 
-                        # ###### Delta eta ∆𝜂 HH veto ######
-                        # if "Delta_eta_HH_discriminant" in selections:
-                        #     deltaeta_HH_discrim_sel = selections[
-                        #         "Delta_eta_HH_discriminant"
-                        #     ]
-                        #     deltaeta_HH = np.abs(h1_p4.eta - h2_p4.eta)
-                        #     events[f"deltaeta_HH_{selection_name}_discrim"] = (
-                        #         deltaeta_HH
-                        #     )
-                        #     Delta_eta_HH_mask = select_discrim_events(
-                        #         (deltaeta_HH,),
-                        #         selection=deltaeta_HH_discrim_sel,
-                        #     )
-                        #     events[f"deltaeta_HH_{selection_name}_mask"] = (
-                        #         Delta_eta_HH_mask
-                        #     )
-                        #     valid_events_pairing = (
-                        #         valid_events_pairing & Delta_eta_HH_mask
-                        #     )
-                        #     logger.info(
-                        #         "Events passing previous cuts and ∆𝜂 HH %s %s with %s: %s (weighted: %s)",
-                        #         deltaeta_HH_discrim_sel["operator"],
-                        #         deltaeta_HH_discrim_sel["value"],
-                        #         pairing_id.replace("_", " "),
-                        #         ak.sum(valid_events_pairing),
-                        #         ak.sum(events.event_weight[valid_events_pairing]),
-                        #     )
-                        #     if ak.sum(valid_events_pairing) == 0:
-                        #         return events
+                    # ###### Apply X_Wt cut ######
+                    # if "X_Wt_discriminant" in selections:
+                    #     valid_events_pairing = valid_events_pairing & X_Wt_mask
+                    #     logger.info(
+                    #         "Events passing previous cuts and X_Wt %s %s with %s: %s (weighted: %s)",
+                    #         top_veto_sel["operator"],
+                    #         top_veto_sel["value"],
+                    #         pairing_id.replace("_", " "),
+                    #         ak.sum(valid_events_pairing),
+                    #         ak.sum(events.event_weight[valid_events_pairing]),
+                    #     )
+                    #     if ak.sum(valid_events_pairing) == 0:
+                    #         return events
 
-                        # ###### Apply X_Wt cut ######
-                        # if "X_Wt_discriminant" in selections:
-                        #     valid_events_pairing = valid_events_pairing & X_Wt_mask
-                        #     logger.info(
-                        #         "Events passing previous cuts and X_Wt %s %s with %s: %s (weighted: %s)",
-                        #         top_veto_sel["operator"],
-                        #         top_veto_sel["value"],
-                        #         pairing_id.replace("_", " "),
-                        #         ak.sum(valid_events_pairing),
-                        #         ak.sum(events.event_weight[valid_events_pairing]),
-                        #     )
-                        #     if ak.sum(valid_events_pairing) == 0:
-                        #         return events
+                    # ###### X_HH mass veto ######
+                    # if "X_HH_discriminant" in selections:
+                    #     hh_mass_discrim_sel = selections["X_HH_discriminant"]
+                    #     X_HH_discrim = X_HH(h1_p4.m * GeV, h2_p4.m * GeV)
+                    #     events[f"X_HH_{selection_name}_discrim"] = X_HH_discrim
+                    #     R_CR_discrim = R_CR(h1_p4.m * GeV, h2_p4.m * GeV)
+                    #     events[f"R_CR_{selection_name}_discrim"] = R_CR_discrim
+                    #     regions = ["signal", "control"]
+                    #     for region in regions:
+                    #         if region in hh_mass_discrim_sel:
+                    #             region_mask = select_discrim_events(
+                    #                 (X_HH_discrim, R_CR_discrim),
+                    #                 selection=hh_mass_discrim_sel[region],
+                    #             )
+                    #             events[f"X_HH_{region}_{selection_name}_mask"] = (
+                    #                 region_mask
+                    #             )
+                    #             logger.info(
+                    #                 "Events passing previous cuts and X_HH veto for %s region with %s: %s (weighted: %s)",
+                    #                 region,
+                    #                 pairing_id.replace("_", " "),
+                    #                 ak.sum(region_mask),
+                    #                 ak.sum(events.event_weight[region_mask]),
+                    #             )
 
-                        # ###### X_HH mass veto ######
-                        # if "X_HH_discriminant" in selections:
-                        #     hh_mass_discrim_sel = selections["X_HH_discriminant"]
-                        #     X_HH_discrim = X_HH(h1_p4.m * GeV, h2_p4.m * GeV)
-                        #     events[f"X_HH_{selection_name}_discrim"] = X_HH_discrim
-                        #     R_CR_discrim = R_CR(h1_p4.m * GeV, h2_p4.m * GeV)
-                        #     events[f"R_CR_{selection_name}_discrim"] = R_CR_discrim
-                        #     regions = ["signal", "control"]
-                        #     for region in regions:
-                        #         if region in hh_mass_discrim_sel:
-                        #             region_mask = select_discrim_events(
-                        #                 (X_HH_discrim, R_CR_discrim),
-                        #                 selection=hh_mass_discrim_sel[region],
-                        #             )
-                        #             events[f"X_HH_{region}_{selection_name}_mask"] = (
-                        #                 region_mask
-                        #             )
-                        #             logger.info(
-                        #                 "Events passing previous cuts and X_HH veto for %s region with %s: %s (weighted: %s)",
-                        #                 region,
-                        #                 pairing_id.replace("_", " "),
-                        #                 ak.sum(region_mask),
-                        #                 ak.sum(events.event_weight[region_mask]),
-                        #             )
+                    # signal_event_mask = np.zeros(len(events), dtype=bool)
+                    # control_event_mask = np.zeros(len(events), dtype=bool)
+                    # if "X_Wt_discriminant" in selections:
+                    #     signal_event_mask = events[
+                    #         f"X_Wt_{n_btags}b_{btagger}_mask"
+                    #     ]
+                    # if "Delta_eta_HH_discriminant" in selections:
+                    #     signal_event_mask = (
+                    #         signal_event_mask
+                    #         & events[f"deltaeta_HH_{selection_name}_mask"]
+                    #     )
+                    # if "X_HH_discriminant" in selections:
+                    #     control_event_mask = (
+                    #         signal_event_mask
+                    #         & events[f"X_HH_control_{selection_name}_mask"]
+                    #     )
+                    #     signal_event_mask = (
+                    #         signal_event_mask
+                    #         & events[f"X_HH_signal_{selection_name}_mask"]
+                    #     )
+                    # events[f"signal_{selection_name}_mask"] = signal_event_mask
+                    # events[f"control_{selection_name}_mask"] = control_event_mask
+                    # logger.info(
+                    #     "Events passing previous cuts and signal region with %s: %s (weighted: %s)",
+                    #     pairing_id.replace("_", " "),
+                    #     ak.sum(signal_event_mask),
+                    #     ak.sum(events.event_weight[signal_event_mask]),
+                    # )
+                    # logger.info(
+                    #     "Events passing previous cuts and control region with %s: %s (weighted: %s)",
+                    #     pairing_id.replace("_", " "),
+                    #     ak.sum(control_event_mask),
+                    #     ak.sum(events.event_weight[control_event_mask]),
+                    # )
 
-                        # signal_event_mask = np.zeros(len(events), dtype=bool)
-                        # control_event_mask = np.zeros(len(events), dtype=bool)
-                        # if "X_Wt_discriminant" in selections:
-                        #     signal_event_mask = events[
-                        #         f"X_Wt_{n_btags}b_{btagger}_mask"
-                        #     ]
-                        # if "Delta_eta_HH_discriminant" in selections:
-                        #     signal_event_mask = (
-                        #         signal_event_mask
-                        #         & events[f"deltaeta_HH_{selection_name}_mask"]
-                        #     )
-                        # if "X_HH_discriminant" in selections:
-                        #     control_event_mask = (
-                        #         signal_event_mask
-                        #         & events[f"X_HH_control_{selection_name}_mask"]
-                        #     )
-                        #     signal_event_mask = (
-                        #         signal_event_mask
-                        #         & events[f"X_HH_signal_{selection_name}_mask"]
-                        #     )
-                        # events[f"signal_{selection_name}_mask"] = signal_event_mask
-                        # events[f"control_{selection_name}_mask"] = control_event_mask
-                        # logger.info(
-                        #     "Events passing previous cuts and signal region with %s: %s (weighted: %s)",
-                        #     pairing_id.replace("_", " "),
-                        #     ak.sum(signal_event_mask),
-                        #     ak.sum(events.event_weight[signal_event_mask]),
-                        # )
-                        # logger.info(
-                        #     "Events passing previous cuts and control region with %s: %s (weighted: %s)",
-                        #     pairing_id.replace("_", " "),
-                        #     ak.sum(control_event_mask),
-                        #     ak.sum(events.event_weight[control_event_mask]),
-                        # )
-
-                        # ###### Calculate background estimate using ABCD method ######
-                        # if "background_estimate" in selections:
-                        #     control_regions = [
-                        #         "CR1_top",
-                        #         "CR2_left",
-                        #         "CR1_bottom",
-                        #         "CR2_right",
-                        #     ]
-                        #     # for each region in the control regions select events that fall in the region. The regions are split by 2 perpendicular lines that intersect at the center of the m_HH plane and are 45 degrees from the x-axis.
-                        #     control_events_mask = events[
-                        #         f"control_{selection_name}_mask"
-                        #     ]
-                        #     points = np.transpose(
-                        #         [
-                        #             h1_p4.m[control_events_mask],
-                        #             h2_p4.m[control_events_mask],
-                        #         ]
-                        #     )
-                        #     points *= GeV
-                        #     events_quadrants = classify_control_events(points)
-                        #     for i, c_region in zip(events_quadrants, control_regions):
-                        #         quadrant_events = ak.copy(
-                        #             control_events_mask
-                        #         ).to_numpy()
-                        #         ind = np.where(quadrant_events)[0]
-                        #         quadrant_events[ind] = events_quadrants[i]
-                        #         events[f"{c_region}_{selection_name}_mask"] = (
-                        #             quadrant_events
-                        #         )
-                        #         logger.info(
-                        #             "Events passing previous cuts and %s region with %s: %s (weighted: %s)",
-                        #             c_region,
-                        #             pairing_id.replace("_", " "),
-                        #             ak.sum(quadrant_events),
-                        #             ak.sum(events.event_weight[quadrant_events]),
-                        #         )
-                        #     bkg_est_sel = selections["background_estimate"]
-                        #     low_btag_region = bkg_est_sel["low_btag_region"][
-                        #         "btagging_index"
-                        #     ]
-                        #     low_btag_region = bjets_sel[low_btag_region]["count"][
-                        #         "value"
-                        #     ]
-                        #     high_btag_region = bkg_est_sel["high_btag_region"][
-                        #         "btagging_index"
-                        #     ]
-                        #     high_btag_region = bjets_sel[high_btag_region]["count"][
-                        #         "value"
-                        #     ]
-                        #     if all(
-                        #         f in events.fields
-                        #         for f in [
-                        #             f"control_{low_btag_region}b_{btagger}_{pairing_id}_mask",
-                        #             f"control_{high_btag_region}b_{btagger}_{pairing_id}_mask",
-                        #         ]
-                        #     ):
-                        #         # Calculate SR_4b(prediction) = SR_2b * (CR_4b / CR_2b)
-                        #         # D = C * (B / A)
-                        #         N_A = np.zeros(1, dtype=float)
-                        #         control_regions = ["CR1_top", "CR1_bottom"]
-                        #         for c_region in control_regions:
-                        #             quadrant_mask = events[
-                        #                 f"{c_region}_{low_btag_region}b_{btagger}_{pairing_id}_mask"
-                        #             ]
-                        #             N_A += ak.sum(events.event_weight[quadrant_mask])
-                        #         N_B = np.zeros(1, dtype=float)
-                        #         for c_region in control_regions:
-                        #             quadrant_mask = events[
-                        #                 f"{c_region}_{high_btag_region}b_{btagger}_{pairing_id}_mask"
-                        #             ]
-                        #             N_B += ak.sum(events.event_weight[quadrant_mask])
-                        #         N_C = events[
-                        #             f"signal_{low_btag_region}b_{btagger}_{pairing_id}_mask"
-                        #         ]
-                        #         N_C = ak.sum(events.event_weight[N_C])
-                        #         N_D = N_C * (N_B / N_A)
-                        #         sigma_D = N_D * np.sqrt(
-                        #             (np.sqrt(N_A) / N_A) ** 2
-                        #             + (np.sqrt(N_B) / N_B) ** 2
-                        #             + (np.sqrt(N_C) / N_C) ** 2
-                        #         )
-                        #         logger.info(
-                        #             "Estimated number of events in SR_4b using ABCD method for %s: %s ± %s",
-                        #             pairing_id.replace("_", " "),
-                        #             N_D,
-                        #             sigma_D,
-                        #         )
+                    # ###### Calculate background estimate using ABCD method ######
+                    # if "background_estimate" in selections:
+                    #     control_regions = [
+                    #         "CR1_top",
+                    #         "CR2_left",
+                    #         "CR1_bottom",
+                    #         "CR2_right",
+                    #     ]
+                    #     # for each region in the control regions select events that fall in the region. The regions are split by 2 perpendicular lines that intersect at the center of the m_HH plane and are 45 degrees from the x-axis.
+                    #     control_events_mask = events[
+                    #         f"control_{selection_name}_mask"
+                    #     ]
+                    #     points = np.transpose(
+                    #         [
+                    #             h1_p4.m[control_events_mask],
+                    #             h2_p4.m[control_events_mask],
+                    #         ]
+                    #     )
+                    #     points *= GeV
+                    #     events_quadrants = classify_control_events(points)
+                    #     for i, c_region in zip(events_quadrants, control_regions):
+                    #         quadrant_events = ak.copy(
+                    #             control_events_mask
+                    #         ).to_numpy()
+                    #         ind = np.where(quadrant_events)[0]
+                    #         quadrant_events[ind] = events_quadrants[i]
+                    #         events[f"{c_region}_{selection_name}_mask"] = (
+                    #             quadrant_events
+                    #         )
+                    #         logger.info(
+                    #             "Events passing previous cuts and %s region with %s: %s (weighted: %s)",
+                    #             c_region,
+                    #             pairing_id.replace("_", " "),
+                    #             ak.sum(quadrant_events),
+                    #             ak.sum(events.event_weight[quadrant_events]),
+                    #         )
+                    #     bkg_est_sel = selections["background_estimate"]
+                    #     low_btag_region = bkg_est_sel["low_btag_region"][
+                    #         "btagging_index"
+                    #     ]
+                    #     low_btag_region = bjets_sel[low_btag_region]["count"][
+                    #         "value"
+                    #     ]
+                    #     high_btag_region = bkg_est_sel["high_btag_region"][
+                    #         "btagging_index"
+                    #     ]
+                    #     high_btag_region = bjets_sel[high_btag_region]["count"][
+                    #         "value"
+                    #     ]
+                    #     if all(
+                    #         f in events.fields
+                    #         for f in [
+                    #             f"control_{low_btag_region}b_{btagger}_{pairing_id}_mask",
+                    #             f"control_{high_btag_region}b_{btagger}_{pairing_id}_mask",
+                    #         ]
+                    #     ):
+                    #         # Calculate SR_4b(prediction) = SR_2b * (CR_4b / CR_2b)
+                    #         # D = C * (B / A)
+                    #         N_A = np.zeros(1, dtype=float)
+                    #         control_regions = ["CR1_top", "CR1_bottom"]
+                    #         for c_region in control_regions:
+                    #             quadrant_mask = events[
+                    #                 f"{c_region}_{low_btag_region}b_{btagger}_{pairing_id}_mask"
+                    #             ]
+                    #             N_A += ak.sum(events.event_weight[quadrant_mask])
+                    #         N_B = np.zeros(1, dtype=float)
+                    #         for c_region in control_regions:
+                    #             quadrant_mask = events[
+                    #                 f"{c_region}_{high_btag_region}b_{btagger}_{pairing_id}_mask"
+                    #             ]
+                    #             N_B += ak.sum(events.event_weight[quadrant_mask])
+                    #         N_C = events[
+                    #             f"signal_{low_btag_region}b_{btagger}_{pairing_id}_mask"
+                    #         ]
+                    #         N_C = ak.sum(events.event_weight[N_C])
+                    #         N_D = N_C * (N_B / N_A)
+                    #         sigma_D = N_D * np.sqrt(
+                    #             (np.sqrt(N_A) / N_A) ** 2
+                    #             + (np.sqrt(N_B) / N_B) ** 2
+                    #             + (np.sqrt(N_C) / N_C) ** 2
+                    #         )
+                    #         logger.info(
+                    #             "Estimated number of events in SR_4b using ABCD method for %s: %s ± %s",
+                    #             pairing_id.replace("_", " "),
+                    #             N_D,
+                    #             sigma_D,
+                    #         )
 
     return events

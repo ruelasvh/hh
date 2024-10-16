@@ -17,6 +17,7 @@ from hh.shared.utils import (
     get_legend_label,
     register_bottom_offset,
 )
+from hh.shared.labels import sample_labels
 from hh.nonresonantresolved.pairing import pairing_methods
 
 np.seterr(divide="ignore", invalid="ignore")
@@ -526,8 +527,7 @@ def draw_efficiency_scan_2d(
                 out=np.zeros_like(hist_pass_values),
                 where=hist_total_values != 0,
             )
-            eff_int = hist_pass_values.sum() / hist_total_values.sum()
-            effs.append(eff_int)
+            effs.append(hist_pass_values.sum() / hist_total_values.sum())
             hist_main = HistPlottable(
                 eff,
                 hist_total_edges,
@@ -571,11 +571,11 @@ def draw_efficiency_scan_2d(
     x_bins = m_X_lead_range
     y_bins = m_X_sub_range
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10, 8))
     im = ax.imshow(hist_2d_values, cmap="RdBu_r")
-    # Show all ticks and label them with the respective list entries
-    ax.set_xticks(np.arange(len(x_bins)), labels=x_bins)
-    ax.set_yticks(np.arange(len(y_bins)), labels=y_bins)
+    # Show all ticks and only the labels that are divisible by 3
+    ax.set_xticks(np.arange(len(x_bins)), labels=[f"{l:.0f}" for l in x_bins])
+    ax.set_yticks(np.arange(len(y_bins)), labels=[f"{l:.0f}" for l in y_bins])
     # Create colorbar
     cbar = ax.figure.colorbar(im, ax=ax)
     cbar.ax.set_ylabel("Efficiency")
@@ -590,6 +590,126 @@ def draw_efficiency_scan_2d(
         pad=0.01,
     )
     plot_name += f"_2d" if len(hists_group) == 1 else ""
+    plt.tight_layout()
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
+
+
+def draw_efficiency_scan_1d(
+    hists_group,
+    hist_prefixes,
+    energy,
+    xlabel=None,
+    ylabel="Efficiency",
+    legend_labels: dict = None,
+    legend_options: dict = {"loc": "upper right"},
+    third_exp_label="",
+    luminosity=None,
+    xmin=None,
+    xmax=None,
+    ymin=0,
+    ymax=1,
+    draw_errors=False,
+    output_dir=Path("plots"),
+    plot_name="efficiency",
+):
+    """Draw 1D histograms in one figure. The number of histograms in the figure is
+    determined by the number of samples in the hists_group dictionary. hist_prefix
+    is used to select the histograms to be drawn."""
+
+    # assert that legend_labels is either a list or "auto" with list size equal to the number of samples
+    if isinstance(legend_labels, dict):
+        assert len(legend_labels) == len(hist_prefixes), (
+            "legend_labels map must have the same size as the number of samples in hists_group."
+            f"Expected {len(hist_prefixes)} labels, got {len(legend_labels)}."
+        )
+
+    fig, ax = plt.subplots()
+    effs = {}
+    for sample_type, sample_hists in hists_group.items():
+        effs[sample_type] = []
+        for i, hists in enumerate(hist_prefixes):
+            hist_total_name = find_hist(sample_hists, lambda h: re.match(hists[0], h))
+            hist_total = sample_hists[hist_total_name]
+            hist_total_values = hist_total["values"]
+            hist_total_edges = hist_total["edges"]
+            hist_pass_name = find_hist(sample_hists, lambda h: re.match(hists[1], h))
+            hist_pass = sample_hists[hist_pass_name]
+            hist_pass_values = hist_pass["values"]
+            eff = np.divide(
+                hist_pass_values,
+                hist_total_values,
+                out=np.zeros_like(hist_pass_values),
+                where=hist_total_values != 0,
+            )
+            if "hh_mass" in hist_total_name:
+                print(
+                    sample_type,
+                    xlabel,
+                    hist_pass_values.sum(),
+                    hist_total_values.sum(),
+                )
+            effs[sample_type].append(hist_pass_values.sum() / hist_total_values.sum())
+            hist_main = HistPlottable(
+                eff,
+                hist_total_edges,
+                legend_label=(
+                    f"{legend_labels[hist_total_name]} {sample_labels[sample_type]}"
+                    if legend_labels
+                    else None
+                ),
+                xlabel=xlabel,
+                ylabel=ylabel,
+            )
+            hist_main.plot(ax=ax, color=f"C{i}")
+    ax.legend(**legend_options)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    # scale y-axis so that the legend does not overlap with the plot
+    ax.set_ylim(ymin=ymin, ymax=ymax * (1 + 0.1 * len(hist_prefixes) + 0.1))
+    if xmin is not None:
+        ax.set_xlim(xmin=xmin)
+    if xmax is not None:
+        ax.set_xlim(xmax=xmax)
+    hplt.atlas.label(
+        label="Work In Progress",
+        data=True,  # prevents adding Simulation label, sim labels are added in legend
+        rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
+        loc=4,
+        ax=ax,
+        pad=0.01,
+    )
+    plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
+    plt.tight_layout()
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
+
+    # 1D efficiency scan
+    fig, ax = plt.subplots()
+    pairing_key = "min_mass_optimized_1d_pairing"
+    pairing_info = pairing_methods[pairing_key]
+    m_X_range = pairing_info["m_X_range"]
+    # m_X_range = [m_X_range[0], m_X_range[-1]]
+    for sample_type, eff in effs.items():
+        ax.plot(
+            m_X_range,
+            eff,
+            label=sample_labels[sample_type],
+        )
+    ax.set_ylim(ymin=ymin, ymax=ymax)
+    ax.set_xlim(xmin=m_X_range[0], xmax=m_X_range[-1])
+    ax.legend(**legend_options)
+    ax.set_xlabel(r"$m_{X}$ [GeV]")
+    ax.set_ylabel(ylabel)
+    hplt.atlas.label(
+        label="Work In Progress",
+        data=True,  # prevents adding Simulation label, sim labels are added in legend
+        rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
+        loc=4,
+        ax=ax,
+        pad=0.01,
+    )
+    plot_name += "_1d"
     plt.tight_layout()
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close(fig)
