@@ -129,71 +129,72 @@ def draw_hists(
                 plot_name=f"pairing_efficiency_truth_{hh_var}",
             )
 
-    for btagger, btag_count in btagging.items():
-        for hh_var, hh_var_label in hh_var_labels.items():
-            pairing_key = "min_mass_optimized_pairing"
-            pairing_info = pairing_methods[pairing_key]
-            m_X_lead_range, m_X_sub_range = (
-                pairing_info["m_X_lead_range"],
-                pairing_info["m_X_sub_range"],
-            )
-            # only do the 2D scan if the ranges are not empty
-            if len(m_X_lead_range) == 0 and len(m_X_sub_range) == 0:
-                continue
-            hist_reco_keys = [
-                [
-                    f"{hh_var}_reco_{btag_count}_btag_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}",
-                    f"{hh_var}_reco_{btag_count}_btag_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}_correct",
+    for sample_type, sample_hists in hists_group.items():
+        for btagger, btag_count in btagging.items():
+            for hh_var, hh_var_label in hh_var_labels.items():
+                pairing_key = "min_mass_optimized_pairing"
+                pairing_info = pairing_methods[pairing_key]
+                m_X_lead_range, m_X_sub_range = (
+                    pairing_info["m_X_lead_range"],
+                    pairing_info["m_X_sub_range"],
+                )
+                # only do the 2D scan if the ranges are not empty
+                if len(m_X_lead_range) == 0 and len(m_X_sub_range) == 0:
+                    continue
+                hist_reco_keys = [
+                    [
+                        f"{hh_var}_reco_{btag_count}_btag_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}",
+                        f"{hh_var}_reco_{btag_count}_btag_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}_correct",
+                    ]
+                    for m_X_lead in m_X_lead_range
+                    for m_X_sub in m_X_sub_range
                 ]
-                for m_X_lead in m_X_lead_range
-                for m_X_sub in m_X_sub_range
-            ]
-            hist_reco_labels = {
-                f"{hh_var}_reco_{btag_count}_btag_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}": f"m_X_lead = {m_X_lead}, m_X_sub = {m_X_sub}"
-                for m_X_lead in m_X_lead_range
-                for m_X_sub in m_X_sub_range
-            }
-            draw_efficiency_scan_2d(
-                {sample_type: sample_hists},
-                hist_reco_keys,
-                energy,
-                luminosity=sum(mc_campaigns.values()),
-                xlabel=f"Reco {hh_var_label}",
-                legend_labels=hist_reco_labels,
-                xmin=150 if "hh_mass" == hh_var else None,
-                xmax=600 if "hh_pt" == hh_var else None,
-                legend_options={"loc": "lower right", "fontsize": "small"},
-                third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}\n{pairing_info['label']}",
-                output_dir=output_dir,
-                plot_name=f"pairing_efficiency_reco_{hh_var}",
-            )
-            hist_truth_keys = [
-                [
-                    f"{hh_var}_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}",
-                    f"{hh_var}_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}_correct",
+                hist_reco_labels = {
+                    f"{hh_var}_reco_{btag_count}_btag_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}": f"m_X_lead = {m_X_lead}, m_X_sub = {m_X_sub}"
+                    for m_X_lead in m_X_lead_range
+                    for m_X_sub in m_X_sub_range
+                }
+                draw_efficiency_scan_2d(
+                    {sample_type: sample_hists},
+                    hist_reco_keys,
+                    energy,
+                    luminosity=sum(mc_campaigns.values()),
+                    xlabel=f"Reco {hh_var_label}",
+                    legend_labels=hist_reco_labels,
+                    xmin=150 if "hh_mass" == hh_var else None,
+                    xmax=600 if "hh_pt" == hh_var else None,
+                    legend_options={"loc": "lower right", "fontsize": "small"},
+                    third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}\n{pairing_info['label']}",
+                    output_dir=output_dir,
+                    plot_name=f"pairing_efficiency_reco_{hh_var}",
+                )
+                hist_truth_keys = [
+                    [
+                        f"{hh_var}_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}",
+                        f"{hh_var}_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}_correct",
+                    ]
+                    for m_X_lead in m_X_lead_range
+                    for m_X_sub in m_X_sub_range
                 ]
-                for m_X_lead in m_X_lead_range
-                for m_X_sub in m_X_sub_range
-            ]
-            hist_truth_labels = {
-                f"{hh_var}_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}": f"m_X_lead = {m_X_lead}, m_X_sub = {m_X_sub}"
-                for m_X_lead in m_X_lead_range
-                for m_X_sub in m_X_sub_range
-            }
-            draw_efficiency_scan_2d(
-                {sample_type: sample_hists},
-                hist_truth_keys,
-                energy,
-                luminosity=sum(mc_campaigns.values()),
-                xlabel=f"Truth {hh_var_label}",
-                legend_labels=hist_truth_labels,
-                xmin=200 if "hh_mass" == hh_var else None,
-                xmax=600 if "hh_pt" == hh_var else None,
-                legend_options={"loc": "lower right", "fontsize": "small"},
-                third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}\n{pairing_info['label']}",
-                output_dir=output_dir,
-                plot_name=f"pairing_efficiency_truth_{hh_var}",
-            )
+                hist_truth_labels = {
+                    f"{hh_var}_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}": f"m_X_lead = {m_X_lead}, m_X_sub = {m_X_sub}"
+                    for m_X_lead in m_X_lead_range
+                    for m_X_sub in m_X_sub_range
+                }
+                draw_efficiency_scan_2d(
+                    {sample_type: sample_hists},
+                    hist_truth_keys,
+                    energy,
+                    luminosity=sum(mc_campaigns.values()),
+                    xlabel=f"Truth {hh_var_label}",
+                    legend_labels=hist_truth_labels,
+                    xmin=200 if "hh_mass" == hh_var else None,
+                    xmax=600 if "hh_pt" == hh_var else None,
+                    legend_options={"loc": "lower right", "fontsize": "small"},
+                    third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}\n{pairing_info['label']}",
+                    output_dir=output_dir,
+                    plot_name=f"pairing_efficiency_truth_{hh_var}",
+                )
 
     ################################################
     # Plot backgrounds vs signal

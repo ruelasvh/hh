@@ -136,16 +136,16 @@ pairing_methods = {
             ** 2
         ),
         "optimizer": np.argmin,
-        "m_X_lead_range": [],
-        "m_X_sub_range": [],
+        "m_X_lead_range": np.linspace(0, 150, 16),
+        "m_X_sub_range": np.linspace(0, 150, 16),
     },
     "min_mass_optimized_1d_pairing": {
         "label": r"$\mathrm{arg\,min\,} \Sigma(m_{jj}-m_\mathrm{X})^2$ pairing",
         "loss": lambda m_X: lambda jet_p4, jet_pair_1, jet_pair_2: (
-            ((jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass - m_X) ** 2
+            ((jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass - m_X) ** 2
             + ((jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass - m_X) ** 2
         ),
         "optimizer": np.argmin,
-        "m_X_range": np.linspace(0, 150, 16),
+        "m_X_range": [],
     },
 }
