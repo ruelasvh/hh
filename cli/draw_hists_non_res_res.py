@@ -49,6 +49,13 @@ def get_args():
         action="store_true",
         help="Split JZ0-9 samples (default: %(default)s)",
     )
+    # add bool argument to merge mc campaigns
+    parser.add_argument(
+        "-m",
+        "--split-mc",
+        action="store_true",
+        help="Split mc campaigns (default: %(default)s)",
+    )
     parser.add_argument(
         "-d",
         "--debug",
@@ -93,8 +100,9 @@ def main():
 
     hists = merge_sample_files(
         args.hists_files,
-        merge_jz_regex=None if args.split_jz else re.compile(r"JZ[0-9]"),
         save_to="merged_histograms.h5",
+        merge_jz_regex=None if args.split_jz else re.compile(r"JZ[0-9]"),
+        merge_mc_regex=None if args.split_mc else re.compile(r"mc[1-2][0-9][ade]"),
     )
 
     drawhistsdiagnostics.draw_hists(hists, args)

@@ -1,35 +1,7 @@
 {
-    "features": {
-        "path": "hh/dump/configs/features.json"
-    },
     "samples": [
         {
-            "label": "mc20_4b_ggF_k01",
-            "class_label": "label_HH",
-            "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40000
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
-                    }
-                }
-            },
+            "label": "mc20_ggF_k01",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k01/user.viruelas.EJ_2024_03_23_T095848.600463.e8222_s3681_r13167_p6026_TREE/",
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k01/user.viruelas.EJ_2024_03_23_T095848.600463.e8222_s3681_r13144_p6026_TREE/",
@@ -39,109 +11,59 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13167_p6026",
                     "genFiltEff": 1.0,
-                    "crossSection": 3.077e-05,
+                    "crossSection": 2.7882E-05,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 24.5556
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13144_p6026",
                     "genFiltEff": 1.0,
-                    "crossSection": 3.077e-05,
+                    "crossSection": 2.7882E-05,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 43.65
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13145_p6026",
                     "genFiltEff": 1.0,
-                    "crossSection": 3.077e-05,
+                    "crossSection": 2.7882E-05,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 57.6966
                 }
             ]
         },
         {
-            "label": "mc20_4b_ttbar",
-            "class_label": "label_ttbar",
-            "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40000
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
-                    }
-                }
-            },
+            "label": "mc20_ggF_k10",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/ttbar_allhad/user.viruelas.EJ_2024_03_23_T095425.410471.e6337_s3681_r13167_p6026_TREE/",
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/ttbar_allhad/user.viruelas.EJ_2024_03_23_T095425.410471.e6337_s3681_r13144_p6026_TREE/",
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/ttbar_allhad/user.viruelas.EJ_2024_03_23_T095425.410471.e6337_s3681_r13145_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k10/user.viruelas.EJ_2024_03_23_T095848.600464.e8222_s3681_r13167_p6026_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k10/user.viruelas.EJ_2024_03_23_T095848.600464.e8222_s3681_r13144_p6026_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k10/user.viruelas.EJ_2024_03_23_T095848.600464.e8222_s3681_r13145_p6026_TREE/"
             ],
             "metadata": [
                 {
-                    "logicalDatasetName": "mc20_13TeV.410471.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYS.e6337_s3681_r13167_p6026 ",
-                    "crossSection": 7.2977E-01,
-                    "genFiltEff": 4.562069E-01,
-                    "kFactor": 1.13974074379,
-                    "luminosity": 1.0
+                    "logicalDatasetName": "mc20_13TeV.600464.PhPy8EG_PDF4LHC15_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8222_s3681_r13167_p6026",
+                    "genFiltEff": 1,
+                    "crossSection": 5.8388E-04,
+                    "kFactor": 1.0,
+                    "luminosity": 24.5556
                 },
                 {
-                    "logicalDatasetName": "mc20_13TeV.410471.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYS.e6337_s3681_r13144_p6026",
-                    "crossSection": 7.2977E-01,
-                    "genFiltEff": 4.562069E-01,
-                    "kFactor": 1.13974074379,
-                    "luminosity": 1.0
+                    "logicalDatasetName": "mc20_13TeV.600464.PhPy8EG_PDF4LHC15_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8222_s3681_r13144_p6026",
+                    "genFiltEff": 1,
+                    "crossSection": 5.8388E-04,
+                    "kFactor": 1.0,
+                    "luminosity": 43.65
                 },
                 {
-                    "logicalDatasetName": "mc20_13TeV.410471.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYS.e6337_s3681_r13145_p6026",
-                    "crossSection": 7.2977E-01,
-                    "genFiltEff": 4.562069E-01,
-                    "kFactor": 1.13974074379,
-                    "luminosity": 1.0
+                    "logicalDatasetName": "mc20_13TeV.600464.PhPy8EG_PDF4LHC15_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8222_s3681_r13145_p6026",
+                    "genFiltEff": 1,
+                    "crossSection": 5.8388E-04,
+                    "kFactor": 1.0,
+                    "luminosity": 57.6966
                 }
             ]
         },
         {
-            "label": "mc20_4b_multijet_2bjets_JZ1",
-            "class_label": "label_QCD",
-            "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40000
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
-                    }
-                }
-            },
+            "label": "mc20_multijet_2bjets_JZ1",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802067.e8547_s3797_r13167_p6026_TREE/",
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802067.e8547_s3797_r13144_p6026_TREE/",
@@ -153,51 +75,26 @@
                     "crossSection": 8.9550E+07,
                     "genFiltEff": 3.113989E-06,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 24.5556
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.802067.Py8EG_A14NNPDF23LO_jetjet_JZ1_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13144_p6026",
                     "crossSection": 8.9550E+07,
                     "genFiltEff": 3.113989E-06,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 43.65
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.802067.Py8EG_A14NNPDF23LO_jetjet_JZ1_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13145_p6026",
                     "crossSection": 8.9550E+07,
                     "genFiltEff": 3.113989E-06,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 57.6966
                 }
             ]
         },
         {
-            "label": "mc20_4b_multijet_2bjets_JZ2",
-            "class_label": "label_QCD",
-            "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40000
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
-                    }
-                }
-            },
+            "label": "mc20_multijet_2bjets_JZ2",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.800285.e8547_s3797_r13167_p6026_TREE/",
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.800285.e8547_s3797_r13144_p6026_TREE/",
@@ -209,51 +106,26 @@
                     "crossSection": 2.4332E+06,
                     "genFiltEff": 6.015065E-05,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 24.5556
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.800285.Py8EG_A14NNPDF23LO_jetjet_JZ2_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13144_p6026",
                     "crossSection": 2.4332E+06,
                     "genFiltEff": 6.015065E-05,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 43.65
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.800285.Py8EG_A14NNPDF23LO_jetjet_JZ2_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13145_p6026",
                     "crossSection": 2.4332E+06,
                     "genFiltEff": 6.015065E-05,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 57.6966
                 }
             ]
         },
         {
-            "label": "mc20_4b_multijet_2bjets_JZ3",
-            "class_label": "label_QCD",
-            "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40000
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
-                    }
-                }
-            },
+            "label": "mc20_multijet_2bjets_JZ3",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.800286.e8547_s3797_r13167_p6026_TREE/",
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.800286.e8547_s3797_r13144_p6026_TREE/",
@@ -265,51 +137,26 @@
                     "crossSection": 2.6454E+04,
                     "genFiltEff": 2.814666E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 24.5556
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.800286.Py8EG_A14NNPDF23LO_jetjet_JZ3_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13144_p6026",
                     "crossSection": 2.6454E+04,
                     "genFiltEff": 2.814666E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 43.65
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.800286.Py8EG_A14NNPDF23LO_jetjet_JZ3_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13145_p6026",
                     "crossSection": 2.6454E+04,
                     "genFiltEff": 2.814666E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 57.6966
                 }
             ]
         },
         {
-            "label": "mc20_4b_multijet_2bjets_JZ4",
-            "class_label": "label_QCD",
-            "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40000
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
-                    }
-                }
-            },
+            "label": "mc20_multijet_2bjets_JZ4",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.800287.e8547_s3797_r13167_p6026_TREE/",
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.800287.e8547_s3797_r13144_p6026_TREE/",
@@ -321,51 +168,26 @@
                     "crossSection": 2.5463E+02,
                     "genFiltEff": 5.257662E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 24.5556
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.800287.Py8EG_A14NNPDF23LO_jetjet_JZ4_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13144_p6026",
                     "crossSection": 2.5463E+02,
                     "genFiltEff": 5.257662E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 43.65
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.800287.Py8EG_A14NNPDF23LO_jetjet_JZ4_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13145_p6026",
                     "crossSection": 2.5463E+02,
                     "genFiltEff": 5.257662E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 57.6966
                 }
             ]
         },
         {
-            "label": "mc20_4b_multijet_2bjets_JZ5",
-            "class_label": "label_QCD",
-            "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40000
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
-                    }
-                }
-            },
+            "label": "mc20_multijet_2bjets_JZ5",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802068.e8547_s3797_r13167_p6026_TREE/",
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802068.e8547_s3797_r13144_p6026_TREE/",
@@ -377,51 +199,26 @@
                     "crossSection": 4.5535E+00,
                     "genFiltEff": 6.406074E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 24.5556
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.802068.Py8EG_A14NNPDF23LO_jetjet_JZ5_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13144_p6026",
                     "crossSection": 4.5535E+00,
                     "genFiltEff": 6.406074E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 43.65
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.802068.Py8EG_A14NNPDF23LO_jetjet_JZ5_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13145_p6026",
                     "crossSection": 4.5535E+00,
                     "genFiltEff": 6.406074E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 57.6966
                 }
             ]
         },
         {
-            "label": "mc20_4b_multijet_2bjets_JZ6",
-            "class_label": "label_QCD",
-            "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40000
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
-                    }
-                }
-            },
+            "label": "mc20_multijet_2bjets_JZ6",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802069.e8547_s3797_r13167_p6026_TREE/",
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802069.e8547_s3797_r13144_p6026_TREE/",
@@ -433,51 +230,26 @@
                     "crossSection": 2.5753E-01,
                     "genFiltEff": 4.088869E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 24.5556
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.802069.Py8EG_A14NNPDF23LO_jetjet_JZ6_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13144_p6026",
                     "crossSection": 2.5753E-01,
                     "genFiltEff": 4.088869E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 43.65
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.802069.Py8EG_A14NNPDF23LO_jetjet_JZ6_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13145_p6026",
                     "crossSection": 2.5753E-01,
                     "genFiltEff": 4.088869E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 57.6966
                 }
             ]
         },
         {
-            "label": "mc20_4b_multijet_2bjets_JZ7",
-            "class_label": "label_QCD",
-            "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40000
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
-                    }
-                }
-            },
+            "label": "mc20_multijet_2bjets_JZ7",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802070.e8547_s3797_r13167_p6026_TREE/",
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802070.e8547_s3797_r13144_p6026_TREE/",
@@ -489,51 +261,26 @@
                     "crossSection": 1.6215E-02,
                     "genFiltEff": 4.460816E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 24.5556
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.802070.Py8EG_A14NNPDF23LO_jetjet_JZ7_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13144_p6026",
                     "crossSection": 1.6215E-02,
                     "genFiltEff": 4.460816E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 43.65
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.802070.Py8EG_A14NNPDF23LO_jetjet_JZ7_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13145_p6026",
                     "crossSection": 1.6215E-02,
                     "genFiltEff": 4.460816E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 57.6966
                 }
             ]
         },
         {
-            "label": "mc20_4b_multijet_2bjets_JZ8",
-            "class_label": "label_QCD",
-            "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40000
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
-                    }
-                }
-            },
+            "label": "mc20_multijet_2bjets_JZ8",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802071.e8547_s3797_r13167_p6026_TREE/",
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802071.e8547_s3797_r13144_p6026_TREE/",
@@ -545,51 +292,26 @@
                     "crossSection": 6.2504E-04,
                     "genFiltEff": 3.593166E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 24.5556
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.802071.Py8EG_A14NNPDF23LO_jetjet_JZ8_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13144_p6026",
                     "crossSection": 6.2504E-04,
                     "genFiltEff": 3.593166E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 43.65
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.802071.Py8EG_A14NNPDF23LO_jetjet_JZ8_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13145_p6026",
                     "crossSection": 6.2504E-04,
                     "genFiltEff": 3.593166E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 57.6966
                 }
             ]
         },
         {
-            "label": "mc20_4b_multijet_2bjets_JZ9",
-            "class_label": "label_QCD",
-            "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40000
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        }
-                    }
-                }
-            },
+            "label": "mc20_multijet_2bjets_JZ9",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802072.e8547_s3797_r13167_p6026_TREE/",
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802072.e8547_s3797_r13144_p6026_TREE/",
@@ -601,23 +323,110 @@
                     "crossSection": 1.9639E-05,
                     "genFiltEff": 3.793071E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 24.5556
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.802072.Py8EG_A14NNPDF23LO_jetjet_JZ9incl_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13144_p6026",
                     "crossSection": 1.9639E-05,
                     "genFiltEff": 3.793071E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 43.65
                 },
                 {
                     "logicalDatasetName": "mc20_13TeV.802072.Py8EG_A14NNPDF23LO_jetjet_JZ9incl_4jets15_2bjets.deriv.DAOD_PHYS.e8547_s3797_r13145_p6026",
                     "crossSection": 1.9639E-05,
                     "genFiltEff": 3.793071E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0
+                    "luminosity": 57.6966
+                }
+            ]
+        },
+        {
+            "label": "mc20_ttbar",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/ttbar_allhad/user.viruelas.EJ_2024_03_23_T095425.410471.e6337_s3681_r13167_p6026_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/ttbar_allhad/user.viruelas.EJ_2024_03_23_T095425.410471.e6337_s3681_r13144_p6026_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/ttbar_allhad/user.viruelas.EJ_2024_03_23_T095425.410471.e6337_s3681_r13145_p6026_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc20_13TeV.410471.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYS.e6337_s3681_r13167_p6026 ",
+                    "crossSection": 7.2977E-01,
+                    "genFiltEff": 4.562069E-01,
+                    "kFactor": 1.13974074379,
+                    "luminosity": 24.5556
+                },
+                {
+                    "logicalDatasetName": "mc20_13TeV.410471.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYS.e6337_s3681_r13144_p6026",
+                    "crossSection": 7.2977E-01,
+                    "genFiltEff": 4.562069E-01,
+                    "kFactor": 1.13974074379,
+                    "luminosity": 43.65
+                },
+                {
+                    "logicalDatasetName": "mc20_13TeV.410471.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYS.e6337_s3681_r13145_p6026",
+                    "crossSection": 7.2977E-01,
+                    "genFiltEff": 4.562069E-01,
+                    "kFactor": 1.13974074379,
+                    "luminosity": 57.6966
                 }
             ]
         }
-    ]
+    ],
+    "event_selection": {
+        "trigs": {
+            "operator": "or",
+            "value": "Run 2"
+        },
+        "jets": {
+            "pt": {
+                "operator": ">",
+                "value": 40000
+            },
+            "eta": {
+                "operator": "<",
+                "value": 2.5
+            },
+            "count": {
+                "operator": ">=",
+                "value": 4
+            },
+            "btagging": [
+                {
+                    "model": "GN2v01",
+                    "efficiency": 0.77,
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    }
+                }
+            ]
+        },
+        "Delta_eta_HH_discriminant": {
+            "operator": "<",
+            "value": 1.5
+        },
+        "X_Wt_discriminant": {
+            "operator": ">",
+            "value": 1.5
+        },
+        "X_HH_discriminant": {
+            "signal": {
+                "inner_boundry": {
+                    "operator": "<",
+                    "value": 1.6
+                }
+            },
+            "control": {
+                "inner_boundry": {
+                    "operator": ">=",
+                    "value": 1.6
+                },
+                "outer_boundry": {
+                    "operator": "<=",
+                    "value": 45
+                }
+            }
+        }
+    }
 }

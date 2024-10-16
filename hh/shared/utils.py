@@ -356,17 +356,21 @@ def save_to_h5(hists, name="histograms.h5", compress=True):
 
 
 def merge_sample_files(
-    inputs, hists=None, merge_jz_regex=None, save_to="merged_histograms.h5"
+    inputs,
+    hists=None,
+    save_to="merged_histograms.h5",
+    merge_jz_regex=None,
+    merge_mc_regex=False,
 ):
     """Merges histograms from multiple h5 files into a single dictionary."""
 
     # check that file doesn't already exist
-    if save_to and Path(save_to).exists():
+    if hists is None and Path(save_to).exists():
         # print warning and ask user if they want to overwrite
         overwrite = builtins.input(
             f"Output file '{save_to}' already exists, do you want to overwrite it? (N/y) "
         )
-        if not (overwrite == "" or overwrite.lower() == "n"):
+        if overwrite == "" or overwrite.lower() == "n":
             save_to = None
 
     _hists = (
@@ -378,7 +382,9 @@ def merge_sample_files(
     for input in inputs:
         if input.is_dir():
             files_in_dir = input.glob("*.h5")
-            merge_sample_files(files_in_dir, _hists, merge_jz_regex)
+            merge_sample_files(
+                files_in_dir, _hists, save_to, merge_jz_regex, merge_mc_regex
+            )
             continue
         with h5py.File(input, "r") as hists_file:
             for sample_name in hists_file:
@@ -386,6 +392,10 @@ def merge_sample_files(
                     merged_sample_name = "_".join(sample_name.split("_")[:-2])
                 else:
                     merged_sample_name = sample_name
+                if merge_mc_regex and merge_mc_regex.search(merged_sample_name):
+                    merged_sample_name = re.sub(r"[ade]", "", merged_sample_name)
+                else:
+                    merged_sample_name = merged_sample_name
                 for hist_name in hists_file[sample_name]:
                     hist_edges = hists_file[sample_name][hist_name]["edges"][:]
                     hist_values = hists_file[sample_name][hist_name]["values"][:]

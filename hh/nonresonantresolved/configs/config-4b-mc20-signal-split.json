@@ -3,90 +3,90 @@
         {
             "label": "mc20a_ggF_k01",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.hh4b.ggF.2024_06_03_T114933/user.caiyi.af3_fs_comp_resolved_nofilter.2024_06_03_T114933.603404.e8564_a907_r14859_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k01/user.viruelas.EJ_2024_03_23_T095848.600463.e8222_s3681_r13167_p6026_TREE/"
             ],
             "metadata": [
                 {
-                    "logicalDatasetName": "mc20_13TeV.603404.PhPy8EG_PDF4LHC21_HHbbbb_chhh1p0.deriv.DAOD_PHYS.e8564_e8455_a907_r14859_r14919_p6026",
+                    "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13167_p6026",
                     "genFiltEff": 1.0,
                     "crossSection": 3.077e-05,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
         {
             "label": "mc20d_ggF_k01",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.hh4b.ggF.2024_06_03_T114933/user.caiyi.af3_fs_comp_resolved_nofilter.2024_06_03_T114933.603404.e8564_a907_r14860_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k01/user.viruelas.EJ_2024_03_23_T095848.600463.e8222_s3681_r13144_p6026_TREE/"
             ],
             "metadata": [
                 {
-                    "logicalDatasetName": "mc20_13TeV.603404.PhPy8EG_PDF4LHC21_HHbbbb_chhh1p0.deriv.DAOD_PHYS.e8564_e8455_a907_r14860_r14919_p6026",
+                    "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13144_p6026",
                     "genFiltEff": 1.0,
                     "crossSection": 3.077e-05,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
         {
             "label": "mc20e_ggF_k01",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.hh4b.ggF.2024_06_03_T114933/user.caiyi.af3_fs_comp_resolved_nofilter.2024_06_03_T114933.603404.e8564_a907_r14861_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k01/user.viruelas.EJ_2024_03_23_T095848.600463.e8222_s3681_r13145_p6026_TREE/"
             ],
             "metadata": [
                 {
-                    "logicalDatasetName": "mc20_13TeV.603404.PhPy8EG_PDF4LHC21_HHbbbb_chhh1p0.deriv.DAOD_PHYS.e8564_e8455_a907_r14861_r14919_p6026",
+                    "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13145_p6026",
                     "genFiltEff": 1.0,
                     "crossSection": 3.077e-05,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         },
         {
             "label": "mc20a_ggF_k10",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.hh4b.ggF.2024_06_03_T114933/user.caiyi.af3_fs_comp_resolved_nofilter.2024_06_03_T114933.603406.e8564_a907_r14859_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k10/user.viruelas.EJ_2024_03_23_T095848.600464.e8222_s3681_r13167_p6026_TREE/"
             ],
             "metadata": [
                 {
-                    "logicalDatasetName": "mc20_13TeV.603406.PhPy8EG_PDF4LHC21_HHbbbb_chhh10p0.deriv.DAOD_PHYS.e8564_a907_r14859_p6026",
+                    "logicalDatasetName": "mc20_13TeV.600464.PhPy8EG_PDF4LHC15_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8222_s3681_r13167_p6026",
                     "genFiltEff": 1,
                     "crossSection": 641.2E-06,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556
+                    "luminosity": 36.64674
                 }
             ]
         },
         {
             "label": "mc20d_ggF_k10",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.hh4b.ggF.2024_06_03_T114933/user.caiyi.af3_fs_comp_resolved_nofilter.2024_06_03_T114933.603406.e8564_a907_r14860_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k10/user.viruelas.EJ_2024_03_23_T095848.600464.e8222_s3681_r13144_p6026_TREE/"
             ],
             "metadata": [
                 {
-                    "logicalDatasetName": "mc20_13TeV.603406.PhPy8EG_PDF4LHC21_HHbbbb_chhh10p0.deriv.DAOD_PHYS.e8564_a907_r14860_p6026",
+                    "logicalDatasetName": "mc20_13TeV.600464.PhPy8EG_PDF4LHC15_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8222_s3681_r13144_p6026",
                     "genFiltEff": 1,
                     "crossSection": 641.2E-06,
                     "kFactor": 1.0,
-                    "luminosity": 43.65
+                    "luminosity": 44.6306
                 }
             ]
         },
         {
             "label": "mc20e_ggF_k10",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.hh4b.ggF.2024_06_03_T114933/user.caiyi.af3_fs_comp_resolved_nofilter.2024_06_03_T114933.603406.e8564_a907_r14861_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k10/user.viruelas.EJ_2024_03_23_T095848.600464.e8222_s3681_r13145_p6026_TREE/"
             ],
             "metadata": [
                 {
-                    "logicalDatasetName": "mc20_13TeV.603406.PhPy8EG_PDF4LHC21_HHbbbb_chhh10p0.deriv.DAOD_PHYS.e8564_a907_r14861_p6026",
+                    "logicalDatasetName": "mc20_13TeV.600464.PhPy8EG_PDF4LHC15_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8222_s3681_r13145_p6026",
                     "genFiltEff": 1,
                     "crossSection": 641.2E-06,
                     "kFactor": 1.0,
-                    "luminosity": 57.6966
+                    "luminosity": 58.7916
                 }
             ]
         }
@@ -120,12 +120,12 @@
                 }
             ]
         },
-        "X_Wt_discriminant": {
-            "operator": ">",
-            "value": 1.5
-        },
         "Delta_eta_HH_discriminant": {
             "operator": "<",
+            "value": 1.5
+        },
+        "X_Wt_discriminant": {
+            "operator": ">",
             "value": 1.5
         },
         "X_HH_discriminant": {
