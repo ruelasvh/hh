@@ -17,6 +17,7 @@ from hh.shared.utils import (
     get_legend_label,
     register_bottom_offset,
 )
+from hh.shared.error import get_efficiency_with_uncertainties
 
 np.seterr(divide="ignore", invalid="ignore")
 
@@ -91,9 +92,9 @@ class HistPlottable:
                 ),
             )
         hplt.histplot(
-            self.counts[1:-1],
+            self.counts,
             self.bins,
-            yerr=self.errors[1:-1] if self.errors is not None else None,
+            yerr=self.errors if self.errors is not None else None,
             label=self.legend_label,
             ax=ax,
             **kwargs,
@@ -420,7 +421,7 @@ def draw_efficiency(
     xmax=None,
     ymin=0,
     ymax=1,
-    draw_errors=False,
+    draw_errors=True,
     output_dir=Path("plots"),
     plot_name="efficiency",
 ):
@@ -441,20 +442,30 @@ def draw_efficiency(
         for i, hists in enumerate(hist_prefixes):
             hist_total_name = find_hist(sample_hists, lambda h: re.match(hists[0], h))
             hist_total = sample_hists[hist_total_name]
-            hist_total_values = hist_total["values"]
-            hist_total_edges = hist_total["edges"]
             hist_pass_name = find_hist(sample_hists, lambda h: re.match(hists[1], h))
             hist_pass = sample_hists[hist_pass_name]
-            hist_pass_values = hist_pass["values"]
-            eff = hist_pass_values / hist_total_values
+            eff, errors = get_efficiency_with_uncertainties(
+                hist_pass["values"][1:-1], hist_total["values"][1:-1]
+            )
+            breakpoint()
             hist_main = HistPlottable(
                 eff,
-                hist_total_edges,
+                hist_total["edges"],
+                errors=errors if draw_errors else None,
                 legend_label=legend_labels[hist_total_name] if legend_labels else None,
                 xlabel=xlabel,
                 ylabel=ylabel,
             )
-            hist_main.plot(ax=ax, color=f"C{i}")
+            error_attrs = (
+                {"histtype": "errorbar", "solid_capstyle": "projecting", "capsize": 3}
+                if draw_errors
+                else {}
+            )
+            hist_main.plot(
+                ax=ax,
+                color=f"C{i}",
+                **error_attrs,
+            )
 
     ax.legend(**legend_options)
     ax.set_xlabel(xlabel)

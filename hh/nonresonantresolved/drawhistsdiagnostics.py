@@ -102,7 +102,8 @@ def draw_hists(
                 )
 
     for sample_type, sample_hists in hists_group.items():
-        sample_lumi = [mc_campaigns[mc] for mc in mc_campaigns if mc in sample_type][0]
+        # sample_lumi = [mc_campaigns[mc] for mc in mc_campaigns if mc in sample_type][0]
+        sample_lumi = sum(mc_campaigns.values())
         ########################################################
         # HH mass plots truth reco-matched vs reco truth-matched
         ########################################################
@@ -228,7 +229,7 @@ def draw_hists(
                     },
                     xmin=150 if "hh_mass" == hh_var else None,
                     xmax=600 if "hh_pt" == hh_var else None,
-                    legend_options={"loc": "upper right", "fontsize": "small"},
+                    legend_options={"loc": "lower right", "fontsize": "small"},
                     third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
                     output_dir=output_dir,
                     plot_name=f"pairing_efficiency_reco_{hh_var}",
@@ -257,7 +258,7 @@ def draw_hists(
                     },
                     xmin=200 if "hh_mass" == hh_var else None,
                     xmax=600 if "hh_pt" == hh_var else None,
-                    legend_options={"loc": "upper right", "fontsize": "small"},
+                    legend_options={"loc": "lower right", "fontsize": "small"},
                     third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
                     output_dir=output_dir,
                     plot_name=f"pairing_efficiency_truth_{hh_var}",

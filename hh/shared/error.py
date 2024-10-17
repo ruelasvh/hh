@@ -38,29 +38,24 @@ def efficiency_error_bayesian(k, n, bUpper):
 def get_efficiency_with_uncertainties(passed, total):
     """Get relative upper and lower error bar positions"""
     upper_err = np.array(
-        [
-            efficiency_error_bayesian(passed, total, bUpper=True)
-            for passed, total in zip(passed, total)
-        ]
+        [efficiency_error_bayesian(p, t, bUpper=True) for p, t in zip(passed, total)]
     )
     lower_err = np.array(
-        [
-            efficiency_error_bayesian(passed, total, bUpper=False)
-            for passed, total in zip(passed, total)
-        ]
+        [efficiency_error_bayesian(p, t, bUpper=False) for p, t in zip(passed, total)]
     )
 
     # TODO: Root implementation
     # upper_err = np.array(
-    #     [bayesian(passed, total, bUpper=True) for passed, total in zip(passed, total)],
+    #     [bayesian(p, t, bUpper=True) for p, t in zip(passed, total)],
     #     dtype=np.float32,
     # )
     # lower_err = np.array(
-    #     [bayesian(passed, total, bUpper=False) for passed, total in zip(passed, total)],
+    #     [bayesian(p, t, bUpper=False) for p, t in zip(passed, total)],
     #     dtype=np.float32,
     # )
 
-    efficiency = passed / total
+    # cap efficiency at 1, dirty fix
+    efficiency = np.minimum(passed / total, 1)
     relative_errors = np.array([efficiency - lower_err, upper_err - efficiency])
     return efficiency, relative_errors
 
@@ -82,7 +77,7 @@ def beta_central_interval(level, a, b, bUpper):
         if (a > 0) & (b > 0):
             return stats.beta.ppf((1 - level) / 2, a, b)
         else:
-            0
+            return 0.0
 
 
 def get_symmetric_bin_errors(data, weights, bins):
