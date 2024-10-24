@@ -55,7 +55,7 @@
         "jets": {
             "pt": {
                 "operator": ">",
-                "value": 40000
+                "value": 40
             },
             "eta": {
                 "operator": "<",

@@ -1,6 +1,5 @@
 import itertools as it
 import numpy as np
-import vector as p4
 import awkward as ak
 from hh.shared.utils import (
     get_op,
@@ -37,7 +36,7 @@ def select_n_jets_events(
     valid_jets_mask = np.ones_like(jets.pt, dtype=bool)
     if pt_sel:
         valid_jets_mask = valid_jets_mask & get_op(pt_sel["operator"])(
-            jets.pt, pt_sel["value"]
+            jets.pt * GeV, pt_sel["value"]
         )
     if eta_sel:
         valid_jets_mask = valid_jets_mask & get_op(eta_sel["operator"])(
@@ -242,15 +241,3 @@ def select_truth_matched_jets(
     keep_event_mask = ak.sum(valid_truth_matched_jets, axis=1) >= n_truth_matched
     valid_truth_matched_jet_mask = ak.mask(valid_truth_matched_jets, keep_event_mask)
     return valid_truth_matched_jet_mask
-
-
-def calculate_scale_factors(events):
-    """Calculates the scale factors for each event.
-
-    Returns:
-        The scale factors for each event
-    """
-    # jsfs = t.arrays('sf', aliases=jalias, cut=f'(pt > {pT_min}) & (abs(eta) < {eta_max}) & {jvtCut}')
-    # mc_sf = ak.prod(jsfs.sf[:,:,0],axis=-1).to_numpy()
-    sf = np.ones(len(events))
-    return sf
