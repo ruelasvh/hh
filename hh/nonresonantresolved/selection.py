@@ -243,23 +243,24 @@ def select_truth_matched_jets(
     return valid_truth_matched_jet_mask
 
 
-def select_vbf_events(jets, valid_central_jets_mask, selection={}):
-    """Selects events that pass the VBF selection.
-
-    Returns:
-        Events that pass the VBF selection
-    """
-    selection = {
+def select_vbf_events(
+    jets,
+    valid_central_jets_mask,
+    selection={
         "pt": {"operator": ">", "value": 30},
         "eta_min": {"operator": ">", "value": 2.5},
         "eta_max": {"operator": "<", "value": 4.5},
         "m_jj": {"operator": ">", "value": 1_000},
         "delta_eta_jj": {"operator": ">", "value": 3},
         "pT_vector_sum": {"operator": "<", "value": 65},
-    }
-    # valid_forward_jets_mask = (
-    #     (jets.pt * GeV > 30) & (abs(jets.eta) > 2.5) & (abs(jets.eta) < 4.5)
-    # )
+    },
+):
+    """Selects events that pass the VBF selection.
+
+    Returns:
+        Events that pass the VBF selection
+    """
+
     valid_forward_jets_mask = (
         get_op(selection["pt"]["operator"])(jets.pt * GeV, selection["pt"]["value"])
         & get_op(selection["eta_min"]["operator"])(
@@ -331,19 +332,20 @@ def select_vbf_events(jets, valid_central_jets_mask, selection={}):
     all_jets_novbf = ak.where(mask, all_jets[~is_vbf_cand], all_jets)
 
     # Remove the forward jets from all_jets_novbf, now that we've identified the VBF jets
-    # This lets us get the four HC jets for the vecSumpT calc
-    all_jets_novbf = all_jets_novbf[abs(all_jets_novbf.eta) < 2.5]
+    # all_jets_novbf = all_jets_novbf[abs(all_jets_novbf.eta) < 2.5]
+    # Get the four HC jets for the vector sum pT calculation
     vbf_pTvecsum = ak.where(
         mask,
-        (ak.sum(all_jets_novbf[:, :4], axis=1) + vbf_jet_1 + vbf_jet_2).pt * GeV,
+        (
+            ak.sum(all_jets_novbf[abs(all_jets_novbf.eta) < 2.5][:, :4], axis=1)
+            + vbf_jet_1
+            + vbf_jet_2
+        ).pt
+        * GeV,
         -1,
     )
 
-    # Calculate the variables for VBF event selection:
-    #    mjj > 1 TeV
-    #    dEtajj > 3
-    #    pT(6-jets) < 65 GeV
-    # pass_vbf_sel = (vbf_mjj > 1000) & (vbf_dEtajj > 3) & (vbf_pTvecsum < 65)
+    # Apply the VBF selection
     pass_vbf_sel = (
         get_op(selection["m_jj"]["operator"])(vbf_mjj, selection["m_jj"]["value"])
         & get_op(selection["delta_eta_jj"]["operator"])(
