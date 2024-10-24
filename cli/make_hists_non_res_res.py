@@ -3,6 +3,7 @@
 """
 build plots of everything
 """
+from __future__ import annotations
 
 import os
 import sys
@@ -12,6 +13,8 @@ import h5py
 import uproot
 import argparse
 import logging
+import numpy as np
+import awkward as ak
 from pathlib import Path
 
 from hh.nonresonantresolved.inithists import init_hists
@@ -29,6 +32,7 @@ from hh.shared.utils import (
     get_sample_weight,
     write_hists,
     resolve_project_paths,
+    format_btagger_model_name,
 )
 
 
@@ -40,8 +44,16 @@ def get_args():
         "-o",
         "--output",
         type=Path,
-        default=Path("hists.h5"),
+        default=Path("resolved_nominal.parquet"),
         **defaults,
+    )
+    # add argument to save histograms
+    parser.add_argument(
+        "-s",
+        "--save-hists",
+        action="store_true",
+        default=True,
+        help="Save histograms to file",
     )
     parser.add_argument(
         "-w",
@@ -88,7 +100,7 @@ def process_sample_worker(
     sample_path: Path,
     sample_metadata: list,
     selections: dict,
-    hists: list,
+    hists: dict | None,
     args: argparse.Namespace,
 ) -> None:
     is_mc = "data" not in sample_name
@@ -101,6 +113,7 @@ def process_sample_worker(
         sample_weight = get_sample_weight(sample_metadata, cbk)
     else:
         sample_weight = 1.0 if args.sample_weight is None else args.sample_weight
+    batches = []
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
@@ -112,26 +125,47 @@ def process_sample_worker(
     ):
         logger.info(f"Processing batch: {batch_report}")
         logger.debug(f"Columns: {batch_events.fields}")
-        # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
         processed_batch = process_batch(
             batch_events,
             selections,
             is_mc,
         )
-        # if no events pass the selection, skip filling histograms
         if len(processed_batch) == 0:
             continue
-        # apply sample weight
         processed_batch["event_weight"] = processed_batch.event_weight * sample_weight
-        # fill histograms
-        fill_hists(processed_batch, hists[sample_name], selections, is_mc)
-        # save histograms to file
-        output_name = args.output.with_name(
-            f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}{args.output.suffix}"
-        )
-        with h5py.File(output_name, "w") as output_file:
-            logger.info(f"Saving histograms to file: {output_name}")
+        valid_events = np.zeros(len(processed_batch), dtype=bool)
+        if "jets" in selections and "btagging" in selections["jets"]:
+            bjets_sel = selections["jets"]["btagging"]
+            if isinstance(bjets_sel, dict):
+                bjets_sel = [bjets_sel]
+            for i_bjets_sel in bjets_sel:
+                btag_model = i_bjets_sel["model"]
+                btag_eff = i_bjets_sel["efficiency"]
+                n_btags = i_bjets_sel["count"]["value"]
+                btagger = format_btagger_model_name(
+                    btag_model,
+                    btag_eff,
+                )
+                valid_events = (
+                    valid_events
+                    | processed_batch[f"valid_{n_btags}_btag_{btagger}_events"]
+                )
+        processed_batch = processed_batch[valid_events]
+        batches.append(processed_batch)
+        if args.save_hists:
+            fill_hists(processed_batch, hists[sample_name], selections, is_mc)
+    if args.save_hists:
+        hists_output_name = f"hists_{sample_name}_{os.getpgid(os.getpid())}.h5"
+        with h5py.File(hists_output_name, "w") as output_file:
+            logger.info(f"Saving histograms to file: {hists_output_name}")
             write_hists(hists[sample_name], sample_name, output_file)
+    # concatenate all batches
+    batches = ak.concatenate(batches)
+    output_name = args.output.with_name(
+        f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}{args.output.suffix}"
+    )
+    logger.info(f"Saving processed events to {output_name}")
+    ak.to_parquet(batches, output_name)
 
 
 def main():
@@ -142,16 +176,16 @@ def main():
     if args.loglevel:
         setup_logger(args.loglevel)
 
-    # check that output file extension is .h5
-    if args.output.suffix != ".h5":
-        logger.error("Only h5 file output supported!")
+    # check that output file extension is .parquet
+    if args.output.suffix != ".parquet":
+        logger.error("Only parquet file output supported!")
         sys.exit(1)
 
     with open(args.config) as cf:
         config = resolve_project_paths(config=json.load(cf))
 
     samples, event_selection = config["samples"], config["event_selection"]
-    hists = init_hists(samples, event_selection, args)
+    hists = init_hists(samples, event_selection, args) if args.save_hists else None
 
     worker_items = [
         (

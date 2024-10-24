@@ -4,14 +4,10 @@ import vector as p4
 import awkward as ak
 from hh.shared.utils import (
     get_op,
-    format_btagger_model_name,
     get_trigs_logical_op,
-    kin_labels,
     GeV,
-    MeV,
 )
 from hh.shared.selection import X_Wt, get_W_t_p4
-from hh.nonresonantresolved.pairing import scan_m_X
 
 
 def select_events_passing_triggers(
@@ -48,10 +44,10 @@ def select_n_jets_events(
             np.abs(jets.eta), eta_sel["value"]
         )
     if do_jvt:
+        jvt_mask = jets.jvttag == 1
         # apply JVT cut only on jets that have pt < 60 GeV
-        valid_jets_mask = ak.mask(valid_jets_mask, jets.pt < 60_000)
-        valid_jets_mask = valid_jets_mask & (jets.jvttag == 1)
-        ak.fill_none(valid_jets_mask, True, axis=1)
+        jvt_mask = ak.where(jets.pt * GeV < 60, jvt_mask, True)
+        valid_jets_mask = valid_jets_mask & jvt_mask
     if njets_sel:
         valid_events_mask = get_op(njets_sel["operator"])(
             ak.sum(valid_jets_mask, axis=1), njets_sel["value"]
@@ -105,7 +101,7 @@ def select_hh_jet_candidates(jets, valid_jets_mask, n_jets=4):
 
 
 def reconstruct_hh_jet_pairs(
-    jets_p4, hh_jet_idx, loss, optimizer=np.argmin, n_jets=4, n_pairs=2
+    jets, hh_jet_idx, loss, optimizer=np.argmin, n_jets=4, n_pairs=2
 ):
     """Reconstructs the Higgs candidate jets in each event."""
     jet_pairs = list(
@@ -115,7 +111,7 @@ def reconstruct_hh_jet_pairs(
         (jet_pairs[i], jet_pairs[~i]) for i in range(n_pairs + 1)
     ]  # [((0, 1), (2, 3)), ((0, 2), (1, 3)), ((0, 3), (1, 2))] for n_jets=4, n_pairs=2
 
-    hc_jets = jets_p4[hh_jet_idx]
+    hc_jets = jets[hh_jet_idx]
     valid_event_mask = ~ak.is_none(hc_jets, axis=0)
     chosen_pairs = optimizer(
         np.vstack(

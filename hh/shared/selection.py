@@ -62,14 +62,13 @@ def X_Wt(m_jj, m_jjb, m_W=80.4, m_t=172.5):
 def get_W_t_p4(jets, hh_jet_idx, non_hh_jet_idx):
     jet_idx = ak.concatenate([hh_jet_idx, non_hh_jet_idx], axis=1)
     jets = jets[jet_idx]
-    jet_p4 = p4.zip({var: jets[var] for var in kin_labels})
-    bjet_p4 = jet_p4[:, :4][jets.btag[:, :4] == 1]
+    bjet_p4 = jets[:, :4][jets.btag[:, :4] == 1]
     bjet_idx = ak.local_index(bjet_p4, axis=1)
     # for one event with hc_jet_indices with 4 jets, remaining_jets with 2 jets
     # jet_indices -> [[0, 1, 2, 3, 4, 5], ...]
     # hc_jet_indices -> [[0, 2, 3, 5], ...]
     jet_pair_combinations_indices = ak.argcombinations(
-        jet_p4, 2, axis=1
+        jets, 2, axis=1
     )  # [[(0, 1), (0, 2), (0, 3), (0, 4), (...), ..., (2, 5), (3, 4), (3, 5), (4, 5)], ...]
     top_candidate_indices = ak.cartesian(
         [bjet_idx, jet_pair_combinations_indices], axis=1
@@ -86,8 +85,8 @@ def get_W_t_p4(jets, hh_jet_idx, non_hh_jet_idx):
     top_jet1_indices = top_jet1_indices[valid_top_candidate_mask]
     top_jet2_indices = top_jet2_indices[valid_top_candidate_mask]
     top_jet3_indices = top_jet3_indices[valid_top_candidate_mask]
-    W_candidates_p4 = jet_p4[top_jet1_indices] + jet_p4[top_jet2_indices]
-    top_candidates_p4 = W_candidates_p4 + jet_p4[top_jet3_indices]
+    W_candidates_p4 = jets[top_jet1_indices] + jets[top_jet2_indices]
+    top_candidates_p4 = W_candidates_p4 + jets[top_jet3_indices]
     return W_candidates_p4, top_candidates_p4
 
 

@@ -33,7 +33,6 @@ def fill_hists(
             weights=events.event_weight,
             hists=find_hists_by_name(hists, "hh_(pt|eta|phi|mass)_truth"),
         )
-        fill_reco_truth_matched_jets_histograms(events, hists)
         fill_reco_vs_truth_variable_response_histograms(events, hists, kin_labels)
         ## fill_hh_jets_vs_trigs_histograms(events, hists)
         if "jets" in selections and "btagging" in selections["jets"]:
@@ -49,6 +48,7 @@ def fill_hists(
                     btag_model,
                     btag_eff,
                 )
+                fill_reco_truth_matched_jets_histograms(events, hists, 2, btagger)
                 fill_reco_hh_histograms(events, hists, n_btags, btagger)
                 fill_hh_jets_pairings_histograms(events, hists, n_btags, btagger)
                 fill_mHH_plane_vs_pairing_histograms(events, hists, n_btags, btagger)
@@ -148,7 +148,9 @@ def fill_reco_hh_histograms(events, hists, n_btags, btagger) -> None:
         )
 
 
-def fill_reco_truth_matched_jets_histograms(events, hists: list) -> None:
+def fill_reco_truth_matched_jets_histograms(
+    events, hists: list, n_btags: int, btagger: str
+) -> None:
     """Fill reco truth matched jets histograms"""
 
     jets_p4 = p4.zip({v: events[f"jet_{v}"] for v in kin_labels})
@@ -185,7 +187,7 @@ def fill_reco_truth_matched_jets_histograms(events, hists: list) -> None:
     h1_truth_p4 = p4.zip({v: events[f"h1_truth_{v}"] for v in kin_labels})
     h2_truth_p4 = p4.zip({v: events[f"h2_truth_{v}"] for v in kin_labels})
     hh_truth_p4 = h1_truth_p4 + h2_truth_p4
-    valid_event = ~ak.is_none(events.valid_jets, axis=0)
+    valid_event = ~ak.is_none(events[f"valid_{n_btags}_btag_{btagger}_events"], axis=0)
     fill_HH_histograms(
         hh=hh_truth_p4[valid_event],
         weights=weights[valid_event],

@@ -15,7 +15,7 @@ from hh.shared.selection import (
     get_W_t_p4,
     classify_control_events,
 )
-from hh.nonresonantresolved.pairing import pairing_methods, scan_m_X
+from hh.nonresonantresolved.pairing import pairing_methods
 from hh.nonresonantresolved.selection import (
     select_n_jets_events,
     select_n_bjets_events,
@@ -73,15 +73,16 @@ def process_batch(
                         {k: events[f"jet_{k}"] for k in ["jvttag", *kin_labels.keys()]}
                     ),
                     selection=jets_sel,
-                    do_jvt=False,
+                    do_jvt=True,
                 )
                 ## apply 2 b-tag pre-selection ##
-                events["valid_jets"] = select_n_bjets_events(
+                valid_jets = select_n_bjets_events(
                     jets=valid_jets,
                     where=events[f"jet_btag_{btagger}"][valid_jets],
                     selection={**i_bjets_sel, "count": {"operator": ">=", "value": 2}},
                 )
-                valid_events = valid_events & ~ak.is_none(events.valid_jets).to_numpy()
+                valid_events = valid_events & ~ak.is_none(valid_jets).to_numpy()
+                events[f"valid_2_btag_{btagger}_events"] = valid_events
                 logger.info(
                     "Events passing previous cut and %s %s jets with pT %s %s, |eta| %s %s and 2 b-tags: %s (weighted: %s)",
                     jets_sel["count"]["operator"],
@@ -102,11 +103,11 @@ def process_batch(
                         events.truth_jet_H_parent_mask != 0,
                         # (events.truth_jet_H_parent_mask == 1)
                         # | (events.truth_jet_H_parent_mask == 2),
-                        events.valid_jets,
+                        valid_jets,
                     )
                     ### jets truth matched with HadronConeExclTruthLabelID ###
                     events["reco_truth_matched_jets_v2"] = select_truth_matched_jets(
-                        events.jet_truth_label_ID == 5, events.valid_jets
+                        events.jet_truth_label_ID == 5, valid_jets
                     )
                     if logger.level == logging.DEBUG:
                         logger.info(
@@ -139,13 +140,12 @@ def process_batch(
                     passed_trigs = select_events_passing_triggers(
                         ak.mask(events, valid_events), op=trig_op
                     )
-                    events["passed_trigs"] = passed_trigs
                     valid_events = valid_events & ak.to_numpy(passed_trigs)
+                    events[f"valid_2_btag_{btagger}_events"] = valid_events
                     logger.info(
                         "Events passing previous cuts and the %s of all triggers: %s (weighted: %s)",
                         trig_op.upper() if trig_op is not None else "None",
                         ak.sum(valid_events),
-                        # ak.sum(events.event_weight[valid_events]),
                         ak.sum(passed_trigs),
                     )
                     if ak.sum(valid_events) == 0:
@@ -153,12 +153,13 @@ def process_batch(
 
                 ## select and save events with >= n central b-jets ##
                 valid_btagged_jets = select_n_bjets_events(
-                    jets=events.valid_jets,
-                    where=events[f"jet_btag_{btagger}"][events.valid_jets],
+                    jets=valid_jets,
+                    where=events[f"jet_btag_{btagger}"][valid_jets],
                     selection=i_bjets_sel,
                 )
                 events[f"valid_{n_btags}_btag_{btagger}_jets"] = valid_btagged_jets
                 valid_events = valid_events & ~ak.is_none(valid_btagged_jets).to_numpy()
+                events[f"valid_{n_btags}_btag_{btagger}_events"] = valid_events
                 logger.info(
                     "Events passing previous cut and %s %s b-tags with %s and %s efficiency: %s (weighted: %s)",
                     i_bjets_sel["count"]["operator"],
@@ -166,7 +167,8 @@ def process_batch(
                     i_bjets_sel["model"],
                     i_bjets_sel["efficiency"],
                     ak.sum(valid_events),
-                    ak.sum(events.event_weight[valid_events]),
+                    # ak.sum(events.event_weight[valid_events]),
+                    ak.sum(events.event_weight),
                 )
                 if ak.sum(valid_events) == 0:
                     return events
@@ -212,13 +214,16 @@ def process_batch(
                             ),
                         )
 
-                # ###################################
-                # # select and save HH jet candidates
-                # ###################################
-                jets = {k: events[f"jet_{k}"] for k in kin_labels}
-                jets["btag"] = events[f"jet_btag_{btagger}"]
-                jets = ak.zip(jets)
-                jets_p4 = p4.zip({v: events[f"jet_{v}"] for v in kin_labels})
+                ###################################
+                # select and save HH jet candidates
+                ###################################
+                jets = p4.zip(
+                    {
+                        "btag": events[f"jet_btag_{btagger}"],
+                        **{k: events[f"jet_{k}"] for k in kin_labels},
+                    }
+                )
+
                 hh_jet_idx, non_hh_jet_idx = select_hh_jet_candidates(
                     jets=jets,
                     valid_jets_mask=valid_btagged_jets,
@@ -289,7 +294,7 @@ def process_batch(
                     valid_events_pairing = np.copy(valid_events)
                     ###### reconstruct H1 and H2 ######
                     H1_jet_idx, H2_jet_idx = reconstruct_hh_jet_pairs(
-                        jets_p4=jets_p4,
+                        jets,
                         hh_jet_idx=hh_jet_idx,
                         loss=pairing_info["loss"],
                         optimizer=pairing_info["optimizer"],
@@ -300,7 +305,7 @@ def process_batch(
                         ###### Truth match the H1 and H2 ######
                         H1_truth_matched_jet_idx, H2_truth_matched_jet_idx = (
                             reconstruct_hh_jet_pairs(
-                                jets_p4=jets_p4,
+                                jets,
                                 hh_jet_idx=hh_truth_matched_jet_idx,
                                 loss=pairing_info["loss"],
                                 optimizer=pairing_info["optimizer"],
@@ -332,8 +337,8 @@ def process_batch(
                     #################################################
                     # Perform event selection for each pairing method
                     #################################################
-                    h1_p4 = ak.sum(jets_p4[H1_jet_idx], axis=1)
-                    h2_p4 = ak.sum(jets_p4[H2_jet_idx], axis=1)
+                    h1_p4 = ak.sum(jets[H1_jet_idx], axis=1)
+                    h2_p4 = ak.sum(jets[H2_jet_idx], axis=1)
                     ###### Delta eta ∆𝜂 HH veto ######
                     if "Delta_eta_HH_discriminant" in selections:
                         deltaeta_HH_discrim_sel = selections[
