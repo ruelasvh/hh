@@ -241,3 +241,117 @@ def select_truth_matched_jets(
     keep_event_mask = ak.sum(valid_truth_matched_jets, axis=1) >= n_truth_matched
     valid_truth_matched_jet_mask = ak.mask(valid_truth_matched_jets, keep_event_mask)
     return valid_truth_matched_jet_mask
+
+
+def select_vbf_events(jets, valid_central_jets_mask, selection={}):
+    """Selects events that pass the VBF selection.
+
+    Returns:
+        Events that pass the VBF selection
+    """
+    selection = {
+        "pt": {"operator": ">", "value": 30},
+        "eta_min": {"operator": ">", "value": 2.5},
+        "eta_max": {"operator": "<", "value": 4.5},
+        "m_jj": {"operator": ">", "value": 1_000},
+        "delta_eta_jj": {"operator": ">", "value": 3},
+        "pT_vector_sum": {"operator": "<", "value": 65},
+    }
+    # valid_forward_jets_mask = (
+    #     (jets.pt * GeV > 30) & (abs(jets.eta) > 2.5) & (abs(jets.eta) < 4.5)
+    # )
+    valid_forward_jets_mask = (
+        get_op(selection["pt"]["operator"])(jets.pt * GeV, selection["pt"]["value"])
+        & get_op(selection["eta_min"]["operator"])(
+            abs(jets.eta), selection["eta_min"]["value"]
+        )
+        & get_op(selection["eta_max"]["operator"])(
+            abs(jets.eta), selection["eta_max"]["value"]
+        )
+    )
+    central_jets = jets[valid_central_jets_mask]
+    forward_jets = jets[valid_forward_jets_mask]
+
+    all_jets = ak.concatenate([central_jets, forward_jets], axis=1)
+
+    # sort jets by pt and b-tagging
+    all_jets = all_jets[ak.argsort(all_jets.pt, axis=1, ascending=False)]
+    all_jets = all_jets[ak.argsort(all_jets.btag, axis=1, ascending=False)]
+
+    # For the event to be VBF, need at least 6 jets, 2 of which are anti-tagged
+    num_all_jets = ak.num(all_jets.pt, axis=1)
+    num_untag = ak.sum(all_jets.btag == 0, axis=1)
+    mask = (num_all_jets >= 6) & (num_untag >= 2)
+
+    # Make combinations of possible VBF jet pairs
+    vbfjet_pair_idxs = ak.argcombinations(
+        ak.mask(all_jets, mask), 2, fields=["j1", "j2"]
+    )
+
+    # VBF jets can't be b-tagged
+    untagged_mask = (ak.mask(all_jets.btag, mask)[vbfjet_pair_idxs.j1] == 0) & (
+        ak.mask(all_jets.btag, mask)[vbfjet_pair_idxs.j2] == 0
+    )
+    vbfjet_pair_idxs = vbfjet_pair_idxs[untagged_mask]
+
+    # Get the pair with the highest m_jj
+    mjj_cand = ak.mask(
+        (all_jets[vbfjet_pair_idxs.j1] + all_jets[vbfjet_pair_idxs.j2]).mass, mask
+    )
+    lead_mjj_cand_idx = ak.argsort(mjj_cand, ascending=False)[:, :1]
+
+    vbf_idx_1 = vbfjet_pair_idxs[lead_mjj_cand_idx].j1
+    vbf_idx_2 = vbfjet_pair_idxs[lead_mjj_cand_idx].j2
+
+    vbf_jet_1 = ak.firsts(all_jets[vbf_idx_1])
+    vbf_jet_2 = ak.firsts(all_jets[vbf_idx_2])
+
+    # Get the indices of the VBF jets
+    jidx = ak.local_index(all_jets)
+    is_vbf_cand = ak.mask(
+        (jidx == ak.firsts(vbf_idx_1)) | (jidx == ak.firsts(vbf_idx_2)), mask
+    )
+
+    # Check if we have four central jets remaining if we remove the VBF jets
+    has_four_central_jets = (
+        ak.num(
+            all_jets[
+                (ak.fill_none(~is_vbf_cand, False, axis=0)) & (abs(all_jets.eta) < 2.5)
+            ],
+            axis=1,
+        )
+        >= 4
+    )
+    mask = ak.where(has_four_central_jets == True, mask, False)
+
+    vbf_mjj = ak.where(mask, (vbf_jet_1 + vbf_jet_2).mass * GeV, -1)
+    vbf_dEtajj = ak.where(mask, abs(vbf_jet_1.eta - vbf_jet_2.eta), -1)
+
+    # Remove the VBF jets from the array of central jets
+    all_jets_novbf = ak.where(mask, all_jets[~is_vbf_cand], all_jets)
+
+    # Remove the forward jets from all_jets_novbf, now that we've identified the VBF jets
+    # This lets us get the four HC jets for the vecSumpT calc
+    all_jets_novbf = all_jets_novbf[abs(all_jets_novbf.eta) < 2.5]
+    vbf_pTvecsum = ak.where(
+        mask,
+        (ak.sum(all_jets_novbf[:, :4], axis=1) + vbf_jet_1 + vbf_jet_2).pt * GeV,
+        -1,
+    )
+
+    # Calculate the variables for VBF event selection:
+    #    mjj > 1 TeV
+    #    dEtajj > 3
+    #    pT(6-jets) < 65 GeV
+    # pass_vbf_sel = (vbf_mjj > 1000) & (vbf_dEtajj > 3) & (vbf_pTvecsum < 65)
+    pass_vbf_sel = (
+        get_op(selection["m_jj"]["operator"])(vbf_mjj, selection["m_jj"]["value"])
+        & get_op(selection["delta_eta_jj"]["operator"])(
+            vbf_dEtajj, selection["delta_eta_jj"]["value"]
+        )
+        & get_op(selection["pT_vector_sum"]["operator"])(
+            vbf_pTvecsum, selection["pT_vector_sum"]["value"]
+        )
+    )
+
+    return pass_vbf_sel, ak.where(pass_vbf_sel, all_jets_novbf, jets)

@@ -25,6 +25,7 @@ from hh.nonresonantresolved.selection import (
     reconstruct_hh_jet_pairs,
     select_correct_hh_pair_events,
     select_discrim_events,
+    select_vbf_events,
 )
 
 
@@ -223,6 +224,30 @@ def process_batch(
                         **{k: events[f"jet_{k}"] for k in kin_labels},
                     }
                 )
+                ###################################
+                # Do VBF selection
+                ###################################
+                selections["VBF"] = {
+                    "pt": {"operator": ">", "value": 30},
+                    "eta_min": {"operator": ">", "value": 2.5},
+                    "eta_max": {"operator": "<", "value": 4.5},
+                    "m_jj": {"operator": ">", "value": 1_000},
+                    "delta_eta_jj": {"operator": ">", "value": 3},
+                    "pT_vector_sum": {"operator": "<", "value": 65},
+                }
+                if "VBF" in selections:
+                    vbf_sel = selections["VBF"]
+                    passed_vbf, vbf_jets = select_vbf_events(
+                        jets=jets,
+                        valid_central_jets_mask=valid_btagged_jets,
+                        selection=vbf_sel,
+                    )
+                    events["passed_vbf"] = passed_vbf
+                    logger.info(
+                        "Events passing previous cuts and VBF selection: %s (weighted: %s)",
+                        ak.sum(valid_events & passed_vbf),
+                        ak.sum(events.event_weight[valid_events & passed_vbf]),
+                    )
 
                 hh_jet_idx, non_hh_jet_idx = select_hh_jet_candidates(
                     jets=jets,
