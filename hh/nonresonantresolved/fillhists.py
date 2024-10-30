@@ -4,10 +4,10 @@ import awkward as ak
 from hh.shared.utils import (
     logger,
     find_hist,
-    kin_labels,
     find_hists_by_name,
     format_btagger_model_name,
 )
+from hh.shared.labels import kin_labels
 from hh.nonresonantresolved.pairing import pairing_methods
 from hh.nonresonantresolved.selection import (
     select_n_jets_events,
@@ -53,7 +53,7 @@ def fill_hists(
                 fill_hh_jets_pairings_histograms(events, hists, n_btags, btagger)
                 fill_mHH_plane_vs_pairing_histograms(events, hists, n_btags, btagger)
                 fill_X_HH_histograms(events, hists, n_btags, btagger)
-                fill_mHH_regions_histograms(events, hists, n_btags, btagger)
+                fill_HH_regions_histograms(events, hists, n_btags, btagger)
     return hists
 
 
@@ -135,9 +135,7 @@ def fill_reco_hh_histograms(events, hists, n_btags, btagger) -> None:
         ),
     )
     for pairing in pairing_methods:
-        valid_event = ~ak.is_none(
-            events[f"correct_hh_{n_btags}b_{btagger}_{pairing}_mask"], axis=0
-        )
+        valid_event = events[f"correct_hh_{n_btags}b_{btagger}_{pairing}_mask"] == True
         fill_HH_histograms(
             hh=hh_truth_p4[valid_event],
             weights=weights[valid_event],
@@ -327,9 +325,8 @@ def fill_hh_jets_pairings_histograms(
         valid_event_paired = ~ak.is_none(
             events[f"reco_truth_matched_{n_btags}_btag_{btagger}_jets"], axis=0
         )
-        valid_event_paired_correct = ~ak.is_none(
-            events[f"correct_hh_{n_btags}b_{btagger}_{pairing}_mask"],
-            axis=0,
+        valid_event_paired_correct = (
+            events[f"correct_hh_{n_btags}b_{btagger}_{pairing}_mask"] == True
         )
         valid_events = [valid_event_paired, valid_event_paired_correct]
         for cat, valid_event in zip(
@@ -378,9 +375,7 @@ def fill_hh_jets_pairings_histograms(
             )
 
 
-def fill_mHH_regions_histograms(
-    events, hists: list, n_btags: int, btagger: str
-) -> None:
+def fill_HH_regions_histograms(events, hists: list, n_btags: int, btagger: str) -> None:
     jet_p4 = p4.zip(
         {var: events[f"jet_{var}"] for var in kin_labels},
     )
@@ -429,6 +424,17 @@ def fill_mHH_regions_histograms(
                 hists=find_hists_by_name(
                     hists,
                     f"hh_(pt|eta|phi|mass)_reco_{region}_{n_btags}b_{btagger}_{pairing}_geq_300_GeV",
+                ),
+            )
+            region_wrong_pairs_mask = ~events[
+                f"{region}_correct_pairs_{n_btags}b_{btagger}_{pairing}_mask"
+            ]
+            fill_HH_histograms(
+                hh=hh_reco_p4[region_wrong_pairs_mask],
+                weights=weights[region_wrong_pairs_mask],
+                hists=find_hists_by_name(
+                    hists,
+                    f"hh_(pt|eta|phi|mass)_reco_{region}_{n_btags}b_{btagger}_{pairing}_wrong_pairs",
                 ),
             )
 
@@ -481,6 +487,31 @@ def fill_mHH_plane_vs_pairing_histograms(
                 in h.name,
             ),
         )
+        for region in ["signal", "control"]:
+            region_mask = events[f"{region}_{n_btags}b_{btagger}_{pairing}_mask"]
+            fill_mH_2d_histograms(
+                mh1=h1_p4.mass[region_mask],
+                mh2=h2_p4.mass[region_mask],
+                weights=weights[region_mask],
+                hist=find_hist(
+                    hists,
+                    lambda h: f"mHH_plane_reco_{region}_{n_btags}b_{btagger}_{pairing}"
+                    in h.name,
+                ),
+            )
+            region_wrong_pairs_mask = ~events[
+                f"{region}_correct_pairs_{n_btags}b_{btagger}_{pairing}_mask"
+            ]
+            fill_mH_2d_histograms(
+                mh1=h1_p4.mass[region_wrong_pairs_mask],
+                mh2=h2_p4.mass[region_wrong_pairs_mask],
+                weights=weights[region_wrong_pairs_mask],
+                hist=find_hist(
+                    hists,
+                    lambda h: f"mHH_plane_reco_{region}_{n_btags}b_{btagger}_{pairing}_wrong_pairs"
+                    in h.name,
+                ),
+            )
 
 
 def fill_mH_2d_histograms(mh1, mh2, weights, hist) -> None:

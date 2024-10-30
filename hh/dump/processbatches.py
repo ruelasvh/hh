@@ -7,8 +7,8 @@ from hh.shared.utils import (
     make_4jet_comb_array,
     format_btagger_model_name,
     get_common,
-    kin_labels,
 )
+from hh.shared.labels import kin_labels
 from hh.dump.output import Features, Labels
 from hh.nonresonantresolved.selection import (
     select_events_passing_triggers,

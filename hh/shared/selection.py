@@ -1,7 +1,7 @@
 import numpy as np
 import awkward as ak
 import vector as p4
-from hh.shared.utils import kin_labels
+from hh.shared.labels import kin_labels
 
 
 def calculate_discrim(x, y, x_center, y_center, x_res=0.1, y_res=0.1):

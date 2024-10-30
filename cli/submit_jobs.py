@@ -44,7 +44,7 @@ def get_args():
         "--output",
         type=Path,
         help="Output file name postfix (default: %(default)s)",
-        default=Path("output.h5"),
+        default=Path("output.parquet"),
         metavar="",
     )
     parser.add_argument(
@@ -112,31 +112,7 @@ def main():
                 # get the cutbookkeepers for the sample
                 cbk = concatenate_cutbookkeepers(sample_path)
                 sample_weight = get_sample_weight(sample_metadata, cbk)
-            # === Iterate over each file and create a config file for each sample ===
-            # # create a config file for each sample
-            # config_file = CONFIG_DIR / f"config-{sample['label']}-{i_sample}.json"
-            # configs.append(
-            #     {
-            #         "config_file": config_file.as_posix(),
-            #         "sample_weight": str(sample_weight),
-            #     }
-            # )
-            # with open(config_file, "w") as file:
-            #     # write the sample and event_selection objects to the new config file
-            #     json.dump(
-            #         {
-            #             **config,
-            #             "samples": [
-            #                 {
-            #                     **sample,
-            #                     "paths": [sample_path],
-            #                     "metadata": [sample_metadata],
-            #                 }
-            #             ],
-            #         },
-            #         file,
-            #         indent=4,
-            #     )
+                sample_metadata["sample_weight"] = sample_weight
             # === Iterate over each file in the sample path for faster processing ===
             files = list(Path(sample_path).glob("*.root"))
             for file_path in files:

@@ -2,9 +2,9 @@ from argparse import Namespace
 from hh.nonresonantresolved.pairing import pairing_methods
 from hh.shared.utils import (
     logger,
-    kin_labels,
     format_btagger_model_name,
 )
+from hh.shared.labels import kin_labels
 from hh.shared.hist import (
     Histogram,
     Histogram2d,
@@ -140,6 +140,13 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                     hists_dict[sample_name] += init_mH_2d_histograms(
                         postfix=f"_reco_{btag_count}b_{btagger}_{pairing}_geq_300_GeV"
                     )
+                    for region in ["signal", "control"]:
+                        hists_dict[sample_name] += init_mH_2d_histograms(
+                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}"
+                        )
+                        hists_dict[sample_name] += init_mH_2d_histograms(
+                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_wrong_pairs"
+                        )
                 ##################################################
                 ### X_HH histograms
                 ##################################################
@@ -159,46 +166,32 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                         hists_dict[sample_name] += init_HH_histograms(
                             postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}",
                             binrange={
-                                "pt": [40_000, 500_000],
+                                "pt": [20_000, 500_000],
                                 "eta": [-5, 5],
                                 "phi": [-3, 3],
-                                "mass": [200_000, 1_100_000],
+                                "mass": [100_000, 1_100_000],
+                            },
+                            bins=20,
+                        )
+                        hists_dict[sample_name] += init_HH_histograms(
+                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_wrong_pairs",
+                            binrange={
+                                "pt": [20_000, 500_000],
+                                "eta": [-5, 5],
+                                "phi": [-3, 3],
+                                "mass": [100_000, 1_100_000],
                             },
                             bins=20,
                         )
                         hists_dict[sample_name] += init_HH_histograms(
                             postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_bins_logscale",
                             binrange={
-                                "pt": [40_000, 500_000],
-                                "mass": [200_000, 1_100_000],
+                                "pt": [20_000, 500_000],
+                                "mass": [100_000, 1_100_000],
                             },
                             bins=20,
                             bins_logscale=True,
                         )
-                        ##################################################
-                        # This histograms should be for studies for MC23
-                        # to study low-mass regions with new triggers
-                        ##################################################
-                        # hists_dict[sample_name] += init_HH_histograms(
-                        #     postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_lt_300_GeV",
-                        #     binrange={
-                        #         "pt": [50_000, 500_000],
-                        #         "eta": [-5, 5],
-                        #         "phi": [-3, 3],
-                        #         "mass": [60_000, 300_000],
-                        #     },
-                        #     bins=bins,
-                        # )
-                        # hists_dict[sample_name] += init_HH_histograms(
-                        #     postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_geq_300_GeV",
-                        #     binrange={
-                        #         "pt": [50_000, 500_000],
-                        #         "eta": [-5, 5],
-                        #         "phi": [-3, 3],
-                        #         "mass": [300_000, 1_000_000],
-                        #     },
-                        #     bins=bins,
-                        # )
 
         ##################################################
         ### Background estimate histograms

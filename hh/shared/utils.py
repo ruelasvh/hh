@@ -21,8 +21,6 @@ logger = logging.getLogger("hh4b-analysis")
 
 nth = {1: "first", 2: "second", 3: "third", 4: "fourth"}
 
-kin_labels = {"pt": r"$p_T$", "eta": r"$\eta$", "phi": r"$\phi$", "mass": r"$m$"}
-
 jz_leading_jet_pt = {
     "min": {
         0: -1,

@@ -5,9 +5,9 @@ import awkward as ak
 from hh.shared.utils import (
     logger,
     format_btagger_model_name,
-    kin_labels,
     GeV,
 )
+from hh.shared.labels import kin_labels
 from hh.shared.selection import (
     X_HH,
     R_CR,
@@ -44,6 +44,12 @@ def process_batch(
         )
     logger.info(
         "Initial Events: %s (weighted: %s)", len(events), ak.sum(events["event_weight"])
+    )
+    events_4_more_true_bjets = ak.sum(events.jet_truth_label_ID == 5, axis=1) > 4
+    logger.info(
+        "Events with 4 or more true b-jets: %s (weighted: %s)",
+        sum(events_4_more_true_bjets),
+        sum(events.event_weight[events_4_more_true_bjets]),
     )
 
     ## return early if selections is empty ##
@@ -309,7 +315,7 @@ def process_batch(
                     )
                     if logger.level == logging.DEBUG:
                         logger.info(
-                            "Events passing previous cuts and correct H1 and H2 jet pairs with nominal pairing: %s (weighted: %s)",
+                            "Events passing previous cuts and correct H1 and H2 jet pairs using nominal pairing: %s (weighted: %s)",
                             ak.sum(correct_hh_nominal_pairs_mask),
                             ak.sum(events.event_weight[correct_hh_nominal_pairs_mask]),
                         )
@@ -353,7 +359,7 @@ def process_batch(
                         )
                         if logger.level == logging.DEBUG:
                             logger.info(
-                                "Events passing previous cuts and correct H1 and H2 jet pairs with %s: %s (weighted: %s)",
+                                "Events passing previous cuts and correct H1 and H2 jet pairs using %s pairing: %s (weighted: %s)",
                                 pairing.replace("_", " "),
                                 ak.sum(correct_hh_pairs_mask),
                                 ak.sum(events.event_weight[correct_hh_pairs_mask]),
@@ -382,7 +388,7 @@ def process_batch(
                         )
                         valid_events_pairing = valid_events_pairing & Delta_eta_HH_mask
                         logger.info(
-                            "Events passing previous cuts and ∆𝜂 HH %s %s with %s pairing: %s (weighted: %s)",
+                            "Events passing previous cuts and ∆𝜂 HH %s %s using %s pairing: %s (weighted: %s)",
                             deltaeta_HH_discrim_sel["operator"],
                             deltaeta_HH_discrim_sel["value"],
                             pairing.replace("_", " "),
@@ -396,7 +402,7 @@ def process_batch(
                     if "X_Wt_discriminant" in selections:
                         valid_events_pairing = valid_events_pairing & X_Wt_mask
                         logger.info(
-                            "Events passing previous cuts and X_Wt %s %s with %s pairing: %s (weighted: %s)",
+                            "Events passing previous cuts and X_Wt %s %s using %s pairing: %s (weighted: %s)",
                             top_veto_sel["operator"],
                             top_veto_sel["value"],
                             pairing.replace("_", " "),
@@ -428,7 +434,7 @@ def process_batch(
                                     f"X_HH_{region}_{n_btags}b_{btagger}_{pairing}_mask"
                                 ] = region_mask
                                 logger.info(
-                                    "Events passing previous cuts and X_HH veto for %s region with %s pairing: %s (weighted: %s)",
+                                    "Events passing previous cuts and X_HH veto for %s region using %s pairing: %s (weighted: %s)",
                                     region,
                                     pairing.replace("_", " "),
                                     ak.sum(region_mask),
@@ -458,21 +464,51 @@ def process_batch(
                     events[f"signal_{n_btags}b_{btagger}_{pairing}_mask"] = (
                         signal_event_mask
                     )
-                    events[f"control_{n_btags}b_{btagger}_{pairing}_mask"] = (
-                        control_event_mask
-                    )
                     logger.info(
-                        "Events passing previous cuts and signal region with %s pairing: %s (weighted: %s)",
+                        "Events passing previous cuts and signal region using %s pairing: %s (weighted: %s)",
                         pairing.replace("_", " "),
                         ak.sum(signal_event_mask),
                         ak.sum(events.event_weight[signal_event_mask]),
                     )
+                    signal_event_correct_pairs_mask = ak.mask(
+                        correct_hh_pairs_mask, signal_event_mask
+                    )
+                    events[
+                        f"signal_correct_pairs_{n_btags}b_{btagger}_{pairing}_mask"
+                    ] = signal_event_correct_pairs_mask
+                    if logger.level == logging.DEBUG:
+                        logger.info(
+                            "Events passing previous cuts and signal region with wrong pairs using %s pairing: %s (weighted: %s)",
+                            pairing.replace("_", " "),
+                            ak.sum(~signal_event_correct_pairs_mask),
+                            ak.sum(
+                                events.event_weight[~signal_event_correct_pairs_mask]
+                            ),
+                        )
+                    events[f"control_{n_btags}b_{btagger}_{pairing}_mask"] = (
+                        control_event_mask
+                    )
                     logger.info(
-                        "Events passing previous cuts and control region with %s pairing: %s (weighted: %s)",
+                        "Events passing previous cuts and control region using %s pairing: %s (weighted: %s)",
                         pairing.replace("_", " "),
                         ak.sum(control_event_mask),
                         ak.sum(events.event_weight[control_event_mask]),
                     )
+                    control_event_correct_pairs_mask = ak.mask(
+                        correct_hh_pairs_mask, control_event_mask
+                    )
+                    events[
+                        f"control_correct_pairs_{n_btags}b_{btagger}_{pairing}_mask"
+                    ] = control_event_correct_pairs_mask
+                    if logger.level == logging.DEBUG:
+                        logger.info(
+                            "Events passing previous cuts and control region with wrong pairs using %s pairing: %s (weighted: %s)",
+                            pairing.replace("_", " "),
+                            ak.sum(~control_event_correct_pairs_mask),
+                            ak.sum(
+                                events.event_weight[~control_event_correct_pairs_mask]
+                            ),
+                        )
 
                     ###### Calculate background estimate using ABCD method ######
                     if "background_estimate" in selections:

@@ -60,3 +60,5 @@ selections_labels = {
     # "truth_matched_4_plus_jets": r"${n_b}_\mathrm{match} \geq$ 4",
     "truth_matched_4_plus_jets": r"$\geq$ 4 truth-matched jets",
 }
+
+kin_labels = {"pt": r"$p_T$", "eta": r"$\eta$", "phi": r"$\phi$", "mass": r"$m$"}

@@ -47,13 +47,11 @@ def get_args():
         default=Path("resolved_nominal.parquet"),
         **defaults,
     )
-    # add argument to save histograms
     parser.add_argument(
         "-s",
-        "--save-hists",
+        "--skip-hists",
         action="store_true",
-        default=True,
-        help="Save histograms to file",
+        help="Skip saving histograms",
     )
     parser.add_argument(
         "-w",
@@ -152,10 +150,12 @@ def process_sample_worker(
                 )
         processed_batch = processed_batch[valid_events]
         batches.append(processed_batch)
-        if args.save_hists:
+        if not args.skip_hists:
             fill_hists(processed_batch, hists[sample_name], selections, is_mc)
-    if args.save_hists:
-        hists_output_name = f"hists_{sample_name}_{os.getpgid(os.getpid())}.h5"
+    if not args.skip_hists:
+        hists_output_name = args.output.with_name(
+            f"hists_{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
+        )
         with h5py.File(hists_output_name, "w") as output_file:
             logger.info(f"Saving histograms to file: {hists_output_name}")
             write_hists(hists[sample_name], sample_name, output_file)
@@ -185,7 +185,7 @@ def main():
         config = resolve_project_paths(config=json.load(cf))
 
     samples, event_selection = config["samples"], config["event_selection"]
-    hists = init_hists(samples, event_selection, args) if args.save_hists else None
+    hists = None if args.skip_hists else init_hists(samples, event_selection, args)
 
     worker_items = [
         (
