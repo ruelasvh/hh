@@ -9,7 +9,7 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13167_p6026",
                     "genFiltEff": 1.0,
-                    "crossSection": 3.077e-05,
+                    "crossSection": 2.9875E-05,
                     "kFactor": 1.0,
                     "luminosity": 36.64674
                 }
@@ -24,7 +24,7 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13144_p6026",
                     "genFiltEff": 1.0,
-                    "crossSection": 3.077e-05,
+                    "crossSection": 2.9875E-05,
                     "kFactor": 1.0,
                     "luminosity": 44.6306
                 }
@@ -39,7 +39,7 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13145_p6026",
                     "genFiltEff": 1.0,
-                    "crossSection": 3.077e-05,
+                    "crossSection": 2.9875E-05,
                     "kFactor": 1.0,
                     "luminosity": 58.7916
                 }
@@ -54,7 +54,7 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600464.PhPy8EG_PDF4LHC15_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8222_s3681_r13167_p6026",
                     "genFiltEff": 1,
-                    "crossSection": 641.2E-06,
+                    "crossSection": 5.8388E-04,
                     "kFactor": 1.0,
                     "luminosity": 36.64674
                 }
@@ -69,7 +69,7 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600464.PhPy8EG_PDF4LHC15_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8222_s3681_r13144_p6026",
                     "genFiltEff": 1,
-                    "crossSection": 641.2E-06,
+                    "crossSection": 5.8388E-04,
                     "kFactor": 1.0,
                     "luminosity": 44.6306
                 }
@@ -84,7 +84,7 @@
                 {
                     "logicalDatasetName": "mc20_13TeV.600464.PhPy8EG_PDF4LHC15_HH4b_cHHH10d0.deriv.DAOD_PHYS.e8222_s3681_r13145_p6026",
                     "genFiltEff": 1,
-                    "crossSection": 641.2E-06,
+                    "crossSection": 5.8388E-04,
                     "kFactor": 1.0,
                     "luminosity": 58.7916
                 }
