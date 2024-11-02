@@ -32,7 +32,7 @@ def get_args():
         "-l",
         "--luminosity",
         type=float,
-        default=1.0,
+        default=None,
         help="Luminosity in fb^-1 (default: %(default)s)",
     )
     parser.add_argument(
@@ -101,8 +101,10 @@ def main():
     hists = merge_sample_files(
         args.hists_files,
         save_to="merged_histograms.h5",
-        merge_jz_regex=None if args.split_jz else re.compile(r"JZ[0-9]"),
-        merge_mc_regex=None if args.split_mc else re.compile(r"mc[1-2][0-9][ade]"),
+        merge_jz_regex=None if args.split_jz else re.compile(r"jz[0-9]", re.IGNORECASE),
+        merge_mc_regex=(
+            None if args.split_mc else re.compile(r"mc[1-2][0-9][ade]", re.IGNORECASE)
+        ),
     )
 
     drawhistsdiagnostics.draw_hists(hists, args)

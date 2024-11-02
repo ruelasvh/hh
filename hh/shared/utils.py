@@ -391,7 +391,11 @@ def merge_sample_files(
                 else:
                     merged_sample_name = sample_name
                 if merge_mc_regex and merge_mc_regex.search(merged_sample_name):
-                    merged_sample_name = re.sub(r"[ade]", "", merged_sample_name)
+                    merged_sample_name = re.sub(
+                        r"(?<=mc[0-9]{2})[ade]|(?<=MC[0-9]{2})[ade]",
+                        "",
+                        merged_sample_name,
+                    )
                 else:
                     merged_sample_name = merged_sample_name
                 for hist_name in hists_file[sample_name]:

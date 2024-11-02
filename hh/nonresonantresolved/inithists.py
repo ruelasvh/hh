@@ -34,8 +34,14 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
         ### Truth H(H) histograms ########################
         ##################################################
         hists_dict[sample_name] += init_H_histograms(postfix="_truth")
+        hists_dict[sample_name] += init_H_histograms(postfix="_reco")
+        hists_dict[sample_name] += init_H_histograms(
+            postfix="_reco_H1_truth_mass_lt_350_GeV"
+        )
+        hists_dict[sample_name] += init_H_histograms(
+            postfix="_reco_H1_truth_mass_geq_350_GeV"
+        )
         hists_dict[sample_name] += init_HH_histograms(postfix="_truth")
-        hists_dict[sample_name] += init_HH_histograms(postfix="_truth_unweighted")
 
         ##################################################
         ### Reco H(H) histograms ########################
@@ -135,10 +141,13 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                         postfix=f"_reco_{btag_count}b_{btagger}_{pairing}"
                     )
                     hists_dict[sample_name] += init_mH_2d_histograms(
-                        postfix=f"_reco_{btag_count}b_{btagger}_{pairing}_lt_300_GeV"
+                        postfix=f"_reco_{btag_count}b_{btagger}_{pairing}_wrong_pairs"
                     )
                     hists_dict[sample_name] += init_mH_2d_histograms(
-                        postfix=f"_reco_{btag_count}b_{btagger}_{pairing}_geq_300_GeV"
+                        postfix=f"_reco_{btag_count}b_{btagger}_{pairing}_lt_350_GeV"
+                    )
+                    hists_dict[sample_name] += init_mH_2d_histograms(
+                        postfix=f"_reco_{btag_count}b_{btagger}_{pairing}_geq_350_GeV"
                     )
                     for region in ["signal", "control"]:
                         hists_dict[sample_name] += init_mH_2d_histograms(
@@ -146,6 +155,12 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                         )
                         hists_dict[sample_name] += init_mH_2d_histograms(
                             postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_wrong_pairs"
+                        )
+                        hists_dict[sample_name] += init_mH_2d_histograms(
+                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_lt_350_GeV"
+                        )
+                        hists_dict[sample_name] += init_mH_2d_histograms(
+                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_geq_350_GeV"
                         )
                 ##################################################
                 ### X_HH histograms
@@ -184,13 +199,24 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                             bins=20,
                         )
                         hists_dict[sample_name] += init_HH_histograms(
-                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_bins_logscale",
+                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_lt_350_GeV",
                             binrange={
                                 "pt": [20_000, 500_000],
+                                "eta": [-5, 5],
+                                "phi": [-3, 3],
                                 "mass": [100_000, 1_100_000],
                             },
                             bins=20,
-                            bins_logscale=True,
+                        )
+                        hists_dict[sample_name] += init_HH_histograms(
+                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_geq_350_GeV",
+                            binrange={
+                                "pt": [20_000, 500_000],
+                                "eta": [-5, 5],
+                                "phi": [-3, 3],
+                                "mass": [100_000, 1_100_000],
+                            },
+                            bins=20,
                         )
 
         ##################################################

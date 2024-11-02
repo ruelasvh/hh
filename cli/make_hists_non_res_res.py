@@ -161,6 +161,16 @@ def process_sample_worker(
             write_hists(hists[sample_name], sample_name, output_file)
     # concatenate all batches
     batches = ak.concatenate(batches)
+    # bad_branches = [
+    #     "hh_4b_GN2v01_77_truth_matched_jet_idx",
+    #     "non_hh_4b_GN2v01_77_truth_matched_jet_idx",
+    #     "H1_4b_GN2v01_77_min_deltar_pairing_truth_matched_jet_idx",
+    #     "H2_4b_GN2v01_77_min_deltar_pairing_truth_matched_jet_idx",
+    #     "H1_4b_GN2v01_77_min_mass_optimized_1D_medium_pairing_truth_matched_jet_idx",
+    #     "H2_4b_GN2v01_77_min_mass_optimized_1D_medium_pairing_truth_matched_jet_idx",
+    # ]
+    # for bad_branch in bad_branches:
+    #     del batches[bad_branch]
     output_name = args.output.with_name(
         f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}{args.output.suffix}"
     )

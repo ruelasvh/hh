@@ -85,7 +85,7 @@ def process_batch(
                 ## apply 2 b-tag pre-selection ##
                 valid_jets = select_n_bjets_events(
                     jets=valid_jets,
-                    where=events[f"jet_btag_{btagger}"][valid_jets],
+                    btags=events[f"jet_btag_{btagger}"][valid_jets],
                     selection={**i_bjets_sel, "count": {"operator": ">=", "value": 2}},
                 )
                 valid_events = valid_events & ~ak.is_none(valid_jets).to_numpy()
@@ -161,7 +161,7 @@ def process_batch(
                 ## select and save events with >= n central b-jets ##
                 valid_btagged_jets = select_n_bjets_events(
                     jets=valid_jets,
-                    where=events[f"jet_btag_{btagger}"][valid_jets],
+                    btags=events[f"jet_btag_{btagger}"][valid_jets],
                     selection=i_bjets_sel,
                 )
                 events[f"valid_{n_btags}_btag_{btagger}_jets"] = valid_btagged_jets
@@ -174,8 +174,7 @@ def process_batch(
                     i_bjets_sel["model"],
                     i_bjets_sel["efficiency"],
                     ak.sum(valid_events),
-                    # ak.sum(events.event_weight[valid_events]),
-                    ak.sum(events.event_weight),
+                    ak.sum(events.event_weight[valid_events]),
                 )
                 if ak.sum(valid_events) == 0:
                     return events
@@ -451,6 +450,7 @@ def process_batch(
                             & events[f"deltaeta_HH_{n_btags}b_{btagger}_{pairing}_mask"]
                         )
                     if "X_HH_discriminant" in selections:
+                        # needs to go before re-assigment of signal_event_mask to ensure the final signal region mask not applied
                         control_event_mask = (
                             signal_event_mask
                             & events[
@@ -464,11 +464,20 @@ def process_batch(
                     events[f"signal_{n_btags}b_{btagger}_{pairing}_mask"] = (
                         signal_event_mask
                     )
+                    events[f"control_{n_btags}b_{btagger}_{pairing}_mask"] = (
+                        control_event_mask
+                    )
                     logger.info(
                         "Events passing previous cuts and signal region using %s pairing: %s (weighted: %s)",
                         pairing.replace("_", " "),
                         ak.sum(signal_event_mask),
                         ak.sum(events.event_weight[signal_event_mask]),
+                    )
+                    logger.info(
+                        "Events passing previous cuts and control region using %s pairing: %s (weighted: %s)",
+                        pairing.replace("_", " "),
+                        ak.sum(control_event_mask),
+                        ak.sum(events.event_weight[control_event_mask]),
                     )
                     signal_event_correct_pairs_mask = ak.mask(
                         correct_hh_pairs_mask, signal_event_mask
@@ -485,15 +494,6 @@ def process_batch(
                                 events.event_weight[~signal_event_correct_pairs_mask]
                             ),
                         )
-                    events[f"control_{n_btags}b_{btagger}_{pairing}_mask"] = (
-                        control_event_mask
-                    )
-                    logger.info(
-                        "Events passing previous cuts and control region using %s pairing: %s (weighted: %s)",
-                        pairing.replace("_", " "),
-                        ak.sum(control_event_mask),
-                        ak.sum(events.event_weight[control_event_mask]),
-                    )
                     control_event_correct_pairs_mask = ak.mask(
                         correct_hh_pairs_mask, control_event_mask
                     )

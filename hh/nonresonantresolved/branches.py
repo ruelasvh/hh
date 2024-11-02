@@ -76,10 +76,7 @@ def get_branch_aliases(is_mc=False, trig_set=None, sample_metadata=None):
 
     if trig_set:
         if sample_metadata:
-            for year, rtags in CAMPAIGNS.items():
-                for rtag in rtags:
-                    if rtag in sample_metadata["logicalDatasetName"]:
-                        trig_set = f"{trig_set} {year}"
+            trig_set = f"{trig_set} {sample_metadata['dataTakingYear']}"
         aliases.update(
             {
                 f"trig_{trig_short}": f"trigPassed_{trig_long}"

@@ -111,7 +111,9 @@ def main():
             if sample_is_mc:
                 # get the cutbookkeepers for the sample
                 cbk = concatenate_cutbookkeepers(sample_path)
-                sample_metadata["initialSumWeights"] = cbk["initial_sum_of_weights"]
+                sample_metadata["initialSumWeights"] = str(
+                    cbk["initial_sum_of_weights"]
+                )
                 sample_weight = get_sample_weight(sample_metadata, cbk)
             # === Iterate over each file in the sample path for faster processing ===
             files = list(Path(sample_path).glob("*.root"))
