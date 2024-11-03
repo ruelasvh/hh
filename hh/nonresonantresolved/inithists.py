@@ -71,16 +71,16 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
         #     prefix="hh_jet", postfix="_truth_matched"
         # )
         # hists_dict[sample_name] += init_leading_jets_histograms(
-        #     prefix="hh_jet", postfix="_truth_matched_4_btags"
+        #     prefix="hh_jet", postfix="_truth_matched_4btags"
         # )
         # hists_dict[sample_name] += init_leading_jets_histograms(
         #     prefix="hh_jet", postfix="_truth_matched_2b2j_asym"
         # )
         # hists_dict[sample_name] += init_leading_jets_histograms(
-        #     prefix="hh_jet", postfix="_truth_matched_2b2j_asym_n_btags"
+        #     prefix="hh_jet", postfix="_truth_matched_2b2j_asym_nbtags"
         # )
         # hists_dict[sample_name] += init_leading_jets_histograms(
-        #     prefix="hh_jet", postfix="_truth_matched_2b2j_asym_4_btags"
+        #     prefix="hh_jet", postfix="_truth_matched_2b2j_asym_4btags"
         # )
 
         if "jets" in selections and "btagging" in selections["jets"]:
@@ -96,17 +96,17 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                     btag_eff,
                 )
                 hists_dict[sample_name] += init_HH_histograms(
-                    postfix=f"_truth_reco_central_{btag_count}b_{btagger}_jets_selection"
+                    postfix=f"_truth_reco_central_{btag_count}btags_{btagger}_jets_selection"
                 )
                 hists_dict[sample_name] += init_HH_histograms(
-                    postfix=f"_truth_reco_central_{btag_count}b_{btagger}_4_plus_truth_matched_jets_selection"
+                    postfix=f"_truth_reco_central_{btag_count}btags_{btagger}_4_plus_truth_matched_jets_selection"
                 )
                 hists_dict[sample_name] += init_HH_histograms(
-                    postfix=f"_truth_reco_central_{btag_count}b_{btagger}_4_plus_truth_matched_jets_selection_v2"
+                    postfix=f"_truth_reco_central_{btag_count}btags_{btagger}_4_plus_truth_matched_jets_selection_v2"
                 )
                 for pairing in pairing_methods:
                     hists_dict[sample_name] += init_HH_histograms(
-                        postfix=f"_truth_reco_central_{btag_count}b_{btagger}_4_plus_truth_matched_jets_correct_{pairing}_selection"
+                        postfix=f"_truth_reco_central_{btag_count}btags_{btagger}_4_plus_truth_matched_jets_correct_{pairing}_selection"
                     )
                 ###################################################
                 ### Truth matched Pairing vs Reco HH histograms ###
@@ -114,11 +114,11 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                 for pairing in pairing_methods:
                     hists_dict[sample_name] += init_HH_histograms(
                         hh_vars_binranges,
-                        postfix=f"_reco_{btag_count}_btag_{btagger}_{pairing}",
+                        postfix=f"_reco_{btag_count}btags_{btagger}_{pairing}",
                     )
                     hists_dict[sample_name] += init_HH_histograms(
                         hh_vars_binranges,
-                        postfix=f"_reco_{btag_count}_btag_{btagger}_{pairing}_correct",
+                        postfix=f"_reco_{btag_count}btags_{btagger}_{pairing}_correct",
                     )
 
                 ####################################################
@@ -127,40 +127,40 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                 for pairing in pairing_methods:
                     hists_dict[sample_name] += init_HH_histograms(
                         hh_vars_binranges,
-                        postfix=f"_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing}",
+                        postfix=f"_reco_truth_matched_{btag_count}btags_{btagger}_{pairing}",
                     )
                     hists_dict[sample_name] += init_HH_histograms(
                         hh_vars_binranges,
-                        postfix=f"_reco_truth_matched_{btag_count}_btag_{btagger}_{pairing}_correct",
+                        postfix=f"_reco_truth_matched_{btag_count}btags_{btagger}_{pairing}_correct",
                     )
                 ##################################################
                 ### Mass plane for pairing methods histograms ####
                 ##################################################
                 for pairing in pairing_methods:
                     hists_dict[sample_name] += init_mH_2d_histograms(
-                        postfix=f"_reco_{btag_count}b_{btagger}_{pairing}"
+                        postfix=f"_reco_{btag_count}btags_{btagger}_{pairing}"
                     )
                     hists_dict[sample_name] += init_mH_2d_histograms(
-                        postfix=f"_reco_{btag_count}b_{btagger}_{pairing}_wrong_pairs"
+                        postfix=f"_reco_{btag_count}btags_{btagger}_{pairing}_wrong_pairs"
                     )
                     hists_dict[sample_name] += init_mH_2d_histograms(
-                        postfix=f"_reco_{btag_count}b_{btagger}_{pairing}_lt_350_GeV"
+                        postfix=f"_reco_{btag_count}btags_{btagger}_{pairing}_lt_350_GeV"
                     )
                     hists_dict[sample_name] += init_mH_2d_histograms(
-                        postfix=f"_reco_{btag_count}b_{btagger}_{pairing}_geq_350_GeV"
+                        postfix=f"_reco_{btag_count}btags_{btagger}_{pairing}_geq_350_GeV"
                     )
                     for region in ["signal", "control"]:
                         hists_dict[sample_name] += init_mH_2d_histograms(
-                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}"
+                            postfix=f"_reco_{region}_{btag_count}btags_{btagger}_{pairing}"
                         )
                         hists_dict[sample_name] += init_mH_2d_histograms(
-                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_wrong_pairs"
+                            postfix=f"_reco_{region}_{btag_count}btags_{btagger}_{pairing}_wrong_pairs"
                         )
                         hists_dict[sample_name] += init_mH_2d_histograms(
-                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_lt_350_GeV"
+                            postfix=f"_reco_{region}_{btag_count}btags_{btagger}_{pairing}_lt_350_GeV"
                         )
                         hists_dict[sample_name] += init_mH_2d_histograms(
-                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_geq_350_GeV"
+                            postfix=f"_reco_{region}_{btag_count}btags_{btagger}_{pairing}_geq_350_GeV"
                         )
                 ##################################################
                 ### X_HH histograms
@@ -169,7 +169,7 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                 for pairing in pairing_methods:
                     for region, binrange in X_HH_regions.items():
                         hists_dict[sample_name] += init_HH_mass_discrim_histograms(
-                            posfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}",
+                            posfix=f"_reco_{region}_{btag_count}btags_{btagger}_{pairing}",
                             binrange=binrange,
                             bins=21,
                         )
@@ -179,7 +179,7 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                 for pairing in pairing_methods:
                     for region in ["signal", "control"]:
                         hists_dict[sample_name] += init_HH_histograms(
-                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}",
+                            postfix=f"_reco_{region}_{btag_count}btags_{btagger}_{pairing}",
                             binrange={
                                 "pt": [20_000, 500_000],
                                 "eta": [-5, 5],
@@ -189,7 +189,7 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                             bins=20,
                         )
                         hists_dict[sample_name] += init_HH_histograms(
-                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_wrong_pairs",
+                            postfix=f"_reco_{region}_{btag_count}btags_{btagger}_{pairing}_wrong_pairs",
                             binrange={
                                 "pt": [20_000, 500_000],
                                 "eta": [-5, 5],
@@ -199,7 +199,7 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                             bins=20,
                         )
                         hists_dict[sample_name] += init_HH_histograms(
-                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_lt_350_GeV",
+                            postfix=f"_reco_{region}_{btag_count}btags_{btagger}_{pairing}_lt_350_GeV",
                             binrange={
                                 "pt": [20_000, 500_000],
                                 "eta": [-5, 5],
@@ -209,7 +209,7 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                             bins=20,
                         )
                         hists_dict[sample_name] += init_HH_histograms(
-                            postfix=f"_reco_{region}_{btag_count}b_{btagger}_{pairing}_geq_350_GeV",
+                            postfix=f"_reco_{region}_{btag_count}btags_{btagger}_{pairing}_geq_350_GeV",
                             binrange={
                                 "pt": [20_000, 500_000],
                                 "eta": [-5, 5],

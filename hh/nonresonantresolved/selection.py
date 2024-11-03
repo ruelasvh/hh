@@ -11,13 +11,13 @@ from hh.shared.selection import X_Wt, get_W_t_p4
 
 def select_events_passing_triggers(
     events,
-    op: str = None,
     triggers: list = None,
+    operation: str = None,
 ):
     triggers = triggers or list(filter(lambda x: "trig_" in x, events.fields))
     passed_trigs_mask = np.ones(len(events), dtype=bool)
-    if op:
-        passed_trigs_mask = get_trigs_logical_op(events, triggers, op)
+    if operation:
+        passed_trigs_mask = get_trigs_logical_op(events, triggers, operation)
         passed_trigs_mask = ak.fill_none(passed_trigs_mask, False)
     return passed_trigs_mask
 
@@ -77,7 +77,7 @@ def select_n_bjets_events(
     condition_mask = get_op(n_btags_operator)(ak.sum(btags, axis=1), n_btags_value)
     # valid_events_mask = ~ak.is_none(jets, axis=0)
     # valid_jets_mask = ak.mask(jets, valid_events_mask & condition_mask)
-    valid_jets_mask = jets & condition_mask
+    valid_jets_mask = ak.mask(jets, condition_mask)
     return valid_jets_mask
 
 
