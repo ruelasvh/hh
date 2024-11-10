@@ -744,7 +744,7 @@ def draw_mHH_plane_2D_hists(
     hist_values[hist_values > 2000] = 0
     print(f"Counts for {sample_name} {hist_name}: {np.sum(hist_values[1:-1, 1:-1])}")
     print(
-        f"Counts for with overflow/underflow {sample_name} {hist_name}: {np.sum(hist_values)}"
+        f"Counts for with overflow/underflow {sample_name} {hist_name}: {np.sum(hist_values)}\n"
     )
     pcm, cbar, _ = hplt.hist2dplot(
         hist_values[1:-1, 1:-1],

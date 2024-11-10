@@ -41,7 +41,6 @@ def draw_hists(
     # ###############################################
     draw_dijet_slices_hists(
         {k: v for k, v in hists_group.items() if "multijet" in k},
-        hists_group,
         "leading_truth_jet_1_pt",
         energy,
         luminosity=lumi,
@@ -51,7 +50,6 @@ def draw_hists(
     for btagger, btag_count in btagging.items():
         draw_dijet_slices_hists(
             {k: v for k, v in hists_group.items() if "multijet" in k},
-            hists_group,
             f"leading_resolved_{btag_count}btags_{btagger}_reco_jet_1_pt",
             energy,
             luminosity=lumi,
