@@ -1,9 +1,10 @@
 {
     "samples": [
         {
-            "label": "mc23a_ggF_k01",
+            "label": "mc23_ggF_k01",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603404.e8564_a910_r14932_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603404.e8564_a910_r14932_p6026_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603404.e8564_a911_r15224_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -12,30 +13,25 @@
                     "crossSection": 2.9875E-05,
                     "kFactor": 1.0,
                     "luminosity": 26.0714,
-                    "dataTakingYear": 2022
-                }
-            ]
-        },
-        {
-            "label": "mc23d_ggF_k01",
-            "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603404.e8564_a911_r15224_p6026_TREE/"
-            ],
-            "metadata": [
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
                 {
                     "logicalDatasetName": "mc23_13p6TeV.603404.PhPy8EG_PDF4LHC21_HHbbbb_chhh1p0.deriv.DAOD_PHYS.e8564_a911_r15224_p6026",
                     "genFiltEff": 1,
                     "crossSection": 2.9875E-05,
                     "kFactor": 1.0,
                     "luminosity": 25.7675,
-                    "dataTakingYear": 2023
+                    "dataTakingYear": 2023,
+                    "isMC": true
                 }
             ]
         },
         {
-            "label": "mc23a_ggF_k05",
+            "label": "mc23_ggF_k05",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603405.e8564_a910_r14932_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603405.e8564_a910_r14932_p6026_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603405.e8564_a911_r15224_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -44,30 +40,25 @@
                     "crossSection": 8.3827E-05,
                     "kFactor": 1.0,
                     "luminosity": 26.0714,
-                    "dataTakingYear": 2022
-                }
-            ]
-        },
-        {
-            "label": "mc23d_ggF_k05",
-            "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603405.e8564_a911_r15224_p6026_TREE/"
-            ],
-            "metadata": [
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
                 {
                     "logicalDatasetName": "mc23_13p6TeV.603405.PhPy8EG_PDF4LHC21_HHbbbb_chhh5p0.deriv.DAOD_PHYS.e8564_a911_r15224_p6026",
                     "genFiltEff": 1,
                     "crossSection": 8.3827E-05,
                     "kFactor": 1.0,
                     "luminosity": 25.7675,
-                    "dataTakingYear": 2023
+                    "dataTakingYear": 2023,
+                    "isMC": true
                 }
             ]
         },
         {
-            "label": "mc23a_multijet_2bjets_JZ1",
+            "label": "mc23_multijet_2bjets_JZ1",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802067.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802067.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802067.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -76,30 +67,25 @@
                     "genFiltEff": 4.187944E-06,
                     "kFactor": 1.0,
                     "luminosity": 26.0714,
-                    "dataTakingYear": 2022
-                }
-            ]
-        },
-        {
-            "label": "mc23d_multijet_2bjets_JZ1",
-            "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802067.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
-            ],
-            "metadata": [
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
                 {
                     "logicalDatasetName": "mc23_13p6TeV.802067.Py8EG_A14NNPDF23LO_jetjet_JZ1_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
                     "crossSection": 9.3900E+07,
                     "genFiltEff": 4.187944E-06,
                     "kFactor": 1.0,
                     "luminosity": 25.7675,
-                    "dataTakingYear": 2023
+                    "dataTakingYear": 2023,
+                    "isMC": true
                 }
             ]
         },
         {
-            "label": "mc23a_multijet_2bjets_JZ2",
+            "label": "mc23_multijet_2bjets_JZ2",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800285.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800285.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800285.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -108,30 +94,25 @@
                     "genFiltEff": 8.241819E-05,
                     "kFactor": 1.0,
                     "luminosity": 26.0714,
-                    "dataTakingYear": 2022
-                }
-            ]
-        },
-        {
-            "label": "mc23d_multijet_2bjets_JZ2",
-            "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800285.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
-            ],
-            "metadata": [
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
                 {
                     "logicalDatasetName": "mc23_13p6TeV.800285.Py8EG_A14NNPDF23LO_jetjet_JZ2_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
                     "crossSection": 2.5826E+06,
                     "genFiltEff": 8.241819E-05,
                     "kFactor": 1.0,
                     "luminosity": 25.7675,
-                    "dataTakingYear": 2023
+                    "dataTakingYear": 2023,
+                    "isMC": true
                 }
             ]
         },
         {
-            "label": "mc23a_multijet_2bjets_JZ3",
+            "label": "mc23_multijet_2bjets_JZ3",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800286.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800286.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800286.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -140,30 +121,25 @@
                     "genFiltEff": 4.256739E-04,
                     "kFactor": 1.0,
                     "luminosity": 26.0714,
-                    "dataTakingYear": 2022
-                }
-            ]
-        },
-        {
-            "label": "mc23d_multijet_2bjets_JZ3",
-            "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800286.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
-            ],
-            "metadata": [
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
                 {
                     "logicalDatasetName": "mc23_13p6TeV.800286.Py8EG_A14NNPDF23LO_jetjet_JZ3_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
                     "crossSection": 2.8527E+04,
                     "genFiltEff": 4.256739E-04,
                     "kFactor": 1.0,
                     "luminosity": 25.7675,
-                    "dataTakingYear": 2023
+                    "dataTakingYear": 2023,
+                    "isMC": true
                 }
             ]
         },
         {
-            "label": "mc23a_multijet_2bjets_JZ4",
+            "label": "mc23_multijet_2bjets_JZ4",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800287.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800287.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800287.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -172,30 +148,25 @@
                     "genFiltEff": 8.805395E-04,
                     "kFactor": 1.0,
                     "luminosity": 26.0714,
-                    "dataTakingYear": 2022
-                }
-            ]
-        },
-        {
-            "label": "mc23d_multijet_2bjets_JZ4",
-            "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800287.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
-            ],
-            "metadata": [
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
                 {
                     "logicalDatasetName": "mc23_13p6TeV.800287.Py8EG_A14NNPDF23LO_jetjet_JZ4_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
                     "crossSection": 2.8014E+02,
                     "genFiltEff": 8.805395E-04,
                     "kFactor": 1.0,
                     "luminosity": 25.7675,
-                    "dataTakingYear": 2023
+                    "dataTakingYear": 2023,
+                    "isMC": true
                 }
             ]
         },
         {
-            "label": "mc23a_multijet_2bjets_JZ5",
+            "label": "mc23_multijet_2bjets_JZ5",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802068.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802068.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802068.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -204,30 +175,25 @@
                     "genFiltEff": 1.186040E-03,
                     "kFactor": 1.0,
                     "luminosity": 26.0714,
-                    "dataTakingYear": 2022
-                }
-            ]
-        },
-        {
-            "label": "mc23d_multijet_2bjets_JZ5",
-            "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802068.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
-            ],
-            "metadata": [
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
                 {
                     "logicalDatasetName": "mc23_13p6TeV.802068.Py8EG_A14NNPDF23LO_jetjet_JZ5_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
                     "crossSection": 5.1327E+00,
                     "genFiltEff": 1.186040E-03,
                     "kFactor": 1.0,
                     "luminosity": 25.7675,
-                    "dataTakingYear": 2023
+                    "dataTakingYear": 2023,
+                    "isMC": true
                 }
             ]
         },
         {
-            "label": "mc23a_multijet_2bjets_JZ6",
+            "label": "mc23_multijet_2bjets_JZ6",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802069.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802069.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802069.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -236,30 +202,25 @@
                     "genFiltEff": 8.850437E-04,
                     "kFactor": 1.0,
                     "luminosity": 26.0714,
-                    "dataTakingYear": 2022
-                }
-            ]
-        },
-        {
-            "label": "mc23d_multijet_2bjets_JZ6",
-            "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802069.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
-            ],
-            "metadata": [
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
                 {
                     "logicalDatasetName": "mc23_13p6TeV.802069.Py8EG_A14NNPDF23LO_jetjet_JZ6_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
                     "crossSection": 2.9765E-01,
                     "genFiltEff": 8.850437E-04,
                     "kFactor": 1.0,
                     "luminosity": 25.7675,
-                    "dataTakingYear": 2023
+                    "dataTakingYear": 2023,
+                    "isMC": true
                 }
             ]
         },
         {
-            "label": "mc23a_multijet_2bjets_JZ7",
+            "label": "mc23_multijet_2bjets_JZ7",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802070.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802070.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802070.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -268,30 +229,25 @@
                     "genFiltEff": 1.133779E-03,
                     "kFactor": 1.0,
                     "luminosity": 26.0714,
-                    "dataTakingYear": 2022
-                }
-            ]
-        },
-        {
-            "label": "mc23d_multijet_2bjets_JZ7",
-            "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802070.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
-            ],
-            "metadata": [
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
                 {
                     "logicalDatasetName": "mc23_13p6TeV.802070.Py8EG_A14NNPDF23LO_jetjet_JZ7_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
                     "crossSection": 1.6215E-02,
                     "genFiltEff": 1.133779E-03,
                     "kFactor": 1.0,
                     "luminosity": 25.7675,
-                    "dataTakingYear": 2023
+                    "dataTakingYear": 2023,
+                    "isMC": true
                 }
             ]
         },
         {
-            "label": "mc23a_multijet_2bjets_JZ8",
+            "label": "mc23_multijet_2bjets_JZ8",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802071.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802071.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802071.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
             ],
             "metadata": [
                 {
@@ -300,28 +256,22 @@
                     "genFiltEff": 1.147757E-03,
                     "kFactor": 1.0,
                     "luminosity": 26.0714,
-                    "dataTakingYear": 2022
-                }
-            ]
-        },
-        {
-            "label": "mc23d_multijet_2bjets_JZ8",
-            "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802071.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
-            ],
-            "metadata": [
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
                 {
                     "logicalDatasetName": "mc23_13p6TeV.802071.Py8EG_A14NNPDF23LO_jetjet_JZ8_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
                     "crossSection": 7.9800E-04,
                     "genFiltEff": 1.147757E-03,
                     "kFactor": 1.0,
                     "luminosity": 25.7675,
-                    "dataTakingYear": 2023
+                    "dataTakingYear": 2023,
+                    "isMC": true
                 }
             ]
         },
         {
-            "label": "mc23a_multijet_2bjets_JZ9",
+            "label": "mc23_multijet_2bjets_JZ9",
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.802072.e8564_e8528_s4162_s4114_r14622_r14663_p6266_TREE/"
             ],
@@ -332,7 +282,8 @@
                     "genFiltEff": 1.576067E-03,
                     "kFactor": 1.0,
                     "luminosity": 26.0714,
-                    "dataTakingYear": 2022
+                    "dataTakingYear": 2022,
+                    "isMC": true
                 }
             ]
         }

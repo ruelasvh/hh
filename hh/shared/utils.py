@@ -103,13 +103,14 @@ def concatenate_cutbookkeepers(sample_path):
     return cutbookkeepers
 
 
-def get_sample_weight(sample_metadata, cbk):
-    sum_weights = cbk["initial_sum_of_weights"]
+def get_sample_weight(sample_metadata, initial_sum_of_weights):
     filter_efficiency = float(sample_metadata["genFiltEff"])
     k_factor = float(sample_metadata["kFactor"])
     cross_section = float(sample_metadata["crossSection"]) * 1e6  # nb to fb
     luminosity = float(sample_metadata["luminosity"])  # fb^-1
-    return (filter_efficiency * k_factor * cross_section * luminosity) / sum_weights
+    return (
+        filter_efficiency * k_factor * cross_section * luminosity
+    ) / initial_sum_of_weights
 
 
 def get_datasetname_query(filepath):
@@ -130,7 +131,7 @@ def get_datasetname_query(filepath):
 def write_hists(sample_hists, sample_name, output):
     sample_out = output.create_group(sample_name)
     sample_out.attrs["type"] = "sample_type"
-    for hist in sample_hists:
+    for hist in sample_hists.values():
         hist.write(sample_out, hist.name)
 
 
@@ -162,26 +163,42 @@ def find_hists(
     return list(filter(pred, iteratable))
 
 
-def find_hist(
-    iteratable,
-    pred=None,
-    default=False,
-):
-    """Returns the first true value in the iterable.
+# def find_hist(
+#     iteratable,
+#     pred=None,
+#     default=False,
+# ):
+#     """Returns the first true value in the iterable.
 
-    If no true value is found, returns *default*
+#     If no true value is found, returns *default*
 
-    If *pred* is not None, returns the first item
-    for which pred(item) is true.
+#     If *pred* is not None, returns the first item
+#     for which pred(item) is true.
 
+#     """
+#     return next(filter(pred, iteratable), default)
+
+
+def find_hist(dictionary, predicate, default=None):
+    """Returns the value of the first key in the dictionary that matches the predicate.
+
+    If no matching key is found, returns *default*.
+
+    Returns the value for the first key for which pred(key) is true.
     """
-    return next(filter(pred, iteratable), default)
+    return next((value for key, value in dictionary.items() if predicate(key)), default)
 
 
-def find_hists_by_name(hists, delimeter):
+# def find_hists_by_name(hists, delimeter):
+#     """Returns the list of hists that match the delimeter"""
+#     prog = re.compile(delimeter + "$")
+#     return list(filter(lambda h: prog.match(h.name), hists.keys()))
+
+
+def find_hists_by_name(hists, pattern):
     """Returns the list of hists that match the delimeter"""
-    prog = re.compile(delimeter + "$")
-    return list(filter(lambda h: prog.match(h.name), hists))
+    prog = re.compile(pattern)
+    return {k: v for k, v in hists.items() if prog.match(k)}
 
 
 def get_trigs_logical_op(events, trigs, op="or", skip_trig=None):
@@ -355,10 +372,11 @@ def save_to_h5(hists, name="histograms.h5", compress=True):
 
 def merge_sample_files(
     inputs,
-    hists=None,
-    save_to="merged_histograms.h5",
+    hists: dict = None,
+    save_to: Path = "merged_histograms.h5",
+    exclude_samples: list = None,
     merge_jz_regex=None,
-    merge_mc_regex=False,
+    merge_mc_regex=None,
 ):
     """Merges histograms from multiple h5 files into a single dictionary."""
 
@@ -370,6 +388,8 @@ def merge_sample_files(
         )
         if overwrite == "" or overwrite.lower() == "n":
             save_to = None
+        else:
+            os.remove(save_to)
 
     _hists = (
         hists
@@ -380,14 +400,26 @@ def merge_sample_files(
     for input in inputs:
         if input.is_dir():
             files_in_dir = input.glob("*.h5")
+            if exclude_samples:
+                files_in_dir = filter(
+                    lambda file: not any(
+                        sample in file.name for sample in exclude_samples
+                    ),
+                    files_in_dir,
+                )
             merge_sample_files(
-                files_in_dir, _hists, save_to, merge_jz_regex, merge_mc_regex
+                files_in_dir,
+                _hists,
+                save_to,
+                exclude_samples,
+                merge_jz_regex,
+                merge_mc_regex,
             )
-            continue
+            return _hists
         with h5py.File(input, "r") as hists_file:
             for sample_name in hists_file:
                 if merge_jz_regex and merge_jz_regex.search(sample_name):
-                    merged_sample_name = "_".join(sample_name.split("_")[:-2])
+                    merged_sample_name = re.sub(r"_jz[0-9]|_JZ[0-9]", "", sample_name)
                 else:
                     merged_sample_name = sample_name
                 if merge_mc_regex and merge_mc_regex.search(merged_sample_name):
@@ -401,6 +433,7 @@ def merge_sample_files(
                 for hist_name in hists_file[sample_name]:
                     hist_edges = hists_file[sample_name][hist_name]["edges"][:]
                     hist_values = hists_file[sample_name][hist_name]["values"][:]
+                    _hists[merged_sample_name][hist_name]["name"] = hist_name
                     _hists[merged_sample_name][hist_name]["edges"] = hist_edges
                     if _hists[merged_sample_name][hist_name]["values"] is None:
                         _hists[merged_sample_name][hist_name]["values"] = hist_values

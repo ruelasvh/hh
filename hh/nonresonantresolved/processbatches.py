@@ -36,17 +36,12 @@ def process_batch(
 ) -> ak.Record:
     """Apply analysis regions selections and append info to events."""
 
-    ## set the total event weight ##
-    events["event_weight"] = np.ones(len(events), dtype=float)
-    if is_mc:
-        events["event_weight"] = np.prod(
-            [events.mc_event_weights[:, 0], events.pileup_weight], axis=0
-        )
     logger.info(
         "Initial Events: %s (weighted: %s)", len(events), ak.sum(events["event_weight"])
     )
+
     events_4_more_true_bjets = ak.sum(events.jet_truth_label_ID == 5, axis=1) > 4
-    logger.info(
+    logger.debug(
         "Events with 4 or more true b-jets: %s (weighted: %s)",
         ak.sum(events_4_more_true_bjets),
         ak.sum(events.event_weight[events_4_more_true_bjets]),
@@ -128,34 +123,33 @@ def process_batch(
 
                 if is_mc:
                     events["reco_truth_matched_jets"] = select_truth_matched_jets(
-                        events.truth_jet_H_parent_mask != 0,
-                        # (events.truth_jet_H_parent_mask == 1)
-                        # | (events.truth_jet_H_parent_mask == 2),
+                        events.jet_truth_H_parent_mask != 0,
+                        # (events.jet_truth_H_parent_mask == 1)
+                        # | (events.jet_truth_H_parent_mask == 2),
                         valid_jets_mask,
                     )
                     ### jets truth matched with HadronConeExclTruthLabelID ###
                     events["reco_truth_matched_jets_v2"] = select_truth_matched_jets(
                         events.jet_truth_label_ID == 5, valid_jets_mask
                     )
-                    if logger.level == logging.DEBUG:
-                        logger.info(
-                            "Events passing previous cuts and 4 truth-matched jets: %s (weighted: %s)",
-                            ak.sum(~ak.is_none(events.reco_truth_matched_jets)),
-                            ak.sum(
-                                events.event_weight[
-                                    ~ak.is_none(events.reco_truth_matched_jets)
-                                ]
-                            ),
-                        )
-                        logger.info(
-                            "Events passing previous cuts and 4 truth-matched jets using HadronConeExclTruthLabelID: %s (weighted: %s)",
-                            ak.sum(~ak.is_none(events.reco_truth_matched_jets_v2)),
-                            ak.sum(
-                                events.event_weight[
-                                    ~ak.is_none(events.reco_truth_matched_jets_v2)
-                                ]
-                            ),
-                        )
+                    logger.debug(
+                        "Events passing previous cuts and 4 truth-matched jets: %s (weighted: %s)",
+                        ak.sum(~ak.is_none(events.reco_truth_matched_jets)),
+                        ak.sum(
+                            events.event_weight[
+                                ~ak.is_none(events.reco_truth_matched_jets)
+                            ]
+                        ),
+                    )
+                    logger.debug(
+                        "Events passing previous cuts and 4 truth-matched jets using HadronConeExclTruthLabelID: %s (weighted: %s)",
+                        ak.sum(~ak.is_none(events.reco_truth_matched_jets_v2)),
+                        ak.sum(
+                            events.event_weight[
+                                ~ak.is_none(events.reco_truth_matched_jets_v2)
+                            ]
+                        ),
+                    )
 
                 ## select and save events with >= n central b-jets ##
                 valid_btagged_jets = select_n_bjets_events(
@@ -183,9 +177,9 @@ def process_batch(
                 ### Do truth matching with b-tagging requirement ###
                 if is_mc:
                     reco_truth_matched_btagged_jets = select_truth_matched_jets(
-                        events.truth_jet_H_parent_mask != 0,
-                        # (events.truth_jet_H_parent_mask == 1)
-                        # | (events.truth_jet_H_parent_mask == 2),
+                        events.jet_truth_H_parent_mask != 0,
+                        # (events.jet_truth_H_parent_mask == 1)
+                        # | (events.jet_truth_H_parent_mask == 2),
                         valid_btagged_jets,
                     )
                     events[f"reco_truth_matched_{n_btags}btags_{btagger}_jets"] = (
@@ -199,27 +193,26 @@ def process_batch(
                     events[
                         f"reco_truth_matched_central_{n_btags}btags_{btagger}_jets_v2"
                     ] = reco_truth_matched_btagged_jets_v2
-                    if logger.level == logging.DEBUG:
-                        logger.info(
-                            "Events passing previous cuts and 4 truth-matched b-tagged jets with %s %s btags: %s (weighted: %s)",
-                            i_bjets_sel["count"]["operator"],
-                            i_bjets_sel["count"]["value"],
-                            ak.sum(~ak.is_none(reco_truth_matched_btagged_jets)),
-                            ak.sum(
-                                events.event_weight[
-                                    ~ak.is_none(reco_truth_matched_btagged_jets)
-                                ]
-                            ),
-                        )
-                        logger.info(
-                            "Events passing previous cuts and 4 truth-matched b-tagged jets using HadronConeExclTruthLabelID: %s (weighted: %s)",
-                            ak.sum(~ak.is_none(reco_truth_matched_btagged_jets_v2)),
-                            ak.sum(
-                                events.event_weight[
-                                    ~ak.is_none(reco_truth_matched_btagged_jets_v2)
-                                ]
-                            ),
-                        )
+                    logger.debug(
+                        "Events passing previous cuts and 4 truth-matched b-tagged jets with %s %s btags: %s (weighted: %s)",
+                        i_bjets_sel["count"]["operator"],
+                        i_bjets_sel["count"]["value"],
+                        ak.sum(~ak.is_none(reco_truth_matched_btagged_jets)),
+                        ak.sum(
+                            events.event_weight[
+                                ~ak.is_none(reco_truth_matched_btagged_jets)
+                            ]
+                        ),
+                    )
+                    logger.debug(
+                        "Events passing previous cuts and 4 truth-matched b-tagged jets using HadronConeExclTruthLabelID: %s (weighted: %s)",
+                        ak.sum(~ak.is_none(reco_truth_matched_btagged_jets_v2)),
+                        ak.sum(
+                            events.event_weight[
+                                ~ak.is_none(reco_truth_matched_btagged_jets_v2)
+                            ]
+                        ),
+                    )
 
                 ###################################
                 # select and save HH jet candidates
@@ -308,17 +301,16 @@ def process_batch(
                     correct_hh_nominal_pairs_mask = select_correct_hh_pair_events(
                         h1_jets_idx=hh_truth_matched_jet_idx[:, 0:2],
                         h2_jets_idx=hh_truth_matched_jet_idx[:, 2:4],
-                        truth_jet_H_parent_mask=events.truth_jet_H_parent_mask,
+                        jet_truth_H_parent_mask=events.jet_truth_H_parent_mask,
                     )
                     events[
                         f"correct_hh_{n_btags}btags_{btagger}_nominal_pairs_mask"
                     ] = correct_hh_nominal_pairs_mask
-                    if logger.level == logging.DEBUG:
-                        logger.info(
-                            "Events passing previous cuts and correct H1 and H2 jet pairs using nominal pairing: %s (weighted: %s)",
-                            ak.sum(correct_hh_nominal_pairs_mask),
-                            ak.sum(events.event_weight[correct_hh_nominal_pairs_mask]),
-                        )
+                    logger.debug(
+                        "Events passing previous cuts and correct H1 and H2 jet pairs using nominal pairing: %s (weighted: %s)",
+                        ak.sum(correct_hh_nominal_pairs_mask),
+                        ak.sum(events.event_weight[correct_hh_nominal_pairs_mask]),
+                    )
 
                 for pairing, pairing_info in pairing_methods.items():
                     ## NEED TO MASK THE EVENTS WITH THE X_Wt MASK ##
@@ -356,18 +348,17 @@ def process_batch(
                         correct_hh_pairs_mask = select_correct_hh_pair_events(
                             h1_jets_idx=H1_truth_matched_jet_idx,
                             h2_jets_idx=H2_truth_matched_jet_idx,
-                            truth_jet_H_parent_mask=events.truth_jet_H_parent_mask,
+                            jet_truth_H_parent_mask=events.jet_truth_H_parent_mask,
                         )
                         events[
                             f"correct_hh_{n_btags}btags_{btagger}_{pairing}_mask"
                         ] = correct_hh_pairs_mask
-                        if logger.level == logging.DEBUG:
-                            logger.info(
-                                "Events passing previous cuts and correct H1 and H2 jet pairs using %s pairing: %s (weighted: %s)",
-                                pairing.replace("_", " "),
-                                ak.sum(correct_hh_pairs_mask),
-                                ak.sum(events.event_weight[correct_hh_pairs_mask]),
-                            )
+                        logger.debug(
+                            "Events passing previous cuts and correct H1 and H2 jet pairs using %s pairing: %s (weighted: %s)",
+                            pairing.replace("_", " "),
+                            ak.sum(correct_hh_pairs_mask),
+                            ak.sum(events.event_weight[correct_hh_pairs_mask]),
+                        )
 
                     #################################################
                     # Perform event selection for each pairing method
@@ -500,108 +491,23 @@ def process_batch(
                     events[
                         f"signal_correct_pairs_{n_btags}btags_{btagger}_{pairing}_mask"
                     ] = signal_event_correct_pairs_mask
-                    if logger.level == logging.DEBUG:
-                        logger.info(
-                            "Events passing previous cuts and signal region with wrong pairs using %s pairing: %s (weighted: %s)",
-                            pairing.replace("_", " "),
-                            ak.sum(~signal_event_correct_pairs_mask),
-                            ak.sum(
-                                events.event_weight[~signal_event_correct_pairs_mask]
-                            ),
-                        )
+                    logger.debug(
+                        "Events passing previous cuts and signal region with wrong pairs using %s pairing: %s (weighted: %s)",
+                        pairing.replace("_", " "),
+                        ak.sum(~signal_event_correct_pairs_mask),
+                        ak.sum(events.event_weight[~signal_event_correct_pairs_mask]),
+                    )
                     control_event_correct_pairs_mask = ak.mask(
                         correct_hh_pairs_mask, control_event_mask
                     )
                     events[
                         f"control_correct_pairs_{n_btags}btags_{btagger}_{pairing}_mask"
                     ] = control_event_correct_pairs_mask
-                    if logger.level == logging.DEBUG:
-                        logger.info(
-                            "Events passing previous cuts and control region with wrong pairs using %s pairing: %s (weighted: %s)",
-                            pairing.replace("_", " "),
-                            ak.sum(~control_event_correct_pairs_mask),
-                            ak.sum(
-                                events.event_weight[~control_event_correct_pairs_mask]
-                            ),
-                        )
-
-                    ###### Calculate background estimate using ABCD method ######
-                    if "background_estimate" in selections:
-                        control_regions = [
-                            "CR1_top",
-                            "CR2_left",
-                            "CR1_bottom",
-                            "CR2_right",
-                        ]
-                        # for each region in the control regions select events that fall in the region. The regions are split by 2 perpendicular lines that intersect at the center of the m_HH plane and are 45 degrees from the x-axis.
-                        control_events_mask = events[
-                            f"control_{n_btags}btags_{btagger}_{pairing}_mask"
-                        ]
-                        points = np.transpose(
-                            [h1_p4.m[control_events_mask], h2_p4.m[control_events_mask]]
-                        )
-                        points *= GeV
-                        events_quadrants = classify_control_events(points)
-                        for i, c_region in zip(events_quadrants, control_regions):
-                            quadrant_events = ak.copy(control_events_mask).to_numpy()
-                            ind = np.where(quadrant_events)[0]
-                            quadrant_events[ind] = events_quadrants[i]
-                            events[
-                                f"{c_region}_{n_btags}btags_{btagger}_{pairing}_mask"
-                            ] = quadrant_events
-                            logger.info(
-                                "Events passing previous cuts and %s region with %s pairing: %s (weighted: %s)",
-                                c_region,
-                                pairing.replace("_", " "),
-                                ak.sum(quadrant_events),
-                                ak.sum(events.event_weight[quadrant_events]),
-                            )
-                        bkg_est_sel = selections["background_estimate"]
-                        low_btag_region = bkg_est_sel["low_btag_region"][
-                            "btagging_index"
-                        ]
-                        low_btag_region = bjets_sel[low_btag_region]["count"]["value"]
-                        high_btag_region = bkg_est_sel["high_btag_region"][
-                            "btagging_index"
-                        ]
-                        high_btag_region = bjets_sel[high_btag_region]["count"]["value"]
-                        if all(
-                            f in events.fields
-                            for f in [
-                                f"control_{low_btag_region}b_{btagger}_{pairing}_mask",
-                                f"control_{high_btag_region}b_{btagger}_{pairing}_mask",
-                            ]
-                        ):
-                            # Calculate SR_4b(prediction) = SR_2b * (CR_4b / CR_2b)
-                            # D = C * (B / A)
-                            N_A = np.zeros(1, dtype=float)
-                            control_regions = ["CR1_top", "CR1_bottom"]
-                            for c_region in control_regions:
-                                quadrant_mask = events[
-                                    f"{c_region}_{low_btag_region}b_{btagger}_{pairing}_mask"
-                                ]
-                                N_A += ak.sum(events.event_weight[quadrant_mask])
-                            N_B = np.zeros(1, dtype=float)
-                            for c_region in control_regions:
-                                quadrant_mask = events[
-                                    f"{c_region}_{high_btag_region}b_{btagger}_{pairing}_mask"
-                                ]
-                                N_B += ak.sum(events.event_weight[quadrant_mask])
-                            N_C = events[
-                                f"signal_{low_btag_region}b_{btagger}_{pairing}_mask"
-                            ]
-                            N_C = ak.sum(events.event_weight[N_C])
-                            N_D = N_C * (N_B / N_A)
-                            sigma_D = N_D * np.sqrt(
-                                (np.sqrt(N_A) / N_A) ** 2
-                                + (np.sqrt(N_B) / N_B) ** 2
-                                + (np.sqrt(N_C) / N_C) ** 2
-                            )
-                            logger.info(
-                                "Estimated number of events in SR_4b using ABCD method for %s pairing: %s ± %s",
-                                pairing.replace("_", " "),
-                                N_D,
-                                sigma_D,
-                            )
+                    logger.debug(
+                        "Events passing previous cuts and control region with wrong pairs using %s pairing: %s (weighted: %s)",
+                        pairing.replace("_", " "),
+                        ak.sum(~control_event_correct_pairs_mask),
+                        ak.sum(events.event_weight[~control_event_correct_pairs_mask]),
+                    )
 
     return events

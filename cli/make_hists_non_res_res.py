@@ -24,7 +24,12 @@ from hh.nonresonantresolved.branches import (
 from hh.nonresonantresolved.processbatches import (
     process_batch,
 )
-from hh.nonresonantresolved.fillhists import fill_hists
+from hh.nonresonantresolved.fillhists import (
+    fill_analysis_hists,
+    fill_leading_jets_histograms,
+    fill_n_true_bjet_composition_histograms,
+)
+from hh.nonresonantresolved.pairing import pairing_methods
 from hh.shared.utils import (
     logger,
     setup_logger,
@@ -52,13 +57,6 @@ def get_args():
         "--skip-hists",
         action="store_true",
         help="Skip saving histograms",
-    )
-    parser.add_argument(
-        "-w",
-        "--sample-weight",
-        type=float,
-        default=None,
-        **defaults,
     )
     parser.add_argument(
         "-b",
@@ -98,19 +96,31 @@ def process_sample_worker(
     sample_path: Path,
     sample_metadata: list,
     selections: dict,
-    hists: dict | None,
+    sample_hists: dict | None,
     args: argparse.Namespace,
 ) -> None:
-    is_mc = "data" not in sample_name
+    """
+    Apply the event selection, fill histograms, and save the output
+    """
+
+    is_mc = sample_metadata["isMC"]
+
+    # get the sample weight
+    sample_weight = 1.0
+    if is_mc:
+        initial_sum_of_weights = sample_metadata.get("initialSumWeights", None)
+        if initial_sum_of_weights is None:
+            cbk = concatenate_cutbookkeepers(sample_path)
+            initial_sum_of_weights = cbk["initial_sum_of_weights"]
+        sample_weight = get_sample_weight(sample_metadata, initial_sum_of_weights)
+
+    # get the branch aliases
     trig_set = None
     if "trigs" in selections:
         trig_set = selections["trigs"].get("value")
     branch_aliases = get_branch_aliases(is_mc, trig_set, sample_metadata)
-    if args.sample_weight is None and is_mc:
-        cbk = concatenate_cutbookkeepers(sample_path)
-        sample_weight = get_sample_weight(sample_metadata, cbk)
-    else:
-        sample_weight = 1.0 if args.sample_weight is None else args.sample_weight
+
+    # iterate over the files in the sample
     batches = []
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
@@ -123,6 +133,30 @@ def process_sample_worker(
     ):
         logger.info(f"Processing batch: {batch_report}")
         logger.debug(f"Columns: {batch_events.fields}")
+
+        # set the total event weight
+        if is_mc:
+            batch_events["event_weight"] = (
+                np.prod(
+                    [batch_events.mc_event_weights[:, 0], batch_events.pileup_weight],
+                    axis=0,
+                )
+                * sample_weight
+            )
+            del batch_events["mc_event_weights"]
+        else:
+            batch_events["event_weight"] = np.ones(len(batch_events), dtype=float)
+
+        # fill the leading jets and bjet composition histograms before any selections
+        if not args.skip_hists:
+            fill_leading_jets_histograms(
+                batch_events,
+                sample_hists,
+                jet_type="truth_jet",
+                hist_prefix="leading_truth_jet",
+            )
+            fill_n_true_bjet_composition_histograms(batch_events, sample_hists)
+
         processed_batch = process_batch(
             batch_events,
             selections,
@@ -131,7 +165,10 @@ def process_sample_worker(
         if processed_batch is None:
             continue
 
-        processed_batch["event_weight"] = processed_batch.event_weight * sample_weight
+        if not args.skip_hists and sample_hists is not None:
+            fill_analysis_hists(processed_batch, sample_hists, selections, is_mc)
+
+        # only keep events that pass the btagging selection to keep the file size down
         valid_events = np.zeros(len(processed_batch), dtype=bool)
         if "jets" in selections and "btagging" in selections["jets"]:
             bjets_sel = selections["jets"]["btagging"]
@@ -147,13 +184,33 @@ def process_sample_worker(
                 )
                 valid_events = (
                     valid_events
-                    | processed_batch[f"valid_2btags_{btagger}_events"]
+                    # | processed_batch[f"valid_2btags_{btagger}_events"]
                     | processed_batch[f"valid_{n_btags}btags_{btagger}_events"]
                 )
+                # These branches create issues for multijet samples
+                bad_branches = [
+                    f"hh_{n_btags}btags_{btagger}_truth_matched_jet_idx",
+                    f"non_hh_{n_btags}btags_{btagger}_truth_matched_jet_idx",
+                ]
+                bad_branches += [
+                    f"H{i}_{n_btags}btags_{btagger}_{pairing}_truth_matched_jet_idx"
+                    for pairing in pairing_methods
+                    for i in [1, 2]
+                ]
+                for bad_branch in bad_branches:
+                    processed_batch[bad_branch] = ak.fill_none(
+                        processed_batch[bad_branch], [], axis=0
+                    )
         processed_batch = processed_batch[valid_events]
         batches.append(processed_batch)
-        if not args.skip_hists:
-            fill_hists(processed_batch, hists[sample_name], selections, is_mc)
+
+    if not args.skip_hists:
+        hists_output_name = args.output.with_name(
+            f"hists_{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
+        )
+        with h5py.File(hists_output_name, "w") as output_file:
+            logger.info(f"Saving histograms to file: {hists_output_name}")
+            write_hists(sample_hists, sample_name, output_file)
 
     if len(batches) == 0:
         logger.info("No valid events found!")
@@ -161,24 +218,6 @@ def process_sample_worker(
 
     # concatenate all batches
     batches = ak.concatenate(batches)
-    if not args.skip_hists:
-        hists_output_name = args.output.with_name(
-            f"hists_{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
-        )
-        with h5py.File(hists_output_name, "w") as output_file:
-            logger.info(f"Saving histograms to file: {hists_output_name}")
-            write_hists(hists[sample_name], sample_name, output_file)
-    # These branches create issues for multijet samples
-    # bad_branches = [
-    #     "hh_4b_GN2v01_77_truth_matched_jet_idx",
-    #     "non_hh_4btags_GN2v01_77_truth_matched_jet_idx",
-    #     "H1_4btags_GN2v01_77_min_deltar_pairing_truth_matched_jet_idx",
-    #     "H2_4btags_GN2v01_77_min_deltar_pairing_truth_matched_jet_idx",
-    #     "H1_4btags_GN2v01_77_min_mass_optimized_1D_medium_pairing_truth_matched_jet_idx",
-    #     "H2_4btags_GN2v01_77_min_mass_optimized_1D_medium_pairing_truth_matched_jet_idx",
-    # ]
-    # for bad_branch in bad_branches:
-    #     del batches[bad_branch]
     output_name = args.output.with_name(
         f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}{args.output.suffix}"
     )
@@ -211,7 +250,7 @@ def main():
             sample_path,
             sample["metadata"][idx] if "metadata" in sample else None,
             event_selection,
-            hists,
+            hists[sample["label"]] if hists is not None else None,
             args,
         )
         for sample in samples

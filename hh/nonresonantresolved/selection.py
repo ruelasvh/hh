@@ -204,12 +204,12 @@ def select_discrim_events(discrim, selection=None):
     return keep
 
 
-def select_correct_hh_pair_events(h1_jets_idx, h2_jets_idx, truth_jet_H_parent_mask):
-    h1_truth_matched = truth_jet_H_parent_mask[h1_jets_idx]
+def select_correct_hh_pair_events(h1_jets_idx, h2_jets_idx, jet_truth_H_parent_mask):
+    h1_truth_matched = jet_truth_H_parent_mask[h1_jets_idx]
     h1_jet1_truth_matched = h1_truth_matched[:, 0]
     h1_jet2_truth_matched = h1_truth_matched[:, 1]
     h1_jets_have_same_parent_mask = h1_jet1_truth_matched == h1_jet2_truth_matched
-    h2_truth_matched = truth_jet_H_parent_mask[h2_jets_idx]
+    h2_truth_matched = jet_truth_H_parent_mask[h2_jets_idx]
     h2_jet1_truth_matched = h2_truth_matched[:, 0]
     h2_jet2_truth_matched = h2_truth_matched[:, 1]
     h2_jets_have_same_parent_mask = h2_jet1_truth_matched == h2_jet2_truth_matched

@@ -40,6 +40,9 @@ sample_labels = {
     "mc23_multijet": f"{sample_types['multijet']} MC23",
     "mc23a_multijet": f"{sample_types['multijet']} MC23a",
     "mc23d_multijet": f"{sample_types['multijet']} MC23d",
+    "mc23_multijet_2bjets": f"{sample_types['multijet']} MC23",
+    "mc23a_multijet_2bjets": f"{sample_types['multijet']} MC23a",
+    "mc23d_multijet_2bjets": f"{sample_types['multijet']} MC23d",
     # mc23 ttbar samples
     "mc23_ttbar": f"{sample_types['ttbar']} MC23",
     "mc23a_ttbar": f"{sample_types['ttbar']} MC23a",
@@ -59,6 +62,8 @@ selections_labels = {
     "btagged_GN277_4_jets": r"$\geq$ 4 b-tags with GN2v01@77%",
     # "truth_matched_4_plus_jets": r"${n_b}_\mathrm{match} \geq$ 4",
     "truth_matched_4_plus_jets": r"$\geq$ 4 truth-matched jets",
+    "jets": lambda n_jets=4, pT_cut=20, eta_cut=2.5: rf"$\geq$ {n_jets} jets with $p_{{\mathrm{{T}}}} > {pT_cut}$ GeV, $|\eta| < {eta_cut}$",
+    "b-tagging": lambda n_btags=4, tagger="GN2v01", eff=77: rf"$\geq$ {n_btags} b-tags with {tagger}@{eff}%",
 }
 
 kin_labels = {"pt": r"$p_T$", "eta": r"$\eta$", "phi": r"$\phi$", "mass": r"$m$"}

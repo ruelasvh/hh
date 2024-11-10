@@ -98,12 +98,56 @@ def get_symmetric_bin_errors(data, weights, bins):
     """
 
     bin_edges = bins
-    bin_centers = (bin_edges[1:] + bin_edges[:-1]) / 2
 
-    bin_errors = np.zeros_like(bin_centers)
+    bin_errors = np.zeros(len(bin_edges) - 1)
     for i, (low, high) in enumerate(zip(bin_edges[:-1], bin_edges[1:])):
-        mask = (low < data) & (data <= high)
+        mask = (low <= data) & (data < high)
         bin_errors[i] = np.sqrt(np.sum(weights[mask] ** 2))
+
+    return bin_errors
+
+
+def calculate_2d_bin_errors(data, weights, bins_x, bins_y):
+    """
+    Calculate bin errors for a 2D histogram using np.digitize.
+
+    Parameters:
+    - data: ndarray of shape (2, N)
+        The input data to be histogrammed. The first row corresponds to the x-values,
+        and the second row corresponds to the y-values.
+    - weights: ndarray of shape (N,)
+        The weights associated with each data point.
+    - bins_x: ndarray
+        The bin edges for the x-dimension.
+    - bins_y: ndarray
+        The bin edges for the y-dimension.
+
+    Returns:
+    - bin_centers_x: ndarray
+        The centers of the x-bins.
+    - bin_centers_y: ndarray
+        The centers of the y-bins.
+    - bin_errors: ndarray of shape (len(bins_x)-1, len(bins_y)-1)
+        The errors for each 2D bin.
+    """
+
+    # Ensure data is a 2D array with shape (2, N)
+    data = np.asarray(data)
+    if data.shape[0] != 2:
+        raise ValueError("Data should have shape (2, N) for a 2D histogram.")
+
+    # Digitize the data to find bin indices
+    bin_indices_x = np.digitize(data[0], bins_x) - 1
+    bin_indices_y = np.digitize(data[1], bins_y) - 1
+
+    # Initialize bin errors array
+    bin_errors = np.zeros((len(bins_x) - 1, len(bins_y) - 1))
+
+    # Calculate bin errors
+    for i in range(len(bins_x) - 1):
+        for j in range(len(bins_y) - 1):
+            mask = (bin_indices_x == i) & (bin_indices_y == j)
+            bin_errors[i, j] = np.sqrt(np.sum(weights[mask] ** 2))
 
     return bin_errors
 

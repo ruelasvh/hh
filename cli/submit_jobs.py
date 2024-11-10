@@ -18,7 +18,6 @@ from pathlib import Path
 from hh.shared.utils import (
     resolve_project_paths,
     concatenate_cutbookkeepers,
-    get_sample_weight,
 )
 
 
@@ -103,18 +102,14 @@ def main():
     # Create a config file for each file in 'paths' for each sample in 'samples'
     configs = []
     for sample in config["samples"]:
-        sample_is_mc = "data" not in sample["label"]
-        for sample_path, sample_metadata, i_sample in zip(
-            sample["paths"], sample["metadata"], range(len(sample["paths"]))
-        ):
-            sample_weight = 1.0
+        for sample_path, sample_metadata in zip(sample["paths"], sample["metadata"]):
+            sample_is_mc = sample_metadata["isMC"]
             if sample_is_mc:
                 # get the cutbookkeepers for the sample
                 cbk = concatenate_cutbookkeepers(sample_path)
-                sample_metadata["initialSumWeights"] = str(
+                sample_metadata["initialSumWeights"] = float(
                     cbk["initial_sum_of_weights"]
                 )
-                sample_weight = get_sample_weight(sample_metadata, cbk)
             # === Iterate over each file in the sample path for faster processing ===
             files = list(Path(sample_path).glob("*.root"))
             for file_path in files:
@@ -123,12 +118,7 @@ def main():
                     CONFIG_DIR / f"config-{sample['label']}-{file_path.stem}.json"
                 )
                 # add the config file to the list of configs
-                configs.append(
-                    {
-                        "config_file": config_file.as_posix(),
-                        "sample_weight": str(sample_weight),
-                    }
-                )
+                configs.append({"config_file": config_file.as_posix()})
                 # create a new config file for each file
                 with open(config_file, "w") as file:
                     # write the sample and event_selection objects to the new config file
@@ -161,7 +151,7 @@ def main():
     sub = htcondor.Submit(
         {
             "executable": "/usr/bin/apptainer",
-            "arguments": f"exec {args.image} {args.exec} $(config_file) -o {OUTPUT_DIR}/{args.output.stem}_$(ClusterId)_$(ProcId){args.output.suffix} -w $(sample_weight) -v {' '.join(restargs)}",
+            "arguments": f"exec {args.image} {args.exec} $(config_file) -o {OUTPUT_DIR}/{args.output.stem}_$(ClusterId)_$(ProcId){args.output.suffix} -v {' '.join(restargs)}",
             "output": f"{CONDOR_OUTPUT_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",
             "error": f"{CONDOR_ERROR_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",
             "log": f"{CONDOR_LOG_DIR}/{args.exec.stem}-$(ClusterId).$(ProcId).log",

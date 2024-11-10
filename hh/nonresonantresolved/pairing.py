@@ -149,14 +149,14 @@ pairing_methods = {
     #     "m_X_range": np.linspace(0, 150, 16),
     # },
     # "min_mass_optimized_2D_low_pairing": {
-    #     "label": r"$\mathrm{arg\,min\,} ((m_{jj}^{lead}-110\ \mathrm{GeV})^2 + (m_{jj}^{sub}-120\ \mathrm{GeV})^2)$ pairing",
+    #     "label": r"$\mathrm{arg\,min\,} ((m_{jj}^{lead}-120\ \mathrm{GeV})^2 + (m_{jj}^{sub}-110\ \mathrm{GeV})^2)$ pairing",
     #     "loss": lambda jet_p4, jet_pair_1, jet_pair_2: (
     #         (
     #             np.maximum(
     #                 (jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass,
     #                 (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass,
     #             )
-    #             - 110 * MeV
+    #             - 120 * MeV
     #         )
     #         ** 2
     #         + (
@@ -164,7 +164,7 @@ pairing_methods = {
     #                 (jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass,
     #                 (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass,
     #             )
-    #             - 120 * MeV
+    #             - 110 * MeV
     #         )
     #         ** 2
     #     ),
@@ -173,14 +173,14 @@ pairing_methods = {
     #     "m_X_sub_range": np.linspace(0, 150, 16),
     # },
     # "min_mass_optimized_2D_high_pairing": {
-    #     "label": r"$\mathrm{arg\,min\,} ((m_{jj}^{lead}-80\ \mathrm{GeV})^2 + (m_{jj}^{sub}-100\ \mathrm{GeV})^2)$ pairing",
+    #     "label": r"$\mathrm{arg\,min\,} ((m_{jj}^{lead}-100\ \mathrm{GeV})^2 + (m_{jj}^{sub}-80\ \mathrm{GeV})^2)$ pairing",
     #     "loss": lambda jet_p4, jet_pair_1, jet_pair_2: (
     #         (
     #             np.maximum(
     #                 (jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass,
     #                 (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass,
     #             )
-    #             - 80 * MeV
+    #             - 100 * MeV
     #         )
     #         ** 2
     #         + (
@@ -188,7 +188,7 @@ pairing_methods = {
     #                 (jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]).mass,
     #                 (jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]).mass,
     #             )
-    #             - 100 * MeV
+    #             - 80 * MeV
     #         )
     #         ** 2
     #     ),

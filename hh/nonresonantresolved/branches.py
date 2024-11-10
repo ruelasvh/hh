@@ -22,6 +22,7 @@ JET_ALIASES = {
     "jet_mass": "recojet_antikt4PFlow_m_NOSYS",
     "jet_NNJvt": "recojet_antikt4PFlow_NNJvt_NOSYS",
     "jet_jvttag": "recojet_antikt4PFlow_jvt_selection_NOSYS",  # also recojet_antikt4PFlow_NOSYS_NNJvt, recojet_antikt4PFlow_NOSYS_Jvt, recojet_antikt4PFlow_NOSYS_JvtRpt, recojet_antikt4PFlow_NOSYS_NNJvtRpt, recojet_antikt4PFlow_NOSYS_jvt_selection
+    "jet_truth_H_parent_mask": "recojet_antikt4PFlow_parentHiggsParentsMask_NOSYS",
     "jet_truth_label_ID": "recojet_antikt4PFlow_HadronConeExclTruthLabelID_NOSYS",
     "jet_btag_DL1dv01_70": "recojet_antikt4PFlow_ftag_select_DL1dv01_FixedCutBEff_70_NOSYS",
     "jet_btag_DL1dv01_77": "recojet_antikt4PFlow_ftag_select_DL1dv01_FixedCutBEff_77_NOSYS",
@@ -29,6 +30,7 @@ JET_ALIASES = {
     "jet_btag_DL1dv01_pb": "recojet_antikt4PFlow_DL1dv01_pb_NOSYS",
     "jet_btag_DL1dv01_pc": "recojet_antikt4PFlow_DL1dv01_pc_NOSYS",
     "jet_btag_DL1dv01_pu": "recojet_antikt4PFlow_DL1dv01_pu_NOSYS",
+    "jet_btag_DL1dv01_ptau": "recojet_antikt4PFlow_DL1dv01_pu_NOSYS",
     "jet_btag_GN2v01_65": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_65_NOSYS",
     "jet_btag_GN2v01_70": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_70_NOSYS",
     "jet_btag_GN2v01_77": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_77_NOSYS",
@@ -36,13 +38,17 @@ JET_ALIASES = {
     "jet_btag_GN2v01_pb": "recojet_antikt4PFlow_GN2v01_pb_NOSYS",
     "jet_btag_GN2v01_pc": "recojet_antikt4PFlow_GN2v01_pc_NOSYS",
     "jet_btag_GN2v01_pu": "recojet_antikt4PFlow_GN2v01_pu_NOSYS",
+    "jet_btag_GN2v01_ptau": "recojet_antikt4PFlow_GN2v01_ptau_NOSYS",
 }
 
 MC_ALIASES = {
     "mc_event_weights": "mcEventWeights",
     "pileup_weight": "PileupWeight_NOSYS",
-    "truth_jet_H_parent_mask": "recojet_antikt4PFlow_parentHiggsParentsMask_NOSYS",
     "truth_jet_label_ID": "truthjet_antikt4_HadronConeExclTruthLabelID",
+    "truth_jet_eta": "truthjet_antikt4_eta",
+    "truth_jet_mass": "truthjet_antikt4_m",
+    "truth_jet_phi": "truthjet_antikt4_phi",
+    "truth_jet_pt": "truthjet_antikt4_pt",
     "h1_truth_ID": "truth_H1_pdgId",
     "h1_truth_pt": "truth_H1_pt",
     "h1_truth_eta": "truth_H1_eta",

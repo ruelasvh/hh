@@ -1,0 +1,77 @@
+{
+    "samples": [
+        {
+            "label": "mc23a_ggF_k01",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.603404.e8564_a910_r14932_p6026_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.603404.PhPy8EG_PDF4LHC21_HHbbbb_chhh1p0.deriv.DAOD_PHYS.e8564_a910_r14932_p6026",
+                    "genFiltEff": 1,
+                    "crossSection": 2.9875E-05,
+                    "kFactor": 1.0,
+                    "luminosity": 26.0714,
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                }
+            ]
+        }
+    ],
+    "event_selection": {
+        "trigs": {
+            "operator": "or",
+            "value": "Run 3 Asymm"
+        },
+        "jets": {
+            "pt": {
+                "operator": ">",
+                "value": 20
+            },
+            "eta": {
+                "operator": "<",
+                "value": 2.5
+            },
+            "count": {
+                "operator": ">=",
+                "value": 4
+            },
+            "btagging": [
+                {
+                    "model": "GN2v01",
+                    "efficiency": 0.77,
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    }
+                }
+            ]
+        },
+        "Delta_eta_HH_discriminant": {
+            "operator": "<",
+            "value": 1.5
+        },
+        "X_Wt_discriminant": {
+            "operator": ">",
+            "value": 1.5
+        },
+        "X_HH_discriminant": {
+            "signal": {
+                "inner_boundry": {
+                    "operator": "<",
+                    "value": 1.6
+                }
+            },
+            "control": {
+                "inner_boundry": {
+                    "operator": ">=",
+                    "value": 1.6
+                },
+                "outer_boundry": {
+                    "operator": "<=",
+                    "value": 45
+                }
+            }
+        }
+    }
+}

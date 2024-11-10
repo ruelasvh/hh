@@ -3,21 +3,17 @@ import numpy as np
 import mplhep as hplt
 from pathlib import Path
 import matplotlib.pyplot as plt
-import matplotlib.scale as mscale
-import matplotlib.colors as mcolors
-import matplotlib.ticker as mticker
 from hh.shared.selection import X_HH, R_CR
 from hh.shared.utils import (
     find_hist,
     find_hists,
     GeV,
-    kin_labels,
     get_com_lumi_label,
     jz_leading_jet_pt,
     get_legend_label,
     register_bottom_offset,
 )
-from hh.shared.error import get_efficiency_with_uncertainties
+from hh.shared.labels import kin_labels
 
 np.seterr(divide="ignore", invalid="ignore")
 
@@ -101,6 +97,70 @@ class HistPlottable:
         )
 
 
+def draw_dijet_slices_hists(
+    hists_group,
+    hist_name,
+    energy,
+    xlabel: str = None,
+    ylabel: str = "Entries",
+    third_exp_label="",
+    legend_labels: list = None,
+    luminosity=None,
+    yscale="log",
+    normalize=False,
+    binwidth_norm=True,
+    output_dir=Path("plots"),
+):
+    """Draw dijet slices histograms in one figure."""
+
+    # assert that legend_labels is either a list or "auto" with list size equal to the number of samples
+    if isinstance(legend_labels, dict):
+        assert len(legend_labels) == len(hists_group), (
+            "legend_labels map must have the same size as the number of samples in hists_group."
+            f"Expected {len(hists_group)} labels, got {len(legend_labels)}."
+        )
+
+    fig, ax = plt.subplots()
+    sorted_keys = sorted(hists_group.keys())
+    hists = []
+    labels = []
+    bins = []
+    for sample_type in sorted_keys:
+        labels.append(sample_type)
+        hist = hists_group[sample_type][hist_name]
+        hist_values = hist["values"][1:-1]
+        hists.append(hist_values)
+        bins = hist["edges"]
+    hist_main = HistPlottable(
+        hists,
+        bins,
+        normalize=normalize,
+        binwidth_norm=binwidth_norm,
+        ylabel=ylabel,
+        xlabel=xlabel,
+        legend_label=legend_labels if legend_labels else labels,
+    )
+    hist_main.plot(ax=ax, histtype="fill", stack=True)
+    ax.legend(loc="upper right")
+    ax.set_yscale(yscale)
+    # _, ymax = ax.get_ylim()
+    # ax.set_ylim(ymin=0.1 if yscale == "log" else 0.0, ymax=ymax * 1.5)
+    if xlabel:
+        ax.set_xlabel(xlabel)
+    hplt.atlas.label(
+        label="Work In Progress",
+        data=True,  # prevents adding Simulation label, sim labels are added in legend
+        rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
+        loc=4,
+        ax=ax,
+        pad=0.01,
+    )
+    plot_name = f"multijet_slices_{hist_name}"
+    plt.tight_layout()
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
+
+
 def draw_1d_hists(
     hists_group,
     hist_prefix,
@@ -121,6 +181,7 @@ def draw_1d_hists(
     ggFk10_factor=None,
     ggFk05_factor=None,
     data2b_factor=None,
+    styles={},
     output_dir=Path("plots"),
 ):
     """Draw 1D histograms in one figure. The number of histograms in the figure is
@@ -136,12 +197,10 @@ def draw_1d_hists(
 
     fig, ax = plt.subplots()
     for sample_type, sample_hists in hists_group.items():
-        hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
-        is_data = "data" in sample_type
-        hist = sample_hists[hist_name]
-        hist_values = hist["values"]
+        hist = find_hist(sample_hists, lambda h_name: hist_prefix == h_name)
+        hist_values = hist["values"][1:-1]
         hist_edges = hist["edges"]
-        hist_errors = hist["errors"] if draw_errors else None
+        hist_errors = hist["errors"][1:-1] if draw_errors else None
         scale_factor = None
         if ggFk01_factor and "ggF" in sample_type and "k01" in sample_type:
             scale_factor = ggFk01_factor
@@ -151,11 +210,12 @@ def draw_1d_hists(
             scale_factor = ggFk10_factor
         if data2b_factor and "data" in sample_type and "2b" in sample_type:
             scale_factor = data2b_factor
-        bin_width = hist_edges[1] - hist_edges[0]
-        bin_centers = hist_edges + (bin_width * 0.5)
+        # bin_width = hist_edges[1] - hist_edges[0]
+        # bin_centers = hist_edges + (bin_width * 0.5)
         hist_main = HistPlottable(
             hist_values,
-            bin_centers,
+            # bin_centers,
+            hist_edges,
             errors=hist_errors,
             scale_factor=scale_factor,
             normalize=normalize,
@@ -164,7 +224,7 @@ def draw_1d_hists(
             xlabel=xlabel,
             legend_label=legend_labels[sample_type] if legend_labels else None,
         )
-        hist_main.plot(ax=ax, linewidth=2.0)
+        hist_main.plot(ax=ax, **styles)
     ax.legend(loc="upper right")
     if xcut:
         ax.axvline(x=xcut, ymax=0.6, color="purple")
@@ -244,9 +304,9 @@ def draw_signal_vs_background(
         hist = samples[sample_name]
         if hist:
             hist_main = HistPlottable(
-                hist["values"],
+                hist["values"][1:-1],
                 hist["edges"],
-                errors=hist["errors"],
+                errors=hist["errors"][1:-1],
                 legend_label=legend_labels.get(sample_name, sample_name),
                 scale_factor=100 if "ggF" in sample_name else None,
                 binwidth_norm=False,
@@ -290,12 +350,12 @@ def draw_signal_vs_background(
 
 def draw_1d_hists_v2(
     hists_group,
-    hist_prefixes,
+    hist_names,
     energy,
     xlabel=None,
     ylabel="Entries",
     baseline=None,
-    legend_labels: dict = None,
+    legend_labels: list = None,
     legend_options: dict = {"loc": "upper right"},
     third_exp_label="",
     luminosity=None,
@@ -318,10 +378,10 @@ def draw_1d_hists_v2(
     is used to select the histograms to be drawn."""
 
     # assert that legend_labels is either a list or "auto" with list size equal to the number of samples
-    if isinstance(legend_labels, dict):
-        assert len(legend_labels) == len(hist_prefixes), (
-            "legend_labels map must have the same size as the number of samples in hists_group."
-            f"Expected {len(hist_prefixes)} labels, got {len(legend_labels)}."
+    if isinstance(legend_labels, list):
+        assert len(legend_labels) == len(hist_names), (
+            "legend_labels list must have the same size as the number of samples in hists_group."
+            f"Expected {len(hist_names)} labels, got {len(legend_labels)}."
         )
 
     if draw_ratio:
@@ -333,13 +393,11 @@ def draw_1d_hists_v2(
 
     for sample_type, sample_hists in hists_group.items():
         base_hist_values = None
-        for i, hist_prefix in enumerate(hist_prefixes):
-            hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
-            is_data = "data" in sample_type
+        for i, hist_name in enumerate(hist_names):
             hist = sample_hists[hist_name]
-            hist_values = hist["values"]
+            hist_values = hist["values"][1:-1]
             hist_edges = hist["edges"]
-            hist_errors = hist["errors"] if draw_errors else None
+            hist_errors = hist["errors"][1:-1] if draw_errors else None
             hist_main = HistPlottable(
                 hist_values,
                 hist_edges,
@@ -347,7 +405,7 @@ def draw_1d_hists_v2(
                 scale_factor=scale_factors[i] if scale_factors else None,
                 normalize=normalize,
                 binwidth_norm=binwidth_norm,
-                legend_label=legend_labels[hist_prefix] if legend_labels else None,
+                legend_label=legend_labels[i] if legend_labels else None,
                 xlabel=xlabel,
                 ylabel=ylabel,
             )
@@ -368,7 +426,7 @@ def draw_1d_hists_v2(
             edges_underflow_overflow = np.concatenate([-infvar, hist_edges, infvar])
             baseline_hist, _ = np.histogramdd(baseline, bins=[edges_underflow_overflow])
             hist_baseline = HistPlottable(
-                baseline_hist,
+                baseline_hist[1:-1],
                 hist_edges,
                 errors=hist_errors,
                 legend_label=r"Flat $m_\mathrm{HH}$ distribution",
@@ -407,9 +465,57 @@ def draw_1d_hists_v2(
     plt.close(fig)
 
 
+def eff_err(
+    arr: np.ndarray,
+    n_counts: int,
+    suppress_zero_divison_error: bool = False,
+    norm: bool = False,
+) -> np.ndarray:
+    """Calculate statistical efficiency uncertainty.
+
+    Parameters
+    ----------
+    arr : numpy.array
+        Efficiency values
+    n_counts : int
+        Number of used statistics to calculate efficiency
+    suppress_zero_divison_error : bool
+        Not raising Error for zero division
+    norm : bool, optional
+        If True, normed (relative) error is being calculated, by default False
+
+    Returns
+    -------
+    numpy.array
+        Efficiency uncertainties
+
+    Raises
+    ------
+    ValueError
+        If n_counts <=0
+
+    Notes
+    -----
+    This method uses binomial errors as described in section 2.2 of
+    https://inspirehep.net/files/57287ac8e45a976ab423f3dd456af694
+    """
+    # logger.debug("Calculating efficiency error.")
+    # logger.debug("arr: %s", arr)
+    # logger.debug("n_counts: %i", n_counts)
+    # logger.debug("suppress_zero_divison_error: %s", suppress_zero_divison_error)
+    # logger.debug("norm: %s", norm)
+    if np.any(n_counts <= 0) and not suppress_zero_divison_error:
+        raise ValueError(
+            f"You passed as argument `N` {n_counts} but it has to be larger 0."
+        )
+    if norm:
+        return np.sqrt(arr * (1 - arr) / n_counts) / arr
+    return np.sqrt(arr * (1 - arr) / n_counts)
+
+
 def draw_efficiency(
     hists_group,
-    hist_prefixes,
+    hist_names,
     energy,
     xlabel=None,
     ylabel="Efficiency",
@@ -430,29 +536,26 @@ def draw_efficiency(
     is used to select the histograms to be drawn."""
 
     # assert that legend_labels is either a list or "auto" with list size equal to the number of samples
-    if isinstance(legend_labels, dict):
-        assert len(legend_labels) == len(hist_prefixes), (
-            "legend_labels map must have the same size as the number of samples in hists_group."
-            f"Expected {len(hist_prefixes)} labels, got {len(legend_labels)}."
+    if isinstance(legend_labels, list):
+        assert len(legend_labels) == len(hist_names), (
+            "legend_labels must have the same size as the number of samples in hists_group."
+            f"Expected {len(hist_names)} labels, got {len(legend_labels)}."
         )
 
     fig, ax = plt.subplots()
 
     for sample_type, sample_hists in hists_group.items():
-        for i, hists in enumerate(hist_prefixes):
-            hist_total_name = find_hist(sample_hists, lambda h: re.match(hists[0], h))
-            hist_total = sample_hists[hist_total_name]
-            hist_pass_name = find_hist(sample_hists, lambda h: re.match(hists[1], h))
-            hist_pass = sample_hists[hist_pass_name]
-            eff, errors = get_efficiency_with_uncertainties(
-                hist_pass["values"][1:-1], hist_total["values"][1:-1]
-            )
-            breakpoint()
+        for i, hists in enumerate(hist_names):
+            hist_total = sample_hists[hists["total"]]
+            hist_pass = sample_hists[hists["pass"]]
+            hist_pass_counts = hist_pass["values"][1:-1]
+            hist_total_counts = hist_total["values"][1:-1]
+            bins = hist_total["edges"]
+            eff = hist_pass_counts / hist_total_counts
             hist_main = HistPlottable(
                 eff,
-                hist_total["edges"],
-                errors=errors if draw_errors else None,
-                legend_label=legend_labels[hist_total_name] if legend_labels else None,
+                bins,
+                legend_label=legend_labels[i] if legend_labels else None,
                 xlabel=xlabel,
                 ylabel=ylabel,
             )
@@ -460,6 +563,14 @@ def draw_efficiency(
                 {"histtype": "errorbar", "solid_capstyle": "projecting", "capsize": 3}
                 if draw_errors
                 else {}
+            )
+            hplt.histplot(
+                hist_total_counts / np.max(hist_total_counts),
+                bins * GeV,
+                ax=ax,
+                histtype="fill",
+                color="silver",
+                alpha=0.5,
             )
             hist_main.plot(
                 ax=ax,
@@ -471,7 +582,7 @@ def draw_efficiency(
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     # scale y-axis so that the legend does not overlap with the plot
-    ax.set_ylim(ymin=ymin, ymax=ymax * (1 + 0.1 * len(hist_prefixes) + 0.1))
+    ax.set_ylim(ymin=ymin, ymax=ymax * (1 + 0.2 * len(hist_names) + 0.1))
     if xmin is not None:
         ax.set_xlim(xmin=xmin)
     if xmax is not None:
@@ -609,31 +720,34 @@ def draw_mH_1D_hists(
     plt.close(fig)
 
 
-def draw_mH_plane_2D_hists(
+def draw_mHH_plane_2D_hists(
     sample_hists,
     sample_name,
-    hist_prefix,
+    hist_name,
     energy,
     luminosity=None,
     log_z=False,
     label_z="Entries",
     xrange=(50, 200),
     yrange=(50, 200),
+    log_z_min=None,
+    log_z_max=None,
     third_exp_label="",
     output_dir=Path("plots"),
 ):
     fig, ax = plt.subplots()
-    hist_name = find_hist(sample_hists, lambda h: re.match(hist_prefix, h))
     hist = sample_hists[hist_name]
     is_data = "data" in sample_name
     bins_GeV = hist["edges"] * GeV
-    hist_values = (
-        hist["values"] * luminosity if luminosity and not is_data else hist["values"]
-    )
+    hist_values = hist["values"]
     # remove outliers from hist_values
     hist_values[hist_values > 2000] = 0
+    print(f"Counts for {sample_name} {hist_name}: {np.sum(hist_values[1:-1, 1:-1])}")
+    print(
+        f"Counts for with overflow/underflow {sample_name} {hist_name}: {np.sum(hist_values)}"
+    )
     pcm, cbar, _ = hplt.hist2dplot(
-        hist_values,
+        hist_values[1:-1, 1:-1],
         bins_GeV,
         bins_GeV,
         ax=ax,
@@ -646,14 +760,31 @@ def draw_mH_plane_2D_hists(
     cbar.set_label(label_z)
     # move top bar "multiplier" so doesn't overlap with the plot labels
     register_bottom_offset(cbar.ax.yaxis)
+    # if log_z:
+    #     cbar.ax.set_yscale(
+    #         "symlog",
+    #         base=10,
+    #         linthresh=100 if hist_values.max() > 100 else 0.015,
+    #         linscale=0.05 if hist_values.max() > 100 else 1,
+    #         subs=[2, 3, 4, 5, 6, 7, 8, 9],
+    #     )
+
     if log_z:
+        # Set default min and max if not provided
+        if log_z_min is None:
+            log_z_min = 100 if hist_values.max() > 100 else 0.015
+        if log_z_max is None:
+            log_z_max = hist_values.max()
+
         cbar.ax.set_yscale(
             "symlog",
             base=10,
-            linthresh=100 if hist_values.max() > 100 else 0.015,
+            linthresh=log_z_min,
             linscale=0.05 if hist_values.max() > 100 else 1,
             subs=[2, 3, 4, 5, 6, 7, 8, 9],
         )
+        cbar.ax.set_ylim(log_z_min, log_z_max)  # Set the y-axis limits for the colorbar
+
     ax.set_ylabel(r"$m_{H2}$ [GeV]")
     ax.set_xlabel(r"$m_{H1}$ [GeV]")
     ax.set_ylim(*yrange)
@@ -717,7 +848,12 @@ def draw_mH_plane_2D_hists(
         colors=["black"],
         linestyles=["dashed"],
     )
-    plot_label = sample_name.replace("_", " ")
+    plot_label = (
+        sample_name.replace("_", " ")
+        .replace("k01", "$\kappa_\lambda=1$")
+        .replace("k05", "$\kappa_\lambda=5$")
+        .replace("k10", "$\kappa_\lambda=10$")
+    )
     plot_label = f"{plot_label}, {third_exp_label}" if third_exp_label else plot_label
     hplt.atlas.label(
         loc=0,
@@ -729,6 +865,231 @@ def draw_mH_plane_2D_hists(
     plot_name = f"{sample_name}_{hist_name}"
     plt.tight_layout()
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
+
+
+def draw_mHH_plane_3D_hists(
+    sample_hists,
+    sample_name,
+    hist_name,
+    energy,
+    label_z="Entries",
+    xrange: tuple = None,
+    yrange: tuple = None,
+    third_exp_label="",
+    output_dir=Path("plots"),
+):
+    from mpl_toolkits.mplot3d import Axes3D
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+    hist = sample_hists[hist_name]
+    bins_GeV = hist["edges"] * GeV
+    hist_values = hist["values"][1:-1, 1:-1]
+    # Remove outliers
+    hist_values[hist_values > 2000] = 0
+
+    X, Y = np.meshgrid(bins_GeV[:-1], bins_GeV[:-1])
+    Z = hist_values
+
+    surf = ax.plot_surface(
+        X,
+        Y,
+        Z,
+        rstride=1,
+        cstride=1,
+        cmap=plt.cm.coolwarm,
+        linewidth=0,
+        antialiased=False,
+    )
+    cbar = fig.colorbar(surf, shrink=0.5)
+    cbar.set_label(label_z)
+    ax.view_init(azim=45)
+
+    ax.set_xlabel(r"$m_{H1}$ [GeV]")
+    ax.set_ylabel(r"$m_{H2}$ [GeV]")
+    # ax.set_zlabel(label_z)
+    if xrange:
+        ax.set_xlim(*xrange)
+    if yrange:
+        ax.set_ylim(*yrange)
+
+    plot_label = (
+        sample_name.replace("_", " ")
+        .replace("k01", "$\kappa_\lambda=1$")
+        .replace("k05", "$\kappa_\lambda=5$")
+        .replace("k10", "$\kappa_\lambda=10$")
+    )
+    plot_label = f"{plot_label}, {third_exp_label}" if third_exp_label else plot_label
+    ax.set_title(f"{plot_label}, {energy} TeV")
+
+    plt.tight_layout()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plot_name = f"{sample_name}_{hist_name}_3D.png"
+    fig.savefig(output_dir / plot_name, bbox_inches="tight")
+    plt.close(fig)
+
+
+def draw_mHH_plane_projections_hists(
+    sample_hists,
+    sample_name,
+    h1_hist_name,
+    h2_hist_name,
+    hh_2d_hist_name,
+    energy,
+    luminosity=None,
+    log_z=True,
+    label_z="Entries",
+    xrange: tuple = (50, 200),
+    yrange: tuple = (50, 200),
+    third_exp_label="",
+    output_dir=Path("plots"),
+):
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+    is_data = "data" in sample_name
+
+    fig, ax = plt.subplots(figsize=(7.5, 6.5))
+
+    h1_hist = sample_hists[h1_hist_name]
+    h1_hist_values = h1_hist["values"][1:-1]
+    h1_hist_bins_GeV = h1_hist["edges"] * GeV
+    h2_hist = sample_hists[h2_hist_name]
+    h2_hist_values = h2_hist["values"][1:-1]
+    h2_hist_bins_GeV = h2_hist["edges"] * GeV
+    hh_hist = sample_hists[hh_2d_hist_name]
+    hh_hist_values = hh_hist["values"][1:-1, 1:-1]
+    hh_bins_GeV = hh_hist["edges"] * GeV
+
+    pcm, cbar, _ = hplt.hist2dplot(
+        hh_hist_values,
+        hh_bins_GeV,
+        hh_bins_GeV,
+        ax=ax,
+        cbarpad=0.15,
+        cbarsize="5%",
+        flow=None,
+        cbarextend=True,
+        cmap="RdBu_r",
+    )
+    cbar.set_label(label_z)
+
+    ax.set_xlabel(r"$m_{H1}$ [GeV]")
+    ax.set_ylabel(r"$m_{H2}$ [GeV]")
+    if xrange:
+        ax.set_xlim(*xrange)
+    if yrange:
+        ax.set_ylim(*yrange)
+
+    if log_z:
+        cbar.ax.set_yscale(
+            "symlog",
+            base=10,
+            linthresh=100 if hh_hist_values.max() > 100 else 0.015,
+            linscale=0.05 if hh_hist_values.max() > 100 else 1,
+            subs=[2, 3, 4, 5, 6, 7, 8, 9],
+        )
+
+    # signal and control region countours
+    X, Y = np.meshgrid(hh_bins_GeV, hh_bins_GeV)
+    signal_region = X_HH(X, Y)
+    ax.contour(
+        X,
+        Y,
+        signal_region,
+        levels=[1.55, 1.6],
+        colors=["tab:red", "black"],
+        linestyles=["solid", "dashed"],
+    )
+    # line connecting SR and CR points x_ur, y_ur
+    ax.plot(
+        (139.35, 161.84),
+        (132.35, 154.84),
+        color="black",
+        linestyle="dashed",
+    )
+    # line connecting SR and CR points x_dr, y_dr
+    ax.plot(
+        (137.24, 155.42),
+        (103.76, 85.58),
+        color="black",
+        linestyle="dashed",
+    )
+    # line connecting SR and CR points x_ul, y_ul
+    ax.plot(
+        (110.51, 92.93),
+        (130.05, 148.07),
+        color="black",
+        linestyle="dashed",
+    )
+    # line connecting SR and CR points x_dl, y_dl
+    ax.plot(
+        (111.77, 98.21),
+        (104.77, 91.21),
+        color="black",
+        linestyle="dashed",
+    )
+    if is_data:
+        ax.contourf(
+            X,
+            Y,
+            signal_region,
+            levels=[0, 1.54],
+            colors=["black", "white"],
+            extend="min",
+        )
+    congrol_region = R_CR(X, Y)
+    ax.contour(
+        X,
+        Y,
+        congrol_region,
+        levels=[45],
+        colors=["black"],
+        linestyles=["dashed"],
+    )
+
+    # create new Axes on the right and on the top of the current Axes
+    divider = make_axes_locatable(ax)
+    # below height and pad are in inches
+    ax_histx = divider.append_axes("top", 1.2, pad=0.1, sharex=ax)
+    ax_histy = divider.append_axes("right", 1.2, pad=0.1, sharey=ax)
+
+    # make some labels invisible
+    ax_histx.xaxis.set_tick_params(labelbottom=False)
+    ax_histy.yaxis.set_tick_params(labelleft=False)
+
+    hplt.histplot(
+        h1_hist_values,
+        h1_hist_bins_GeV,
+        histtype="fill",
+        ax=ax_histx,
+        label="mH1",
+    )
+    hplt.histplot(
+        h2_hist_values,
+        h2_hist_bins_GeV,
+        histtype="fill",
+        ax=ax_histy,
+        label="mH2",
+        orientation="horizontal",
+    )
+
+    ax_histx.set_yticks([h1_hist_values.max()])
+    ax_histy.set_xticks([h2_hist_values.max()])
+
+    plot_label = (
+        sample_name.replace("_", " ")
+        .replace("k01", "$\kappa_\lambda=1$")
+        .replace("k05", "$\kappa_\lambda=5$")
+        .replace("k10", "$\kappa_\lambda=10$")
+    )
+    plot_label = f"{plot_label}, {third_exp_label}" if third_exp_label else plot_label
+    hplt.atlas.label(label=plot_label, loc=0, ax=ax_histx, lumi=luminosity, rlabel="")
+
+    plt.tight_layout()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plot_name = f"{sample_name}_{hh_2d_hist_name}_projections.png"
+    fig.savefig(output_dir / plot_name, bbox_inches="tight")
     plt.close(fig)
 
 

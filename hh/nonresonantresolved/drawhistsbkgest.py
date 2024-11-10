@@ -4,7 +4,7 @@ from hh.shared.drawhists import (
     draw_1d_hists,
     draw_kin_hists,
     draw_mH_1D_hists,
-    draw_mH_plane_2D_hists,
+    draw_mHH_plane_2D_hists,
     draw_mH_1D_hists_v2,
 )
 
