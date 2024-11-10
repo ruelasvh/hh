@@ -68,6 +68,7 @@ def fill_analysis_hists(
                 fill_jet_flavor_composition_histograms(
                     events, hists, n_btags, btag_model, btag_eff
                 )
+                fill_HH_combined_pairing_histograms(events, hists, n_btags, btagger)
 
     return hists
 
@@ -871,3 +872,90 @@ def fill_jet_flavor_composition_histograms(
                     np.ravel(jet_discrim_signal[flav_mask]).to_numpy(),
                     weights=ak.ravel(wgts[flav_mask]).to_numpy(),
                 )
+
+
+def fill_HH_combined_pairing_histograms(
+    events, hists: dict, n_btags: int, btagger: str
+) -> None:
+    """Fill HH combined pairing histograms"""
+
+    jet_p4 = p4.zip(
+        {var: events[f"jet_{var}"] for var in kin_labels},
+    )
+    weights = events.event_weight
+    valid_event_mask = events[f"valid_{n_btags}btags_{btagger}_events"]
+
+    h1_jets_idx_min_deltar = events[
+        f"H1_{n_btags}btags_{btagger}_min_deltar_pairing_jet_idx"
+    ]
+    h2_jets_idx_min_deltar = events[
+        f"H2_{n_btags}btags_{btagger}_min_deltar_pairing_jet_idx"
+    ]
+    h1_p4_min_deltar = ak.sum(jet_p4[h1_jets_idx_min_deltar], axis=1)
+    h2_p4_min_deltar = ak.sum(jet_p4[h2_jets_idx_min_deltar], axis=1)
+    hh_reco_p4_min_deltar = h1_p4_min_deltar + h2_p4_min_deltar
+    h1_jets_idx_min_mass_optimized_1D_medium_pairing = events[
+        f"H1_{n_btags}btags_{btagger}_min_mass_optimized_1D_medium_pairing_jet_idx"
+    ]
+    h2_jets_idx_min_mass_optimized_1D_medium_pairing = events[
+        f"H2_{n_btags}btags_{btagger}_min_mass_optimized_1D_medium_pairing_jet_idx"
+    ]
+    h1_p4_min_mass_optimized_1D_medium_pairing = ak.sum(
+        jet_p4[h1_jets_idx_min_mass_optimized_1D_medium_pairing], axis=1
+    )
+    h2_p4_min_mass_optimized_1D_medium_pairing = ak.sum(
+        jet_p4[h2_jets_idx_min_mass_optimized_1D_medium_pairing], axis=1
+    )
+    hh_reco_p4_min_mass_optimized_1D_medium_pairing = (
+        h1_p4_min_mass_optimized_1D_medium_pairing
+        + h2_p4_min_mass_optimized_1D_medium_pairing
+    )
+    hh_jet_idx = events[f"hh_{n_btags}btags_{btagger}_jet_idx"]
+    hh_p4 = ak.sum(jet_p4[hh_jet_idx], axis=1)
+    low_mass_mask = (hh_p4.mass < 370_000) & valid_event_mask
+
+    # create variable called hh_p4_combined_pairing where the pairing is done with the minimum deltaR for hh_p4.mass < 370 GeV and
+    # minimum mass optimized 1D medium pairing for hh_p4.mass >= 370 GeV
+    h1_p4_combined_pairing = ak.where(
+        low_mass_mask,
+        h1_p4_min_mass_optimized_1D_medium_pairing,
+        h1_p4_min_deltar,
+    )
+    h2_p4_combined_pairing = ak.where(
+        low_mass_mask,
+        h2_p4_min_mass_optimized_1D_medium_pairing,
+        h2_p4_min_deltar,
+    )
+    hh_p4_combined_pairing = h1_p4_combined_pairing + h2_p4_combined_pairing
+    weights_combined_pairing = ak.where(
+        low_mass_mask,
+        weights,
+        weights,
+    )
+    fill_H_histograms(
+        h1=h1_p4_combined_pairing,
+        h2=h2_p4_combined_pairing,
+        weights=weights_combined_pairing,
+        hists=find_hists_by_name(
+            hists,
+            f"h[12]_(pt|eta|phi|mass)_reco_{n_btags}btags_{btagger}_combined_pairing$",
+        ),
+    )
+    fill_HH_histograms(
+        hh=hh_p4_combined_pairing,
+        weights=weights_combined_pairing,
+        hists=find_hists_by_name(
+            hists,
+            "hh_(pt|eta|phi|mass)_reco_{n_btags}btags_{btagger}_combined_pairing$",
+        ),
+    )
+    fill_mHH_2d_histograms(
+        mh1=h1_p4_combined_pairing.mass,
+        mh2=h2_p4_combined_pairing.mass,
+        weights=weights_combined_pairing,
+        hist=find_hist(
+            hists,
+            lambda h_name: f"mHH_plane_reco_{n_btags}btags_{btagger}_combined_pairing"
+            == h_name,
+        ),
+    )

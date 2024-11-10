@@ -174,8 +174,12 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                 ###################################################
                 ### Truth matched Pairing vs Reco HH histograms ###
                 ###################################################
+                hists_dict[sample_name].update(
+                    init_H_histograms(
+                        postfix=f"_reco_{btag_count}btags_{btagger}_combined_pairing"
+                    )
+                )
                 for pairing in pairing_methods:
-                    ### H1 and H2 histograms ########################
                     hists_dict[sample_name].update(
                         init_H_histograms(
                             postfix=f"_reco_{btag_count}btags_{btagger}_{pairing}"
@@ -231,6 +235,11 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                 ##################################################
                 ### Mass plane for pairing methods histograms ####
                 ##################################################
+                hists_dict[sample_name].update(
+                    init_mH_2d_histograms(
+                        postfix=f"_reco_{btag_count}btags_{btagger}_combined_pairing"
+                    )
+                )
                 for pairing in pairing_methods:
                     hists_dict[sample_name].update(
                         init_mH_2d_histograms(
@@ -306,6 +315,16 @@ def init_hists(inputs: dict, selections: dict, args: Namespace) -> dict:
                 ############################################################
                 ### Signal and Control region histograms after analysis cuts
                 ############################################################
+                init_HH_histograms(
+                    postfix=f"_reco_{region}_{btag_count}btags_{btagger}_combined_pairing",
+                    binrange={
+                        "pt": [20_000, 500_000],
+                        "eta": [-5, 5],
+                        "phi": [-3, 3],
+                        "mass": [100_000, 1_100_000],
+                    },
+                    bins=21,
+                )
                 for pairing in pairing_methods:
                     for region in ["signal", "control"]:
                         hists_dict[sample_name].update(
