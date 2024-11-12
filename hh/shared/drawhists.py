@@ -740,12 +740,12 @@ def draw_mHH_plane_2D_hists(
     is_data = "data" in sample_name
     bins_GeV = hist["edges"] * GeV
     hist_values = hist["values"]
-    # remove outliers from hist_values
-    hist_values[hist_values > 2000] = 0
     print(f"Counts for {sample_name} {hist_name}: {np.sum(hist_values[1:-1, 1:-1])}")
     print(
         f"Counts for with overflow/underflow {sample_name} {hist_name}: {np.sum(hist_values)}\n"
     )
+    # remove outliers from hist_values
+    hist_values[hist_values > 2_000] = 0
     pcm, cbar, _ = hplt.hist2dplot(
         hist_values[1:-1, 1:-1],
         bins_GeV,
@@ -961,6 +961,13 @@ def draw_mHH_plane_projections_hists(
     hh_hist_values = hh_hist["values"][1:-1, 1:-1]
     hh_bins_GeV = hh_hist["edges"] * GeV
 
+    print(f"Counts for {sample_name} {hh_2d_hist_name}: {np.sum(hh_hist_values)}")
+    print(
+        f"Counts for with overflow/underflow {sample_name} {hh_2d_hist_name}: {np.sum(hh_hist["values"])}\n"
+    )
+
+    # remove outliers from hist_values
+    hh_hist_values[hh_hist_values > 2_000] = 0
     pcm, cbar, _ = hplt.hist2dplot(
         hh_hist_values,
         hh_bins_GeV,

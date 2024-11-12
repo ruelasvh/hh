@@ -262,7 +262,7 @@ def draw_hists(
                 f"mHH_plane_reco_{btag_count}btags_{btagger}_combined_pairing",
                 energy,
                 log_z=False,
-                third_exp_label=pairing_info["label"].replace("pairing", ""),
+                third_exp_label="Combined Pairing",
                 output_dir=output_dir,
             )
             for pairing_id, pairing_info in pairing_methods.items():
@@ -277,28 +277,12 @@ def draw_hists(
                     third_exp_label=pairing_info["label"].replace("pairing", ""),
                     output_dir=output_dir,
                 )
-                draw_mHH_plane_2D_hists(
+                draw_mHH_plane_projections_hists(
                     sample_hists,
                     sample_type,
-                    f"mHH_plane_reco_{btag_count}btags_{btagger}_{pairing_id}",
-                    energy,
-                    log_z=False,
-                    third_exp_label=pairing_info["label"].replace("pairing", ""),
-                    output_dir=output_dir,
-                )
-                draw_mHH_plane_2D_hists(
-                    sample_hists,
-                    sample_type,
+                    f"h1_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_wrong_pairs",
+                    f"h2_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_wrong_pairs",
                     f"mHH_plane_reco_{btag_count}btags_{btagger}_{pairing_id}_wrong_pairs",
-                    energy,
-                    third_exp_label=pairing_info["label"].replace("pairing", ""),
-                    log_z=False,
-                    output_dir=output_dir,
-                )
-                draw_mHH_plane_2D_hists(
-                    sample_hists,
-                    sample_type,
-                    f"mHH_plane_reco_{btag_count}btags_{btagger}_{pairing_id}_lt_370_GeV",
                     energy,
                     log_z=False,
                     third_exp_label=pairing_info["label"].replace("pairing", ""),
@@ -315,17 +299,19 @@ def draw_hists(
                     third_exp_label=pairing_info["label"].replace("pairing", ""),
                     output_dir=output_dir,
                 )
-                draw_mHH_plane_2D_hists(
+                draw_mHH_plane_projections_hists(
                     sample_hists,
                     sample_type,
+                    f"h1_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_geq_370_GeV",
+                    f"h2_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_geq_370_GeV",
                     f"mHH_plane_reco_{btag_count}btags_{btagger}_{pairing_id}_geq_370_GeV",
                     energy,
                     log_z=False,
                     third_exp_label=pairing_info["label"].replace("pairing", ""),
                     output_dir=output_dir,
                 )
-                # for region in ["signal", "control"]:
-                for region in ["signal"]:
+                for region in ["signal", "control"]:
+                # for region in ["signal"]:
                     draw_mHH_plane_2D_hists(
                         sample_hists,
                         sample_type,
