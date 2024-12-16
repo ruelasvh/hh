@@ -317,36 +317,14 @@
                 }
             ]
         },
-        "VBF": {
-            "pt": {
-                "operator": ">",
-                "value": 30
-            },
-            "eta_min": {
-                "operator": ">",
-                "value": 2.5
-            },
-            "eta_max": {
-                "operator": "<",
-                "value": 4.5
-            },
-            "m_jj": {
-                "operator": ">",
-                "value": 1e3
-            },
-            "delta_eta_jj": {
-                "operator": ">",
-                "value": 3
-            },
-            "pT_vector_sum": {
-                "operator": "<",
-                "value": 65
-            }
+        "CLAHH_discriminant": {
+            "model": "/lustre/fs22/group/atlas/ruelasv/hh4b-classifiers/models/v5_deepsets_min_dR_pairing_no_truth_matching/export/clahh_deepsets_model.onnx",
+            "working_point": 0.2,
+            "operator": ">",
+            "value": 3.327
         },
         "pairing": [
-            "min_deltar_pairing",
-            "random_pairing",
-            "min_mass_optimized_1D_medium_pairing"
+            "min_deltar_pairing"
         ],
         "Delta_eta_HH_discriminant": {
             "operator": "<",

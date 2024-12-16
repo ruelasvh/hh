@@ -101,7 +101,7 @@ def main():
     hists = merge_sample_files(
         args.hists_files,
         save_to="merged_histograms.h5",
-        exclude_samples=["ggF_k01"],
+        # exclude_samples=["ggF_k01"],
         merge_jz_regex=None if args.split_jz else re.compile(r"jz[0-9]", re.IGNORECASE),
         merge_mc_regex=(
             None if args.split_mc else re.compile(r"mc[1-2][0-9][ade]", re.IGNORECASE)

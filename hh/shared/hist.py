@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import numpy as np
 from abc import ABC, abstractmethod
-from hh.shared.error import get_symmetric_bin_errors, propagate_errors
 
 
 class BaseHistogram(ABC):
@@ -14,11 +15,23 @@ class BaseHistogram(ABC):
 
 
 class Histogram(BaseHistogram):
-    def __init__(self, name, binrange, bins=100, compress=True, dimensions=1):
+    def __init__(
+        self,
+        name,
+        bins: int | list | tuple | np.ndarray = 100,
+        binrange=None,
+        compress=True,
+        dimensions=1,
+    ):
+        if dimensions not in [1, 2]:
+            raise ValueError("Dimensions must be either 1 or 2")
+
         self._name = name
         self._dimensions = dimensions
         infvar = np.array([np.inf])
-        binning = np.linspace(*binrange, bins)
+        binning = (
+            np.linspace(*binrange, bins) if binrange is not None else np.ravel([bins])
+        )
         # Add underflow and overflow bins
         self._binning = np.concatenate([-infvar, binning, infvar])
         self._counts = np.zeros([self._binning.size - 1] * dimensions, dtype=float)
@@ -26,28 +39,15 @@ class Histogram(BaseHistogram):
         self._compression = dict(compression="gzip") if compress else {}
 
     def fill(self, values, weights=None):
-        if self._dimensions == 1:
-            counts, _ = np.histogramdd(values, bins=[self._binning], weights=weights)
-        elif self._dimensions == 2:
-            counts, _ = np.histogramdd(
-                values, bins=[self._binning, self._binning], weights=weights
-            )
-        else:
-            raise ValueError(
-                "Unsupported number of dimensions: {}".format(self._dimensions)
-            )
-
+        counts, _ = np.histogramdd(
+            values, bins=[self._binning] * self._dimensions, weights=weights
+        )
         self._counts += counts
 
         if weights is not None:
-            if self._dimensions == 1:
-                sumw2, _ = np.histogramdd(
-                    values, bins=[self._binning], weights=weights**2
-                )
-            elif self._dimensions == 2:
-                sumw2, _ = np.histogramdd(
-                    values, bins=[self._binning, self._binning], weights=weights**2
-                )
+            sumw2, _ = np.histogramdd(
+                values, bins=[self._binning] * self._dimensions, weights=weights**2
+            )
             self._error = np.sqrt(self._error**2 + sumw2)
 
     def write(self, group, name=None):

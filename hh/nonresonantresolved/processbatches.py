@@ -1,11 +1,13 @@
-import logging
 import numpy as np
 import vector as p4
 import awkward as ak
+import itertools as it
+import onnxruntime as ort
 from hh.shared.utils import (
-    logger,
-    format_btagger_model_name,
     GeV,
+    logger,
+    get_op,
+    format_btagger_model_name,
 )
 from hh.shared.labels import kin_labels
 from hh.shared.selection import (
@@ -13,9 +15,8 @@ from hh.shared.selection import (
     R_CR,
     X_Wt,
     get_W_t_p4,
-    classify_control_events,
 )
-from hh.nonresonantresolved.pairing import pairing_methods
+from hh.nonresonantresolved.pairing import pairing_methods as all_pairing_methods
 from hh.nonresonantresolved.selection import (
     select_n_jets_events,
     select_n_bjets_events,
@@ -27,12 +28,14 @@ from hh.nonresonantresolved.selection import (
     select_discrim_events,
     select_vbf_events,
 )
+from hh.shared.clahh_utils import get_inferences, get_deepset_inputs
 
 
 def process_batch(
     events: ak.Record,
     selections: dict,
     is_mc: bool = False,
+    clahh_model_ort: ort.InferenceSession = None,
 ) -> ak.Record:
     """Apply analysis regions selections and append info to events."""
 
@@ -226,14 +229,6 @@ def process_batch(
                 ###################################
                 # Do VBF selection
                 ###################################
-                selections["VBF"] = {
-                    "pt": {"operator": ">", "value": 30},
-                    "eta_min": {"operator": ">", "value": 2.5},
-                    "eta_max": {"operator": "<", "value": 4.5},
-                    "m_jj": {"operator": ">", "value": 1_000},
-                    "delta_eta_jj": {"operator": ">", "value": 3},
-                    "pT_vector_sum": {"operator": "<", "value": 65},
-                }
                 if "VBF" in selections:
                     vbf_sel = selections["VBF"]
                     passed_vbf, vbf_jets = select_vbf_events(
@@ -248,6 +243,9 @@ def process_batch(
                         ak.sum(events.event_weight[valid_events_mask & passed_vbf]),
                     )
 
+                ###################################################
+                ######## Select and save HH jet candidates ########
+                ###################################################
                 hh_jet_idx, non_hh_jet_idx = select_hh_jet_candidates(
                     jets=jets,
                     valid_jets_mask=valid_btagged_jets,
@@ -268,6 +266,51 @@ def process_batch(
                     events[f"non_hh_{n_btags}btags_{btagger}_truth_matched_jet_idx"] = (
                         non_hh_truth_matched_jet_idx
                     )
+
+                ####################################
+                ######## CLAHH discriminant ########
+                ####################################
+                if "CLAHH_discriminant" in selections and clahh_model_ort:
+                    clahh_discrim_sel = selections["CLAHH_discriminant"]
+                    dataset = events[[f"jet_{k}" for k in kin_labels]]
+                    dataset["jet_btag"] = events[f"jet_btag_{btagger}"]
+                    dataset["hh_jet_idx"] = hh_jet_idx
+                    input_jet, input_event = get_deepset_inputs(
+                        dataset=dataset,
+                        max_jets=20,
+                    )
+                    clahh_discrim = get_inferences(
+                        ort_session=clahh_model_ort,
+                        input_jet=input_jet,
+                        input_event=input_event,
+                    )
+                    events[f"clahh_{n_btags}btags_{btagger}_discrim"] = clahh_discrim
+                    clahh_predictions = np.where(
+                        get_op(clahh_discrim_sel["operator"])(
+                            clahh_discrim, clahh_discrim_sel["value"]
+                        ),
+                        1,
+                        0,
+                    )
+                    clahh_wp_str = "{:.0f}".format(
+                        clahh_discrim_sel["working_point"] * 100
+                    )
+                    events[f"clahh{clahh_wp_str}_{n_btags}btags_{btagger}"] = (
+                        clahh_predictions
+                    )
+                    clahh_predictions_mask = clahh_predictions == 1
+                    clahh_signal_events_mask = (
+                        valid_events_mask & clahh_predictions_mask
+                    )
+                    logger.info(
+                        "Events passing previous cuts and CLAHH %s %s: %s (weighted: %s)",
+                        clahh_discrim_sel["operator"],
+                        clahh_discrim_sel["value"],
+                        ak.sum(clahh_signal_events_mask),
+                        ak.sum(events.event_weight[clahh_signal_events_mask]),
+                    )
+                    # if ak.sum(clahh_signal_events_mask) == 0:
+                    #     return None
 
                 ############################################
                 ## Calculate top veto X_Wt
@@ -293,28 +336,100 @@ def process_batch(
                     )
                     events[f"X_Wt_{n_btags}btags_{btagger}_mask"] = X_Wt_mask
 
+                # ###### scan m_X_lead and m_X_sub and reconstruct H1 and H2 ######
+                # logger.info("Scanning m_X_lead and m_X_sub")
+                # pairing = "min_mass_optimize_2D_pairing"
+                # pairing_info = {
+                #     "label": r"$\mathrm{arg\,min\,} ((m_{jj}^{lead}-m_\mathrm{X}^{lead})^2 + (m_{jj}^{sub}-m_\mathrm{X}^{sub})^2)$ pairing",
+                #     "loss": lambda m_X_lead, m_X_sub: lambda jet_p4, jet_pair_1, jet_pair_2: (
+                #         (
+                #             np.maximum(
+                #                 (
+                #                     jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]
+                #                 ).mass,
+                #                 (
+                #                     jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]
+                #                 ).mass,
+                #             )
+                #             - m_X_lead
+                #         )
+                #         ** 2
+                #         + (
+                #             np.minimum(
+                #                 (
+                #                     jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]
+                #                 ).mass,
+                #                 (
+                #                     jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]
+                #                 ).mass,
+                #             )
+                #             - m_X_sub
+                #         )
+                #         ** 2
+                #     ),
+                #     "optimizer": np.argmin,
+                #     "m_X_range": (np.linspace(0, 150, 16), np.linspace(0, 150, 16)),
+                # }
+                # m_X_lead_range, m_X_sub_range = pairing_info["m_X_range"]
+                # for m_X_lead, m_X_sub in it.product(m_X_lead_range, m_X_sub_range):
+                #     pairing_id = f"{pairing}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}"
+                #     selection_name = f"{n_btags}btags_{btagger}_{pairing_id}"
+                #     # use the m_X_lead and m_X_sub to scan over all possible pairings
+                #     pairing_loss = pairing_info["loss"](m_X_lead * GeV, m_X_sub * GeV)
+                #     H1_jet_idx, H2_jet_idx = reconstruct_hh_jet_pairs(
+                #         jets,
+                #         hh_jet_idx=hh_jet_idx,
+                #         loss=pairing_loss,
+                #         optimizer=pairing_info["optimizer"],
+                #     )
+                #     events[f"H1_{selection_name}_jet_idx"] = H1_jet_idx
+                #     events[f"H2_{selection_name}_jet_idx"] = H2_jet_idx
+                #     if is_mc:
+                #         ###### Truth match the H1 and H2 ######
+                #         H1_truth_matched_jet_idx, H2_truth_matched_jet_idx = (
+                #             reconstruct_hh_jet_pairs(
+                #                 jets,
+                #                 hh_jet_idx=hh_truth_matched_jet_idx,
+                #                 loss=pairing_loss,
+                #                 optimizer=pairing_info["optimizer"],
+                #             )
+                #         )
+                #         events[f"H1_{selection_name}_truth_matched_jet_idx"] = (
+                #             H1_truth_matched_jet_idx
+                #         )
+                #         events[f"H2_{selection_name}_truth_matched_jet_idx"] = (
+                #             H2_truth_matched_jet_idx
+                #         )
+
+                #         correct_hh_pairs_mask = select_correct_hh_pair_events(
+                #             h1_jets_idx=H1_truth_matched_jet_idx,
+                #             h2_jets_idx=H2_truth_matched_jet_idx,
+                #             jet_truth_H_parent_mask=events.jet_truth_H_parent_mask,
+                #         )
+                #         events[f"correct_hh_{selection_name}_mask"] = (
+                #             correct_hh_pairs_mask
+                #         )
+                #         logger.debug(
+                #             "Events passing previous cuts and correct H1 and H2 jet pairs with %s: %s (weighted: %s)",
+                #             pairing_id.replace("_", " "),
+                #             ak.sum(correct_hh_pairs_mask),
+                #             ak.sum(events.event_weight[correct_hh_pairs_mask]),
+                #         )
+
                 ############################################
                 # Apply different HH jet candidate pairings
                 ############################################
-                ###### HH jet nominal pairing ######
-                if is_mc:
-                    correct_hh_nominal_pairs_mask = select_correct_hh_pair_events(
-                        h1_jets_idx=hh_truth_matched_jet_idx[:, 0:2],
-                        h2_jets_idx=hh_truth_matched_jet_idx[:, 2:4],
-                        jet_truth_H_parent_mask=events.jet_truth_H_parent_mask,
-                    )
-                    events[
-                        f"correct_hh_{n_btags}btags_{btagger}_nominal_pairs_mask"
-                    ] = correct_hh_nominal_pairs_mask
-                    logger.debug(
-                        "Events passing previous cuts and correct H1 and H2 jet pairs using nominal pairing: %s (weighted: %s)",
-                        ak.sum(correct_hh_nominal_pairs_mask),
-                        ak.sum(events.event_weight[correct_hh_nominal_pairs_mask]),
-                    )
-
+                pairing_methods = {}
+                if "pairing" in selections:
+                    pairing_methods = {
+                        k: v
+                        for k, v in all_pairing_methods.items()
+                        if k in selections["pairing"]
+                    }
                 for pairing, pairing_info in pairing_methods.items():
                     ## NEED TO MASK THE EVENTS WITH THE X_Wt MASK ##
                     valid_events_pairing_mask = np.copy(valid_events_mask)
+
                     ###### reconstruct H1 and H2 ######
                     H1_jet_idx, H2_jet_idx = reconstruct_hh_jet_pairs(
                         jets,

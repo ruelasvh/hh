@@ -14,6 +14,7 @@ from hh.shared.utils import (
     register_bottom_offset,
 )
 from hh.shared.labels import kin_labels
+from hh.nonresonantresolved.pairing import pairing_methods
 
 np.seterr(divide="ignore", invalid="ignore")
 
@@ -131,6 +132,7 @@ def draw_dijet_slices_hists(
         hist_values = hist["values"][1:-1]
         hists.append(hist_values)
         bins = hist["edges"]
+
     hist_main = HistPlottable(
         hists,
         bins,
@@ -163,7 +165,7 @@ def draw_dijet_slices_hists(
 
 def draw_1d_hists(
     hists_group,
-    hist_prefix,
+    hist_name,
     energy,
     xlabel: str = None,
     ylabel: str = "Entries",
@@ -197,9 +199,13 @@ def draw_1d_hists(
 
     fig, ax = plt.subplots()
     for sample_type, sample_hists in hists_group.items():
-        hist = find_hist(sample_hists, lambda h_name: hist_prefix == h_name)
+        hist = sample_hists[hist_name]
+        print(f"Total events for {sample_type} {hist_name}: {np.sum(hist['values'])}")
         hist_values = hist["values"][1:-1]
         hist_edges = hist["edges"]
+        if any(var in xlabel for var in [kin_labels["pt"], kin_labels["mass"]]):
+            hist_edges = hist_edges * GeV
+            xlabel += " [GeV]"
         hist_errors = hist["errors"][1:-1] if draw_errors else None
         scale_factor = None
         if ggFk01_factor and "ggF" in sample_type and "k01" in sample_type:
@@ -210,11 +216,8 @@ def draw_1d_hists(
             scale_factor = ggFk10_factor
         if data2b_factor and "data" in sample_type and "2b" in sample_type:
             scale_factor = data2b_factor
-        # bin_width = hist_edges[1] - hist_edges[0]
-        # bin_centers = hist_edges + (bin_width * 0.5)
         hist_main = HistPlottable(
             hist_values,
-            # bin_centers,
             hist_edges,
             errors=hist_errors,
             scale_factor=scale_factor,
@@ -255,7 +258,7 @@ def draw_1d_hists(
         ax=ax,
         pad=0.01,
     )
-    plot_name = hist_prefix.replace("$", "")
+    plot_name = hist_name
     plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
     plt.tight_layout()
     fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
@@ -601,6 +604,144 @@ def draw_efficiency(
     plt.close(fig)
 
 
+def draw_combined_significance_hists(
+    hists_group: dict,
+    left_side_pairing_key: str,
+    right_side_pairing_key: str,
+    signal_key: str,
+    background_key: str,
+    btag_count: int,
+    btagger: str,
+    energy: int,
+    luminosity: float,
+    xlabel: str,
+    ylabel: str,
+    output_dir: str,
+    plot_name: str,
+) -> None:
+    """Draw combined significance histograms for two different pairing methods."""
+
+    signal_left = hists_group[signal_key][
+        f"signal_{btag_count}btags_{btagger}_{left_side_pairing_key}_mHH_cut_left"
+    ]["values"][1:-1]
+    background_left = hists_group[background_key][
+        f"signal_{btag_count}btags_{btagger}_{left_side_pairing_key}_mHH_cut_left"
+    ]["values"][1:-1]
+    signal_right = hists_group[signal_key][
+        f"signal_{btag_count}btags_{btagger}_{right_side_pairing_key}_mHH_cut_right"
+    ]["values"][1:-1]
+    background_right = hists_group[background_key][
+        f"signal_{btag_count}btags_{btagger}_{right_side_pairing_key}_mHH_cut_right"
+    ]
+    bins_GeV = background_right["edges"] / 1_000
+    background_right = background_right["values"][1:-1]
+
+    # create plot of counts for all 4 histograms
+    # Create a 2x2 grid of subplots
+    fig, axs = plt.subplots(2, 2, figsize=(10, 8))
+    # Top left plot
+    ax_top_left = axs[0, 0]
+    hplt.histplot(
+        signal_left,
+        bins_GeV,
+        histtype="fill",
+        ax=ax_top_left,
+        label="Signal",
+    )
+    ax_top_left.set_title(pairing_methods[left_side_pairing_key]["label"])
+    ax_top_left.legend()
+    # Top right plot
+    ax_top_right = axs[0, 1]
+    hplt.histplot(
+        signal_right,
+        bins_GeV,
+        histtype="fill",
+        ax=ax_top_right,
+        label="Signal",
+    )
+    ax_top_right.set_title(pairing_methods[right_side_pairing_key]["label"])
+    ax_top_right.legend()
+    # Bottom left plot
+    ax_bottom_left = axs[1, 0]
+    hplt.histplot(
+        background_left,
+        bins_GeV,
+        histtype="fill",
+        ax=ax_bottom_left,
+        label="Background",
+    )
+    ax_bottom_left.set_title(pairing_methods[left_side_pairing_key]["label"])
+    ax_bottom_left.legend()
+    # Bottom right plot
+    ax_bottom_right = axs[1, 1]
+    hplt.histplot(
+        background_right,
+        bins_GeV,
+        histtype="fill",
+        ax=ax_bottom_right,
+        label="Background",
+    )
+    ax_bottom_right.set_title(pairing_methods[right_side_pairing_key]["label"])
+    ax_bottom_right.legend()
+    # Set labels for shared axes
+    for ax in axs.flat:
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel("Events")
+
+    plt.tight_layout()
+    fig.savefig(f"{output_dir}/{plot_name}_counts.png", bbox_inches="tight")
+    plt.close(fig)
+
+    ##################################
+    # calculate combined significance
+    ##################################
+    significance_left = signal_left / background_left**0.5
+    significance_right = signal_right / background_right**0.5
+    combined_significance = np.sqrt(significance_left**2 + significance_right**2)
+
+    # get bin value where max count in signal left and right is above 10
+    signal_left_min = np.where(signal_left >= 10)[0][0]
+    signal_right_max = np.where(signal_right <= 10)[0][0]
+    combined_significance = combined_significance[signal_left_min:signal_right_max]
+    bins_GeV = bins_GeV[:-1][signal_left_min:signal_right_max]
+
+    if not np.any(combined_significance):
+        print(f"No significant bins for {plot_name}")
+        return
+
+    max = np.argmax(combined_significance)
+    print(
+        f"Max significance: {combined_significance[max]} at {bins_GeV[max]} GeV for {plot_name}"
+    )
+
+    fig, ax = plt.subplots()
+    ax.scatter(
+        bins_GeV,
+        combined_significance,
+        label="Combined Significance",
+    )
+    ax.legend()
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_ylim(ymax=ax.get_ylim()[1] * 1.1)
+
+    hplt.atlas.label(
+        label="Work In Progress",
+        rlabel=get_com_lumi_label(energy, luminosity)
+        + "\n"
+        + rf"{pairing_methods[left_side_pairing_key]['label']} for $< m_{{HH}}$"
+        + "\n"
+        + rf"and {pairing_methods[right_side_pairing_key]['label']} for $\geq m_{{HH}}$",
+        loc=4,
+        ax=ax,
+        pad=0.01,
+    )
+    plt.tight_layout()
+    fig.savefig(f"{output_dir}/{plot_name}", bbox_inches="tight")
+    plt.close(fig)
+
+
 def draw_mH_1D_hists_v2(
     hists_group,
     hist_prefix,
@@ -942,6 +1083,7 @@ def draw_mHH_plane_projections_hists(
     label_z="Entries",
     xrange: tuple = (50, 200),
     yrange: tuple = (50, 200),
+    zrange: tuple = None,
     third_exp_label="",
     output_dir=Path("plots"),
 ):
@@ -963,7 +1105,7 @@ def draw_mHH_plane_projections_hists(
 
     print(f"Counts for {sample_name} {hh_2d_hist_name}: {np.sum(hh_hist_values)}")
     print(
-        f"Counts for with overflow/underflow {sample_name} {hh_2d_hist_name}: {np.sum(hh_hist["values"])}\n"
+        f"Counts for with overflow/underflow {sample_name} {hh_2d_hist_name}: {np.sum(hh_hist['values'])}\n"
     )
 
     # remove outliers from hist_values
@@ -979,15 +1121,17 @@ def draw_mHH_plane_projections_hists(
         cbarextend=True,
         cmap="RdBu_r",
     )
-    cbar.set_label(label_z)
 
     ax.set_xlabel(r"$m_{H1}$ [GeV]")
     ax.set_ylabel(r"$m_{H2}$ [GeV]")
+    cbar.set_label(label_z)
     if xrange:
         ax.set_xlim(*xrange)
     if yrange:
         ax.set_ylim(*yrange)
-
+    if zrange:
+        cbar.vmax = zrange[1]
+        cbar.vmin = zrange[0]
     if log_z:
         cbar.ax.set_yscale(
             "symlog",
@@ -1081,8 +1225,11 @@ def draw_mHH_plane_projections_hists(
         orientation="horizontal",
     )
 
+    # Only show one tick mark with the highest numerical value on the y-axis
     ax_histx.set_yticks([h1_hist_values.max()])
     ax_histy.set_xticks([h2_hist_values.max()])
+    # move y-axis "multiplier" so doesn't overlap with the plot labels
+    # register_bottom_offset(ax_histy.yaxis)
 
     plot_label = (
         sample_name.replace("_", " ")
@@ -1198,4 +1345,90 @@ def num_events_vs_sample(
         f"{output_dir}/{ylabel.lower().replace(' ', '_')}_{xlabel.lower().replace(' ', '_')}.png",
         bbox_inches="tight",
     )
+    plt.close(fig)
+
+
+def draw_efficiency_scan_2d(
+    hists_group,
+    hist_prefixes,
+    energy,
+    xlabel=None,
+    ylabel="Efficiency",
+    legend_options: dict = {"loc": "upper right"},
+    third_exp_label="",
+    luminosity=None,
+    xmin=None,
+    xmax=None,
+    ymin=0,
+    ymax=1,
+    draw_errors=False,
+    output_dir=Path("plots"),
+    plot_name="efficiency",
+):
+    """Draw 2D histograms in one figure. The number of histograms in the figure is
+    determined by the number of samples in the hists_group dictionary. hist_prefix
+    is used to select the histograms to be drawn."""
+
+    fig, ax = plt.subplots()
+    effs = []
+    for sample_type, sample_hists in hists_group.items():
+        for i, hists in enumerate(hist_prefixes):
+            hist_total = sample_hists[hists["total"]]
+            hist_pass = sample_hists[hists["pass"]]
+            hist_pass_counts = hist_pass["values"][1:-1]
+            hist_total_counts = hist_total["values"][1:-1]
+            bins = hist_total["edges"]
+            eff = hist_pass_counts / hist_total_counts
+            effs.append(hist_pass_counts.sum() / hist_total_counts.sum())
+    effs = np.array(effs)
+    ax.legend(**legend_options)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    # scale y-axis so that the legend does not overlap with the plot
+    ax.set_ylim(ymin=ymin, ymax=ymax * (1 + 0.1 * len(hist_prefixes) + 0.1))
+    if xmin is not None:
+        ax.set_xlim(xmin=xmin)
+    if xmax is not None:
+        ax.set_xlim(xmax=xmax)
+    hplt.atlas.label(
+        label="Work In Progress",
+        data=True,  # prevents adding Simulation label, sim labels are added in legend
+        rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
+        loc=4,
+        ax=ax,
+        pad=0.01,
+    )
+    plot_name += f"_{sample_type}" if len(hists_group) == 1 else ""
+    plt.tight_layout()
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
+    plt.close(fig)
+
+    # 2D efficiency scan, basically a heat map of the efficiency where the efficiency is the integral of the efficiency calculated in the 1D histograms
+    m_X_lead_range, m_X_sub_range = (np.linspace(0, 150, 16), np.linspace(0, 150, 16))
+    hist_2d_values = effs.reshape(len(m_X_lead_range), len(m_X_sub_range))
+    # get the midpoints of the bin edges and add values to the beginning and end
+    x_bins = m_X_lead_range
+    y_bins = m_X_sub_range
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    im = ax.imshow(hist_2d_values, cmap="RdBu_r")
+    # Show all ticks and only the labels that are divisible by 3
+    ax.set_xticks(np.arange(len(x_bins)), labels=[f"{l:.0f}" for l in x_bins])
+    ax.set_yticks(np.arange(len(y_bins)), labels=[f"{l:.0f}" for l in y_bins])
+    # Create colorbar
+    cbar = ax.figure.colorbar(im, ax=ax)
+    cbar.ax.set_ylabel("Efficiency")
+    ax.set_xlabel(r"$m_{X}^{lead}$ [GeV]")
+    ax.set_ylabel(r"$m_{X}^{sub}$ [GeV]")
+    hplt.atlas.label(
+        label="Work In Progress",
+        data=True,  # prevents adding Simulation label, sim labels are added in legend
+        rlabel=get_com_lumi_label(energy, luminosity) + third_exp_label,
+        loc=4,
+        ax=ax,
+        pad=0.01,
+    )
+    plot_name += f"_2d" if len(hists_group) == 1 else ""
+    plt.tight_layout()
+    fig.savefig(f"{output_dir}/{plot_name}.png", bbox_inches="tight")
     plt.close(fig)

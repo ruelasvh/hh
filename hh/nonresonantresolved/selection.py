@@ -113,15 +113,13 @@ def reconstruct_hh_jet_pairs(
 
     hc_jets = jets[hh_jet_idx]
     valid_event_mask = ~ak.is_none(hc_jets, axis=0)
-    chosen_pairs = optimizer(
-        np.vstack(
-            [
-                loss(hc_jets, jet_pair_1, jet_pair_2)
-                for jet_pair_1, jet_pair_2 in jet_pairs_combos
-            ]
-        ),
-        axis=0,
+    losses = np.vstack(
+        [
+            loss(hc_jets, jet_pair_1, jet_pair_2)
+            for jet_pair_1, jet_pair_2 in jet_pairs_combos
+        ]
     )
+    chosen_pairs = optimizer(losses, axis=0)
     chosen_pairs = ak.mask(chosen_pairs, valid_event_mask)
     jet_pairs_combos_arr = ak.Array(jet_pairs_combos * len(chosen_pairs))
     hc_selected_idx = jet_pairs_combos_arr[chosen_pairs]

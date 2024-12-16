@@ -1,4 +1,5 @@
 import numpy as np
+import itertools as it
 from argparse import Namespace
 from hh.nonresonantresolved.pairing import pairing_methods
 from hh.shared.selection import X_HH
@@ -14,6 +15,8 @@ from hh.shared.drawhists import (
     draw_efficiency,
     draw_signal_vs_background,
     draw_dijet_slices_hists,
+    draw_combined_significance_hists,
+    draw_efficiency_scan_2d,
 )
 
 
@@ -34,6 +37,118 @@ def draw_hists(
         "mc23a": 26.0714,
         "mc23d": 25.7675,
     }
+
+    for btagger, btag_count in btagging.items():
+        for pairing_id, pairing_info in pairing_methods.items():
+            if pairing_id in [
+                "min_deltar_pairing",
+                "min_mass_optimized_1D_medium_pairing",
+            ]:
+                draw_1d_hists(
+                    hists_group,
+                    f"hh_abs_deltaeta_discrim_reco_{btag_count}btags_{btagger}_{pairing_id}",
+                    energy,
+                    luminosity=lumi,
+                    xlabel="\Delta\eta_{HH} Discriminant",
+                    legend_labels={
+                        sample_type: sample_type for sample_type in hists_group
+                    },
+                    third_exp_label="\n"
+                    + selections_labels["jets"](n_jets=4, pT_cut=20, eta_cut=2.5)
+                    + "\n"
+                    + selections_labels["b-tagging"](
+                        n_btags=btag_count,
+                        tagger=btagger.split("_")[0],
+                        eff=btagger.split("_")[1],
+                    ),
+                    normalize=True,
+                    output_dir=output_dir,
+                )
+
+    return
+    # for sample_type, sample_hists in hists_group.items():
+    #     for btagger, btag_count in btagging.items():
+    #         for hh_var, hh_var_label in hh_var_labels.items():
+    #             pairing_key = "min_mass_optimize_2D_pairing"
+    #             pairing_info = {
+    #                 "label": r"$\mathrm{arg\,min\,} ((m_{jj}^{lead}-m_\mathrm{X}^{lead})^2 + (m_{jj}^{sub}-m_\mathrm{X}^{sub})^2)$ pairing",
+    #                 "loss": lambda m_X_lead, m_X_sub: lambda jet_p4, jet_pair_1, jet_pair_2: (
+    #                     (
+    #                         np.maximum(
+    #                             (
+    #                                 jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]
+    #                             ).mass,
+    #                             (
+    #                                 jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]
+    #                             ).mass,
+    #                         )
+    #                         - m_X_lead
+    #                     )
+    #                     ** 2
+    #                     + (
+    #                         np.minimum(
+    #                             (
+    #                                 jet_p4[:, jet_pair_1[0]] + jet_p4[:, jet_pair_1[1]]
+    #                             ).mass,
+    #                             (
+    #                                 jet_p4[:, jet_pair_2[0]] + jet_p4[:, jet_pair_2[1]]
+    #                             ).mass,
+    #                         )
+    #                         - m_X_sub
+    #                     )
+    #                     ** 2
+    #                 ),
+    #                 "optimizer": np.argmin,
+    #                 "m_X_range": (np.linspace(0, 150, 16), np.linspace(0, 150, 16)),
+    #             }
+    #             m_X_lead_range, m_X_sub_range = pairing_info["m_X_range"]
+    #             # only do the 2D scan if the ranges are not empty
+    #             if len(m_X_lead_range) == 0 and len(m_X_sub_range) == 0:
+    #                 continue
+    #             hist_reco_keys = [
+    #                 {
+    #                     "total": f"{hh_var}_reco_{btag_count}btags_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}",
+    #                     "pass": f"{hh_var}_reco_{btag_count}btags_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}_correct_pairs",
+    #                 }
+    #                 for m_X_lead in m_X_lead_range
+    #                 for m_X_sub in m_X_sub_range
+    #             ]
+    #             draw_efficiency_scan_2d(
+    #                 {sample_type: sample_hists},
+    #                 hist_reco_keys,
+    #                 energy,
+    #                 luminosity=sum(mc_campaigns.values()),
+    #                 xlabel=f"Reco {hh_var_label}",
+    #                 xmin=150 if "hh_mass" == hh_var else None,
+    #                 xmax=600 if "hh_pt" == hh_var else None,
+    #                 legend_options={"loc": "lower right", "fontsize": "small"},
+    #                 third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}\n{pairing_info['label']}",
+    #                 output_dir=output_dir,
+    #                 plot_name=f"pairing_efficiency_reco_{hh_var}",
+    #             )
+    #             hist_truth_keys = [
+    #                 {
+    #                     "total": f"{hh_var}_reco_truth_matched_{btag_count}btags_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}",
+    #                     "pass": f"{hh_var}_reco_truth_matched_{btag_count}btags_{btagger}_{pairing_key}_m_X_lead_{m_X_lead}_m_X_sub_{m_X_sub}_correct_pairs",
+    #                 }
+    #                 for m_X_lead in m_X_lead_range
+    #                 for m_X_sub in m_X_sub_range
+    #             ]
+    #             draw_efficiency_scan_2d(
+    #                 {sample_type: sample_hists},
+    #                 hist_truth_keys,
+    #                 energy,
+    #                 luminosity=sum(mc_campaigns.values()),
+    #                 xlabel=f"Truth {hh_var_label}",
+    #                 xmin=200 if "hh_mass" == hh_var else None,
+    #                 xmax=600 if "hh_pt" == hh_var else None,
+    #                 legend_options={"loc": "lower right", "fontsize": "small"},
+    #                 third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}\n{pairing_info['label']}",
+    #                 output_dir=output_dir,
+    #                 plot_name=f"pairing_efficiency_truth_{hh_var}",
+    #             )
+
+    # return
 
     # ###############################################
     # # Leading jet pt plots for multijet samples
@@ -63,6 +178,73 @@ def draw_hists(
             ),
             output_dir=output_dir,
         )
+
+    for sample_type, sample_hists in hists_group.items():
+        for btagger, btag_count in btagging.items():
+            #### Draw kinematic distributions for HH ####
+            for kin_var, kin_var_label in kin_labels.items():
+                draw_1d_hists(
+                    {sample_type: sample_hists},
+                    f"hh_{kin_var}_reco_{btag_count}btags_{btagger}",
+                    energy,
+                    luminosity=lumi,
+                    xlabel=f"Reco HH({kin_var_label})",
+                    legend_labels={sample_type: sample_labels[sample_type]},
+                    third_exp_label="\n"
+                    + selections_labels["jets"](n_jets=4, pT_cut=20, eta_cut=2.5)
+                    + "\n"
+                    + selections_labels["b-tagging"](
+                        n_btags=btag_count,
+                        tagger=btagger.split("_")[0],
+                        eff=btagger.split("_")[1],
+                    ),
+                    output_dir=output_dir,
+                )
+
+            #### Draw kinematic distributions for HH in CLAHH signal region ####
+            for kin_var, kin_var_label in kin_labels.items():
+                draw_1d_hists(
+                    {sample_type: sample_hists},
+                    f"hh_{kin_var}_reco_signal_{btag_count}btags_{btagger}_clahh",
+                    energy,
+                    luminosity=lumi,
+                    xlabel=f"Reco {kin_var_label}",
+                    legend_labels={sample_type: sample_labels[sample_type]},
+                    third_exp_label="\n"
+                    + selections_labels["jets"](n_jets=4, pT_cut=20, eta_cut=2.5)
+                    + "\n"
+                    + selections_labels["b-tagging"](
+                        n_btags=btag_count,
+                        tagger=btagger.split("_")[0],
+                        eff=btagger.split("_")[1],
+                    )
+                    + "\n"
+                    + selections_labels["clahh"](working_point=20),
+                    output_dir=output_dir,
+                )
+
+    return
+
+    # ####################################################################
+    # # # Plot the combined significance for the different pairing methods
+    # ####################################################################
+    # product = list(it.product(pairing_methods.keys(), repeat=2))
+    # for left, right in product:
+    #     draw_combined_significance_hists(
+    #         hists_group,
+    #         left_side_pairing_key=left,
+    #         right_side_pairing_key=right,
+    #         signal_key="mc23_ggF_k05",
+    #         background_key="mc23_multijet_2bjets",
+    #         btag_count=4,
+    #         btagger="GN2v01_77",
+    #         energy=energy,
+    #         luminosity=lumi,
+    #         ylabel="Significance",
+    #         xlabel=hh_var_labels["hh_mass"],
+    #         output_dir=output_dir,
+    #         plot_name=f"combined_significance_{left}_{right}.png",
+    #     )
 
     # ###############################################
     # # Truth H1 and H2 pT plots
@@ -112,83 +294,42 @@ def draw_hists(
     #     output_dir=output_dir,
     # )
 
-    # ################################################
-    # # Plot backgrounds vs signal
-    # ################################################
-    # for mc, lumi in mc_campaigns.items():
-    #     mc_samples = {
-    #         sample: hists for sample, hists in hists_group.items() if mc in sample
-    #     }
-    #     mc_kl1_samples = {
-    #         sample: hists for sample, hists in mc_samples.items() if "ggF_k01" in sample
-    #     }
-    #     mc_background_samples = {
-    #         sample: hists
-    #         for sample, hists in mc_samples.items()
-    #         if any(bkg in sample for bkg in ["ttbar", "multijet"])
-    #     }
-    #     # for region in ["signal", "control"]:
-    #     for region in ["signal"]:
-    #         for pairing in pairing_methods:
-    #             draw_signal_vs_background(
-    #                 f"hh_mass_reco_{region}_4b_GN2v01_77_{pairing}_bins_logscale",
-    #                 signal=mc_kl1_samples,
-    #                 background=mc_background_samples,
-    #                 energy=energy,
-    #                 luminosity=lumi,
-    #                 xlabel=hh_var_labels["hh_mass"],
-    #                 legend_labels={
-    #                     **{key: sample_labels[key] for key in mc_kl1_samples.keys()},
-    #                     "Background MC": "Background MC",
-    #                 },
-    #                 third_exp_label="\n".join(
-    #                     [
-    #                         f"\n4b {region.capitalize()} Region",
-    #                         f"{pairing_methods[pairing]['label']}",
-    #                     ]
-    #                 ),
-    #                 plot_name=f"{mc}_sig_vs_bkg_{region}_region_4b_GN2v01_77_{pairing}_bins_logscale",
-    #                 output_dir=output_dir,
-    #                 show_counts=True,
-    #             )
-
     for sample_type, sample_hists in hists_group.items():
         #### Draw jet flavor distribution histograms ####
-        for pairing_id, pairing_info in pairing_methods.items():
-            for btagger, btag_count in btagging.items():
-                for pairing_id, pairing_info in pairing_methods.items():
-                    draw_1d_hists_v2(
-                        {sample_type: sample_hists},
-                        [f"jet_flavor_signal_{btag_count}btags_{btagger}_{pairing_id}"],
-                        energy,
-                        luminosity=lumi,
-                        xlabel="Jet flavor",
-                        ylabel="Counts",
-                        legend_labels=[f"{pairing_info['label']}"],
-                        legend_options={"loc": "upper right", "fontsize": "small"},
-                        third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
-                        plot_name=f"jet_flavor_distribution_{pairing_id}",
-                        output_dir=output_dir,
-                    )
-                    draw_1d_hists_v2(
-                        {sample_type: sample_hists},
-                        [
-                            f"bjet_discrim_{flav}_signal_{btag_count}btags_{btagger}_{pairing_id}"
-                            for flav in ["b", "c", "u"]
-                        ],
-                        energy,
-                        luminosity=lumi,
-                        xlabel="b-jet Discriminant",
-                        ylabel="Counts",
-                        legend_labels=[
-                            f"{flav}-jets ({pairing_info['label']})"
-                            for flav in ["b", "c", "u"]
-                        ],
-                        legend_options={"loc": "upper right", "fontsize": "small"},
-                        third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
-                        plot_name=f"jet_btag_discriminant_distribution_{pairing_id}",
-                        output_dir=output_dir,
-                    )
+        for btagger, btag_count in btagging.items():
+            for pairing_id, pairing_info in pairing_methods.items():
+                draw_1d_hists_v2(
+                    {sample_type: sample_hists},
+                    [f"jet_flavor_signal_{btag_count}btags_{btagger}_{pairing_id}"],
+                    energy,
+                    luminosity=lumi,
+                    xlabel="Jet flavor",
+                    ylabel="Counts",
+                    legend_labels=[f"{pairing_info['label']}"],
+                    legend_options={"loc": "upper right", "fontsize": "small"},
+                    third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
+                    plot_name=f"jet_flavor_distribution_{pairing_id}",
+                    output_dir=output_dir,
+                )
+                draw_1d_hists_v2(
+                    {sample_type: sample_hists},
+                    [
+                        f"bjet_discrim_{flav}_signal_{btag_count}btags_{btagger}_{pairing_id}"
+                        for flav in ["b", "c", "u"]
+                    ],
+                    energy,
+                    luminosity=lumi,
+                    xlabel="b-jet Discriminant",
+                    ylabel="Counts",
+                    legend_labels=[
+                        f"{flav}-jets ({pairing_info['label']})"
+                        for flav in ["b", "c", "u"]
+                    ],
+                    legend_options={"loc": "upper right", "fontsize": "small"},
+                    third_exp_label=f"\n{sample_labels[sample_type]}\n{selections_labels['truth_matching']}",
+                    plot_name=f"jet_btag_discriminant_distribution_{pairing_id}",
+                    output_dir=output_dir,
+                )
 
         # lumi = [mc_campaigns[mc] for mc in mc_campaigns if mc in sample_type][0]
         # ########################################################
@@ -273,7 +414,11 @@ def draw_hists(
                     f"h2_mass_reco_{btag_count}btags_{btagger}_{pairing_id}",
                     f"mHH_plane_reco_{btag_count}btags_{btagger}_{pairing_id}",
                     energy,
-                    log_z=False,
+                    zrange=(
+                        (0, 3)
+                        if "ggF" in sample_type
+                        else ((0, 1_800) if "multijet" in sample_type else None)
+                    ),
                     third_exp_label=pairing_info["label"].replace("pairing", ""),
                     output_dir=output_dir,
                 )
@@ -284,16 +429,16 @@ def draw_hists(
                     f"h2_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_wrong_pairs",
                     f"mHH_plane_reco_{btag_count}btags_{btagger}_{pairing_id}_wrong_pairs",
                     energy,
-                    log_z=False,
+                    zrange=(0, 0.4),
                     third_exp_label=pairing_info["label"].replace("pairing", ""),
                     output_dir=output_dir,
                 )
                 draw_mHH_plane_projections_hists(
                     sample_hists,
                     sample_type,
-                    f"h1_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_lt_370_GeV",
-                    f"h2_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_lt_370_GeV",
-                    f"mHH_plane_reco_{btag_count}btags_{btagger}_{pairing_id}_lt_370_GeV",
+                    f"h1_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_lt_mHH_cut",
+                    f"h2_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_lt_mHH_cut",
+                    f"mHH_plane_reco_{btag_count}btags_{btagger}_{pairing_id}_lt_mHH_cut",
                     energy,
                     log_z=False,
                     third_exp_label=pairing_info["label"].replace("pairing", ""),
@@ -302,16 +447,16 @@ def draw_hists(
                 draw_mHH_plane_projections_hists(
                     sample_hists,
                     sample_type,
-                    f"h1_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_geq_370_GeV",
-                    f"h2_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_geq_370_GeV",
-                    f"mHH_plane_reco_{btag_count}btags_{btagger}_{pairing_id}_geq_370_GeV",
+                    f"h1_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_geq_mHH_cut",
+                    f"h2_mass_reco_{btag_count}btags_{btagger}_{pairing_id}_geq_mHH_cut",
+                    f"mHH_plane_reco_{btag_count}btags_{btagger}_{pairing_id}_geq_mHH_cut",
                     energy,
                     log_z=False,
                     third_exp_label=pairing_info["label"].replace("pairing", ""),
                     output_dir=output_dir,
                 )
                 for region in ["signal", "control"]:
-                # for region in ["signal"]:
+                    # for region in ["signal"]:
                     draw_mHH_plane_2D_hists(
                         sample_hists,
                         sample_type,
@@ -333,7 +478,7 @@ def draw_hists(
                     draw_mHH_plane_2D_hists(
                         sample_hists,
                         sample_type,
-                        f"mHH_plane_reco_{region}_{btag_count}btags_{btagger}_{pairing_id}_lt_370_GeV",
+                        f"mHH_plane_reco_{region}_{btag_count}btags_{btagger}_{pairing_id}_lt_mHH_cut",
                         energy,
                         log_z=False,
                         third_exp_label=pairing_info["label"].replace("pairing", ""),
@@ -342,7 +487,7 @@ def draw_hists(
                     draw_mHH_plane_2D_hists(
                         sample_hists,
                         sample_type,
-                        f"mHH_plane_reco_{region}_{btag_count}btags_{btagger}_{pairing_id}_geq_370_GeV",
+                        f"mHH_plane_reco_{region}_{btag_count}btags_{btagger}_{pairing_id}_geq_mHH_cut",
                         energy,
                         log_z=False,
                         third_exp_label=pairing_info["label"].replace("pairing", ""),

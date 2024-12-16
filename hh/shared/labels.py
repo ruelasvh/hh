@@ -64,6 +64,7 @@ selections_labels = {
     "truth_matched_4_plus_jets": r"$\geq$ 4 truth-matched jets",
     "jets": lambda n_jets=4, pT_cut=20, eta_cut=2.5: rf"$\geq$ {n_jets} jets with $p_{{\mathrm{{T}}}} > {pT_cut}$ GeV, $|\eta| < {eta_cut}$",
     "b-tagging": lambda n_btags=4, tagger="GN2v01", eff=77: rf"$\geq$ {n_btags} b-tags with {tagger}@{eff}%",
+    "clahh": lambda working_point: rf"CLAHH@{working_point}% WP",
 }
 
 kin_labels = {"pt": r"$p_T$", "eta": r"$\eta$", "phi": r"$\phi$", "mass": r"$m$"}

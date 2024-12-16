@@ -16,7 +16,7 @@ import logging
 import numpy as np
 import awkward as ak
 from pathlib import Path
-
+import onnxruntime as ort
 from hh.nonresonantresolved.inithists import init_hists
 from hh.nonresonantresolved.branches import (
     get_branch_aliases,
@@ -29,7 +29,7 @@ from hh.nonresonantresolved.fillhists import (
     fill_leading_jets_histograms,
     fill_n_true_bjet_composition_histograms,
 )
-from hh.nonresonantresolved.pairing import pairing_methods
+from hh.nonresonantresolved.pairing import pairing_methods as all_pairing_methods
 from hh.shared.utils import (
     logger,
     setup_logger,
@@ -38,19 +38,33 @@ from hh.shared.utils import (
     write_hists,
     resolve_project_paths,
     format_btagger_model_name,
+    write_batches,
 )
 
 
 def get_args():
     parser = argparse.ArgumentParser(description=__doc__)
     defaults = dict(help="default: %(default)s")
-    parser.add_argument("config", type=Path)
-    parser.add_argument(
+
+    def check_file_extension(value, extension):
+        if not value.endswith(extension):
+            raise argparse.ArgumentTypeError(f"File must have a {extension} extension")
+        return Path(value)
+
+    parser.add_argument("config", type=lambda x: check_file_extension(x, ".json"))
+    # Make arguments -p and -o mutually exclusive. If postprocessed, shouldn't save again
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         "-o",
         "--output",
-        type=Path,
-        default=Path("resolved_nominal.parquet"),
+        type=lambda x: check_file_extension(x, ".parquet"),
         **defaults,
+    )
+    group.add_argument(
+        "-p",
+        "--postprocessed-path",
+        type=Path,
+        help="Path to the postprocessed parquet files",
     )
     parser.add_argument(
         "-s",
@@ -122,6 +136,9 @@ def process_sample_worker(
 
     # iterate over the files in the sample
     batches = []
+    ort_session = None
+    if "CLAHH_discriminant" in selections:
+        ort_session = ort.InferenceSession(selections["CLAHH_discriminant"]["model"])
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
@@ -133,6 +150,8 @@ def process_sample_worker(
     ):
         logger.info(f"Processing batch: {batch_report}")
         logger.debug(f"Columns: {batch_events.fields}")
+
+        batch_events = ak.with_name(batch_events, sample_name)
 
         # set the total event weight
         if is_mc:
@@ -161,6 +180,7 @@ def process_sample_worker(
             batch_events,
             selections,
             is_mc,
+            clahh_model_ort=ort_session,
         )
         if processed_batch is None:
             continue
@@ -170,6 +190,13 @@ def process_sample_worker(
 
         # only keep events that pass the btagging selection to keep the file size down
         valid_events = np.zeros(len(processed_batch), dtype=bool)
+        pairing_methods = {}
+        if "pairing" in selections:
+            pairing_methods = {
+                k: v
+                for k, v in all_pairing_methods.items()
+                if k in selections["pairing"]
+            }
         if "jets" in selections and "btagging" in selections["jets"]:
             bjets_sel = selections["jets"]["btagging"]
             if isinstance(bjets_sel, dict):
@@ -204,25 +231,74 @@ def process_sample_worker(
         processed_batch = processed_batch[valid_events]
         batches.append(processed_batch)
 
+    output_stemname = f"{sample_name}_{os.getpgid(os.getpid())}"
+    if args.output is not None:
+        output_stemname = args.output.with_name(f"{args.output.stem}_{output_stemname}")
+
+    # save the histograms
     if not args.skip_hists:
-        hists_output_name = args.output.with_name(
-            f"hists_{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}.h5"
-        )
+        hists_output_name = f"{output_stemname}_hists.h5"
         with h5py.File(hists_output_name, "w") as output_file:
             logger.info(f"Saving histograms to file: {hists_output_name}")
             write_hists(sample_hists, sample_name, output_file)
 
+    # return if no valid events found
     if len(batches) == 0:
         logger.info("No valid events found!")
         return
 
-    # concatenate all batches
-    batches = ak.concatenate(batches)
-    output_name = args.output.with_name(
-        f"{args.output.stem}_{sample_name}_{os.getpgid(os.getpid())}{args.output.suffix}"
-    )
-    logger.info(f"Saving processed events to {output_name}")
-    ak.to_parquet(batches, output_name)
+    # save the processed batches if an output file is specified
+    if args.output is not None:
+        # concatenate all processed batches
+        batches = ak.concatenate(batches)
+        output_name = f"{output_stemname}{args.output.suffix}"
+        logger.info(f"Saving processed events to {output_name}")
+        write_batches(batches, output_name)
+
+
+def fill_output_histograms(postprocessed_path, selections, hists, args):
+    """
+    Process output samples by reading Parquet files and filling histograms.
+
+    Parameters:
+    - args: Namespace
+        The arguments containing the postprocessed_path.
+    - fill_analysis_hists: function
+        The function to fill histograms with the data from each Parquet file.
+    """
+
+    # Ensure the path exists
+    if not postprocessed_path.exists():
+        raise FileNotFoundError(
+            f"Postprocessed path {postprocessed_path} does not exist."
+        )
+
+    # Iterate through Parquet files in the specified path
+    files = list(postprocessed_path.glob("*.parquet"))
+    for i, file_path in enumerate(files):
+        # Extract sample name from the file name
+        sample_filename = file_path.stem
+        # Read the Parquet file
+        dataset = ak.from_parquet(file_path)
+        metadata = ak.parameters(dataset)
+        if metadata:
+            sample_name = metadata["__record__"]
+        else:
+            sample_name = next(key for key in hists.keys() if key in sample_filename)
+        is_mc = "data" not in sample_name.lower()
+        # create variable called sample_name which is the match of the hists.keys() to the sample_filename
+        logger.info(
+            f"(Progress: {i + 1} out of {len(files)}) Filling histograms for sample {sample_name} from {file_path}"
+        )
+        fill_analysis_hists(dataset, hists[sample_name], selections, is_mc)
+
+    # save the histograms
+    if not args.skip_hists:
+        for sample_name in hists.keys():
+            hists_output_name = f"{sample_name}_hists.h5"
+            with h5py.File(hists_output_name, "w") as output_file:
+                logger.info(f"Saving histograms to file: {hists_output_name}")
+                write_hists(hists[sample_name], sample_name, output_file)
 
 
 def main():
@@ -233,31 +309,29 @@ def main():
     if args.loglevel:
         setup_logger(args.loglevel)
 
-    # check that output file extension is .parquet
-    if args.output.suffix != ".parquet":
-        logger.error("Only parquet file output supported!")
-        sys.exit(1)
-
     with open(args.config) as cf:
         config = resolve_project_paths(config=json.load(cf))
 
     samples, event_selection = config["samples"], config["event_selection"]
     hists = None if args.skip_hists else init_hists(samples, event_selection, args)
 
-    worker_items = [
-        (
-            sample["label"],
-            sample_path,
-            sample["metadata"][idx] if "metadata" in sample else None,
-            event_selection,
-            hists[sample["label"]] if hists is not None else None,
-            args,
-        )
-        for sample in samples
-        for idx, sample_path in enumerate(sample["paths"])
-    ]
-    for worker_item in worker_items:
-        process_sample_worker(*worker_item)
+    if args.postprocessed_path is not None:
+        fill_output_histograms(args.postprocessed_path, event_selection, hists, args)
+    else:
+        worker_items = [
+            (
+                sample["label"],
+                sample_path,
+                sample["metadata"][idx] if "metadata" in sample else None,
+                event_selection,
+                hists[sample["label"]] if hists is not None else None,
+                args,
+            )
+            for sample in samples
+            for idx, sample_path in enumerate(sample["paths"])
+        ]
+        for worker_item in worker_items:
+            process_sample_worker(*worker_item)
 
     if logger.level == logging.DEBUG:
         logger.debug(

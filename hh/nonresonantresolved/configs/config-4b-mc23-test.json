@@ -33,6 +33,23 @@
                     "isMC": true
                 }
             ]
+        },
+        {
+            "label": "mc23d_multijet_2bjets_JZ3",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.19/user.caiyi.resolved_tag_v19.800286.e8564_e8528_s4159_s4114_r15530_r15514_p6026_TREE/"
+            ],
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.800286.Py8EG_A14NNPDF23LO_jetjet_JZ3_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
+                    "crossSection": 2.8527E+04,
+                    "genFiltEff": 4.256739E-04,
+                    "kFactor": 1.0,
+                    "luminosity": 25.7675,
+                    "dataTakingYear": 2023,
+                    "isMC": true
+                }
+            ]
         }
     ],
     "event_selection": {
