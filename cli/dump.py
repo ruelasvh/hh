@@ -27,6 +27,7 @@ from hh.shared.utils import (
     resolve_project_paths,
     write_out_h5,
     write_out_root,
+    write_out_parquet,
 )
 
 
@@ -91,17 +92,25 @@ def process_sample_worker(
     features: dict,
     args: argparse.Namespace,
 ) -> None:
-    is_mc = "data" not in sample_name
+    is_mc = sample_metadata["isMC"]
+    sample_metadata["label"] = class_label
+
+    # get the sample weight
+    sample_weight = 1.0
+    if is_mc:
+        initial_sum_of_weights = sample_metadata.get("initialSumWeights", None)
+        if initial_sum_of_weights is None:
+            cbk = concatenate_cutbookkeepers(sample_path)
+            initial_sum_of_weights = cbk["initial_sum_of_weights"]
+        sample_weight = get_sample_weight(sample_metadata, initial_sum_of_weights)
+
     trig_set = None
     if "trigs" in selections:
         trig_set = selections["trigs"]["value"]
     branch_aliases = get_branch_aliases(is_mc, trig_set, sample_metadata)
-    if args.sample_weight is None and is_mc:
-        cbk = concatenate_cutbookkeepers(sample_path)
-        sample_weight = get_sample_weight(sample_metadata, cbk)
-    else:
-        sample_weight = 1.0 if args.sample_weight is None else args.sample_weight
+
     out = []
+    cutflow = {}
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
@@ -113,23 +122,20 @@ def process_sample_worker(
     ):
         logger.info(f"Processing batch: {batch_report}")
         # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
-        processed_batch = process_batch(
+        processed_batch, cutflow = process_batch(
             batch_events,
             selections,
             features,
             class_label,
             sample_weight,
             is_mc,
+            cutflow,
         )
         if len(processed_batch) == 0:
             continue
-        logger.info(f"Sample weight: {sample_weight}")
-        logger.info(
-            f"Sum of mc event weights: {ak.sum(processed_batch.mc_event_weight)}"
-        )
-        logger.info(f"Sum of event weights: {ak.sum(processed_batch.event_weight)}")
         logger.info(f"Merging batches for sample: {sample_name}")
         out.append(processed_batch)
+
     out = ak.concatenate(out)
     out_filename_stem = args.output.with_name(
         f"{args.output.stem}_{sample_name}_{sample_id}_{os.getpgid(os.getpid())}"
@@ -142,6 +148,16 @@ def process_sample_worker(
         out_filename = out_filename_stem.with_suffix(".root")
         logger.info(f"Writing {sample_name} to {out_filename}")
         write_out_root(out, sample_name, out_filename)
+    elif args.output.suffix == ".parquet":
+        out_filename = out_filename_stem.with_suffix(".parquet")
+        logger.info(f"Writing {sample_name} to {out_filename}")
+        write_out_parquet(
+            processed_batch,
+            sample_name,
+            out_filename,
+            metadata=sample_metadata,
+            cutflow=cutflow,
+        )
     else:
         raise ValueError(f"Invalid output file format: {args.output.suffix}")
 

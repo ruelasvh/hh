@@ -24,7 +24,6 @@
         "deltaEta_hh",
         "X_hh",
         "event_weight",
-        "mc_event_weight",
         "event_number"
     ],
     "labels": [

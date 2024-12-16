@@ -26,6 +26,7 @@ setup(
         "cabinetry>=0.6.0",
         "pyarrow>=17.0.0",
         "hist>=2.8.0",
+        "onnxruntime>=1.19.2",
     ],
     entry_points={
         "console_scripts": [

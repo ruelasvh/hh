@@ -135,6 +135,14 @@ def write_hists(sample_hists, sample_name, output):
         hist.write(sample_out, hist.name)
 
 
+def write_batches(batches, output_path):
+    # batches_with_metadata = ak.with_parameter(
+    #     batches, "metadata", {"sample": sample_name, **sample_metadata}
+    # )
+    # batches_with_metadata = ak.with_name(batches, sample_name)
+    ak.to_parquet(batches, output_path)
+
+
 def get_op(op):
     return {
         ">": operator.gt,
@@ -163,22 +171,6 @@ def find_hists(
     return list(filter(pred, iteratable))
 
 
-# def find_hist(
-#     iteratable,
-#     pred=None,
-#     default=False,
-# ):
-#     """Returns the first true value in the iterable.
-
-#     If no true value is found, returns *default*
-
-#     If *pred* is not None, returns the first item
-#     for which pred(item) is true.
-
-#     """
-#     return next(filter(pred, iteratable), default)
-
-
 def find_hist(dictionary, predicate, default=None):
     """Returns the value of the first key in the dictionary that matches the predicate.
 
@@ -187,12 +179,6 @@ def find_hist(dictionary, predicate, default=None):
     Returns the value for the first key for which pred(key) is true.
     """
     return next((value for key, value in dictionary.items() if predicate(key)), default)
-
-
-# def find_hists_by_name(hists, delimeter):
-#     """Returns the list of hists that match the delimeter"""
-#     prog = re.compile(delimeter + "$")
-#     return list(filter(lambda h: prog.match(h.name), hists.keys()))
 
 
 def find_hists_by_name(hists, pattern):
@@ -264,7 +250,7 @@ def resolve_project_paths(config, path_delimiter="path"):
     return config
 
 
-def get_feature_types():
+def get_feature_types(features: list = None):
     type_dict = {}
     type_dict[Features.JET_NUM.value] = "i8"
     type_dict[Features.JET_NBTAGS.value] = "i8"
@@ -290,28 +276,46 @@ def get_feature_types():
     type_dict[Features.EVENT_X_WT.value] = "f4"
     type_dict[Features.EVENT_X_HH.value] = "f4"
     type_dict[Features.EVENT_WEIGHT.value] = "float64"
-    type_dict[Features.MC_EVENT_WEIGHT.value] = "float64"
     type_dict[Features.EVENT_NUMBER.value] = "i8"
     type_dict[Labels.LABEL_HH.value] = "i4"
     type_dict[Labels.LABEL_TTBAR.value] = "i4"
     type_dict[Labels.LABEL_QCD.value] = "i4"
+
+    # filter out features that are not in the features list
+    if features:
+        return {k: v for k, v in type_dict.items() if k in features}
     return type_dict
 
 
-def write_out_h5(sample_output, sample_name, output_name):
+def write_out_h5(sample_output, sample_name, output_name, metadata=None, cutflow=None):
     """Writes the sample_output to an hdf5 file with the sample_name as the key."""
     output_df = ak.to_dataframe(sample_output, how="outer")
     output_df.to_hdf(output_name, key=sample_name, mode="w")
 
 
-def write_out_root(sample_output, sample_name, output_name):
+def write_out_root(
+    sample_output, sample_name, output_name, metadata=None, cutflow=None
+):
     """Writes the sample_output to a root file with the sample_name as the tree name."""
     with uproot.recreate(output_name) as f:
-        type_dict = get_feature_types()
+        type_dict = get_feature_types(sample_output.fields)
         f.mktree(sample_name, type_dict)
         f[sample_name].extend(
-            {field: sample_output[field] for field in sample_output.fields}
+            {field: sample_output[field].to_numpy() for field in sample_output.fields}
         )
+
+
+def write_out_parquet(
+    sample_output, sample_name, output_name, metadata=None, cutflow=None
+):
+    """Writes the sample_output to a parquet file with the sample_name as the key."""
+    parameters = {"sample_label": sample_name}
+    if metadata:
+        parameters["metadata"] = metadata
+    if cutflow:
+        parameters["cutflow"] = cutflow
+    sample_output = ak.with_parameter(sample_output, "parameters", parameters)
+    ak.to_parquet(sample_output, output_name)
 
 
 def make_4jet_comb_array(a, op):
@@ -458,3 +462,13 @@ def merge_sample_files(
         save_to_h5(_hists, name=save_to)
 
     return _hists
+
+
+def update_cutflow(cutflow, cutname, selection, weights):
+    if cutname in cutflow:
+        cutflow[cutname] += int(sum(selection))
+        cutflow[f"{cutname}_weighted"] += float(sum(weights))
+    else:
+        cutflow[cutname] = int(sum(selection))
+        cutflow[f"{cutname}_weighted"] = float(sum(weights))
+    return cutflow
