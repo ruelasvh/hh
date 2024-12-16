@@ -10,6 +10,7 @@ import time
 import uproot
 import logging
 import argparse
+from functools import reduce
 import awkward as ak
 from pathlib import Path
 from hh.dump.processbatches import (
@@ -110,7 +111,7 @@ def process_sample_worker(
     branch_aliases = get_branch_aliases(is_mc, trig_set, sample_metadata)
 
     out = []
-    cutflow = {}
+    cutflows = []
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
@@ -129,14 +130,15 @@ def process_sample_worker(
             class_label,
             sample_weight,
             is_mc,
-            cutflow,
         )
         if len(processed_batch) == 0:
             continue
         logger.info(f"Merging batches for sample: {sample_name}")
         out.append(processed_batch)
+        cutflows.append(cutflow)
 
     out = ak.concatenate(out)
+    cutflow = reduce(lambda x, y: {k: x[k] + y[k] for k in x.keys()}, cutflows)
     out_filename_stem = args.output.with_name(
         f"{args.output.stem}_{sample_name}_{sample_id}_{os.getpgid(os.getpid())}"
     )
@@ -152,7 +154,7 @@ def process_sample_worker(
         out_filename = out_filename_stem.with_suffix(".parquet")
         logger.info(f"Writing {sample_name} to {out_filename}")
         write_out_parquet(
-            processed_batch,
+            out,
             sample_name,
             out_filename,
             metadata=sample_metadata,

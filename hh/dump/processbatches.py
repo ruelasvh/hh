@@ -32,13 +32,13 @@ def process_batch(
     class_label: str,
     sample_weight: float = 1.0,
     is_mc: bool = True,
-    cutflow: dict = None,
 ) -> ak.Record:
     """Apply analysis regions selection and append info to events."""
 
     # get features and class names to be saved
     feature_names = outputs["features"]
     label_names = outputs["labels"]
+    cutflow = {}
 
     # append label_names to events and set them to 0 or 1
     for class_name in label_names:
