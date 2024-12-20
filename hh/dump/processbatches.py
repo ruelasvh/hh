@@ -163,7 +163,7 @@ def process_batch(
             )
             valid_bjets = select_n_bjets_events(
                 jets=valid_jets,
-                btags=events[Features.JET_BTAG.value],
+                btags=events[Features.JET_BTAG.value][valid_jets],
                 selection=bjet_selection,
             )
             valid_events_mask = ~ak.is_none(valid_bjets, axis=0)
@@ -209,7 +209,7 @@ def process_batch(
                 + four_bjets_p4[:, 1]
                 + four_bjets_p4[:, 2]
                 + four_bjets_p4[:, 3]
-            ).mass
+            ).mass * GeV
             # calculate bb features
             if Features.EVENT_BB_RMH.value in feature_names:
                 events[Features.EVENT_BB_RMH.value] = (
