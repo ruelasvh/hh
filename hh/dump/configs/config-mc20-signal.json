@@ -15,7 +15,7 @@
                 "jets": {
                     "pt": {
                         "operator": ">",
-                        "value": 20
+                        "value": 40
                     },
                     "eta": {
                         "operator": "<",
@@ -27,7 +27,7 @@
                     },
                     "btagging": {
                         "model": "GN2v01",
-                        "efficiency": 0.77,
+                        "efficiency": 0.85,
                         "count": {
                             "operator": ">=",
                             "value": 4
