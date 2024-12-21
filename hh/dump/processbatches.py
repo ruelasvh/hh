@@ -205,16 +205,12 @@ def process_batch(
             events["non_hh_jet_idx"] = non_hh_jet_idx
             four_bjets_p4 = jets_p4[events.hh_jet_idx]
             events[Features.EVENT_M_4B.value] = (
-                four_bjets_p4[:, 0]
-                + four_bjets_p4[:, 1]
-                + four_bjets_p4[:, 2]
-                + four_bjets_p4[:, 3]
-            ).mass * GeV
+                ak.sum(four_bjets_p4, axis=1, keepdims=True).mass * GeV
+            )
             # calculate bb features
-            if Features.EVENT_BB_RMH.value in feature_names:
-                events[Features.EVENT_BB_RMH.value] = (
-                    make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass * GeV)
-                    / 125.0
+            if Features.EVENT_BB_DM.value in feature_names:
+                events[Features.EVENT_BB_DM.value] = (
+                    make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass) * GeV
                 )
             if Features.EVENT_BB_DR.value in feature_names:
                 events[Features.EVENT_BB_DR.value] = make_4jet_comb_array(
