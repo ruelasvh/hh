@@ -1,35 +1,87 @@
 {
     "features": {
-        "path": "hh/dump/configs/features.json"
+        "path": "hh/dump/configs/variables.json"
     },
     "samples": [
         {
             "label": "mc20_4b_multijet_2bjets_JZ1",
             "class_label": "label_QCD",
             "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
                         "count": {
                             "operator": ">=",
                             "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.85,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
                         }
                     }
                 },
-                "pairing": "min_deltar_pairing"
+                "analysis": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
             },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802067.e8547_s3797_r13167_p6026_TREE/",
@@ -70,29 +122,81 @@
             "label": "mc20_4b_multijet_2bjets_JZ2",
             "class_label": "label_QCD",
             "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
                         "count": {
                             "operator": ">=",
                             "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.85,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
                         }
                     }
                 },
-                "pairing": "min_deltar_pairing"
+                "analysis": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
             },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.800285.e8547_s3797_r13167_p6026_TREE/",
@@ -133,29 +237,81 @@
             "label": "mc20_4b_multijet_2bjets_JZ3",
             "class_label": "label_QCD",
             "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
                         "count": {
                             "operator": ">=",
                             "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.85,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
                         }
                     }
                 },
-                "pairing": "min_deltar_pairing"
+                "analysis": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
             },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.800286.e8547_s3797_r13167_p6026_TREE/",
@@ -196,29 +352,81 @@
             "label": "mc20_4b_multijet_2bjets_JZ4",
             "class_label": "label_QCD",
             "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
                         "count": {
                             "operator": ">=",
                             "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.85,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
                         }
                     }
                 },
-                "pairing": "min_deltar_pairing"
+                "analysis": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
             },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.800287.e8547_s3797_r13167_p6026_TREE/",
@@ -259,29 +467,81 @@
             "label": "mc20_4b_multijet_2bjets_JZ5",
             "class_label": "label_QCD",
             "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
                         "count": {
                             "operator": ">=",
                             "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.85,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
                         }
                     }
                 },
-                "pairing": "min_deltar_pairing"
+                "analysis": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
             },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802068.e8547_s3797_r13167_p6026_TREE/",
@@ -322,29 +582,81 @@
             "label": "mc20_4b_multijet_2bjets_JZ6",
             "class_label": "label_QCD",
             "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
                         "count": {
                             "operator": ">=",
                             "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.85,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
                         }
                     }
                 },
-                "pairing": "min_deltar_pairing"
+                "analysis": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
             },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802069.e8547_s3797_r13167_p6026_TREE/",
@@ -385,29 +697,81 @@
             "label": "mc20_4b_multijet_2bjets_JZ7",
             "class_label": "label_QCD",
             "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
                         "count": {
                             "operator": ">=",
                             "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.85,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
                         }
                     }
                 },
-                "pairing": "min_deltar_pairing"
+                "analysis": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
             },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802070.e8547_s3797_r13167_p6026_TREE/",
@@ -448,29 +812,81 @@
             "label": "mc20_4b_multijet_2bjets_JZ8",
             "class_label": "label_QCD",
             "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
                         "count": {
                             "operator": ">=",
                             "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.85,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
                         }
                     }
                 },
-                "pairing": "min_deltar_pairing"
+                "analysis": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
             },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802071.e8547_s3797_r13167_p6026_TREE/",
@@ -511,29 +927,81 @@
             "label": "mc20_4b_multijet_2bjets_JZ9",
             "class_label": "label_QCD",
             "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
                         "count": {
                             "operator": ">=",
                             "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.85,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
                         }
                     }
                 },
-                "pairing": "min_deltar_pairing"
+                "analysis": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
             },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/dijets_b_filtered/user.viruelas.EJ_2024_03_23_T100207.802072.e8547_s3797_r13167_p6026_TREE/",

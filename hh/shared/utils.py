@@ -472,3 +472,11 @@ def update_cutflow(cutflow, cutname, selection, weights):
         cutflow[cutname] = int(sum(selection))
         cutflow[f"{cutname}_weighted"] = float(sum(weights))
     return cutflow
+
+
+def find_matching_field(events, *search_terms):
+    if events is None:
+        return None
+    return next(
+        filter(lambda x: all(term in x for term in search_terms), events.fields), None
+    )

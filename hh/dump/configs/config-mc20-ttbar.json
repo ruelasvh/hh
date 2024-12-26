@@ -1,35 +1,87 @@
 {
     "features": {
-        "path": "hh/dump/configs/features.json"
+        "path": "hh/dump/configs/variables.json"
     },
     "samples": [
         {
             "label": "mc20_4b_ttbar",
             "class_label": "label_ttbar",
             "selections": {
-                "jets": {
-                    "pt": {
-                        "operator": ">",
-                        "value": 40
-                    },
-                    "eta": {
-                        "operator": "<",
-                        "value": 2.5
-                    },
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    },
-                    "btagging": {
-                        "model": "GN2v01",
-                        "efficiency": 0.85,
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
                         "count": {
                             "operator": ">=",
                             "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.85,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
                         }
                     }
                 },
-                "pairing": "min_deltar_pairing"
+                "analysis": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
             },
             "paths": [
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/ttbar_allhad/user.viruelas.EJ_2024_03_23_T095425.410471.e6337_s3681_r13167_p6026_TREE/",

@@ -12,12 +12,12 @@ from hh.shared.selection import X_Wt, get_W_t_p4
 def select_events_passing_triggers(
     events,
     triggers: list = None,
-    operation: str = None,
+    operator: str = None,
 ):
     triggers = triggers or list(filter(lambda x: "trig_" in x, events.fields))
     passed_trigs_mask = np.ones(len(events), dtype=bool)
-    if operation:
-        passed_trigs_mask = get_trigs_logical_op(events, triggers, operation)
+    if operator:
+        passed_trigs_mask = get_trigs_logical_op(events, triggers, operator)
         passed_trigs_mask = ak.fill_none(passed_trigs_mask, False)
     return passed_trigs_mask
 

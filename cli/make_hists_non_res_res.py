@@ -129,10 +129,10 @@ def process_sample_worker(
         sample_weight = get_sample_weight(sample_metadata, initial_sum_of_weights)
 
     # get the branch aliases
-    trig_set = None
+    trig_set = set()
     if "trigs" in selections:
-        trig_set = selections["trigs"].get("value")
-    branch_aliases = get_branch_aliases(is_mc, trig_set, sample_metadata)
+        trig_set.add(selections["trigs"]["value"])
+    branch_aliases = get_branch_aliases(is_mc, list(trig_set), sample_metadata)
 
     # iterate over the files in the sample
     batches = []
@@ -180,6 +180,7 @@ def process_sample_worker(
             batch_events,
             selections,
             is_mc,
+            year=sample_metadata["dataTakingYear"],
             clahh_model_ort=ort_session,
         )
         if processed_batch is None:

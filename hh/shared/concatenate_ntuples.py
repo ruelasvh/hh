@@ -42,7 +42,6 @@ def concatenate_and_save(files, output_filename):
             "min_deltar_pairing",
             ak.sum(concatenated_array.event_weight[mask]),
         )
-        breakpoint()
         # ak.to_parquet(concatenated_array, output_filename)
         # print(f"Saved concatenated file: {output_filename}")
     except Exception as e:

@@ -105,13 +105,16 @@ def process_sample_worker(
             initial_sum_of_weights = cbk["initial_sum_of_weights"]
         sample_weight = get_sample_weight(sample_metadata, initial_sum_of_weights)
 
-    trig_set = None
-    if "trigs" in selections:
-        trig_set = selections["trigs"]["value"]
-    branch_aliases = get_branch_aliases(is_mc, trig_set, sample_metadata)
+    trig_sets = set()
+    for k, v in selections.items():
+        if "trigs" in v:
+            trig_sets.add(v["trigs"]["value"])
+
+    branch_aliases = get_branch_aliases(is_mc, list(trig_sets), sample_metadata)
 
     out = []
     cutflows = []
+    i_batch = 0
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
@@ -122,7 +125,7 @@ def process_sample_worker(
         report=True,
     ):
         logger.info(f"Processing batch: {batch_report}")
-        # select analysis events, calculate analysis variables (e.g. X_hh, deltaEta_hh, X_Wt) and fill the histograms
+        # select analysis events, calculate analysis variables (e.g. X_hh, dEta_hh, X_Wt) and fill the histograms
         processed_batch, cutflow = process_batch(
             batch_events,
             selections,
@@ -130,12 +133,16 @@ def process_sample_worker(
             class_label,
             sample_weight,
             is_mc,
+            year=sample_metadata["dataTakingYear"],
         )
         if len(processed_batch) == 0:
             continue
         logger.info(f"Merging batches for sample: {sample_name}")
         out.append(processed_batch)
         cutflows.append(cutflow)
+        i_batch += 1
+        if i_batch > 2:
+            break
 
     out = ak.concatenate(out)
     cutflow = reduce(lambda x, y: {k: x[k] + y[k] for k in x.keys()}, cutflows)

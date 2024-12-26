@@ -1,6 +1,4 @@
-from .triggers import (
-    trig_sets,
-)
+from .triggers import trig_sets as trigger_sets
 
 CAMPAIGNS = {
     2016: ["r13167", "r14859"],
@@ -97,7 +95,16 @@ MC_ALIASES = {
 }
 
 
-def get_branch_aliases(is_mc=False, trig_set=None, sample_metadata=None):
+def get_trigger_branch_aliases(trig_set, year=None):
+    if year is not None:
+        trig_set = f"{trig_set} {year}"
+    return {
+        f"trig_{trig_short}": f"trigPassed_{trig_long}"
+        for trig_long, trig_short, _ in trigger_sets[trig_set]
+    }
+
+
+def get_branch_aliases(is_mc=False, trig_sets=None, sample_metadata=None):
     aliases = {**BASE_ALIASES}
     aliases.update(
         {
@@ -108,13 +115,9 @@ def get_branch_aliases(is_mc=False, trig_set=None, sample_metadata=None):
     if is_mc:
         aliases.update(MC_ALIASES)
 
-    if trig_set:
-        if sample_metadata:
-            trig_set = f"{trig_set} {sample_metadata['dataTakingYear']}"
-        aliases.update(
-            {
-                f"trig_{trig_short}": f"trigPassed_{trig_long}"
-                for trig_long, trig_short, _ in trig_sets[trig_set]
-            }
-        )
+    if trig_sets:
+        year = sample_metadata.get("dataTakingYear", None)
+        for trig_set in trig_sets:
+            aliases.update(get_trigger_branch_aliases(trig_set, year))
+
     return aliases
