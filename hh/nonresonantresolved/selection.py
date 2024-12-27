@@ -75,8 +75,6 @@ def select_n_bjets_events(
         selection["count"]["value"],
     )
     condition_mask = get_op(n_btags_operator)(ak.sum(btags, axis=1), n_btags_value)
-    # valid_events_mask = ~ak.is_none(jets, axis=0)
-    # valid_jets_mask = ak.mask(jets, valid_events_mask & condition_mask)
     valid_jets_mask = ak.mask(jets, condition_mask)
     return valid_jets_mask
 
@@ -214,6 +212,7 @@ def select_correct_hh_pair_events(h1_jets_idx, h2_jets_idx, jet_truth_H_parent_m
     correct_hh_pairs_mask = (
         h1_jets_have_same_parent_mask & h2_jets_have_same_parent_mask
     )
+    breakpoint()
     return correct_hh_pairs_mask
 
 

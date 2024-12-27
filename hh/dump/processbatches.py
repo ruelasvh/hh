@@ -259,7 +259,7 @@ def process_batch(
     # Analysis selections
     ############################################
     analysis_events = analysis_process_batch(
-        events[events.fields], analysis_selections, is_mc, year=year
+        events[events.fields], analysis_selections, is_mc, year
     )
 
     X_Wt_discriminant_name = find_matching_field(analysis_events, "X_Wt", "discrim")
