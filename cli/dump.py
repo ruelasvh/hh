@@ -114,7 +114,6 @@ def process_sample_worker(
 
     out = []
     cutflows = []
-    i_batch = 0
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
         expressions=branch_aliases.keys(),
@@ -140,9 +139,6 @@ def process_sample_worker(
         logger.info(f"Merging batches for sample: {sample_name}")
         out.append(processed_batch)
         cutflows.append(cutflow)
-        i_batch += 1
-        if i_batch > 2:
-            break
 
     out = ak.concatenate(out)
     cutflow = reduce(lambda x, y: {k: x[k] + y[k] for k in x.keys()}, cutflows)
