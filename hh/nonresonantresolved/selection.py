@@ -212,7 +212,6 @@ def select_correct_hh_pair_events(h1_jets_idx, h2_jets_idx, jet_truth_H_parent_m
     correct_hh_pairs_mask = (
         h1_jets_have_same_parent_mask & h2_jets_have_same_parent_mask
     )
-    breakpoint()
     return correct_hh_pairs_mask
 
 

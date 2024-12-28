@@ -72,7 +72,7 @@ def process_batch(
         passed_trigs = select_events_passing_triggers(
             events, triggers=triggers.keys(), operator=trig_op
         )
-        events = ak.mask(events, passed_trigs)
+        events[f"passed_{trig_op}_trigs"] = passed_trigs
         logger.info(
             "Analysis events passing the %s of all triggers: %s (weighted: %s)",
             trig_op.upper() if trig_op is not None else "None",
@@ -86,7 +86,7 @@ def process_batch(
     if "jets" in selections:
         jets_sel = selections["jets"]
         ## set overall event filter ##
-        valid_events_mask = ~ak.is_none(events.event_number).to_numpy()
+        valid_events_mask = passed_trigs
         ## apply jet b-tagging selections ##
         if "btagging" in jets_sel:
             bjets_sel = jets_sel["btagging"]
@@ -109,7 +109,7 @@ def process_batch(
                     with_name="Momentum4D",
                 )
                 valid_jets_mask = select_n_jets_events(
-                    jets=jets_p4,
+                    jets=jets_p4.mask[valid_events_mask],
                     selection=jets_sel,
                     do_jvt=True,
                 )
@@ -144,7 +144,7 @@ def process_batch(
                         # | (events.jet_truth_H_parent_mask == 2),
                         valid_jets_mask,
                     )
-                    # events["reco_truth_matched_jets"] = reco_truth_matched_jets
+                    events["reco_truth_matched_jets"] = reco_truth_matched_jets
                     logger.debug(
                         "Analysis events passing previous cuts and 4 truth-matched jets: %s (weighted: %s)",
                         ak.sum(~ak.is_none(reco_truth_matched_jets)),
@@ -156,7 +156,7 @@ def process_batch(
                     reco_truth_matched_jets_v2 = select_truth_matched_jets(
                         events.jet_truth_label_ID == 5, valid_jets_mask
                     )
-                    # events["reco_truth_matched_jets_v2"] = reco_truth_matched_jets_v2
+                    events["reco_truth_matched_jets_v2"] = reco_truth_matched_jets_v2
                     logger.debug(
                         "Analysis events passing previous cuts and 4 truth-matched jets using HadronConeExclTruthLabelID: %s (weighted: %s)",
                         ak.sum(~ak.is_none(reco_truth_matched_jets_v2)),
@@ -173,7 +173,6 @@ def process_batch(
                 )
                 events[f"valid_{n_btags}btags_{btagger}_jets"] = valid_btagged_jets
                 valid_events_mask = ~ak.is_none(valid_btagged_jets).to_numpy()
-                events[f"valid_{n_btags}btags_{btagger}_events"] = valid_events_mask
                 logger.info(
                     "Analysis events passing previous cut and %s %s b-tags with %s and %s efficiency: %s (weighted: %s)",
                     i_bjets_sel["count"]["operator"],
@@ -194,9 +193,9 @@ def process_batch(
                         # | (events.jet_truth_H_parent_mask == 2),
                         valid_btagged_jets,
                     )
-                    # events[f"reco_truth_matched_{n_btags}btags_{btagger}_jets"] = (
-                    #     reco_truth_matched_btagged_jets
-                    # )
+                    events[f"reco_truth_matched_{n_btags}btags_{btagger}_jets"] = (
+                        reco_truth_matched_btagged_jets
+                    )
                     logger.debug(
                         "Analysis events passing previous cuts and 4 truth-matched b-tagged jets with %s %s btags: %s (weighted: %s)",
                         i_bjets_sel["count"]["operator"],
@@ -213,9 +212,9 @@ def process_batch(
                         events.jet_truth_label_ID == 5,
                         valid_btagged_jets,
                     )
-                    # events[
-                    #     f"reco_truth_matched_central_{n_btags}btags_{btagger}_jets_v2"
-                    # ] = reco_truth_matched_btagged_jets_v2
+                    events[
+                        f"reco_truth_matched_central_{n_btags}btags_{btagger}_jets_v2"
+                    ] = reco_truth_matched_btagged_jets_v2
                     logger.debug(
                         "Analysis events passing previous cuts and 4 truth-matched b-tagged jets using HadronConeExclTruthLabelID: %s (weighted: %s)",
                         ak.sum(~ak.is_none(reco_truth_matched_btagged_jets_v2)),
@@ -454,21 +453,21 @@ def process_batch(
                                 optimizer=pairing_info["optimizer"],
                             )
                         )
-                        # events[
-                        #     f"H1_{n_btags}btags_{btagger}_{pairing}_truth_matched_jet_idx"
-                        # ] = H1_truth_matched_jet_idx
-                        # events[
-                        #     f"H2_{n_btags}btags_{btagger}_{pairing}_truth_matched_jet_idx"
-                        # ] = H2_truth_matched_jet_idx
+                        events[
+                            f"H1_{n_btags}btags_{btagger}_{pairing}_truth_matched_jet_idx"
+                        ] = H1_truth_matched_jet_idx
+                        events[
+                            f"H2_{n_btags}btags_{btagger}_{pairing}_truth_matched_jet_idx"
+                        ] = H2_truth_matched_jet_idx
 
                         correct_hh_pairs_mask = select_correct_hh_pair_events(
                             h1_jets_idx=H1_truth_matched_jet_idx,
                             h2_jets_idx=H2_truth_matched_jet_idx,
                             jet_truth_H_parent_mask=events.jet_truth_H_parent_mask,
                         )
-                        # events[
-                        #     f"correct_hh_{n_btags}btags_{btagger}_{pairing}_mask"
-                        # ] = correct_hh_pairs_mask
+                        events[
+                            f"correct_hh_{n_btags}btags_{btagger}_{pairing}_mask"
+                        ] = correct_hh_pairs_mask
                         logger.debug(
                             "Analysis events passing previous cuts and correct H1 and H2 jet pairs using %s pairing: %s (weighted: %s)",
                             pairing.replace("_", " "),
