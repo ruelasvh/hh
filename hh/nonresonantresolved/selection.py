@@ -18,7 +18,7 @@ def select_events_passing_triggers(
     passed_trigs_mask = np.ones(len(events), dtype=bool)
     if operator:
         passed_trigs_mask = get_trigs_logical_op(events, triggers, operator)
-        passed_trigs_mask = ak.fill_none(passed_trigs_mask, False)
+        passed_trigs_mask = passed_trigs_mask.to_numpy()
     return passed_trigs_mask
 
 
@@ -86,8 +86,8 @@ def select_hh_jet_candidates(jets, valid_jets_mask, n_jets=4):
         The 4 Higgs candidate jets mask and non-Higgs candidates in each event
     """
     jet_idx = ak.local_index(jets)
-    valid_jets = jets[valid_jets_mask]
-    valid_jets_idx = jet_idx[valid_jets_mask]
+    valid_jets = ak.mask(jets, valid_jets_mask)
+    valid_jets_idx = ak.mask(jet_idx, valid_jets_mask)
     pt_sort = ak.argsort(valid_jets.pt, axis=1, ascending=False)
     valid_jets_pt_sorted = valid_jets[pt_sort]
     valid_jets_pt_sorted_idx = valid_jets_idx[pt_sort]

@@ -23,7 +23,7 @@
                         },
                         "btagging": {
                             "model": "GN2v01",
-                            "efficiency": 0.85,
+                            "efficiency": 0.77,
                             "count": {
                                 "operator": ">=",
                                 "value": 4
@@ -138,7 +138,7 @@
                         },
                         "btagging": {
                             "model": "GN2v01",
-                            "efficiency": 0.85,
+                            "efficiency": 0.77,
                             "count": {
                                 "operator": ">=",
                                 "value": 4
@@ -253,7 +253,7 @@
                         },
                         "btagging": {
                             "model": "GN2v01",
-                            "efficiency": 0.85,
+                            "efficiency": 0.77,
                             "count": {
                                 "operator": ">=",
                                 "value": 4
@@ -368,7 +368,7 @@
                         },
                         "btagging": {
                             "model": "GN2v01",
-                            "efficiency": 0.85,
+                            "efficiency": 0.77,
                             "count": {
                                 "operator": ">=",
                                 "value": 4
@@ -483,7 +483,7 @@
                         },
                         "btagging": {
                             "model": "GN2v01",
-                            "efficiency": 0.85,
+                            "efficiency": 0.77,
                             "count": {
                                 "operator": ">=",
                                 "value": 4
@@ -598,7 +598,7 @@
                         },
                         "btagging": {
                             "model": "GN2v01",
-                            "efficiency": 0.85,
+                            "efficiency": 0.77,
                             "count": {
                                 "operator": ">=",
                                 "value": 4
@@ -713,7 +713,7 @@
                         },
                         "btagging": {
                             "model": "GN2v01",
-                            "efficiency": 0.85,
+                            "efficiency": 0.77,
                             "count": {
                                 "operator": ">=",
                                 "value": 4
@@ -828,7 +828,7 @@
                         },
                         "btagging": {
                             "model": "GN2v01",
-                            "efficiency": 0.85,
+                            "efficiency": 0.77,
                             "count": {
                                 "operator": ">=",
                                 "value": 4
@@ -943,7 +943,7 @@
                         },
                         "btagging": {
                             "model": "GN2v01",
-                            "efficiency": 0.85,
+                            "efficiency": 0.77,
                             "count": {
                                 "operator": ">=",
                                 "value": 4

@@ -60,6 +60,9 @@ def process_batch(
         logger.info("Analysis selections empty. No object selections applied.")
         return events
 
+    ## create a mask to keep track of valid events
+    valid_events_mask = np.ones(len(events), dtype=bool)
+
     ## apply trigger selection ##
     if "trigs" in selections:
         trig_sel = selections["trigs"]
@@ -73,6 +76,7 @@ def process_batch(
             events, triggers=triggers.keys(), operator=trig_op
         )
         events[f"passed_{trig_op}_trigs"] = passed_trigs
+        valid_events_mask = passed_trigs
         logger.info(
             "Analysis events passing the %s of all triggers: %s (weighted: %s)",
             trig_op.upper() if trig_op is not None else "None",
@@ -85,14 +89,13 @@ def process_batch(
     ## apply jet selections ##
     if "jets" in selections:
         jets_sel = selections["jets"]
-        ## set overall event filter ##
-        valid_events_mask = passed_trigs
         ## apply jet b-tagging selections ##
         if "btagging" in jets_sel:
             bjets_sel = jets_sel["btagging"]
             if isinstance(bjets_sel, dict):
                 bjets_sel = [bjets_sel]
             for i_bjets_sel in bjets_sel:
+                valid_events_mask = np.copy(valid_events_mask)
                 btag_model = i_bjets_sel["model"]
                 btag_eff = i_bjets_sel["efficiency"]
                 n_btags = i_bjets_sel["count"]["value"]
@@ -121,7 +124,6 @@ def process_batch(
                 )
                 events[f"valid_2btags_{btagger}_jets"] = valid_jets_mask
                 valid_events_mask = ~ak.is_none(valid_jets_mask).to_numpy()
-                events[f"valid_2btags_{btagger}_events"] = valid_events_mask
                 logger.info(
                     "Analysis events passing previous cut and %s %s jets with pT %s %s, |eta| %s %s and 2 b-tags: %s (weighted: %s)",
                     jets_sel["count"]["operator"],
@@ -140,8 +142,6 @@ def process_batch(
                 if is_mc:
                     reco_truth_matched_jets = select_truth_matched_jets(
                         events.jet_truth_H_parent_mask != 0,
-                        # (events.jet_truth_H_parent_mask == 1)
-                        # | (events.jet_truth_H_parent_mask == 2),
                         valid_jets_mask,
                     )
                     events["reco_truth_matched_jets"] = reco_truth_matched_jets
@@ -189,8 +189,6 @@ def process_batch(
                 if is_mc:
                     reco_truth_matched_btagged_jets = select_truth_matched_jets(
                         events.jet_truth_H_parent_mask != 0,
-                        # (events.jet_truth_H_parent_mask == 1)
-                        # | (events.jet_truth_H_parent_mask == 2),
                         valid_btagged_jets,
                     )
                     events[f"reco_truth_matched_{n_btags}btags_{btagger}_jets"] = (
