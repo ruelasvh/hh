@@ -117,13 +117,13 @@ def process_batch(
                     do_jvt=True,
                 )
                 ## apply 2 b-tag pre-selection ##
-                valid_jets_mask = select_n_bjets_events(
+                valid_jets_2bjets_mask = select_n_bjets_events(
                     jets=valid_jets_mask,
                     btags=jets_p4.btag.mask[valid_jets_mask],
                     selection={**i_bjets_sel, "count": {"operator": ">=", "value": 2}},
                 )
-                events[f"valid_2btags_{btagger}_jets"] = valid_jets_mask
-                valid_events_mask = ~ak.is_none(valid_jets_mask).to_numpy()
+                events[f"valid_2btags_{btagger}_jets"] = valid_jets_2bjets_mask
+                valid_events_mask = ~ak.is_none(valid_jets_2bjets_mask).to_numpy()
                 logger.info(
                     "Analysis events passing previous cut and %s %s jets with pT %s %s, |eta| %s %s and 2 b-tags: %s (weighted: %s)",
                     jets_sel["count"]["operator"],
@@ -142,7 +142,7 @@ def process_batch(
                 if is_mc:
                     reco_truth_matched_jets = select_truth_matched_jets(
                         events.jet_truth_H_parent_mask != 0,
-                        valid_jets_mask,
+                        valid_jets_2bjets_mask,
                     )
                     events["reco_truth_matched_jets"] = reco_truth_matched_jets
                     logger.debug(
@@ -154,7 +154,7 @@ def process_batch(
                     )
                     ### jets truth matched with HadronConeExclTruthLabelID ###
                     reco_truth_matched_jets_v2 = select_truth_matched_jets(
-                        events.jet_truth_label_ID == 5, valid_jets_mask
+                        events.jet_truth_label_ID == 5, valid_jets_2bjets_mask
                     )
                     events["reco_truth_matched_jets_v2"] = reco_truth_matched_jets_v2
                     logger.debug(
@@ -167,8 +167,8 @@ def process_batch(
 
                 ## select and save events with >= n central b-jets ##
                 valid_btagged_jets = select_n_bjets_events(
-                    jets=valid_jets_mask,
-                    btags=jets_p4.btag.mask[valid_jets_mask],
+                    jets=valid_jets_2bjets_mask,
+                    btags=jets_p4.btag.mask[valid_jets_2bjets_mask],
                     selection=i_bjets_sel,
                 )
                 events[f"valid_{n_btags}btags_{btagger}_jets"] = valid_btagged_jets
