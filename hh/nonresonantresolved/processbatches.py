@@ -119,7 +119,7 @@ def process_batch(
                 ## apply 2 b-tag pre-selection ##
                 valid_jets_mask = select_n_bjets_events(
                     jets=valid_jets_mask,
-                    btags=jets_p4.btag[valid_jets_mask],
+                    btags=jets_p4.btag.mask[valid_jets_mask],
                     selection={**i_bjets_sel, "count": {"operator": ">=", "value": 2}},
                 )
                 events[f"valid_2btags_{btagger}_jets"] = valid_jets_mask
@@ -168,7 +168,7 @@ def process_batch(
                 ## select and save events with >= n central b-jets ##
                 valid_btagged_jets = select_n_bjets_events(
                     jets=valid_jets_mask,
-                    btags=jets_p4.btag[valid_jets_mask],
+                    btags=jets_p4.btag.mask[valid_jets_mask],
                     selection=i_bjets_sel,
                 )
                 events[f"valid_{n_btags}btags_{btagger}_jets"] = valid_btagged_jets

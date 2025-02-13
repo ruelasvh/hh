@@ -149,6 +149,10 @@ def process_batch(
     # apply jet train selections
     if "jets" in train_selections:
         jet_selection = train_selections["jets"]
+        jets_p4 = ak.zip(
+            {k: events[f"jet_{k}"] for k in ["jvttag", *kin_labels.keys()]},
+            with_name="Momentum4D",
+        )
         valid_jets = select_n_jets_events(
             jets=jets_p4,
             selection=jet_selection,
@@ -158,10 +162,17 @@ def process_batch(
         valid_jets = valid_jets[valid_events_mask]
         events = events[valid_events_mask]
         logger.info(
-            "Events passing previous cuts and jets selection: %s (weighted: %s)",
+            "Events passing previous cut and %s %s jets with pT %s %s, |eta| %s %s and 2 b-tags: %s (weighted: %s)",
+            jet_selection["count"]["operator"],
+            jet_selection["count"]["value"],
+            jet_selection["pt"]["operator"],
+            jet_selection["pt"]["value"],
+            jet_selection["eta"]["operator"],
+            jet_selection["eta"]["value"],
             len(events),
             ak.sum(events.event_weight),
         )
+
         if cutflow is not None:
             cutname = "_".join(
                 [
@@ -199,7 +210,11 @@ def process_batch(
             valid_bjets = valid_bjets[valid_events_mask]
             events = events[valid_events_mask]
             logger.info(
-                "Events passing previous cuts and b-jets selection: %s (weighted: %s)",
+                "Events passing previous cut and %s %s b-tags with %s and %s efficiency: %s (weighted: %s)",
+                bjet_selection["count"]["operator"],
+                bjet_selection["count"]["value"],
+                bjet_selection["model"],
+                bjet_selection["efficiency"],
                 len(events),
                 ak.sum(events.event_weight),
             )

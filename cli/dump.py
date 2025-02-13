@@ -40,7 +40,7 @@ def get_args():
         "-o",
         "--output",
         type=Path,
-        default=Path("train.root"),
+        default=Path("train.parquet"),
         **defaults,
     )
     parser.add_argument(

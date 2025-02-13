@@ -32,6 +32,10 @@
                     }
                 },
                 "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -94,7 +98,7 @@
                     "crossSection": 7.2977E-01,
                     "genFiltEff": 4.562069E-01,
                     "kFactor": 1.13974074379,
-                    "luminosity": 1.0,
+                    "luminosity": 24.5556,
                     "isMC": true,
                     "dataTakingYear": 2016
                 },
@@ -103,7 +107,7 @@
                     "crossSection": 7.2977E-01,
                     "genFiltEff": 4.562069E-01,
                     "kFactor": 1.13974074379,
-                    "luminosity": 1.0,
+                    "luminosity": 43.65,
                     "isMC": true,
                     "dataTakingYear": 2017
                 },
@@ -112,7 +116,7 @@
                     "crossSection": 7.2977E-01,
                     "genFiltEff": 4.562069E-01,
                     "kFactor": 1.13974074379,
-                    "luminosity": 1.0,
+                    "luminosity": 57.6966,
                     "isMC": true,
                     "dataTakingYear": 2018
                 }

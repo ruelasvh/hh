@@ -32,6 +32,10 @@
                     }
                 },
                 "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -94,7 +98,7 @@
                     "crossSection": 8.9550E+07,
                     "genFiltEff": 3.113989E-06,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 24.5556,
                     "isMC": true,
                     "dataTakingYear": 2016
                 },
@@ -103,7 +107,7 @@
                     "crossSection": 8.9550E+07,
                     "genFiltEff": 3.113989E-06,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 43.65,
                     "isMC": true,
                     "dataTakingYear": 2017
                 },
@@ -112,7 +116,7 @@
                     "crossSection": 8.9550E+07,
                     "genFiltEff": 3.113989E-06,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 57.6966,
                     "isMC": true,
                     "dataTakingYear": 2018
                 }
@@ -147,6 +151,10 @@
                     }
                 },
                 "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -209,7 +217,7 @@
                     "crossSection": 2.4332E+06,
                     "genFiltEff": 6.015065E-05,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 24.5556,
                     "isMC": true,
                     "dataTakingYear": 2016
                 },
@@ -218,7 +226,7 @@
                     "crossSection": 2.4332E+06,
                     "genFiltEff": 6.015065E-05,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 43.65,
                     "isMC": true,
                     "dataTakingYear": 2017
                 },
@@ -227,7 +235,7 @@
                     "crossSection": 2.4332E+06,
                     "genFiltEff": 6.015065E-05,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 57.6966,
                     "isMC": true,
                     "dataTakingYear": 2018
                 }
@@ -262,6 +270,10 @@
                     }
                 },
                 "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -324,7 +336,7 @@
                     "crossSection": 2.6454E+04,
                     "genFiltEff": 2.814666E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 24.5556,
                     "isMC": true,
                     "dataTakingYear": 2016
                 },
@@ -333,7 +345,7 @@
                     "crossSection": 2.6454E+04,
                     "genFiltEff": 2.814666E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 43.65,
                     "isMC": true,
                     "dataTakingYear": 2017
                 },
@@ -342,7 +354,7 @@
                     "crossSection": 2.6454E+04,
                     "genFiltEff": 2.814666E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 57.6966,
                     "isMC": true,
                     "dataTakingYear": 2018
                 }
@@ -377,6 +389,10 @@
                     }
                 },
                 "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -439,7 +455,7 @@
                     "crossSection": 2.5463E+02,
                     "genFiltEff": 5.257662E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 24.5556,
                     "isMC": true,
                     "dataTakingYear": 2016
                 },
@@ -448,7 +464,7 @@
                     "crossSection": 2.5463E+02,
                     "genFiltEff": 5.257662E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 43.65,
                     "isMC": true,
                     "dataTakingYear": 2017
                 },
@@ -457,7 +473,7 @@
                     "crossSection": 2.5463E+02,
                     "genFiltEff": 5.257662E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 57.6966,
                     "isMC": true,
                     "dataTakingYear": 2018
                 }
@@ -492,6 +508,10 @@
                     }
                 },
                 "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -554,7 +574,7 @@
                     "crossSection": 4.5535E+00,
                     "genFiltEff": 6.406074E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 24.5556,
                     "isMC": true,
                     "dataTakingYear": 2016
                 },
@@ -563,7 +583,7 @@
                     "crossSection": 4.5535E+00,
                     "genFiltEff": 6.406074E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 43.65,
                     "isMC": true,
                     "dataTakingYear": 2017
                 },
@@ -572,7 +592,7 @@
                     "crossSection": 4.5535E+00,
                     "genFiltEff": 6.406074E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 57.6966,
                     "isMC": true,
                     "dataTakingYear": 2018
                 }
@@ -607,6 +627,10 @@
                     }
                 },
                 "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -669,7 +693,7 @@
                     "crossSection": 2.5753E-01,
                     "genFiltEff": 4.088869E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 24.5556,
                     "isMC": true,
                     "dataTakingYear": 2016
                 },
@@ -678,7 +702,7 @@
                     "crossSection": 2.5753E-01,
                     "genFiltEff": 4.088869E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 43.65,
                     "isMC": true,
                     "dataTakingYear": 2017
                 },
@@ -687,7 +711,7 @@
                     "crossSection": 2.5753E-01,
                     "genFiltEff": 4.088869E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 57.6966,
                     "isMC": true,
                     "dataTakingYear": 2018
                 }
@@ -722,6 +746,10 @@
                     }
                 },
                 "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -784,7 +812,7 @@
                     "crossSection": 1.6215E-02,
                     "genFiltEff": 4.460816E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 24.5556,
                     "isMC": true,
                     "dataTakingYear": 2016
                 },
@@ -793,7 +821,7 @@
                     "crossSection": 1.6215E-02,
                     "genFiltEff": 4.460816E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 43.65,
                     "isMC": true,
                     "dataTakingYear": 2017
                 },
@@ -802,7 +830,7 @@
                     "crossSection": 1.6215E-02,
                     "genFiltEff": 4.460816E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 57.6966,
                     "isMC": true,
                     "dataTakingYear": 2018
                 }
@@ -837,6 +865,10 @@
                     }
                 },
                 "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -899,7 +931,7 @@
                     "crossSection": 6.2504E-04,
                     "genFiltEff": 3.593166E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 24.5556,
                     "isMC": true,
                     "dataTakingYear": 2016
                 },
@@ -908,7 +940,7 @@
                     "crossSection": 6.2504E-04,
                     "genFiltEff": 3.593166E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 43.65,
                     "isMC": true,
                     "dataTakingYear": 2017
                 },
@@ -917,7 +949,7 @@
                     "crossSection": 6.2504E-04,
                     "genFiltEff": 3.593166E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 57.6966,
                     "isMC": true,
                     "dataTakingYear": 2018
                 }
@@ -952,6 +984,10 @@
                     }
                 },
                 "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -1014,7 +1050,7 @@
                     "crossSection": 1.9639E-05,
                     "genFiltEff": 3.793071E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 24.5556,
                     "isMC": true,
                     "dataTakingYear": 2016
                 },
@@ -1023,7 +1059,7 @@
                     "crossSection": 1.9639E-05,
                     "genFiltEff": 3.793071E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 43.65,
                     "isMC": true,
                     "dataTakingYear": 2017
                 },
@@ -1032,7 +1068,7 @@
                     "crossSection": 1.9639E-05,
                     "genFiltEff": 3.793071E-04,
                     "kFactor": 1.0,
-                    "luminosity": 1.0,
+                    "luminosity": 57.6966,
                     "isMC": true,
                     "dataTakingYear": 2018
                 }
