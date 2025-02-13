@@ -112,14 +112,14 @@ def process_batch(
                     with_name="Momentum4D",
                 )
                 valid_jets_mask = select_n_jets_events(
-                    jets=jets_p4.mask[valid_events_mask],
+                    jets=ak.mask(jets_p4, valid_events_mask),
                     selection=jets_sel,
                     do_jvt=True,
                 )
                 ## apply 2 b-tag pre-selection ##
                 valid_jets_2bjets_mask = select_n_bjets_events(
                     jets=valid_jets_mask,
-                    btags=jets_p4.btag.mask[valid_jets_mask],
+                    btags=ak.mask(jets_p4.btag, valid_jets_mask),
                     selection={**i_bjets_sel, "count": {"operator": ">=", "value": 2}},
                 )
                 events[f"valid_2btags_{btagger}_jets"] = valid_jets_2bjets_mask
@@ -168,7 +168,7 @@ def process_batch(
                 ## select and save events with >= n central b-jets ##
                 valid_btagged_jets = select_n_bjets_events(
                     jets=valid_jets_2bjets_mask,
-                    btags=jets_p4.btag.mask[valid_jets_2bjets_mask],
+                    btags=ak.mask(jets_p4.btag, valid_jets_2bjets_mask),
                     selection=i_bjets_sel,
                 )
                 events[f"valid_{n_btags}btags_{btagger}_jets"] = valid_btagged_jets
