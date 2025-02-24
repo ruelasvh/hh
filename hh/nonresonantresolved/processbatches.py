@@ -554,8 +554,8 @@ def process_batch(
                                     ak.sum(events.event_weight[region_mask]),
                                 )
 
-                    signal_event_mask = np.zeros(len(events), dtype=bool)
-                    control_event_mask = np.zeros(len(events), dtype=bool)
+                    signal_event_mask = ak.ones_like(events.event_weight, dtype=bool)
+                    control_event_mask = ak.ones_like(events.event_weight, dtype=bool)
                     if "X_Wt_discriminant" in selections:
                         signal_event_mask = (
                             signal_event_mask
