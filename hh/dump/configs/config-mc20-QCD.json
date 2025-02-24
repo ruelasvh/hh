@@ -8,6 +8,10 @@
             "class_label": "label_QCD",
             "selections": {
                 "training": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -127,6 +131,10 @@
             "class_label": "label_QCD",
             "selections": {
                 "training": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -246,6 +254,10 @@
             "class_label": "label_QCD",
             "selections": {
                 "training": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -365,6 +377,10 @@
             "class_label": "label_QCD",
             "selections": {
                 "training": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -484,6 +500,10 @@
             "class_label": "label_QCD",
             "selections": {
                 "training": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -603,6 +623,10 @@
             "class_label": "label_QCD",
             "selections": {
                 "training": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -722,6 +746,10 @@
             "class_label": "label_QCD",
             "selections": {
                 "training": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -841,6 +869,10 @@
             "class_label": "label_QCD",
             "selections": {
                 "training": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
@@ -960,6 +992,10 @@
             "class_label": "label_QCD",
             "selections": {
                 "training": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",

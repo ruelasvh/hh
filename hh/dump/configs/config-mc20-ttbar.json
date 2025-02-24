@@ -8,6 +8,10 @@
             "class_label": "label_ttbar",
             "selections": {
                 "training": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 2"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
