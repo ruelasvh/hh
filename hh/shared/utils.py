@@ -107,6 +107,8 @@ def get_sample_weight(sample_metadata, initial_sum_of_weights):
     filter_efficiency = float(sample_metadata["genFiltEff"])
     k_factor = float(sample_metadata["kFactor"])
     cross_section = float(sample_metadata["crossSection"]) * 1e6  # nb to fb
+    if "branchingRatio" in sample_metadata:
+        cross_section *= float(sample_metadata["branchingRatio"])
     luminosity = float(sample_metadata["luminosity"])  # fb^-1
     return (
         filter_efficiency * k_factor * cross_section * luminosity

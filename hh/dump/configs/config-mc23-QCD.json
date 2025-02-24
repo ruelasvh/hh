@@ -1,0 +1,988 @@
+{
+    "features": {
+        "path": "hh/dump/configs/variables.json"
+    },
+    "samples": [
+        {
+            "label": "mc23_4b_multijet_2bjets_JZ1",
+            "class_label": "label_QCD",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.802067.e8564_s4162_r14622_p6491_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.802067.e8564_s4159_r15530_p6491_TREE/"
+            ],
+            "selections": {
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    }
+                },
+                "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 3 Asymm"
+                    },
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
+            },
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.802067.Py8EG_A14NNPDF23LO_jetjet_JZ1_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4162_r14622_p6266",
+                    "crossSection": 9.3900E+07,
+                    "genFiltEff": 4.187944E-06,
+                    "kFactor": 1.0,
+                    "luminosity": 26.0714,
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.802067.Py8EG_A14NNPDF23LO_jetjet_JZ1_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
+                    "crossSection": 9.3900E+07,
+                    "genFiltEff": 4.187944E-06,
+                    "kFactor": 1.0,
+                    "luminosity": 25.7675,
+                    "dataTakingYear": 2023,
+                    "isMC": true
+                }
+            ]
+        },
+        {
+            "label": "mc23_4b_multijet_2bjets_JZ2",
+            "class_label": "label_QCD",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.800285.e8564_s4162_r14622_p6491_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.800285.e8564_s4159_r15530_p6491_TREE/"
+            ],
+            "selections": {
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    }
+                },
+                "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 3 Asymm"
+                    },
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
+            },
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.800285.Py8EG_A14NNPDF23LO_jetjet_JZ2_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4162_r14622_p6266",
+                    "crossSection": 2.5826E+06,
+                    "genFiltEff": 8.241819E-05,
+                    "kFactor": 1.0,
+                    "luminosity": 26.0714,
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.800285.Py8EG_A14NNPDF23LO_jetjet_JZ2_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
+                    "crossSection": 2.5826E+06,
+                    "genFiltEff": 8.241819E-05,
+                    "kFactor": 1.0,
+                    "luminosity": 25.7675,
+                    "dataTakingYear": 2023,
+                    "isMC": true
+                }
+            ]
+        },
+        {
+            "label": "mc23_4b_multijet_2bjets_JZ3",
+            "class_label": "label_QCD",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.800286.e8564_s4162_r14622_p6491_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.800286.e8564_s4159_r15530_p6491_TREE/"
+            ],
+            "selections": {
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    }
+                },
+                "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 3 Asymm"
+                    },
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
+            },
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.800286.Py8EG_A14NNPDF23LO_jetjet_JZ3_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4162_r14622_p6266",
+                    "crossSection": 2.8527E+04,
+                    "genFiltEff": 4.256739E-04,
+                    "kFactor": 1.0,
+                    "luminosity": 26.0714,
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.800286.Py8EG_A14NNPDF23LO_jetjet_JZ3_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
+                    "crossSection": 2.8527E+04,
+                    "genFiltEff": 4.256739E-04,
+                    "kFactor": 1.0,
+                    "luminosity": 25.7675,
+                    "dataTakingYear": 2023,
+                    "isMC": true
+                }
+            ]
+        },
+        {
+            "label": "mc23_4b_multijet_2bjets_JZ4",
+            "class_label": "label_QCD",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.800287.e8564_s4162_r14622_p6491_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.800287.e8564_s4159_r15530_p6491_TREE/"
+            ],
+            "selections": {
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    }
+                },
+                "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 3 Asymm"
+                    },
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
+            },
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.800287.Py8EG_A14NNPDF23LO_jetjet_JZ4_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4162_r14622_p6266",
+                    "crossSection": 2.8014E+02,
+                    "genFiltEff": 8.805395E-04,
+                    "kFactor": 1.0,
+                    "luminosity": 26.0714,
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.800287.Py8EG_A14NNPDF23LO_jetjet_JZ4_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
+                    "crossSection": 2.8014E+02,
+                    "genFiltEff": 8.805395E-04,
+                    "kFactor": 1.0,
+                    "luminosity": 25.7675,
+                    "dataTakingYear": 2023,
+                    "isMC": true
+                }
+            ]
+        },
+        {
+            "label": "mc23_4b_multijet_2bjets_JZ5",
+            "class_label": "label_QCD",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.802068.e8564_s4162_r14622_p6491_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.802068.e8564_s4159_r15530_p6491_TREE/"
+            ],
+            "selections": {
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    }
+                },
+                "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 3 Asymm"
+                    },
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
+            },
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.802068.Py8EG_A14NNPDF23LO_jetjet_JZ5_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4162_r14622_p6266",
+                    "crossSection": 5.1327E+00,
+                    "genFiltEff": 1.186040E-03,
+                    "kFactor": 1.0,
+                    "luminosity": 26.0714,
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.802068.Py8EG_A14NNPDF23LO_jetjet_JZ5_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
+                    "crossSection": 5.1327E+00,
+                    "genFiltEff": 1.186040E-03,
+                    "kFactor": 1.0,
+                    "luminosity": 25.7675,
+                    "dataTakingYear": 2023,
+                    "isMC": true
+                }
+            ]
+        },
+        {
+            "label": "mc23_4b_multijet_2bjets_JZ6",
+            "class_label": "label_QCD",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.802069.e8564_s4162_r14622_p6491_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.802069.e8564_s4159_r15530_p6491_TREE/"
+            ],
+            "selections": {
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    }
+                },
+                "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 3 Asymm"
+                    },
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
+            },
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.802069.Py8EG_A14NNPDF23LO_jetjet_JZ6_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4162_r14622_p6266",
+                    "crossSection": 2.9765E-01,
+                    "genFiltEff": 8.850437E-04,
+                    "kFactor": 1.0,
+                    "luminosity": 26.0714,
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.802069.Py8EG_A14NNPDF23LO_jetjet_JZ6_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
+                    "crossSection": 2.9765E-01,
+                    "genFiltEff": 8.850437E-04,
+                    "kFactor": 1.0,
+                    "luminosity": 25.7675,
+                    "dataTakingYear": 2023,
+                    "isMC": true
+                }
+            ]
+        },
+        {
+            "label": "mc23_4b_multijet_2bjets_JZ7",
+            "class_label": "label_QCD",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.802070.e8564_s4162_r14622_p6491_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.802070.e8564_s4159_r15530_p6491_TREE/"
+            ],
+            "selections": {
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    }
+                },
+                "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 3 Asymm"
+                    },
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
+            },
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.802070.Py8EG_A14NNPDF23LO_jetjet_JZ7_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4162_r14622_p6266",
+                    "crossSection": 1.6215E-02,
+                    "genFiltEff": 1.133779E-03,
+                    "kFactor": 1.0,
+                    "luminosity": 26.0714,
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.802070.Py8EG_A14NNPDF23LO_jetjet_JZ7_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
+                    "crossSection": 1.6215E-02,
+                    "genFiltEff": 1.133779E-03,
+                    "kFactor": 1.0,
+                    "luminosity": 25.7675,
+                    "dataTakingYear": 2023,
+                    "isMC": true
+                }
+            ]
+        },
+        {
+            "label": "mc23_4b_multijet_2bjets_JZ8",
+            "class_label": "label_QCD",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.802071.e8564_s4162_r14622_p6491_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.802071.e8564_s4159_r15530_p6491_TREE/"
+            ],
+            "selections": {
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    }
+                },
+                "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 3 Asymm"
+                    },
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
+            },
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.802071.Py8EG_A14NNPDF23LO_jetjet_JZ8_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4162_r14622_p6266",
+                    "crossSection": 7.9800E-04,
+                    "genFiltEff": 1.147757E-03,
+                    "kFactor": 1.0,
+                    "luminosity": 26.0714,
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.802071.Py8EG_A14NNPDF23LO_jetjet_JZ8_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
+                    "crossSection": 7.9800E-04,
+                    "genFiltEff": 1.147757E-03,
+                    "kFactor": 1.0,
+                    "luminosity": 25.7675,
+                    "dataTakingYear": 2023,
+                    "isMC": true
+                }
+            ]
+        },
+        {
+            "label": "mc23_4b_multijet_2bjets_JZ9",
+            "class_label": "label_QCD",
+            "paths": [
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.802072.e8564_s4162_r14622_p6491_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.802072.e8564_s4159_r15530_p6491_TREE/"
+            ],
+            "selections": {
+                "training": {
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 20
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    }
+                },
+                "analysis": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 3 Asymm"
+                    },
+                    "jets": {
+                        "pt": {
+                            "operator": ">",
+                            "value": 40
+                        },
+                        "eta": {
+                            "operator": "<",
+                            "value": 2.5
+                        },
+                        "count": {
+                            "operator": ">=",
+                            "value": 4
+                        },
+                        "btagging": {
+                            "model": "GN2v01",
+                            "efficiency": 0.77,
+                            "count": {
+                                "operator": ">=",
+                                "value": 4
+                            }
+                        }
+                    },
+                    "pairing": "min_deltar_pairing",
+                    "Delta_eta_HH_discriminant": {
+                        "operator": "<",
+                        "value": 1.5
+                    },
+                    "X_Wt_discriminant": {
+                        "operator": ">",
+                        "value": 1.5
+                    },
+                    "X_HH_discriminant": {
+                        "signal": {
+                            "inner_boundry": {
+                                "operator": "<",
+                                "value": 1.6
+                            }
+                        },
+                        "control": {
+                            "inner_boundry": {
+                                "operator": ">=",
+                                "value": 1.6
+                            },
+                            "outer_boundry": {
+                                "operator": "<=",
+                                "value": 45
+                            }
+                        }
+                    }
+                }
+            },
+            "metadata": [
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.802072.Py8EG_A14NNPDF23LO_jetjet_JZ9incl_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4162_r14622_p6266",
+                    "crossSection": 2.7822E-05,
+                    "genFiltEff": 1.576067E-03,
+                    "kFactor": 1.0,
+                    "luminosity": 26.0714,
+                    "dataTakingYear": 2022,
+                    "isMC": true
+                },
+                {
+                    "logicalDatasetName": "mc23_13p6TeV.802072.Py8EG_A14NNPDF23LO_jetjet_JZ9incl_4jets15_2bjets.deriv.DAOD_PHYS.e8564_s4159_r15530_p6026",
+                    "crossSection": 2.7822E-05,
+                    "genFiltEff": 1.576067E-03,
+                    "kFactor": 1.0,
+                    "luminosity": 25.7675,
+                    "dataTakingYear": 2023,
+                    "isMC": true
+                }
+            ]
+        }
+    ]
+}

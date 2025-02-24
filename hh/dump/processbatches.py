@@ -58,8 +58,12 @@ def process_batch(
 
     events["event_weight"] = np.ones(len(events), dtype=float) * sample_weight
     if is_mc:
+        if getattr(events.mc_event_weights, "ndim", 1) > 1:
+            mc_w = events.mc_event_weights[:, 0]
+        else:
+            mc_w = events.mc_event_weights
         events["event_weight"] = np.prod(
-            [events.mc_event_weights[:, 0], events.pileup_weight, events.event_weight],
+            [mc_w, events.pileup_weight, events.event_weight],
             axis=0,
         )
     events[Spectators.EVENT_WEIGHT.value] = events["event_weight"]
@@ -127,8 +131,9 @@ def process_batch(
         )
         events = events[passed_trigs_mask]
         logger.info(
-            "Events passing the %s of all triggers: %s (weighted: %s)",
+            "Events passing the %s of triggers %s: %s (weighted: %s)",
             trig_op.upper(),
+            list(triggers.values()),
             len(events),
             ak.sum(events.event_weight),
         )

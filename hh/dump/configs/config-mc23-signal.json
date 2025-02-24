@@ -4,12 +4,11 @@
     },
     "samples": [
         {
-            "label": "mc20_4b_ggF_k01",
+            "label": "mc23_4b_ggF_k01",
             "class_label": "label_HH",
             "paths": [
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k01/user.viruelas.EJ_2024_03_23_T095848.600463.e8222_s3681_r13167_p6026_TREE/",
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k01/user.viruelas.EJ_2024_03_23_T095848.600463.e8222_s3681_r13144_p6026_TREE/",
-                "/lustre/fs22/group/atlas/ruelasv/samples/mc20_13TeV.20240323.GN2v01/easyjet/output/hh4b_k01/user.viruelas.EJ_2024_03_23_T095848.600463.e8222_s3681_r13145_p6026_TREE/"
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.603404.e8564_a910_r14932_p6491_TREE/",
+                "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.603404.e8564_a911_r15224_p6491_TREE/"
             ],
             "selections": {
                 "training": {
@@ -39,7 +38,7 @@
                 "analysis": {
                     "trigs": {
                         "operator": "or",
-                        "value": "Run 2"
+                        "value": "Run 3 Asymm"
                     },
                     "jets": {
                         "pt": {
@@ -94,34 +93,24 @@
             },
             "metadata": [
                 {
-                    "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13167_p6026",
+                    "logicalDatasetName": "mc23_13p6TeV.603404.PhPy8EG_PDF4LHC21_HHbbbb_chhh1p0.deriv.DAOD_PHYS.e8564_a910_r14932_p6026",
                     "genFiltEff": 1.0,
-                    "crossSection": 3.077E-05,
+                    "crossSection": 3.413E-05,
                     "branchingRatio": 0.3392,
                     "kFactor": 1.0,
-                    "luminosity": 24.5556,
+                    "luminosity": 26.0714,
                     "isMC": true,
-                    "dataTakingYear": 2016
+                    "dataTakingYear": 2022
                 },
                 {
-                    "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13144_p6026",
+                    "logicalDatasetName": "mc23_13p6TeV.603404.PhPy8EG_PDF4LHC21_HHbbbb_chhh1p0.deriv.DAOD_PHYS.e8564_a911_r15224_p6026",
                     "genFiltEff": 1.0,
-                    "crossSection": 3.077E-05,
+                    "crossSection": 3.413E-05,
                     "branchingRatio": 0.3392,
                     "kFactor": 1.0,
-                    "luminosity": 43.65,
+                    "luminosity": 25.7675,
                     "isMC": true,
-                    "dataTakingYear": 2017
-                },
-                {
-                    "logicalDatasetName": "mc20_13TeV.600463.PhPy8EG_PDF4LHC15_HH4b_cHHH01d0.deriv.DAOD_PHYS.e8222_s3681_r13145_p6026",
-                    "genFiltEff": 1.0,
-                    "crossSection": 3.077E-05,
-                    "branchingRatio": 0.3392,
-                    "kFactor": 1.0,
-                    "luminosity": 57.6966,
-                    "isMC": true,
-                    "dataTakingYear": 2018
+                    "dataTakingYear": 2023
                 }
             ]
         }

@@ -73,6 +73,8 @@ def main():
 
     args = get_args()
 
+    pairing_methods = {"clahh": {"label": "CLAHH"}, "nominal": {"label": "Nominal"}}
+
     if args.loglevel:
         setup_logger(args.loglevel)
         cabinetry.set_logging()
@@ -109,6 +111,7 @@ def main():
             save_to="merged_histograms.h5",
         )
         fitting.save_to_root(hists, cabinetry_config_base, pairing_methods)
+
     for pairing in pairing_methods:
         # Create a new cabinetry config for each pairing method
         cabinetry_config_pairing = copy.deepcopy(cabinetry_config_base)

@@ -78,8 +78,9 @@ def process_batch(
         events[f"passed_{trig_op}_trigs"] = passed_trigs
         valid_events_mask = passed_trigs
         logger.info(
-            "Analysis events passing the %s of all triggers: %s (weighted: %s)",
+            "Analysis events passing the %s of triggers %s: %s (weighted: %s)",
             trig_op.upper() if trig_op is not None else "None",
+            list(triggers.values()),
             ak.sum(passed_trigs),
             ak.sum(events.event_weight[passed_trigs]),
         )
@@ -556,9 +557,10 @@ def process_batch(
                     signal_event_mask = np.zeros(len(events), dtype=bool)
                     control_event_mask = np.zeros(len(events), dtype=bool)
                     if "X_Wt_discriminant" in selections:
-                        signal_event_mask = events[
-                            f"X_Wt_{n_btags}btags_{btagger}_mask"
-                        ]
+                        signal_event_mask = (
+                            signal_event_mask
+                            & events[f"X_Wt_{n_btags}btags_{btagger}_mask"]
+                        )
                     if "Delta_eta_HH_discriminant" in selections:
                         signal_event_mask = (
                             signal_event_mask

@@ -120,11 +120,12 @@ def process_sample_worker(
         aliases=branch_aliases,
         num_workers=args.num_workers,
         step_size=args.batch_size,
-        allow_missing=False,
+        allow_missing=True,
         report=True,
     ):
+        if len(batch_events) == 0:
+            continue
         logger.info(f"Processing batch: {batch_report}")
-        # select analysis events, calculate analysis variables (e.g. X_hh, dEta_hh, X_Wt) and fill the histograms
         processed_batch, cutflow = process_batch(
             batch_events,
             selections,
@@ -140,6 +141,9 @@ def process_sample_worker(
         out.append(processed_batch)
         cutflows.append(cutflow)
 
+    if len(out) == 0:
+        logger.warning(f"No events found for sample: {sample_name}")
+        return
     out = ak.concatenate(out)
     cutflow = reduce(lambda x, y: {k: x[k] + y[k] for k in x.keys()}, cutflows)
     out_filename_stem = args.output.with_name(
