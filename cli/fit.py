@@ -170,7 +170,7 @@ def main():
 
         limit_results = cabinetry.fit.limit(model, data)
         plot_details = (
-            "\nMC20 2016-2018\n"
+            "\n"
             + sample_types[signal_sample["Name"]]
             + r", $b$-filtered mulitjet and $t\bar{t}$"
         )

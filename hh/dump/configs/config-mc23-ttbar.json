@@ -12,6 +12,10 @@
             ],
             "selections": {
                 "training": {
+                    "trigs": {
+                        "operator": "or",
+                        "value": "Run 3 Asymm"
+                    },
                     "jets": {
                         "pt": {
                             "operator": ">",
