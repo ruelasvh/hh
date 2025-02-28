@@ -13,32 +13,32 @@ BASE_ALIASES = {
     "run_number": "runNumber",
 }
 
-# # MC23 aliases post ezj tag v0.26
-# JET_ALIASES = {
-#     "jet_pt": "recojet_antikt4PFlow_pt_NOSYS",
-#     "jet_eta": "recojet_antikt4PFlow_eta",
-#     "jet_phi": "recojet_antikt4PFlow_phi",
-#     "jet_mass": "recojet_antikt4PFlow_m_NOSYS",
-#     "jet_NNJvt": "recojet_antikt4PFlow_NNJvt",
-#     "jet_jvttag": "recojet_antikt4PFlow_jvt_selection_NOSYS",
-#     "jet_truth_H_parent_mask": "recojet_antikt4PFlow_parentHiggsParentsMask",
-#     "jet_truth_label_ID": "recojet_antikt4PFlow_HadronConeExclTruthLabelID",
-#     "jet_btag_DL1dv01_70": "recojet_antikt4PFlow_ftag_select_DL1dv01_FixedCutBEff_70",
-#     "jet_btag_DL1dv01_77": "recojet_antikt4PFlow_ftag_select_DL1dv01_FixedCutBEff_77",
-#     "jet_btag_DL1dv01_85": "recojet_antikt4PFlow_ftag_select_DL1dv01_FixedCutBEff_85",
-#     "jet_btag_DL1dv01_pb": "recojet_antikt4PFlow_DL1dv01_pb",
-#     "jet_btag_DL1dv01_pc": "recojet_antikt4PFlow_DL1dv01_pc",
-#     "jet_btag_DL1dv01_pu": "recojet_antikt4PFlow_DL1dv01_pu",
-#     "jet_btag_DL1dv01_ptau": "recojet_antikt4PFlow_DL1dv01_pu",
-#     "jet_btag_GN2v01_65": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_65",
-#     "jet_btag_GN2v01_70": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_70",
-#     "jet_btag_GN2v01_77": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_77",
-#     "jet_btag_GN2v01_85": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_85",
-#     "jet_btag_GN2v01_pb": "recojet_antikt4PFlow_GN2v01_pb",
-#     "jet_btag_GN2v01_pc": "recojet_antikt4PFlow_GN2v01_pc",
-#     "jet_btag_GN2v01_pu": "recojet_antikt4PFlow_GN2v01_pu",
-#     "jet_btag_GN2v01_ptau": "recojet_antikt4PFlow_GN2v01_ptau",
-# }
+# MC23 aliases post ezj tag v0.26
+JET_ALIASES = {
+    "jet_pt": "recojet_antikt4PFlow_pt_NOSYS",
+    "jet_eta": "recojet_antikt4PFlow_eta",
+    "jet_phi": "recojet_antikt4PFlow_phi",
+    "jet_mass": "recojet_antikt4PFlow_m_NOSYS",
+    "jet_NNJvt": "recojet_antikt4PFlow_NNJvt",
+    "jet_jvttag": "recojet_antikt4PFlow_jvt_selection_NOSYS",
+    "jet_truth_H_parent_mask": "recojet_antikt4PFlow_parentHiggsParentsMask",
+    "jet_truth_label_ID": "recojet_antikt4PFlow_HadronConeExclTruthLabelID",
+    "jet_btag_DL1dv01_70": "recojet_antikt4PFlow_ftag_select_DL1dv01_FixedCutBEff_70",
+    "jet_btag_DL1dv01_77": "recojet_antikt4PFlow_ftag_select_DL1dv01_FixedCutBEff_77",
+    "jet_btag_DL1dv01_85": "recojet_antikt4PFlow_ftag_select_DL1dv01_FixedCutBEff_85",
+    "jet_btag_DL1dv01_pb": "recojet_antikt4PFlow_DL1dv01_pb",
+    "jet_btag_DL1dv01_pc": "recojet_antikt4PFlow_DL1dv01_pc",
+    "jet_btag_DL1dv01_pu": "recojet_antikt4PFlow_DL1dv01_pu",
+    "jet_btag_DL1dv01_ptau": "recojet_antikt4PFlow_DL1dv01_pu",
+    "jet_btag_GN2v01_65": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_65",
+    "jet_btag_GN2v01_70": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_70",
+    "jet_btag_GN2v01_77": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_77",
+    "jet_btag_GN2v01_85": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_85",
+    "jet_btag_GN2v01_pb": "recojet_antikt4PFlow_GN2v01_pb",
+    "jet_btag_GN2v01_pc": "recojet_antikt4PFlow_GN2v01_pc",
+    "jet_btag_GN2v01_pu": "recojet_antikt4PFlow_GN2v01_pu",
+    "jet_btag_GN2v01_ptau": "recojet_antikt4PFlow_GN2v01_ptau",
+}
 
 # # MC23 aliases pre ezj tag v0.26
 # JET_ALIASES = {
@@ -67,32 +67,32 @@ BASE_ALIASES = {
 #     "jet_btag_GN2v01_ptau": "recojet_antikt4PFlow_GN2v01_ptau_NOSYS",
 # }
 
-# MC20 aliases
-JET_ALIASES = {
-    "jet_pt": "recojet_antikt4PFlow_NOSYS_pt",
-    "jet_eta": "recojet_antikt4PFlow_NOSYS_eta",
-    "jet_phi": "recojet_antikt4PFlow_NOSYS_phi",
-    "jet_mass": "recojet_antikt4PFlow_NOSYS_m",
-    "jet_NNJvt": "recojet_antikt4PFlow_NOSYS_NNJvt",
-    "jet_jvttag": "recojet_antikt4PFlow_NOSYS_jvt_selection",  # also recojet_antikt4PFlow_NOSYS_NNJvt, recojet_antikt4PFlow_NOSYS_Jvt, recojet_antikt4PFlow_NOSYS_JvtRpt, recojet_antikt4PFlow_NOSYS_NNJvtRpt, recojet_antikt4PFlow_NOSYS_jvt_selection
-    "jet_truth_H_parent_mask": "recojet_antikt4PFlow_NOSYS_parentHiggsParentsMask",
-    "jet_truth_label_ID": "recojet_antikt4PFlow_NOSYS_HadronConeExclTruthLabelID",
-    "jet_btag_DL1dv01_70": "recojet_antikt4PFlow_NOSYS_ftag_select_DL1dv01_FixedCutBEff_70",
-    "jet_btag_DL1dv01_77": "recojet_antikt4PFlow_NOSYS_ftag_select_DL1dv01_FixedCutBEff_77",
-    "jet_btag_DL1dv01_85": "recojet_antikt4PFlow_NOSYS_ftag_select_DL1dv01_FixedCutBEff_85",
-    "jet_btag_DL1dv01_pb": "recojet_antikt4PFlow_NOSYS_DL1dv01_pb",
-    "jet_btag_DL1dv01_pc": "recojet_antikt4PFlow_NOSYS_DL1dv01_pc",
-    "jet_btag_DL1dv01_pu": "recojet_antikt4PFlow_NOSYS_DL1dv01_pu",
-    "jet_btag_DL1dv01_ptau": "recojet_antikt4PFlow_NOSYS_DL1dv01_pu",
-    # "jet_btag_GN2v01_65": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_65",
-    "jet_btag_GN2v01_70": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_70",
-    "jet_btag_GN2v01_77": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_77",
-    "jet_btag_GN2v01_85": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_85",
-    "jet_btag_GN2v01_pb": "recojet_antikt4PFlow_NOSYS_GN2v01_pb",
-    "jet_btag_GN2v01_pc": "recojet_antikt4PFlow_NOSYS_GN2v01_pc",
-    "jet_btag_GN2v01_pu": "recojet_antikt4PFlow_NOSYS_GN2v01_pu",
-    "jet_btag_GN2v01_ptau": "recojet_antikt4PFlow_NOSYS_GN2v01_ptau",
-}
+# # MC20 aliases
+# JET_ALIASES = {
+#     "jet_pt": "recojet_antikt4PFlow_NOSYS_pt",
+#     "jet_eta": "recojet_antikt4PFlow_NOSYS_eta",
+#     "jet_phi": "recojet_antikt4PFlow_NOSYS_phi",
+#     "jet_mass": "recojet_antikt4PFlow_NOSYS_m",
+#     "jet_NNJvt": "recojet_antikt4PFlow_NOSYS_NNJvt",
+#     "jet_jvttag": "recojet_antikt4PFlow_NOSYS_jvt_selection",  # also recojet_antikt4PFlow_NOSYS_NNJvt, recojet_antikt4PFlow_NOSYS_Jvt, recojet_antikt4PFlow_NOSYS_JvtRpt, recojet_antikt4PFlow_NOSYS_NNJvtRpt, recojet_antikt4PFlow_NOSYS_jvt_selection
+#     "jet_truth_H_parent_mask": "recojet_antikt4PFlow_NOSYS_parentHiggsParentsMask",
+#     "jet_truth_label_ID": "recojet_antikt4PFlow_NOSYS_HadronConeExclTruthLabelID",
+#     "jet_btag_DL1dv01_70": "recojet_antikt4PFlow_NOSYS_ftag_select_DL1dv01_FixedCutBEff_70",
+#     "jet_btag_DL1dv01_77": "recojet_antikt4PFlow_NOSYS_ftag_select_DL1dv01_FixedCutBEff_77",
+#     "jet_btag_DL1dv01_85": "recojet_antikt4PFlow_NOSYS_ftag_select_DL1dv01_FixedCutBEff_85",
+#     "jet_btag_DL1dv01_pb": "recojet_antikt4PFlow_NOSYS_DL1dv01_pb",
+#     "jet_btag_DL1dv01_pc": "recojet_antikt4PFlow_NOSYS_DL1dv01_pc",
+#     "jet_btag_DL1dv01_pu": "recojet_antikt4PFlow_NOSYS_DL1dv01_pu",
+#     "jet_btag_DL1dv01_ptau": "recojet_antikt4PFlow_NOSYS_DL1dv01_pu",
+#     # "jet_btag_GN2v01_65": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_65",
+#     "jet_btag_GN2v01_70": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_70",
+#     "jet_btag_GN2v01_77": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_77",
+#     "jet_btag_GN2v01_85": "recojet_antikt4PFlow_NOSYS_ftag_select_GN2v01_FixedCutBEff_85",
+#     "jet_btag_GN2v01_pb": "recojet_antikt4PFlow_NOSYS_GN2v01_pb",
+#     "jet_btag_GN2v01_pc": "recojet_antikt4PFlow_NOSYS_GN2v01_pc",
+#     "jet_btag_GN2v01_pu": "recojet_antikt4PFlow_NOSYS_GN2v01_pu",
+#     "jet_btag_GN2v01_ptau": "recojet_antikt4PFlow_NOSYS_GN2v01_ptau",
+# }
 
 MC_ALIASES = {
     "mc_event_weights": "generatorWeight_NOSYS",
