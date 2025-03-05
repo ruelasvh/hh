@@ -73,7 +73,10 @@ def main():
 
     args = get_args()
 
-    pairing_methods = {"clahh": {"label": "CLAHH"}, "nominal": {"label": "Nominal"}}
+    pairing_methods = {
+        "clahh_analysis": {"label": "CLAHH"},
+        "nominal_analysis": {"label": "Nominal"},
+    }
 
     if args.loglevel:
         setup_logger(args.loglevel)

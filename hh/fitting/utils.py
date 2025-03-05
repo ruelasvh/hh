@@ -5,7 +5,14 @@ import hist as bh
 from hh.shared.error import propagate_errors
 
 
-def create_hist(counts, binning, errors=None, name="", axis_name=r"m_\mathrm{HH}"):
+def create_hist(
+    counts,
+    binning,
+    errors=None,
+    name="",
+    # axis_name=r"m_\mathrm{HH}",
+    axis_name="Observable",
+):
     """Create a Hist object from counts, binning, and errors."""
     hist = bh.Hist(
         bh.axis.Variable(binning, underflow=False, overflow=False, name=axis_name),
