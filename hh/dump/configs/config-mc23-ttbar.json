@@ -10,91 +10,6 @@
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.601237.e8514_s4162_r15540_p6491_TREE/",
                 "/lustre/fs22/group/atlas/ruelasv/samples/mc23_v0.26/user.lshi.EJv0.26.0_HH4b_NoSyst_v00.601237.e8514_s4159_r15530_p6491_TREE/"
             ],
-            "selections": {
-                "training": {
-                    "trigs": {
-                        "operator": "or",
-                        "value": "Run 3 Asymm"
-                    },
-                    "jets": {
-                        "pt": {
-                            "operator": ">",
-                            "value": 20
-                        },
-                        "eta": {
-                            "operator": "<",
-                            "value": 2.5
-                        },
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        },
-                        "btagging": {
-                            "model": "GN2v01",
-                            "efficiency": 0.77,
-                            "count": {
-                                "operator": ">=",
-                                "value": 4
-                            }
-                        }
-                    }
-                },
-                "analysis": {
-                    "trigs": {
-                        "operator": "or",
-                        "value": "Run 3 Asymm"
-                    },
-                    "jets": {
-                        "pt": {
-                            "operator": ">",
-                            "value": 40
-                        },
-                        "eta": {
-                            "operator": "<",
-                            "value": 2.5
-                        },
-                        "count": {
-                            "operator": ">=",
-                            "value": 4
-                        },
-                        "btagging": {
-                            "model": "GN2v01",
-                            "efficiency": 0.77,
-                            "count": {
-                                "operator": ">=",
-                                "value": 4
-                            }
-                        }
-                    },
-                    "pairing": "min_deltar_pairing",
-                    "Delta_eta_HH_discriminant": {
-                        "operator": "<",
-                        "value": 1.5
-                    },
-                    "X_Wt_discriminant": {
-                        "operator": ">",
-                        "value": 1.5
-                    },
-                    "X_HH_discriminant": {
-                        "signal": {
-                            "inner_boundry": {
-                                "operator": "<",
-                                "value": 1.6
-                            }
-                        },
-                        "control": {
-                            "inner_boundry": {
-                                "operator": ">=",
-                                "value": 1.6
-                            },
-                            "outer_boundry": {
-                                "operator": "<=",
-                                "value": 45
-                            }
-                        }
-                    }
-                }
-            },
             "metadata": [
                 {
                     "logicalDatasetName": "mc23_13p6TeV.601237.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYS.e8514_e8528_s4162_s4114_r15540_r15516_p6266",
@@ -116,5 +31,152 @@
                 }
             ]
         }
-    ]
+    ],
+    "selections": {
+        "training": {
+            "trigs": {
+                "operator": "or",
+                "value": {
+                    "2022": {
+                        "assym_2b2j_delayed_dl1d": "HLT_j80c_020jvt_j55c_020jvt_j28c_020jvt_j20c_020jvt_SHARED_2j20c_020jvt_bdl1d77_pf_ftf_presel2c20XX2c20b85_L1J45p0ETA21_3J15p0ETA25"
+                    },
+                    "2023": {
+                        "assym_2b2j_high_delayed_gn1": "HLT_j80c_020jvt_j55c_020jvt_j28c_020jvt_j20c_020jvt_SHARED_2j20c_020jvt_bdl1d77_pf_ftf_presel2c20XX2c20b85_L1J45p0ETA21_3J15p0ETA25",
+                        "assym_2b2j_low_delayed_gn1": "HLT_j75c_020jvt_j50c_020jvt_j25c_020jvt_j20c_020jvt_SHARED_2j20c_020jvt_bgn177_pf_ftf_presel2c20XX2c20b85_L1J45p0ETA21_3J15p0ETA25"
+                    }
+                }
+            },
+            "jets": {
+                "pt": {
+                    "operator": ">",
+                    "value": 20
+                },
+                "eta": {
+                    "operator": "<",
+                    "value": 2.5
+                },
+                "count": {
+                    "operator": ">=",
+                    "value": 4
+                },
+                "btagging": {
+                    "model": "GN2v01",
+                    "efficiency": 0.77,
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    }
+                }
+            }
+        },
+        "analysis": {
+            "trigs": {
+                "operator": "or",
+                "value": {
+                    "2022": {
+                        "assym_2b2j_delayed_dl1d": "HLT_j80c_020jvt_j55c_020jvt_j28c_020jvt_j20c_020jvt_SHARED_2j20c_020jvt_bdl1d77_pf_ftf_presel2c20XX2c20b85_L1J45p0ETA21_3J15p0ETA25"
+                    },
+                    "2023": {
+                        "assym_2b2j_high_delayed_gn1": "HLT_j80c_020jvt_j55c_020jvt_j28c_020jvt_j20c_020jvt_SHARED_2j20c_020jvt_bdl1d77_pf_ftf_presel2c20XX2c20b85_L1J45p0ETA21_3J15p0ETA25",
+                        "assym_2b2j_low_delayed_gn1": "HLT_j75c_020jvt_j50c_020jvt_j25c_020jvt_j20c_020jvt_SHARED_2j20c_020jvt_bgn177_pf_ftf_presel2c20XX2c20b85_L1J45p0ETA21_3J15p0ETA25"
+                    }
+                }
+            },
+            "jets": {
+                "pt": {
+                    "operator": ">",
+                    "value": 40
+                },
+                "eta": {
+                    "operator": "<",
+                    "value": 2.5
+                },
+                "count": {
+                    "operator": ">=",
+                    "value": 4
+                },
+                "btagging": {
+                    "model": "GN2v01",
+                    "efficiency": 0.77,
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    }
+                }
+            },
+            "pairing": "min_deltar_pairing",
+            "Delta_eta_HH_discriminant": {
+                "operator": "<",
+                "value": 1.5
+            },
+            "X_Wt_discriminant": {
+                "operator": ">",
+                "value": 1.5
+            },
+            "X_HH_discriminant": {
+                "signal": {
+                    "inner_boundry": {
+                        "operator": "<",
+                        "value": 1.6
+                    }
+                },
+                "control": {
+                    "inner_boundry": {
+                        "operator": ">=",
+                        "value": 1.6
+                    },
+                    "outer_boundry": {
+                        "operator": "<=",
+                        "value": 45
+                    }
+                }
+            }
+        }
+    },
+    "branches": {
+        "jet_pt": "recojet_antikt4PFlow_pt_NOSYS",
+        "jet_eta": "recojet_antikt4PFlow_eta",
+        "jet_phi": "recojet_antikt4PFlow_phi",
+        "jet_mass": "recojet_antikt4PFlow_m_NOSYS",
+        "jet_NNJvt": "recojet_antikt4PFlow_NNJvt",
+        "jet_jvttag": "recojet_antikt4PFlow_jvt_selection_NOSYS",
+        "jet_truth_H_parent_mask": "recojet_antikt4PFlow_parentHiggsParentsMask",
+        "jet_truth_label_ID": "recojet_antikt4PFlow_HadronConeExclTruthLabelID",
+        "jet_btag_DL1dv01_70": "recojet_antikt4PFlow_ftag_select_DL1dv01_FixedCutBEff_70",
+        "jet_btag_DL1dv01_77": "recojet_antikt4PFlow_ftag_select_DL1dv01_FixedCutBEff_77",
+        "jet_btag_DL1dv01_85": "recojet_antikt4PFlow_ftag_select_DL1dv01_FixedCutBEff_85",
+        "jet_btag_DL1dv01_pb": "recojet_antikt4PFlow_DL1dv01_pb",
+        "jet_btag_DL1dv01_pc": "recojet_antikt4PFlow_DL1dv01_pc",
+        "jet_btag_DL1dv01_pu": "recojet_antikt4PFlow_DL1dv01_pu",
+        "jet_btag_DL1dv01_ptau": "recojet_antikt4PFlow_DL1dv01_pu",
+        "jet_btag_GN2v01_65": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_65",
+        "jet_btag_GN2v01_70": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_70",
+        "jet_btag_GN2v01_77": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_77",
+        "jet_btag_GN2v01_85": "recojet_antikt4PFlow_ftag_select_GN2v01_FixedCutBEff_85",
+        "jet_btag_GN2v01_pb": "recojet_antikt4PFlow_GN2v01_pb",
+        "jet_btag_GN2v01_pc": "recojet_antikt4PFlow_GN2v01_pc",
+        "jet_btag_GN2v01_pu": "recojet_antikt4PFlow_GN2v01_pu",
+        "jet_btag_GN2v01_ptau": "recojet_antikt4PFlow_GN2v01_ptau",
+        "mc_event_weights": "generatorWeight_NOSYS",
+        "pileup_weight": "PileupWeight_NOSYS",
+        "truth_jet_label_ID": "truthjet_antikt4_HadronConeExclTruthLabelID",
+        "truth_jet_eta": "truthjet_antikt4_eta",
+        "truth_jet_mass": "truthjet_antikt4_m",
+        "truth_jet_phi": "truthjet_antikt4_phi",
+        "truth_jet_pt": "truthjet_antikt4_pt",
+        "h1_truth_ID": "truth_H1_pdgId",
+        "h1_truth_pt": "truth_H1_pt",
+        "h1_truth_eta": "truth_H1_eta",
+        "h1_truth_phi": "truth_H1_phi",
+        "h1_truth_mass": "truth_H1_m",
+        "h2_truth_ID": "truth_H2_pdgId",
+        "h2_truth_pt": "truth_H2_pt",
+        "h2_truth_eta": "truth_H2_eta",
+        "h2_truth_phi": "truth_H2_phi",
+        "h2_truth_mass": "truth_H2_m",
+        "hh_truth_eta": "truth_HH_eta",
+        "hh_truth_phi": "truth_HH_phi",
+        "hh_truth_mass": "truth_HH_m",
+        "hh_truth_pt": "truth_HH_pt"
+    }
 }
