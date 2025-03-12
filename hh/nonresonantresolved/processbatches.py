@@ -28,7 +28,6 @@ from hh.nonresonantresolved.selection import (
     select_vbf_events,
 )
 from hh.shared.clahh_utils import get_inferences, get_deepset_inputs
-from hh.nonresonantresolved.branches import get_trigger_branch_aliases
 
 vector.register_awkward()
 
@@ -70,21 +69,25 @@ def process_batch(
             trig_sel.get("value"),
             trig_sel.get("operator"),
         )
-        assert trig_set, "Invalid trigger set provided."
-        triggers = get_trigger_branch_aliases(trig_set, year=year)
-        passed_trigs = select_events_passing_triggers(
-            events, triggers=triggers.keys(), operator=trig_op
+        assert trig_op and trig_set, (
+            "Invalid trigger selection. Please provide both operator and value. "
+            "Possible operators: AND, OR."
         )
-        events[f"passed_{trig_op}_trigs"] = passed_trigs
-        valid_events_mask = passed_trigs
+        trigs = [field for field in events.fields if field.startswith("trig_")]
+        # select and save events passing the triggers
+        passed_trigs_mask = select_events_passing_triggers(
+            events, triggers=trigs, operator=trig_op
+        )
+        events[f"passed_{trig_op}_trigs"] = passed_trigs_mask
+        valid_events_mask = passed_trigs_mask
         logger.info(
             "Analysis events passing the %s of triggers %s: %s (weighted: %s)",
             trig_op.upper() if trig_op is not None else "None",
-            list(triggers.values()),
-            ak.sum(passed_trigs),
-            ak.sum(events.event_weight[passed_trigs]),
+            list(trigs),
+            ak.sum(passed_trigs_mask),
+            ak.sum(events.event_weight[passed_trigs_mask]),
         )
-        if ak.sum(passed_trigs) == 0:
+        if ak.sum(passed_trigs_mask) == 0:
             return None
 
     ## apply jet selections ##

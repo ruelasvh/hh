@@ -358,6 +358,8 @@
         }
     },
     "branches": {
+        "event_number": "eventNumber",
+        "run_number": "runNumber",
         "jet_pt": "recojet_antikt4PFlow_pt_NOSYS",
         "jet_eta": "recojet_antikt4PFlow_eta",
         "jet_phi": "recojet_antikt4PFlow_phi",

@@ -19,11 +19,9 @@ from hh.nonresonantresolved.selection import (
     select_hh_jet_candidates,
     reconstruct_hh_jet_pairs,
 )
-from hh.nonresonantresolved.triggers import trig_sets
 from hh.nonresonantresolved.processbatches import (
     process_batch as analysis_process_batch,
 )
-from hh.nonresonantresolved.branches import get_trigger_branch_aliases
 
 vector.register_awkward()
 
@@ -122,18 +120,18 @@ def process_batch(
         )
         assert trig_op and trig_set, (
             "Invalid trigger selection. Please provide both operator and value. "
-            f"Possible operators: AND, OR. Possible values: {trig_sets.keys()}"
+            "Possible operators: AND, OR."
         )
-        triggers = get_trigger_branch_aliases(trig_set, year)
+        trigs = [field for field in events.fields if field.startswith("trig_")]
         # select and save events passing the triggers
         passed_trigs_mask = select_events_passing_triggers(
-            events, triggers=triggers.keys(), operator=trig_op
+            events, triggers=trigs, operator=trig_op
         )
         events = events[passed_trigs_mask]
         logger.info(
             "Events passing the %s of triggers %s: %s (weighted: %s)",
             trig_op.upper(),
-            list(triggers.values()),
+            list(trigs),
             len(events),
             ak.sum(events.event_weight),
         )

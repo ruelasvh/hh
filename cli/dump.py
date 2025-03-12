@@ -18,7 +18,7 @@ from hh.dump.processbatches import (
 )
 from hh.dump.output import Features, Labels
 from hh.nonresonantresolved.branches import (
-    get_branch_aliases,
+    get_trigger_branch_aliases,
 )
 from hh.shared.utils import (
     logger,
@@ -88,8 +88,9 @@ def process_sample_worker(
     sample_name: str,
     sample_path: Path,
     sample_metadata: list,
-    selections: dict,
     class_label: str,
+    selections: dict,
+    columns: dict,
     features: dict,
     args: argparse.Namespace,
 ) -> None:
@@ -105,19 +106,17 @@ def process_sample_worker(
             initial_sum_of_weights = cbk["initial_sum_of_weights"]
         sample_weight = get_sample_weight(sample_metadata, initial_sum_of_weights)
 
-    trig_sets = set()
-    for k, v in selections.items():
-        if "trigs" in v:
-            trig_sets.add(v["trigs"]["value"])
-
-    branch_aliases = get_branch_aliases(is_mc, list(trig_sets), sample_metadata)
+    trig_aliases = get_trigger_branch_aliases(
+        selections, sample_year=str(sample_metadata["dataTakingYear"])
+    )
+    columns = {**columns, **trig_aliases}
 
     out = []
     cutflows = []
     for batch_events, batch_report in uproot.iterate(
         f"{sample_path}*.root:AnalysisMiniTree",
-        expressions=branch_aliases.keys(),
-        aliases=branch_aliases,
+        expressions=columns.keys(),
+        aliases=columns,
         num_workers=args.num_workers,
         step_size=args.batch_size,
         allow_missing=True,
@@ -194,7 +193,12 @@ def main():
         config["features"]["labels"]
     ), f"Invalid labels: {set(config['features']['labels']) - set(Labels.get_all())}"
 
-    samples, features = config["samples"], config["features"]
+    samples, selections, branches, features = (
+        config["samples"],
+        config["selections"],
+        config["branches"],
+        config["features"],
+    )
 
     worker_items = [
         (
@@ -202,8 +206,9 @@ def main():
             sample["label"],
             sample["paths"][sample_id],
             sample["metadata"][sample_id],
-            sample["selections"],
             sample["class_label"],
+            selections,
+            branches,
             features,
             args,
         )
