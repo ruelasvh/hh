@@ -95,6 +95,7 @@ def process_sample_worker(
     args: argparse.Namespace,
 ) -> None:
     is_mc = sample_metadata["isMC"]
+    year = sample_metadata["dataTakingYear"]
     sample_metadata["label"] = class_label
 
     # get the sample weight
@@ -106,9 +107,7 @@ def process_sample_worker(
             initial_sum_of_weights = cbk["initial_sum_of_weights"]
         sample_weight = get_sample_weight(sample_metadata, initial_sum_of_weights)
 
-    trig_aliases = get_trigger_branch_aliases(
-        selections, sample_year=str(sample_metadata["dataTakingYear"])
-    )
+    trig_aliases = get_trigger_branch_aliases(selections, sample_year=str(year))
     columns = {**columns, **trig_aliases}
 
     out = []
@@ -119,7 +118,7 @@ def process_sample_worker(
         aliases=columns,
         num_workers=args.num_workers,
         step_size=args.batch_size,
-        allow_missing=True,
+        allow_missing=False,
         report=True,
     ):
         if len(batch_events) == 0:
@@ -132,7 +131,7 @@ def process_sample_worker(
             class_label,
             sample_weight,
             is_mc,
-            year=sample_metadata["dataTakingYear"],
+            year=year,
         )
         if len(processed_batch) == 0:
             continue

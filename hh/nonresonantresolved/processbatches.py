@@ -73,17 +73,17 @@ def process_batch(
             "Invalid trigger selection. Please provide both operator and value. "
             "Possible operators: AND, OR."
         )
-        trigs = [field for field in events.fields if field.startswith("trig_")]
+        trigs = trig_set[str(year)]
         # select and save events passing the triggers
         passed_trigs_mask = select_events_passing_triggers(
-            events, triggers=trigs, operator=trig_op
+            events, triggers=[f"trig_{trig}" for trig in trigs], operator=trig_op
         )
         events[f"passed_{trig_op}_trigs"] = passed_trigs_mask
         valid_events_mask = passed_trigs_mask
         logger.info(
             "Analysis events passing the %s of triggers %s: %s (weighted: %s)",
             trig_op.upper() if trig_op is not None else "None",
-            list(trigs),
+            list(trigs.values()),
             ak.sum(passed_trigs_mask),
             ak.sum(events.event_weight[passed_trigs_mask]),
         )

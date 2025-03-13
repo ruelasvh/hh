@@ -27,6 +27,7 @@
         "jet_mass",
         "X_Wt",
         "dEta_HH",
-        "X_HH"
+        "X_HH",
+        "year"
     ]
 }

@@ -51,6 +51,7 @@ class Spectators(Enum):
     EVENT_DELTAETA_HH = "dEta_HH"
     EVENT_X_WT = "X_Wt"
     EVENT_X_HH = "X_HH"
+    YEAR = "year"
 
     @classmethod
     def get_all(cls):

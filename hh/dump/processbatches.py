@@ -46,6 +46,7 @@ def process_batch(
     cutflow = {}
 
     events[Spectators.EVENT_NUMBER.value] = events.event_number
+    events[Spectators.YEAR.value] = np.ones(len(events), dtype=int) * year
 
     # append label_names to events and set them to 0 or 1
     for class_name in label_names:
@@ -122,16 +123,16 @@ def process_batch(
             "Invalid trigger selection. Please provide both operator and value. "
             "Possible operators: AND, OR."
         )
-        trigs = [field for field in events.fields if field.startswith("trig_")]
+        trigs = trig_set[str(year)]
         # select and save events passing the triggers
         passed_trigs_mask = select_events_passing_triggers(
-            events, triggers=trigs, operator=trig_op
+            events, triggers=[f"trig_{trig}" for trig in trigs], operator=trig_op
         )
         events = events[passed_trigs_mask]
         logger.info(
             "Events passing the %s of triggers %s: %s (weighted: %s)",
             trig_op.upper(),
-            list(trigs),
+            list(trigs.values()),
             len(events),
             ak.sum(events.event_weight),
         )
