@@ -13,10 +13,13 @@ class Features(Enum):
     JET_BTAG_GN2V01_PB = "jet_btag_GN2v01_pb"
     JET_BTAG_GN2V01_PC = "jet_btag_GN2v01_pc"
     JET_BTAG_GN2V01_PU = "jet_btag_GN2v01_pu"
-    EVENT_M_4B = "m_4b"
-    EVENT_BB_DM = "bb_dM"
-    EVENT_BB_DR = "bb_dR"
-    EVENT_BB_DETA = "bb_dEta"
+    M_4B = "m_4b"
+    PT_4B = "pt_4b"
+    ETA_4B = "eta_4b"
+    PHI_4B = "phi_4b"
+    BB_DM = "bb_dM"
+    BB_DR = "bb_dR"
+    BB_DETA = "bb_dEta"
 
     @classmethod
     def get_all(cls):
@@ -48,10 +51,14 @@ class Spectators(Enum):
     JET_ETA = "jet_eta"
     JET_PHI = "jet_phi"
     JET_MASS = "jet_mass"
-    EVENT_DELTAETA_HH = "dEta_HH"
-    EVENT_X_WT = "X_Wt"
-    EVENT_X_HH = "X_HH"
+    DELTAETA_HH = "dEta_HH"
+    X_WT = "X_Wt"
+    X_HH = "X_HH"
     YEAR = "year"
+    HH_TRUTH_M = "hh_truth_mass"
+    HH_TRUTH_PT = "hh_truth_pt"
+    HH_TRUTH_ETA = "hh_truth_eta"
+    HH_TRUTH_PHI = "hh_truth_phi"
 
     @classmethod
     def get_all(cls):

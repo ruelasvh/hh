@@ -9,6 +9,9 @@
         "jet_btag_GN2v01_pc",
         "jet_btag_GN2v01_pu",
         "m_4b",
+        "pt_4b",
+        "eta_4b",
+        "phi_4b",
         "bb_dM",
         "bb_dR",
         "bb_dEta"
@@ -28,6 +31,10 @@
         "X_Wt",
         "dEta_HH",
         "X_HH",
-        "year"
+        "year",
+        "hh_truth_mass",
+        "hh_truth_pt",
+        "hh_truth_eta",
+        "hh_truth_phi"
     ]
 }

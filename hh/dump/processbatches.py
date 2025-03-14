@@ -17,7 +17,6 @@ from hh.nonresonantresolved.selection import (
     select_n_jets_events,
     select_n_bjets_events,
     select_hh_jet_candidates,
-    reconstruct_hh_jet_pairs,
 )
 from hh.nonresonantresolved.processbatches import (
     process_batch as analysis_process_batch,
@@ -257,20 +256,29 @@ def process_batch(
             events["hh_jet_idx"] = hh_jet_idx
             events["non_hh_jet_idx"] = non_hh_jet_idx
             four_bjets_p4 = jets_p4[events.hh_jet_idx]
-            events[Features.EVENT_M_4B.value] = (
+            events[Features.M_4B.value] = (
                 ak.sum(four_bjets_p4, axis=1, keepdims=True).mass * GeV
             )
+            events[Features.PT_4B.value] = (
+                ak.sum(four_bjets_p4, axis=1, keepdims=True).pt * GeV
+            )
+            events[Features.ETA_4B.value] = ak.sum(
+                four_bjets_p4, axis=1, keepdims=True
+            ).eta
+            events[Features.PHI_4B.value] = ak.sum(
+                four_bjets_p4, axis=1, keepdims=True
+            ).phi
             # calculate bb features
-            if Features.EVENT_BB_DM.value in feature_names:
-                events[Features.EVENT_BB_DM.value] = (
+            if Features.BB_DM.value in feature_names:
+                events[Features.BB_DM.value] = (
                     make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass) * GeV
                 )
-            if Features.EVENT_BB_DR.value in feature_names:
-                events[Features.EVENT_BB_DR.value] = make_4jet_comb_array(
+            if Features.BB_DR.value in feature_names:
+                events[Features.BB_DR.value] = make_4jet_comb_array(
                     four_bjets_p4, lambda x, y: x.deltaR(y)
                 )
-            if Features.EVENT_BB_DETA.value in feature_names:
-                events[Features.EVENT_BB_DETA.value] = make_4jet_comb_array(
+            if Features.BB_DETA.value in feature_names:
+                events[Features.BB_DETA.value] = make_4jet_comb_array(
                     four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
                 )
 
@@ -283,27 +291,27 @@ def process_batch(
 
     X_Wt_discriminant_name = find_matching_field(analysis_events, "X_Wt", "discrim")
     if X_Wt_discriminant_name is not None:
-        events[Spectators.EVENT_X_WT.value] = analysis_events[X_Wt_discriminant_name]
+        events[Spectators.X_WT.value] = analysis_events[X_Wt_discriminant_name]
     else:
-        events[Spectators.EVENT_X_WT.value] = ak.values_astype(
+        events[Spectators.X_WT.value] = ak.values_astype(
             ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
             np.float32,
         )
 
     delta_eta_HH_name = find_matching_field(analysis_events, "deltaeta_HH", "discrim")
     if delta_eta_HH_name is not None:
-        events[Spectators.EVENT_DELTAETA_HH.value] = analysis_events[delta_eta_HH_name]
+        events[Spectators.DELTAETA_HH.value] = analysis_events[delta_eta_HH_name]
     else:
-        events[Spectators.EVENT_DELTAETA_HH.value] = ak.values_astype(
+        events[Spectators.DELTAETA_HH.value] = ak.values_astype(
             ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
             np.float32,
         )
 
     X_HH_discrim_name = find_matching_field(analysis_events, "X_HH", "discrim")
     if X_HH_discrim_name is not None:
-        events[Spectators.EVENT_X_HH.value] = analysis_events[X_HH_discrim_name]
+        events[Spectators.X_HH.value] = analysis_events[X_HH_discrim_name]
     else:
-        events[Spectators.EVENT_X_HH.value] = ak.values_astype(
+        events[Spectators.X_HH.value] = ak.values_astype(
             ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
             np.float32,
         )
@@ -311,6 +319,7 @@ def process_batch(
     out_fields = get_common(
         events.fields, [*label_names, *feature_names, *spectator_names]
     )
+
     if cutflow is None:
         return events[out_fields]
     else:

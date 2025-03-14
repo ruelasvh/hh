@@ -44,29 +44,6 @@
     ],
     "selections": {
         "training": {
-            "trigs": {
-                "operator": "or",
-                "value": {
-                    "2016": {
-                        "1b": "HLT_j225_bmv2c2060_split",
-                        "2b1j": "HLT_j100_2j55_bmv2c2060_split",
-                        "2bHT": "HLT_2j55_bmv2c2060_split_ht300_L14J15",
-                        "2b2j": "HLT_2j35_bmv2c2060_split_2j35_L14J15p0ETA25"
-                    },
-                    "2017": {
-                        "1b": "HLT_j225_gsc300_bmv2c1070_split",
-                        "2b1j": "HLT_j110_gsc150_boffperf_split_2j35_gsc55_bmv2c1070_split_L1J85_3J30",
-                        "2bHT": "HLT_2j35_gsc55_bmv2c1050_split_ht300_L1HT190_J15s5pETA21",
-                        "2b2j": "HLT_2j15_gsc35_bmv2c1040_split_2j15_gsc35_boffperf_split_L14J15p0ETA25"
-                    },
-                    "2018": {
-                        "1b": "HLT_j225_gsc300_bmv2c1070_split",
-                        "2b1j": "HLT_j110_gsc150_boffperf_split_2j45_gsc55_bmv2c1070_split_L1J85_3J30",
-                        "2bHT": "HLT_2j45_gsc55_bmv2c1050_split_ht300_L1HT190_J15s5pETA21",
-                        "2b2j": "HLT_2j35_bmv2c1060_split_2j35_L14J15p0ETA25"
-                    }
-                }
-            },
             "jets": {
                 "pt": {
                     "operator": ">",
