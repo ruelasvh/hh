@@ -96,6 +96,7 @@ def process_sample_worker(
 ) -> None:
     is_mc = sample_metadata["isMC"]
     year = sample_metadata["dataTakingYear"]
+    sample_metadata["label"] = class_label
 
     # get the sample weight
     sample_weight = 1.0
