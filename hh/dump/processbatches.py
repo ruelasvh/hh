@@ -194,8 +194,7 @@ def process_batch(
                 return events[out_fields]
             else:
                 return events[out_fields], cutflow
-
-        # apply b-jet train selections
+        
         if "btagging" in jet_selection:
             bjet_selection = jet_selection["btagging"]
             btagger = format_btagger_model_name(
@@ -241,7 +240,7 @@ def process_batch(
                         events[out_fields],
                         cutflow,
                     )
-
+        
             # select and save diHiggs candidates jets
             jets_p4 = ak.zip(
                 {
@@ -256,6 +255,42 @@ def process_batch(
             events["hh_jet_idx"] = hh_jet_idx
             events["non_hh_jet_idx"] = non_hh_jet_idx
             four_bjets_p4 = jets_p4[events.hh_jet_idx]
+            events[Features.M_4B.value] = (
+                ak.sum(four_bjets_p4, axis=1, keepdims=True).mass * GeV
+            )
+            events[Features.PT_4B.value] = (
+                ak.sum(four_bjets_p4, axis=1, keepdims=True).pt * GeV
+            )
+            events[Features.ETA_4B.value] = ak.sum(
+                four_bjets_p4, axis=1, keepdims=True
+            ).eta
+            events[Features.PHI_4B.value] = ak.sum(
+                four_bjets_p4, axis=1, keepdims=True
+            ).phi
+            # calculate bb features
+            if Features.BB_DM.value in feature_names:
+                events[Features.BB_DM.value] = (
+                    make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass) * GeV
+                )
+            if Features.BB_DR.value in feature_names:
+                events[Features.BB_DR.value] = make_4jet_comb_array(
+                    four_bjets_p4, lambda x, y: x.deltaR(y)
+                )
+            if Features.BB_DETA.value in feature_names:
+                events[Features.BB_DETA.value] = make_4jet_comb_array(
+                    four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
+                )
+        else:
+            # Form Higgs candidates from jets with highest b-tagging probabilities
+            highest_btag_jets = ak.argsort(events[f"jet_btag_{btagger}"], axis=1, ascending=False)[:, :4]
+            jets_p4 = ak.zip(
+                {
+                    "btag": events[f"jet_btag_{btagger}"],
+                    **{k: events[f"jet_{k}"] for k in kin_labels},
+                },
+                with_name="Momentum4D",
+            )
+            four_bjets_p4 = jets_p4[highest_btag_jets]
             events[Features.M_4B.value] = (
                 ak.sum(four_bjets_p4, axis=1, keepdims=True).mass * GeV
             )
