@@ -194,128 +194,131 @@ def process_batch(
                 return events[out_fields]
             else:
                 return events[out_fields], cutflow
-        
+
         if "btagging" in jet_selection:
             bjet_selection = jet_selection["btagging"]
-            btagger = format_btagger_model_name(
-                bjet_selection["model"], bjet_selection["efficiency"]
-            )
-            events[Features.JET_NBTAGS.value] = ak.sum(
-                events[f"jet_btag_{btagger}"], axis=1
-            )
-            valid_bjets = select_n_bjets_events(
-                jets=valid_jets,
-                btags=events[f"jet_btag_{btagger}"][valid_jets],
-                selection=bjet_selection,
-            )
-            valid_events_mask = ~ak.is_none(valid_bjets, axis=0)
-            valid_bjets = valid_bjets[valid_events_mask]
-            events = events[valid_events_mask]
-            logger.info(
-                "Events passing previous cut and %s %s b-tags with %s and %s efficiency: %s (weighted: %s)",
-                bjet_selection["count"]["operator"],
-                bjet_selection["count"]["value"],
-                bjet_selection["model"],
-                bjet_selection["efficiency"],
-                len(events),
-                ak.sum(events.event_weight),
-            )
-            if cutflow is not None:
-                cutname = "_".join(
-                    [
-                        "bjets",
-                        f"tagger_{btagger}",
-                        f"count_{bjet_selection['count']['value']}",
-                    ]
-                ).replace(".", "p")
-                update_cutflow(cutflow, cutname, valid_events_mask, events.event_weight)
-            if len(events) == 0:
-                out_fields = get_common(
-                    events.fields, [*label_names, *feature_names, *spectator_names]
+            btagger = format_btagger_model_name(bjet_selection["model"])
+            if "efficiency" in bjet_selection:
+                btagger = format_btagger_model_name(
+                    btagger, bjet_selection["efficiency"]
                 )
-                if cutflow is None:
-                    return events[out_fields]
-                else:
-                    return (
-                        events[out_fields],
-                        cutflow,
+                events[Features.JET_NBTAGS.value] = ak.sum(
+                    events[f"jet_btag_{btagger}"], axis=1
+                )
+                valid_bjets = select_n_bjets_events(
+                    jets=valid_jets,
+                    btags=events[f"jet_btag_{btagger}"][valid_jets],
+                    selection=bjet_selection,
+                )
+                valid_events_mask = ~ak.is_none(valid_bjets, axis=0)
+                valid_bjets = valid_bjets[valid_events_mask]
+                events = events[valid_events_mask]
+                logger.info(
+                    "Events passing previous cut and %s %s b-tags with %s and %s efficiency: %s (weighted: %s)",
+                    bjet_selection["count"]["operator"],
+                    bjet_selection["count"]["value"],
+                    bjet_selection["model"],
+                    bjet_selection["efficiency"],
+                    len(events),
+                    ak.sum(events.event_weight),
+                )
+                if cutflow is not None:
+                    cutname = "_".join(
+                        [
+                            "bjets",
+                            f"tagger_{btagger}",
+                            f"count_{bjet_selection['count']['value']}",
+                        ]
+                    ).replace(".", "p")
+                    update_cutflow(
+                        cutflow, cutname, valid_events_mask, events.event_weight
                     )
-        
-            # select and save diHiggs candidates jets
-            jets_p4 = ak.zip(
-                {
-                    "btag": events[f"jet_btag_{btagger}"],
-                    **{k: events[f"jet_{k}"] for k in kin_labels},
-                },
-                with_name="Momentum4D",
-            )
-            hh_jet_idx, non_hh_jet_idx = select_hh_jet_candidates(
-                jets=jets_p4, valid_jets_mask=valid_bjets
-            )
-            events["hh_jet_idx"] = hh_jet_idx
-            events["non_hh_jet_idx"] = non_hh_jet_idx
-            four_bjets_p4 = jets_p4[events.hh_jet_idx]
-            events[Features.M_4B.value] = (
-                ak.sum(four_bjets_p4, axis=1, keepdims=True).mass * GeV
-            )
-            events[Features.PT_4B.value] = (
-                ak.sum(four_bjets_p4, axis=1, keepdims=True).pt * GeV
-            )
-            events[Features.ETA_4B.value] = ak.sum(
-                four_bjets_p4, axis=1, keepdims=True
-            ).eta
-            events[Features.PHI_4B.value] = ak.sum(
-                four_bjets_p4, axis=1, keepdims=True
-            ).phi
-            # calculate bb features
-            if Features.BB_DM.value in feature_names:
-                events[Features.BB_DM.value] = (
-                    make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass) * GeV
+                if len(events) == 0:
+                    out_fields = get_common(
+                        events.fields, [*label_names, *feature_names, *spectator_names]
+                    )
+                    if cutflow is None:
+                        return events[out_fields]
+                    else:
+                        return (
+                            events[out_fields],
+                            cutflow,
+                        )
+
+                # select and save diHiggs candidates jets
+                jets_p4 = ak.zip(
+                    {
+                        "btag": events[f"jet_btag_{btagger}"],
+                        **{k: events[f"jet_{k}"] for k in kin_labels},
+                    },
+                    with_name="Momentum4D",
                 )
-            if Features.BB_DR.value in feature_names:
-                events[Features.BB_DR.value] = make_4jet_comb_array(
-                    four_bjets_p4, lambda x, y: x.deltaR(y)
+                hh_jet_idx, non_hh_jet_idx = select_hh_jet_candidates(
+                    jets=jets_p4, valid_jets_mask=valid_bjets
                 )
-            if Features.BB_DETA.value in feature_names:
-                events[Features.BB_DETA.value] = make_4jet_comb_array(
-                    four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
+                events["hh_jet_idx"] = hh_jet_idx
+                events["non_hh_jet_idx"] = non_hh_jet_idx
+                four_bjets_p4 = jets_p4[events.hh_jet_idx]
+                events[Features.M_4B.value] = ak.sum(four_bjets_p4, axis=1).mass * GeV
+                events[Features.PT_4B.value] = (
+                    ak.sum(four_bjets_p4, axis=1, keepdims=True).pt * GeV
                 )
-        else:
-            # Form Higgs candidates from jets with highest b-tagging probabilities
-            highest_btag_jets = ak.argsort(events[f"jet_btag_{btagger}"], axis=1, ascending=False)[:, :4]
-            jets_p4 = ak.zip(
-                {
-                    "btag": events[f"jet_btag_{btagger}"],
-                    **{k: events[f"jet_{k}"] for k in kin_labels},
-                },
-                with_name="Momentum4D",
-            )
-            four_bjets_p4 = jets_p4[highest_btag_jets]
-            events[Features.M_4B.value] = (
-                ak.sum(four_bjets_p4, axis=1, keepdims=True).mass * GeV
-            )
-            events[Features.PT_4B.value] = (
-                ak.sum(four_bjets_p4, axis=1, keepdims=True).pt * GeV
-            )
-            events[Features.ETA_4B.value] = ak.sum(
-                four_bjets_p4, axis=1, keepdims=True
-            ).eta
-            events[Features.PHI_4B.value] = ak.sum(
-                four_bjets_p4, axis=1, keepdims=True
-            ).phi
-            # calculate bb features
-            if Features.BB_DM.value in feature_names:
-                events[Features.BB_DM.value] = (
-                    make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass) * GeV
+                events[Features.ETA_4B.value] = ak.sum(
+                    four_bjets_p4, axis=1, keepdims=True
+                ).eta
+                events[Features.PHI_4B.value] = ak.sum(
+                    four_bjets_p4, axis=1, keepdims=True
+                ).phi
+                # calculate bb features
+                if Features.BB_DM.value in feature_names:
+                    events[Features.BB_DM.value] = (
+                        make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass)
+                        * GeV
+                    )
+                if Features.BB_DR.value in feature_names:
+                    events[Features.BB_DR.value] = make_4jet_comb_array(
+                        four_bjets_p4, lambda x, y: x.deltaR(y)
+                    )
+                if Features.BB_DETA.value in feature_names:
+                    events[Features.BB_DETA.value] = make_4jet_comb_array(
+                        four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
+                    )
+            else:
+                # Form Higgs candidates from jets with highest b-tagging probabilities
+                highest_btag_jets = ak.argsort(
+                    events[f"jet_btag_{btagger}_pb"], axis=1, ascending=False
+                )[:, :4]
+                jets_p4 = ak.zip(
+                    {
+                        **{k: events[f"jet_{k}"] for k in kin_labels},
+                    },
+                    with_name="Momentum4D",
                 )
-            if Features.BB_DR.value in feature_names:
-                events[Features.BB_DR.value] = make_4jet_comb_array(
-                    four_bjets_p4, lambda x, y: x.deltaR(y)
+                four_bjets_p4 = jets_p4[highest_btag_jets]
+                events[Features.M_4B.value] = ak.sum(four_bjets_p4, axis=1).mass * GeV
+                events[Features.PT_4B.value] = (
+                    ak.sum(four_bjets_p4, axis=1, keepdims=True).pt * GeV
                 )
-            if Features.BB_DETA.value in feature_names:
-                events[Features.BB_DETA.value] = make_4jet_comb_array(
-                    four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
-                )
+                events[Features.ETA_4B.value] = ak.sum(
+                    four_bjets_p4, axis=1, keepdims=True
+                ).eta
+                events[Features.PHI_4B.value] = ak.sum(
+                    four_bjets_p4, axis=1, keepdims=True
+                ).phi
+                # calculate bb features
+                if Features.BB_DM.value in feature_names:
+                    events[Features.BB_DM.value] = (
+                        make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass)
+                        * GeV
+                    )
+                if Features.BB_DR.value in feature_names:
+                    events[Features.BB_DR.value] = make_4jet_comb_array(
+                        four_bjets_p4, lambda x, y: x.deltaR(y)
+                    )
+                if Features.BB_DETA.value in feature_names:
+                    events[Features.BB_DETA.value] = make_4jet_comb_array(
+                        four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
+                    )
 
     ############################################
     # Analysis selections
@@ -350,6 +353,32 @@ def process_batch(
             ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
             np.float32,
         )
+
+    if cutflow is not None:
+        analysis_bjet_selection = analysis_selections["jets"]["btagging"]
+        analysis_btagger = format_btagger_model_name(
+            analysis_bjet_selection["model"], analysis_bjet_selection["efficiency"]
+        )
+        analysis_btag_count = analysis_bjet_selection["count"]["value"]
+        cutname = "_".join(
+            [
+                "analysis",
+                "bjets",
+                f"tagger_{analysis_btagger}",
+                f"count_{analysis_btag_count}",
+            ]
+        ).replace(".", "p")
+        valid_events_mask = ~ak.is_none(
+            analysis_events[
+                f"valid_{analysis_btag_count}btags_{analysis_btagger}_jets"
+            ],
+            axis=0,
+        )
+        update_cutflow(
+            cutflow, cutname, valid_events_mask, events.event_weight[valid_events_mask]
+        )
+
+    # TODO: add HH information from the analysis
 
     out_fields = get_common(
         events.fields, [*label_names, *feature_names, *spectator_names]

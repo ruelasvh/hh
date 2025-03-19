@@ -208,12 +208,14 @@ def get_trigs_logical_op(events, trigs, op="or", skip_trig=None):
     )
 
 
-def format_btagger_model_name(model, eff):
+def format_btagger_model_name(model, eff=None):
     # concatenate model and eff, e.g. "DL1dv00_77". eff could be a float or int
-    if isinstance(eff, float):
-        return f"{model}_{eff*100:.0f}"
-    else:
-        return f"{model}_{eff}"
+    if eff is not None:
+        if isinstance(eff, float):
+            return f"{model}_{eff*100:.0f}"
+        else:
+            return f"{model}_{eff}"
+    return model
 
 
 # write function that 1: gets this projects root path, 2: lists directories under it,  3: gets path as argument, 4: returns path arg using root path as base
