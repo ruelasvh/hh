@@ -29,6 +29,7 @@ from hh.shared.utils import (
     write_out_h5,
     write_out_root,
     write_out_parquet,
+    merge_cutflows,
 )
 
 
@@ -143,7 +144,7 @@ def process_sample_worker(
         logger.warning(f"No events found for sample: {sample_name}")
         return
     out = ak.concatenate(out)
-    cutflow = reduce(lambda x, y: {k: x[k] + y[k] for k in x.keys()}, cutflows)
+    cutflow = reduce(merge_cutflows, cutflows)
     out_filename_stem = args.output.with_name(
         f"{args.output.stem}_{sample_name}_{sample_id}_{os.getpgid(os.getpid())}"
     )

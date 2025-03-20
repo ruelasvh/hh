@@ -326,6 +326,13 @@ def process_batch(
             events[OutputVariables[f"H1_RECO_{var.upper()}"].value] = getattr(
                 analysis_events[H1_reco_p4_name], var
             )
+    else:
+        for var in kin_labels:
+            events[OutputVariables[f"H1_RECO_{var.upper()}"].value] = ak.values_astype(
+                ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
+                np.float32,
+            )
+
     H2_reco_p4_name = find_matching_field(
         analysis_events, f"H2_{analysis_btag_count}btags_{analysis_btagger}", "p4"
     )
@@ -334,6 +341,13 @@ def process_batch(
             events[OutputVariables[f"H2_RECO_{var.upper()}"].value] = getattr(
                 analysis_events[H2_reco_p4_name], var
             )
+    else:
+        for var in kin_labels:
+            events[OutputVariables[f"H2_RECO_{var.upper()}"].value] = ak.values_astype(
+                ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
+                np.float32,
+            )
+
     HH_reco_p4_name = find_matching_field(
         analysis_events, f"H2_{analysis_btag_count}btags_{analysis_btagger}", "p4"
     )
@@ -342,18 +356,39 @@ def process_batch(
             events[OutputVariables[f"HH_RECO_{var.upper()}"].value] = getattr(
                 analysis_events[HH_reco_p4_name], var
             )
+    else:
+        for var in kin_labels:
+            events[OutputVariables[f"HH_RECO_{var.upper()}"].value] = ak.values_astype(
+                ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
+                np.float32,
+            )
 
     X_Wt_discriminant_name = find_matching_field(analysis_events, "X_Wt", "discrim")
     if X_Wt_discriminant_name is not None:
         events[OutputVariables.X_WT.value] = analysis_events[X_Wt_discriminant_name]
+    else:
+        events[OutputVariables.X_WT.value] = ak.values_astype(
+            ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
+            np.float32,
+        )
 
     delta_eta_HH_name = find_matching_field(analysis_events, "deltaeta_HH", "discrim")
     if delta_eta_HH_name is not None:
         events[OutputVariables.DELTAETA_HH.value] = analysis_events[delta_eta_HH_name]
+    else:
+        events[OutputVariables.DELTAETA_HH.value] = ak.values_astype(
+            ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
+            np.float32,
+        )
 
     X_HH_discrim_name = find_matching_field(analysis_events, "X_HH", "discrim")
     if X_HH_discrim_name is not None:
         events[OutputVariables.X_HH.value] = analysis_events[X_HH_discrim_name]
+    else:
+        events[OutputVariables.X_HH.value] = ak.values_astype(
+            ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
+            np.float32,
+        )
 
     out_fields = get_common(
         events.fields, [*output_variable_names, *output_label_names]

@@ -484,3 +484,14 @@ def find_matching_field(events, *search_terms):
     return next(
         filter(lambda x: all(term in x for term in search_terms), events.fields), None
     )
+
+
+def merge_cutflows(acc, it):
+    merged = {}
+    # Get all unique keys from both dictionaries
+    all_keys = set(acc.keys()) | set(it.keys())
+    for k in all_keys:
+        acc_val = acc.get(k, 0)
+        it_val = it.get(k, 0)
+        merged[k] = acc_val + it_val
+    return merged
