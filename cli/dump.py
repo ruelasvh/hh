@@ -16,7 +16,7 @@ from pathlib import Path
 from hh.dump.processbatches import (
     process_batch,
 )
-from hh.dump.output import Features, Labels
+from hh.dump.output import OutputVariables
 from hh.nonresonantresolved.branches import (
     get_trigger_branch_aliases,
 )
@@ -180,23 +180,23 @@ def main():
     with open(args.config) as cf:
         config = resolve_project_paths(config=json.load(cf))
 
-    if "path" in config["features"]:
-        with open(config["features"]["path"]) as ff:
-            config["features"] = json.load(ff)
+    if "path" in config["output"]:
+        with open(config["output"]["path"]) as ff:
+            config["output"] = json.load(ff)
 
-    assert Features.contains_all(
-        config["features"]["features"]
-    ), f"Invalid features: {set(config['features']['features']) - set(Features.get_all())}"
+    assert OutputVariables.contains_all(
+        config["output"]["variables"]
+    ), f"Invalid features: {set(config['output']['variables']) - set(OutputVariables.get_all())}"
 
-    assert Labels.contains_all(
-        config["features"]["labels"]
-    ), f"Invalid labels: {set(config['features']['labels']) - set(Labels.get_all())}"
+    assert OutputVariables.contains_all(
+        config["output"]["variables"]
+    ), f"Invalid labels: {set(config['output']['labels']) - set(OutputVariables.get_all())}"
 
     samples, selections, branches, features = (
         config["samples"],
         config["selections"],
         config["branches"],
-        config["features"],
+        config["output"],
     )
 
     worker_items = [

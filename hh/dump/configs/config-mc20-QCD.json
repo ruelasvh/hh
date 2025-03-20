@@ -1,5 +1,5 @@
 {
-    "features": {
+    "output": {
         "path": "hh/dump/configs/variables.json"
     },
     "samples": [
@@ -362,12 +362,7 @@
                     "value": 4
                 },
                 "btagging": {
-                    "model": "GN2v01",
-                    "efficiency": 0.77,
-                    "count": {
-                        "operator": ">=",
-                        "value": 4
-                    }
+                    "model": "GN2v01"
                 }
             }
         },

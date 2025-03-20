@@ -1,7 +1,12 @@
 from enum import Enum
 
 
-class Features(Enum):
+class OutputVariables(Enum):
+    EVENT_NUMBER = "event_number"
+    EVENT_WEIGHT = "event_weight"
+    LABEL_HH = "label_HH"
+    LABEL_TTBAR = "label_ttbar"
+    LABEL_QCD = "label_QCD"
     JET_PX = "jet_px"
     JET_PY = "jet_py"
     JET_PZ = "jet_pz"
@@ -20,33 +25,6 @@ class Features(Enum):
     BB_DM = "bb_dM"
     BB_DR = "bb_dR"
     BB_DETA = "bb_dEta"
-
-    @classmethod
-    def get_all(cls):
-        return [feature.value for feature in cls]
-
-    @classmethod
-    def contains_all(cls, features):
-        return all([feature in cls.get_all() for feature in features])
-
-
-class Labels(Enum):
-    LABEL_HH = "label_HH"
-    LABEL_TTBAR = "label_ttbar"
-    LABEL_QCD = "label_QCD"
-
-    @classmethod
-    def get_all(cls):
-        return [label.value for label in cls]
-
-    @classmethod
-    def contains_all(cls, labels):
-        return all([label in cls.get_all() for label in labels])
-
-
-class Spectators(Enum):
-    EVENT_NUMBER = "event_number"
-    EVENT_WEIGHT = "event_weight"
     JET_PT = "jet_pt"
     JET_ETA = "jet_eta"
     JET_PHI = "jet_phi"
@@ -59,11 +37,33 @@ class Spectators(Enum):
     HH_TRUTH_PT = "hh_truth_pt"
     HH_TRUTH_ETA = "hh_truth_eta"
     HH_TRUTH_PHI = "hh_truth_phi"
+    H1_TRUTH_MASS = "h1_truth_mass"
+    H1_TRUTH_PT = "h1_truth_pt"
+    H1_TRUTH_ETA = "h1_truth_eta"
+    H1_TRUTH_PHI = "h1_truth_phi"
+    H2_TRUTH_MASS = "h2_truth_mass"
+    H2_TRUTH_PT = "h2_truth_pt"
+    H2_TRUTH_ETA = "h2_truth_eta"
+    H2_TRUTH_PHI = "h2_truth_phi"
+    H1_RECO_PT = "h1_reco_pt"
+    H1_RECO_ETA = "h1_reco_eta"
+    H1_RECO_PHI = "h1_reco_phi"
+    H1_RECO_MASS = "h1_reco_mass"
+    H2_RECO_PT = "h2_reco_pt"
+    H2_RECO_ETA = "h2_reco_eta"
+    H2_RECO_PHI = "h2_reco_phi"
+    H2_RECO_MASS = "h2_reco_mass"
+    HH_RECO_MASS = "hh_reco_mass"
+    HH_RECO_PT = "hh_reco_pt"
+    HH_RECO_ETA = "hh_reco_eta"
+    HH_RECO_PHI = "hh_reco_phi"
 
     @classmethod
     def get_all(cls):
-        return [spectator.value for spectator in cls]
+        return [output_variable.value for output_variable in cls]
 
     @classmethod
-    def contains_all(cls, spectators):
-        return all([spectator in cls.get_all() for spectator in spectators])
+    def contains_all(cls, output_variables):
+        return all(
+            [output_variable in cls.get_all() for output_variable in output_variables]
+        )

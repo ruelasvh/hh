@@ -6,6 +6,7 @@ from hh.shared.utils import (
     GeV,
     logger,
     get_op,
+    update_cutflow,
     format_btagger_model_name,
 )
 from hh.shared.labels import kin_labels
@@ -37,15 +38,20 @@ def process_batch(
     selections: dict,
     is_mc: bool = False,
     year: int = None,
+    return_cutflow: bool = False,
     clahh_model_ort: ort.InferenceSession = None,
 ) -> ak.Record:
     """Apply analysis regions selections and append info to events."""
+
+    cutflow = {}
 
     logger.info(
         "Analysis initial events: %s (weighted: %s)",
         len(events),
         ak.sum(events.event_weight),
     )
+    cutname = "analysis_initial_events"
+    update_cutflow(cutflow, cutname, np.ones(len(events)), events.event_weight)
 
     events_4_more_true_bjets = ak.sum(events.jet_truth_label_ID == 5, axis=1) > 4
     logger.debug(
@@ -53,10 +59,19 @@ def process_batch(
         ak.sum(events_4_more_true_bjets),
         ak.sum(events.event_weight[events_4_more_true_bjets]),
     )
+    cutname = "analysis_4_true_bjets"
+    update_cutflow(
+        cutflow,
+        cutname,
+        events_4_more_true_bjets,
+        events.event_weight[events_4_more_true_bjets],
+    )
 
     ## return early if selections is empty ##
     if not selections:
         logger.info("Analysis selections empty. No object selections applied.")
+        if return_cutflow:
+            return events, cutflow
         return events
 
     ## create a mask to keep track of valid events
@@ -87,7 +102,20 @@ def process_batch(
             ak.sum(passed_trigs_mask),
             ak.sum(events.event_weight[passed_trigs_mask]),
         )
+        cutname = "_".join(
+            [
+                "analysis",
+                "passed",
+                "trigs",
+                f"{trig_op.lower()}",
+            ]
+        )
+        update_cutflow(
+            cutflow, cutname, passed_trigs_mask, events.event_weight[passed_trigs_mask]
+        )
         if ak.sum(passed_trigs_mask) == 0:
+            if return_cutflow:
+                return None, cutflow
             return None
 
     ## apply jet selections ##
@@ -139,8 +167,26 @@ def process_batch(
                     ak.sum(valid_events_mask),
                     ak.sum(events.event_weight[valid_events_mask]),
                 )
-
+                cutname = "_".join(
+                    [
+                        "analysis",
+                        "jets",
+                        f"pt_{jets_sel['pt']['value']}",
+                        f"eta_{jets_sel['eta']['value']}",
+                        f"count_{jets_sel['count']['value']}",
+                        "2btags",
+                        f"{btagger}",
+                    ]
+                ).replace(".", "p")
+                update_cutflow(
+                    cutflow,
+                    cutname,
+                    valid_events_mask,
+                    events.event_weight[valid_events_mask],
+                )
                 if ak.sum(valid_events_mask) == 0:
+                    if return_cutflow:
+                        return None, cutflow
                     return None
 
                 if is_mc:
@@ -186,7 +232,23 @@ def process_batch(
                     ak.sum(valid_events_mask),
                     ak.sum(events.event_weight[valid_events_mask]),
                 )
+                cutname = "_".join(
+                    [
+                        "analysis",
+                        "bjets",
+                        f"tagger_{btagger}",
+                        f"count_{i_bjets_sel['count']['value']}",
+                    ]
+                ).replace(".", "p")
+                update_cutflow(
+                    cutflow,
+                    cutname,
+                    valid_events_mask,
+                    events.event_weight[valid_events_mask],
+                )
                 if ak.sum(valid_events_mask) == 0:
+                    if return_cutflow:
+                        return None, cutflow
                     return None
 
                 ### Do truth matching with b-tagging requirement ###
@@ -242,6 +304,19 @@ def process_batch(
                         "Analysis events passing previous cuts and VBF selection: %s (weighted: %s)",
                         ak.sum(valid_events_mask & passed_vbf),
                         ak.sum(events.event_weight[valid_events_mask & passed_vbf]),
+                    )
+                    cutname = "_".join(
+                        [
+                            "analysis",
+                            "passed",
+                            "vbf",
+                        ]
+                    )
+                    update_cutflow(
+                        cutflow,
+                        cutname,
+                        valid_events_mask & passed_vbf,
+                        events.event_weight[valid_events_mask & passed_vbf],
                     )
 
                 ###################################################
@@ -311,7 +386,23 @@ def process_batch(
                         ak.sum(clahh_signal_events_mask),
                         ak.sum(events.event_weight[clahh_signal_events_mask]),
                     )
+                    cutname = "_".join(
+                        [
+                            "analysis",
+                            "passed",
+                            "clahh",
+                            f"{clahh_wp_str}",
+                        ]
+                    )
+                    update_cutflow(
+                        cutflow,
+                        cutname,
+                        clahh_signal_events_mask,
+                        events.event_weight[clahh_signal_events_mask],
+                    )
                     # if ak.sum(clahh_signal_events_mask) == 0:
+                    #    if return_cutflow:
+                    #        return None, cutflow
                     #     return None
 
                 ############################################
@@ -482,6 +573,10 @@ def process_batch(
                     #################################################
                     h1_p4 = ak.sum(jets_p4[H1_jet_idx], axis=1)
                     h2_p4 = ak.sum(jets_p4[H2_jet_idx], axis=1)
+                    events[f"H1_{n_btags}btags_{btagger}_{pairing}_p4"] = h1_p4
+                    events[f"H2_{n_btags}btags_{btagger}_{pairing}_p4"] = h2_p4
+                    events[f"HH_{n_btags}btags_{btagger}_{pairing}_p4"] = h1_p4 + h2_p4
+
                     ###### Delta eta ∆𝜂 HH veto ######
                     if "Delta_eta_HH_discriminant" in selections:
                         deltaeta_HH_discrim_sel = selections[
@@ -509,7 +604,24 @@ def process_batch(
                             ak.sum(valid_events_pairing_mask),
                             ak.sum(events.event_weight[valid_events_pairing_mask]),
                         )
+                        cutname = "_".join(
+                            [
+                                "analysis",
+                                "passed",
+                                "Deta_HH",
+                                f"{n_btags}btags_{btagger}",
+                                f"{pairing}",
+                            ]
+                        )
+                        update_cutflow(
+                            cutflow,
+                            cutname,
+                            valid_events_pairing_mask,
+                            events.event_weight[valid_events_pairing_mask],
+                        )
                         if ak.sum(valid_events_pairing_mask) == 0:
+                            if return_cutflow:
+                                return None, cutflow
                             return None
 
                     ###### Apply X_Wt cut ######
@@ -525,7 +637,24 @@ def process_batch(
                             ak.sum(valid_events_pairing_mask),
                             ak.sum(events.event_weight[valid_events_pairing_mask]),
                         )
+                        cutname = "_".join(
+                            [
+                                "analysis",
+                                "passed",
+                                "X_Wt",
+                                f"{n_btags}btags_{btagger}",
+                                f"{pairing}",
+                            ]
+                        )
+                        update_cutflow(
+                            cutflow,
+                            cutname,
+                            valid_events_pairing_mask,
+                            events.event_weight[valid_events_pairing_mask],
+                        )
                         if ak.sum(valid_events_pairing_mask) == 0:
+                            if return_cutflow:
+                                return None, cutflow
                             return None
 
                     ###### X_HH mass veto ######
@@ -555,6 +684,21 @@ def process_batch(
                                     pairing.replace("_", " "),
                                     ak.sum(region_mask),
                                     ak.sum(events.event_weight[region_mask]),
+                                )
+                                cutname = "_".join(
+                                    [
+                                        "analysis",
+                                        "passed",
+                                        f"X_HH_{region}",
+                                        f"{n_btags}btags_{btagger}",
+                                        f"{pairing}",
+                                    ]
+                                )
+                                update_cutflow(
+                                    cutflow,
+                                    cutname,
+                                    region_mask,
+                                    events.event_weight[region_mask],
                                 )
 
                     signal_event_mask = ak.ones_like(events.event_weight, dtype=bool)
@@ -597,11 +741,43 @@ def process_batch(
                         ak.sum(signal_event_mask),
                         ak.sum(events.event_weight[signal_event_mask]),
                     )
+                    cutname = "_".join(
+                        [
+                            "analysis",
+                            "passed",
+                            "signal",
+                            "region",
+                            f"{n_btags}btags_{btagger}",
+                            f"{pairing}",
+                        ]
+                    )
+                    update_cutflow(
+                        cutflow,
+                        cutname,
+                        signal_event_mask,
+                        events.event_weight[signal_event_mask],
+                    )
                     logger.info(
                         "Analysis events passing previous cuts and control region using %s pairing: %s (weighted: %s)",
                         pairing.replace("_", " "),
                         ak.sum(control_event_mask),
                         ak.sum(events.event_weight[control_event_mask]),
+                    )
+                    cutname = "_".join(
+                        [
+                            "analysis",
+                            "passed",
+                            "control",
+                            "region",
+                            f"{n_btags}btags_{btagger}",
+                            f"{pairing}",
+                        ]
+                    )
+                    update_cutflow(
+                        cutflow,
+                        cutname,
+                        control_event_mask,
+                        events.event_weight[control_event_mask],
                     )
 
                     if is_mc:
@@ -634,4 +810,6 @@ def process_batch(
                             ),
                         )
 
+    if return_cutflow:
+        return events, cutflow
     return events

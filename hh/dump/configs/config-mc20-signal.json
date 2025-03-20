@@ -1,5 +1,5 @@
 {
-    "features": {
+    "output": {
         "path": "hh/dump/configs/variables.json"
     },
     "samples": [

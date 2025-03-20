@@ -11,7 +11,7 @@ from hh.shared.utils import (
     find_matching_field,
 )
 from hh.shared.labels import kin_labels
-from hh.dump.output import Features, Labels, Spectators
+from hh.dump.output import OutputVariables
 from hh.nonresonantresolved.selection import (
     select_events_passing_triggers,
     select_n_jets_events,
@@ -37,22 +37,21 @@ def process_batch(
     """Apply analysis regions selection and append info to events."""
 
     # get features and class names to be saved
-    feature_names = outputs["features"]
-    label_names = outputs["labels"]
-    spectator_names = outputs["spectators"]
+    output_variable_names = outputs["variables"]
+    output_label_names = outputs["labels"]
     train_selections = selections["training"]
     analysis_selections = selections["analysis"]
     cutflow = {}
 
-    events[Spectators.EVENT_NUMBER.value] = events.event_number
-    events[Spectators.YEAR.value] = np.ones(len(events), dtype=int) * year
+    events[OutputVariables.EVENT_NUMBER.value] = events.event_number
+    events[OutputVariables.YEAR.value] = np.ones(len(events), dtype=int) * year
 
-    # append label_names to events and set them to 0 or 1
-    for class_name in label_names:
+    # append output_label_names to events and set them to 0 or 1
+    for class_name in output_label_names:
         if class_name == class_label:
-            events[Labels(class_name).value] = np.ones(len(events))
+            events[OutputVariables(class_name).value] = np.ones(len(events))
         else:
-            events[Labels(class_name).value] = np.zeros(len(events))
+            events[OutputVariables(class_name).value] = np.zeros(len(events))
 
     events["event_weight"] = np.ones(len(events), dtype=float) * sample_weight
     if is_mc:
@@ -64,17 +63,16 @@ def process_batch(
             [mc_w, events.pileup_weight, events.event_weight],
             axis=0,
         )
-    events[Spectators.EVENT_WEIGHT.value] = events["event_weight"]
+    events[OutputVariables.EVENT_WEIGHT.value] = events["event_weight"]
 
     logger.info(
         "Initial events: %s (weighted: %s)", len(events), ak.sum(events.event_weight)
     )
-    if cutflow is not None:
-        cutname = "initial_events"
-        update_cutflow(cutflow, cutname, np.ones(len(events)), events.event_weight)
+    cutname = "initial_events"
+    update_cutflow(cutflow, cutname, np.ones(len(events)), events.event_weight)
 
     # start adding jet features
-    events[Features.JET_NUM.value] = ak.num(events.jet_pt, axis=-1)
+    events[OutputVariables.JET_NUM.value] = ak.num(events.jet_pt, axis=-1)
     # build 4-momentum vectors for jets
     jets_p4 = ak.zip(
         {k: events[f"jet_{k}"] for k in ["jvttag", *kin_labels.keys()]},
@@ -83,17 +81,17 @@ def process_batch(
     # save jet kinematics
     for f, v in zip(
         [
-            Spectators.JET_PT,
-            Spectators.JET_ETA,
-            Spectators.JET_PHI,
-            Spectators.JET_MASS,
+            OutputVariables.JET_PT,
+            OutputVariables.JET_ETA,
+            OutputVariables.JET_PHI,
+            OutputVariables.JET_MASS,
         ],
         [jets_p4.pt, jets_p4.eta, jets_p4.phi, jets_p4.mass],
     ):
         events[f.value] = v
     # convert jets to cartesian coordinates and save them
     for f, v in zip(
-        [Features.JET_PX, Features.JET_PY, Features.JET_PZ],
+        [OutputVariables.JET_PX, OutputVariables.JET_PY, OutputVariables.JET_PZ],
         [jets_p4.px, jets_p4.py, jets_p4.pz],
     ):
         events[f.value] = v
@@ -102,12 +100,9 @@ def process_batch(
     if not selections:
         logger.info("No objects selection applied.")
         out_fields = get_common(
-            events.fields, [*label_names, *feature_names, *spectator_names]
+            events.fields, [*output_variable_names, *output_label_names]
         )
-        if cutflow is None:
-            return events[out_fields]
-        else:
-            return events[out_fields], cutflow
+        return events[out_fields], cutflow
 
     ############################################
     # Train selections
@@ -135,19 +130,13 @@ def process_batch(
             len(events),
             ak.sum(events.event_weight),
         )
-        if cutflow is not None:
-            cutname = "_".join(["triggers", f"pass_{trig_op.lower()}"]).replace(
-                ".", "p"
-            )
-            update_cutflow(cutflow, cutname, passed_trigs_mask, events.event_weight)
+        cutname = "_".join(["triggers", f"pass_{trig_op.lower()}"]).replace(".", "p")
+        update_cutflow(cutflow, cutname, passed_trigs_mask, events.event_weight)
         if len(events) == 0:
             out_fields = get_common(
-                events.fields, [*label_names, *feature_names, *spectator_names]
+                events.fields, [*output_variable_names, *output_label_names]
             )
-            if cutflow is None:
-                return events[out_fields]
-            else:
-                return events[out_fields], cutflow
+            return events[out_fields], cutflow
 
     # apply jet train selections
     if "jets" in train_selections:
@@ -175,25 +164,20 @@ def process_batch(
             len(events),
             ak.sum(events.event_weight),
         )
-
-        if cutflow is not None:
-            cutname = "_".join(
-                [
-                    "jets",
-                    f"pt_{jet_selection['pt']['value']}",
-                    f"eta_{jet_selection['eta']['value']}",
-                    f"count_{jet_selection['count']['value']}",
-                ]
-            ).replace(".", "p")
-            update_cutflow(cutflow, cutname, valid_events_mask, events.event_weight)
+        cutname = "_".join(
+            [
+                "jets",
+                f"pt_{jet_selection['pt']['value']}",
+                f"eta_{jet_selection['eta']['value']}",
+                f"count_{jet_selection['count']['value']}",
+            ]
+        ).replace(".", "p")
+        update_cutflow(cutflow, cutname, valid_events_mask, events.event_weight)
         if len(events) == 0:
             out_fields = get_common(
-                events.fields, [*label_names, *feature_names, *spectator_names]
+                events.fields, [*output_variable_names, *output_label_names]
             )
-            if cutflow is None:
-                return events[out_fields]
-            else:
-                return events[out_fields], cutflow
+            return events[out_fields], cutflow
 
         if "btagging" in jet_selection:
             bjet_selection = jet_selection["btagging"]
@@ -202,7 +186,7 @@ def process_batch(
                 btagger = format_btagger_model_name(
                     btagger, bjet_selection["efficiency"]
                 )
-                events[Features.JET_NBTAGS.value] = ak.sum(
+                events[OutputVariables.JET_NBTAGS.value] = ak.sum(
                     events[f"jet_btag_{btagger}"], axis=1
                 )
                 valid_bjets = select_n_bjets_events(
@@ -222,28 +206,19 @@ def process_batch(
                     len(events),
                     ak.sum(events.event_weight),
                 )
-                if cutflow is not None:
-                    cutname = "_".join(
-                        [
-                            "bjets",
-                            f"tagger_{btagger}",
-                            f"count_{bjet_selection['count']['value']}",
-                        ]
-                    ).replace(".", "p")
-                    update_cutflow(
-                        cutflow, cutname, valid_events_mask, events.event_weight
-                    )
+                cutname = "_".join(
+                    [
+                        "bjets",
+                        f"tagger_{btagger}",
+                        f"count_{bjet_selection['count']['value']}",
+                    ]
+                ).replace(".", "p")
+                update_cutflow(cutflow, cutname, valid_events_mask, events.event_weight)
                 if len(events) == 0:
                     out_fields = get_common(
-                        events.fields, [*label_names, *feature_names, *spectator_names]
+                        events.fields, [*output_variable_names, *output_label_names]
                     )
-                    if cutflow is None:
-                        return events[out_fields]
-                    else:
-                        return (
-                            events[out_fields],
-                            cutflow,
-                        )
+                    return events[out_fields], cutflow
 
                 # select and save diHiggs candidates jets
                 jets_p4 = ak.zip(
@@ -259,28 +234,30 @@ def process_batch(
                 events["hh_jet_idx"] = hh_jet_idx
                 events["non_hh_jet_idx"] = non_hh_jet_idx
                 four_bjets_p4 = jets_p4[events.hh_jet_idx]
-                events[Features.M_4B.value] = ak.sum(four_bjets_p4, axis=1).mass * GeV
-                events[Features.PT_4B.value] = (
+                events[OutputVariables.M_4B.value] = (
+                    ak.sum(four_bjets_p4, axis=1).mass * GeV
+                )
+                events[OutputVariables.PT_4B.value] = (
                     ak.sum(four_bjets_p4, axis=1, keepdims=True).pt * GeV
                 )
-                events[Features.ETA_4B.value] = ak.sum(
+                events[OutputVariables.ETA_4B.value] = ak.sum(
                     four_bjets_p4, axis=1, keepdims=True
                 ).eta
-                events[Features.PHI_4B.value] = ak.sum(
+                events[OutputVariables.PHI_4B.value] = ak.sum(
                     four_bjets_p4, axis=1, keepdims=True
                 ).phi
                 # calculate bb features
-                if Features.BB_DM.value in feature_names:
-                    events[Features.BB_DM.value] = (
+                if OutputVariables.BB_DM.value in output_variable_names:
+                    events[OutputVariables.BB_DM.value] = (
                         make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass)
                         * GeV
                     )
-                if Features.BB_DR.value in feature_names:
-                    events[Features.BB_DR.value] = make_4jet_comb_array(
+                if OutputVariables.BB_DR.value in output_variable_names:
+                    events[OutputVariables.BB_DR.value] = make_4jet_comb_array(
                         four_bjets_p4, lambda x, y: x.deltaR(y)
                     )
-                if Features.BB_DETA.value in feature_names:
-                    events[Features.BB_DETA.value] = make_4jet_comb_array(
+                if OutputVariables.BB_DETA.value in output_variable_names:
+                    events[OutputVariables.BB_DETA.value] = make_4jet_comb_array(
                         four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
                     )
             else:
@@ -295,96 +272,91 @@ def process_batch(
                     with_name="Momentum4D",
                 )
                 four_bjets_p4 = jets_p4[highest_btag_jets]
-                events[Features.M_4B.value] = ak.sum(four_bjets_p4, axis=1).mass * GeV
-                events[Features.PT_4B.value] = (
+                events[OutputVariables.M_4B.value] = (
+                    ak.sum(four_bjets_p4, axis=1).mass * GeV
+                )
+                events[OutputVariables.PT_4B.value] = (
                     ak.sum(four_bjets_p4, axis=1, keepdims=True).pt * GeV
                 )
-                events[Features.ETA_4B.value] = ak.sum(
+                events[OutputVariables.ETA_4B.value] = ak.sum(
                     four_bjets_p4, axis=1, keepdims=True
                 ).eta
-                events[Features.PHI_4B.value] = ak.sum(
+                events[OutputVariables.PHI_4B.value] = ak.sum(
                     four_bjets_p4, axis=1, keepdims=True
                 ).phi
                 # calculate bb features
-                if Features.BB_DM.value in feature_names:
-                    events[Features.BB_DM.value] = (
+                if OutputVariables.BB_DM.value in output_variable_names:
+                    events[OutputVariables.BB_DM.value] = (
                         make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass)
                         * GeV
                     )
-                if Features.BB_DR.value in feature_names:
-                    events[Features.BB_DR.value] = make_4jet_comb_array(
+                if OutputVariables.BB_DR.value in output_variable_names:
+                    events[OutputVariables.BB_DR.value] = make_4jet_comb_array(
                         four_bjets_p4, lambda x, y: x.deltaR(y)
                     )
-                if Features.BB_DETA.value in feature_names:
-                    events[Features.BB_DETA.value] = make_4jet_comb_array(
+                if OutputVariables.BB_DETA.value in output_variable_names:
+                    events[OutputVariables.BB_DETA.value] = make_4jet_comb_array(
                         four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
                     )
 
     ############################################
     # Analysis selections
     ############################################
-    analysis_events = analysis_process_batch(
-        events[events.fields], analysis_selections, is_mc, year
+    analysis_events, analysis_cutflow = analysis_process_batch(
+        events[events.fields],
+        analysis_selections,
+        is_mc=is_mc,
+        year=year,
+        return_cutflow=True,
     )
+    cutflow.update(analysis_cutflow)
+
+    analysis_bjet_selection = analysis_selections["jets"]["btagging"]
+    analysis_btagger = format_btagger_model_name(
+        analysis_bjet_selection["model"], analysis_bjet_selection["efficiency"]
+    )
+    analysis_btag_count = analysis_bjet_selection["count"]["value"]
+
+    # TODO: Make this dynamic to handle all the possible pairing options
+    H1_reco_p4_name = find_matching_field(
+        analysis_events, f"H1_{analysis_btag_count}btags_{analysis_btagger}", "p4"
+    )
+    if H1_reco_p4_name is not None:
+        for var in kin_labels:
+            events[OutputVariables[f"H1_RECO_{var.upper()}"].value] = getattr(
+                analysis_events[H1_reco_p4_name], var
+            )
+    H2_reco_p4_name = find_matching_field(
+        analysis_events, f"H2_{analysis_btag_count}btags_{analysis_btagger}", "p4"
+    )
+    if H2_reco_p4_name is not None:
+        for var in kin_labels:
+            events[OutputVariables[f"H2_RECO_{var.upper()}"].value] = getattr(
+                analysis_events[H2_reco_p4_name], var
+            )
+    HH_reco_p4_name = find_matching_field(
+        analysis_events, f"H2_{analysis_btag_count}btags_{analysis_btagger}", "p4"
+    )
+    if HH_reco_p4_name is not None:
+        for var in kin_labels:
+            events[OutputVariables[f"HH_RECO_{var.upper()}"].value] = getattr(
+                analysis_events[HH_reco_p4_name], var
+            )
 
     X_Wt_discriminant_name = find_matching_field(analysis_events, "X_Wt", "discrim")
     if X_Wt_discriminant_name is not None:
-        events[Spectators.X_WT.value] = analysis_events[X_Wt_discriminant_name]
-    else:
-        events[Spectators.X_WT.value] = ak.values_astype(
-            ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
-            np.float32,
-        )
+        events[OutputVariables.X_WT.value] = analysis_events[X_Wt_discriminant_name]
 
     delta_eta_HH_name = find_matching_field(analysis_events, "deltaeta_HH", "discrim")
     if delta_eta_HH_name is not None:
-        events[Spectators.DELTAETA_HH.value] = analysis_events[delta_eta_HH_name]
-    else:
-        events[Spectators.DELTAETA_HH.value] = ak.values_astype(
-            ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
-            np.float32,
-        )
+        events[OutputVariables.DELTAETA_HH.value] = analysis_events[delta_eta_HH_name]
 
     X_HH_discrim_name = find_matching_field(analysis_events, "X_HH", "discrim")
     if X_HH_discrim_name is not None:
-        events[Spectators.X_HH.value] = analysis_events[X_HH_discrim_name]
-    else:
-        events[Spectators.X_HH.value] = ak.values_astype(
-            ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
-            np.float32,
-        )
-
-    if cutflow is not None:
-        analysis_bjet_selection = analysis_selections["jets"]["btagging"]
-        analysis_btagger = format_btagger_model_name(
-            analysis_bjet_selection["model"], analysis_bjet_selection["efficiency"]
-        )
-        analysis_btag_count = analysis_bjet_selection["count"]["value"]
-        cutname = "_".join(
-            [
-                "analysis",
-                "bjets",
-                f"tagger_{analysis_btagger}",
-                f"count_{analysis_btag_count}",
-            ]
-        ).replace(".", "p")
-        valid_events_mask = ~ak.is_none(
-            analysis_events[
-                f"valid_{analysis_btag_count}btags_{analysis_btagger}_jets"
-            ],
-            axis=0,
-        )
-        update_cutflow(
-            cutflow, cutname, valid_events_mask, events.event_weight[valid_events_mask]
-        )
-
-    # TODO: add HH information from the analysis
+        events[OutputVariables.X_HH.value] = analysis_events[X_HH_discrim_name]
 
     out_fields = get_common(
-        events.fields, [*label_names, *feature_names, *spectator_names]
+        events.fields, [*output_variable_names, *output_label_names]
     )
 
-    if cutflow is None:
-        return events[out_fields]
-    else:
-        return events[out_fields], cutflow
+    return events[out_fields], cutflow

@@ -1,5 +1,7 @@
 {
-    "features": [
+    "variables": [
+        "event_number",
+        "event_weight",
         "jet_px",
         "jet_py",
         "jet_pz",
@@ -14,16 +16,7 @@
         "phi_4b",
         "bb_dM",
         "bb_dR",
-        "bb_dEta"
-    ],
-    "labels": [
-        "label_HH",
-        "label_ttbar",
-        "label_QCD"
-    ],
-    "spectators": [
-        "event_number",
-        "event_weight",
+        "bb_dEta",
         "jet_pt",
         "jet_eta",
         "jet_phi",
@@ -35,6 +28,31 @@
         "hh_truth_mass",
         "hh_truth_pt",
         "hh_truth_eta",
-        "hh_truth_phi"
+        "hh_truth_phi",
+        "h1_truth_mass",
+        "h1_truth_pt",
+        "h1_truth_eta",
+        "h1_truth_phi",
+        "h2_truth_mass",
+        "h2_truth_pt",
+        "h2_truth_eta",
+        "h2_truth_phi",
+        "h1_reco_pt",
+        "h1_reco_eta",
+        "h1_reco_phi",
+        "h1_reco_mass",
+        "h2_reco_pt",
+        "h2_reco_eta",
+        "h2_reco_phi",
+        "h2_reco_mass",
+        "hh_reco_mass",
+        "hh_reco_pt",
+        "hh_reco_eta",
+        "hh_reco_phi"
+    ],
+    "labels": [
+        "label_HH",
+        "label_ttbar",
+        "label_QCD"
     ]
 }

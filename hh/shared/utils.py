@@ -13,7 +13,7 @@ from pathlib import Path
 import logging, coloredlogs
 from functools import reduce
 from collections import defaultdict
-from hh.dump.output import Features, Labels
+from hh.dump.output import OutputVariables
 from hh.shared.error import propagate_errors
 
 
@@ -256,34 +256,34 @@ def resolve_project_paths(config, path_delimiter="path"):
 
 def get_feature_types(features: list = None):
     type_dict = {}
-    type_dict[Features.JET_NUM.value] = "i8"
-    type_dict[Features.JET_NBTAGS.value] = "i8"
-    type_dict[Features.JET_BTAG.value] = "var * int8"
-    type_dict[Features.JET_DL1DV01_PB.value] = "var * float32"
-    type_dict[Features.JET_DL1DV01_PC.value] = "var * float32"
-    type_dict[Features.JET_DL1DV01_PU.value] = "var * float32"
-    type_dict[Features.JET_BTAG_GN2V01_PB.value] = "var * float32"
-    type_dict[Features.JET_BTAG_GN2V01_PC.value] = "var * float32"
-    type_dict[Features.JET_BTAG_GN2V01_PU.value] = "var * float32"
-    type_dict[Features.JET_PT.value] = "var * float32"
-    type_dict[Features.JET_ETA.value] = "var * float32"
-    type_dict[Features.JET_PHI.value] = "var * float32"
-    type_dict[Features.JET_MASS.value] = "var * float32"
-    type_dict[Features.JET_PX.value] = "var * float32"
-    type_dict[Features.JET_PY.value] = "var * float32"
-    type_dict[Features.JET_PZ.value] = "var * float32"
-    type_dict[Features.M_4B.value] = "f4"
-    type_dict[Features.BB_DM.value] = ("f8", 6)
-    type_dict[Features.BB_DR.value] = ("f8", 6)
-    type_dict[Features.BB_DETA.value] = ("f8", 6)
-    type_dict[Features.DELTAETA_HH.value] = "f4"
-    type_dict[Features.X_WT.value] = "f4"
-    type_dict[Features.X_HH.value] = "f4"
-    type_dict[Features.EVENT_WEIGHT.value] = "float64"
-    type_dict[Features.EVENT_NUMBER.value] = "i8"
-    type_dict[Labels.LABEL_HH.value] = "i4"
-    type_dict[Labels.LABEL_TTBAR.value] = "i4"
-    type_dict[Labels.LABEL_QCD.value] = "i4"
+    type_dict[OutputVariables.JET_NUM.value] = "i8"
+    type_dict[OutputVariables.JET_NBTAGS.value] = "i8"
+    type_dict[OutputVariables.JET_BTAG.value] = "var * int8"
+    type_dict[OutputVariables.JET_DL1DV01_PB.value] = "var * float32"
+    type_dict[OutputVariables.JET_DL1DV01_PC.value] = "var * float32"
+    type_dict[OutputVariables.JET_DL1DV01_PU.value] = "var * float32"
+    type_dict[OutputVariables.JET_BTAG_GN2V01_PB.value] = "var * float32"
+    type_dict[OutputVariables.JET_BTAG_GN2V01_PC.value] = "var * float32"
+    type_dict[OutputVariables.JET_BTAG_GN2V01_PU.value] = "var * float32"
+    type_dict[OutputVariables.JET_PT.value] = "var * float32"
+    type_dict[OutputVariables.JET_ETA.value] = "var * float32"
+    type_dict[OutputVariables.JET_PHI.value] = "var * float32"
+    type_dict[OutputVariables.JET_MASS.value] = "var * float32"
+    type_dict[OutputVariables.JET_PX.value] = "var * float32"
+    type_dict[OutputVariables.JET_PY.value] = "var * float32"
+    type_dict[OutputVariables.JET_PZ.value] = "var * float32"
+    type_dict[OutputVariables.M_4B.value] = "f4"
+    type_dict[OutputVariables.BB_DM.value] = ("f8", 6)
+    type_dict[OutputVariables.BB_DR.value] = ("f8", 6)
+    type_dict[OutputVariables.BB_DETA.value] = ("f8", 6)
+    type_dict[OutputVariables.DELTAETA_HH.value] = "f4"
+    type_dict[OutputVariables.X_WT.value] = "f4"
+    type_dict[OutputVariables.X_HH.value] = "f4"
+    type_dict[OutputVariables.EVENT_WEIGHT.value] = "float64"
+    type_dict[OutputVariables.EVENT_NUMBER.value] = "i8"
+    type_dict[OutputVariables.LABEL_HH.value] = "i4"
+    type_dict[OutputVariables.LABEL_TTBAR.value] = "i4"
+    type_dict[OutputVariables.LABEL_QCD.value] = "i4"
 
     # filter out features that are not in the features list
     if features:
