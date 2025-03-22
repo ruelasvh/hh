@@ -2,7 +2,8 @@
     "output": {
         "path": "hh/dump/configs/variables.json",
         "max_jets": 20,
-        "pad_value": "nan"
+        "pad_value": "nan",
+        "sort_by": "jet_btag_GN2v01_pb"
     },
     "samples": [
         {

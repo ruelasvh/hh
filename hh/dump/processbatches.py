@@ -393,10 +393,16 @@ def process_batch(
 
     max_jets = output["max_jets"]
     pad_value = output["pad_value"]
+    sort_by = output.get("sort_by", None)
     if max_jets > 0:
+        sort_idx = ak.argsort(events[sort_by], ascending=False) if sort_by else None
         jet_field_names = [f for f in events.fields if f.startswith("jet_")]
         for f in jet_field_names:
-            events[f] = truncate_jets(events[f], max_jets, pad_value)
+            events[f] = truncate_jets(
+                events[f][sort_idx] if sort_idx is not None else events[f],
+                max_jets,
+                pad_value,
+            )
 
     out_fields = get_common(
         events.fields, [*output_variable_names, *output_label_names]
