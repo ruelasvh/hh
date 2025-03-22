@@ -10,6 +10,7 @@
         "jet_btag_GN2v01_pb",
         "jet_btag_GN2v01_pc",
         "jet_btag_GN2v01_pu",
+        "jet_btag_GN2v01_discriminant",
         "m_4b",
         "pt_4b",
         "eta_4b",

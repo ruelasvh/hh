@@ -10,6 +10,7 @@ from hh.shared.utils import (
     update_cutflow,
     find_matching_field,
     truncate_jets,
+    calculate_discrim,
 )
 from hh.shared.labels import kin_labels
 from hh.dump.output import OutputVariables
@@ -183,6 +184,13 @@ def process_batch(
         if "btagging" in jet_selection:
             bjet_selection = jet_selection["btagging"]
             btagger = format_btagger_model_name(bjet_selection["model"])
+            events[OutputVariables(f"jet_btag_{btagger}_discriminant").value] = (
+                calculate_discrim(
+                    events[OutputVariables(f"jet_btag_{btagger}_pb").value],
+                    events[OutputVariables(f"jet_btag_{btagger}_pc").value],
+                    events[OutputVariables(f"jet_btag_{btagger}_pu").value],
+                )
+            )
             if "efficiency" in bjet_selection:
                 btagger = format_btagger_model_name(
                     btagger, bjet_selection["efficiency"]
