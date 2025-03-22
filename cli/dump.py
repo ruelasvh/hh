@@ -92,7 +92,7 @@ def process_sample_worker(
     class_label: str,
     selections: dict,
     columns: dict,
-    features: dict,
+    output: dict,
     args: argparse.Namespace,
 ) -> None:
     is_mc = sample_metadata["isMC"]
@@ -128,7 +128,7 @@ def process_sample_worker(
         processed_batch, cutflow = process_batch(
             batch_events,
             selections,
-            features,
+            output,
             class_label,
             sample_weight,
             is_mc,
@@ -183,7 +183,7 @@ def main():
 
     if "path" in config["output"]:
         with open(config["output"]["path"]) as ff:
-            config["output"] = json.load(ff)
+            config["output"].update(json.load(ff))
 
     assert OutputVariables.contains_all(
         config["output"]["variables"]
@@ -193,7 +193,7 @@ def main():
         config["output"]["variables"]
     ), f"Invalid labels: {set(config['output']['labels']) - set(OutputVariables.get_all())}"
 
-    samples, selections, branches, features = (
+    samples, selections, branches, output = (
         config["samples"],
         config["selections"],
         config["branches"],
@@ -209,7 +209,7 @@ def main():
             sample["class_label"],
             selections,
             branches,
-            features,
+            output,
             args,
         )
         for sample in samples

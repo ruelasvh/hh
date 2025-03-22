@@ -256,8 +256,8 @@ def resolve_project_paths(config, path_delimiter="path"):
 
 def get_feature_types(features: list = None):
     type_dict = {}
-    type_dict[OutputVariables.JET_NUM.value] = "i8"
-    type_dict[OutputVariables.JET_NBTAGS.value] = "i8"
+    type_dict[OutputVariables.N_JETS.value] = "i8"
+    type_dict[OutputVariables.N_BTAGS.value] = "i8"
     type_dict[OutputVariables.JET_BTAG.value] = "var * int8"
     type_dict[OutputVariables.JET_DL1DV01_PB.value] = "var * float32"
     type_dict[OutputVariables.JET_DL1DV01_PC.value] = "var * float32"
@@ -495,3 +495,9 @@ def merge_cutflows(acc, it):
         it_val = it.get(k, 0)
         merged[k] = acc_val + it_val
     return merged
+
+
+def truncate_jets(x: ak.Array, max: int = 20, pad_value: float = np.nan):
+    x = ak.pad_none(x, max, axis=1, clip=True)
+    x = ak.fill_none(x, float(pad_value))
+    return ak.from_regular(x)

@@ -1,6 +1,8 @@
 {
     "output": {
-        "path": "hh/dump/configs/variables.json"
+        "path": "hh/dump/configs/variables.json",
+        "max_jets": 20,
+        "pad_value": "nan"
     },
     "samples": [
         {

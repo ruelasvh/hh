@@ -9,6 +9,7 @@ from hh.shared.utils import (
     get_common,
     update_cutflow,
     find_matching_field,
+    truncate_jets,
 )
 from hh.shared.labels import kin_labels
 from hh.dump.output import OutputVariables
@@ -28,7 +29,7 @@ vector.register_awkward()
 def process_batch(
     events: ak.Record,
     selections: dict,
-    outputs: dict,
+    output: dict,
     class_label: str,
     sample_weight: float = 1.0,
     is_mc: bool = True,
@@ -37,8 +38,8 @@ def process_batch(
     """Apply analysis regions selection and append info to events."""
 
     # get features and class names to be saved
-    output_variable_names = outputs["variables"]
-    output_label_names = outputs["labels"]
+    output_variable_names = output["variables"]
+    output_label_names = output["labels"]
     train_selections = selections["training"]
     analysis_selections = selections["analysis"]
     cutflow = {}
@@ -72,7 +73,7 @@ def process_batch(
     update_cutflow(cutflow, cutname, np.ones(len(events)), events.event_weight)
 
     # start adding jet features
-    events[OutputVariables.JET_NUM.value] = ak.num(events.jet_pt, axis=-1)
+    events[OutputVariables.N_JETS.value] = ak.num(events.jet_pt, axis=-1)
     # build 4-momentum vectors for jets
     jets_p4 = ak.zip(
         {k: events[f"jet_{k}"] for k in ["jvttag", *kin_labels.keys()]},
@@ -186,7 +187,7 @@ def process_batch(
                 btagger = format_btagger_model_name(
                     btagger, bjet_selection["efficiency"]
                 )
-                events[OutputVariables.JET_NBTAGS.value] = ak.sum(
+                events[OutputVariables.N_BTAGS.value] = ak.sum(
                     events[f"jet_btag_{btagger}"], axis=1
                 )
                 valid_bjets = select_n_bjets_events(
@@ -389,6 +390,13 @@ def process_batch(
             ak.mask(events.event_number, np.zeros(len(events), dtype=bool)),
             np.float32,
         )
+
+    max_jets = output["max_jets"]
+    pad_value = output["pad_value"]
+    if max_jets > 0:
+        jet_field_names = [f for f in events.fields if f.startswith("jet_")]
+        for f in jet_field_names:
+            events[f] = truncate_jets(events[f], max_jets, pad_value)
 
     out_fields = get_common(
         events.fields, [*output_variable_names, *output_label_names]
