@@ -501,3 +501,10 @@ def truncate_jets(x: ak.Array, max: int = 20, pad_value: float = np.nan):
     x = ak.pad_none(x, max, axis=1, clip=True)
     x = ak.fill_none(x, float(pad_value))
     return ak.from_regular(x)
+
+
+def calculate_discrim(pb, pc, pu, fc=0.018):
+    """
+    Calculate the btag discriminat using the output of the btagging algorithm.
+    """
+    return np.log(pb / (fc * pc + (1 - fc) * pu))
