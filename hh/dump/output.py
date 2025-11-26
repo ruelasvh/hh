@@ -7,6 +7,7 @@ class OutputVariables(Enum):
     LABEL_HH = "label_HH"
     LABEL_TTBAR = "label_ttbar"
     LABEL_QCD = "label_QCD"
+    LABEL_PAIRING = "label_pairing"
     JET_PX = "jet_px"
     JET_PY = "jet_py"
     JET_PZ = "jet_pz"

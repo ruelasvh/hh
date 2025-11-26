@@ -19,6 +19,7 @@ from hh.nonresonantresolved.selection import (
     select_n_jets_events,
     select_n_bjets_events,
     select_hh_jet_candidates,
+    get_correct_pairing,
 )
 from hh.nonresonantresolved.processbatches import (
     process_batch as analysis_process_batch,
@@ -271,16 +272,18 @@ def process_batch(
                     )
             else:
                 # Form Higgs candidates from jets with highest b-tagging probabilities
-                highest_btag_jets = ak.argsort(
+                btag_jets_descending = ak.argsort(
                     events[f"jet_btag_{btagger}_pb"], axis=1, ascending=False
-                )[:, :4]
+                )
                 jets_p4 = ak.zip(
                     {
                         **{k: events[f"jet_{k}"] for k in kin_labels},
+                        "btag": events[f"jet_btag_{btagger}_pb"],
                     },
                     with_name="Momentum4D",
                 )
-                four_bjets_p4 = jets_p4[highest_btag_jets]
+                top_btag_indices = btag_jets_descending[:, :4]
+                four_bjets_p4 = jets_p4[top_btag_indices]
                 events[OutputVariables.M_4B.value] = (
                     ak.sum(four_bjets_p4, axis=1).mass * GeV
                 )
@@ -306,6 +309,12 @@ def process_batch(
                 if OutputVariables.BB_DETA.value in output_variable_names:
                     events[OutputVariables.BB_DETA.value] = make_4jet_comb_array(
                         four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
+                    )
+
+                if is_mc:
+                    ###### Truth match the H1 and H2 to get correct pairing ######
+                    events[OutputVariables.LABEL_PAIRING.value] = get_correct_pairing(
+                        events.jet_truth_H_parent_mask[top_btag_indices]
                     )
 
     ############################################

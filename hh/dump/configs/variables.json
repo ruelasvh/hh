@@ -55,5 +55,6 @@
         "label_HH",
         "label_ttbar",
         "label_QCD"
-    ]
+    ],
+    "label_pairing": "label_pairing"
 }

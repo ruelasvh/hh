@@ -215,6 +215,58 @@ def select_correct_hh_pair_events(h1_jets_idx, h2_jets_idx, jet_truth_H_parent_m
     return correct_hh_pairs_mask
 
 
+def get_correct_pairing(higgs_labels, invalid_label=np.nan):
+    """
+    Determine the correct pairing (0, 1, 2, or nan) based on truth-matched Higgs labels.
+
+    Args:
+        higgs_labels: Array of shape (n_events, 4) with values:
+            - 1 or 2: truth-matched to Higgs 1 or 2
+            - 0: not truth-matched
+            - 3: matched to both (ambiguous)
+
+    Returns:
+        Array of shape (n_events,) with values:
+            - 0: pairing 0 (pairs 0,5: jets 01,23)
+            - 1: pairing 1 (pairs 1,4: jets 02,13)
+            - 2: pairing 2 (pairs 2,3: jets 03,12)
+            - nan: invalid/ambiguous (if any jet is 0 or 3, or pattern doesn't match)
+    """
+    # Fill None values with 0
+    labels = ak.fill_none(higgs_labels, 0)
+
+    # Check if all jets have valid labels (only 1s and 2s)
+    valid_mask = ak.all((labels == 1) | (labels == 2), axis=1)
+
+    # Extract individual jet labels
+    j0 = labels[:, 0]
+    j1 = labels[:, 1]
+    j2 = labels[:, 2]
+    j3 = labels[:, 3]
+
+    # Check each pairing condition
+    # Pairing 0: jets (0,1) and jets (2,3)
+    pairing_0 = (j0 == j1) & (j2 == j3) & (j0 != j2)
+
+    # Pairing 1: jets (0,2) and jets (1,3)
+    pairing_1 = (j0 == j2) & (j1 == j3) & (j0 != j1)
+
+    # Pairing 2: jets (0,3) and jets (1,2)
+    pairing_2 = (j0 == j3) & (j1 == j2) & (j0 != j1)
+
+    # Combine conditions with valid mask
+    pairing_0 = pairing_0 & valid_mask
+    pairing_1 = pairing_1 & valid_mask
+    pairing_2 = pairing_2 & valid_mask
+
+    # Create result array: default to invalid_label (nan)
+    result = ak.where(
+        pairing_0, 0, ak.where(pairing_1, 1, ak.where(pairing_2, 2, invalid_label))
+    )
+
+    return result
+
+
 def select_truth_matched_jets(
     truth_matched_jets_mask, valid_jets_mask, n_truth_matched=4
 ):
