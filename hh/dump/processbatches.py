@@ -41,7 +41,7 @@ def process_batch(
 
     # get features and class names to be saved
     output_variable_names = output["variables"]
-    output_label_names = output["labels"]
+    output_label_names = output["labels"] + [output["label_pairing"]]
     train_selections = selections["training"]
     analysis_selections = selections["analysis"]
     cutflow = {}
@@ -200,8 +200,8 @@ def process_batch(
                     events[f"jet_btag_{btagger}"], axis=1
                 )
                 valid_bjets = select_n_bjets_events(
-                    jets=valid_jets,
-                    btags=events[f"jet_btag_{btagger}"][valid_jets],
+                    jet_mask=valid_jets,
+                    btag_mask=ak.mask(events[f"jet_btag_{btagger}"], valid_events_mask),
                     selection=bjet_selection,
                 )
                 valid_events_mask = ~ak.is_none(valid_bjets, axis=0)
@@ -314,7 +314,14 @@ def process_batch(
                 if is_mc:
                     ###### Truth match the H1 and H2 to get correct pairing ######
                     events[OutputVariables.LABEL_PAIRING.value] = get_correct_pairing(
-                        events.jet_truth_H_parent_mask[top_btag_indices]
+                        events.jet_truth_H_parent_mask[top_btag_indices],
+                        invalid_label=-1,
+                    )
+                    logger.info(
+                        "Number of incorrect HH jet pairings: %s (fraction: %s)",
+                        ak.sum(events[OutputVariables.LABEL_PAIRING.value] < 0),
+                        ak.sum(events[OutputVariables.LABEL_PAIRING.value] < 0)
+                        / len(events),
                     )
 
     ############################################

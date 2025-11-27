@@ -56,8 +56,8 @@ def select_n_jets_events(
 
 
 def select_n_bjets_events(
-    jets,
-    btags,
+    jet_mask,
+    btag_mask,
     selection,
 ):
     """Selects events by applying the cuts specified in the selection.
@@ -74,9 +74,11 @@ def select_n_bjets_events(
         selection["count"]["operator"],
         selection["count"]["value"],
     )
-    condition_mask = get_op(n_btags_operator)(ak.sum(btags, axis=1), n_btags_value)
-    valid_jets_mask = ak.mask(jets, condition_mask)
-    return valid_jets_mask
+    btag_mask = ak.values_astype(btag_mask, bool)
+    valid_jet_mask = jet_mask & btag_mask
+    event_mask = get_op(n_btags_operator)(ak.sum(valid_jet_mask, axis=1), n_btags_value)
+    valid_jet_mask = ak.mask(valid_jet_mask, event_mask)
+    return valid_jet_mask
 
 
 def select_hh_jet_candidates(jets, valid_jets_mask, n_jets=4):

@@ -27,6 +27,7 @@ from hh.nonresonantresolved.selection import (
     select_correct_hh_pair_events,
     select_discrim_events,
     select_vbf_events,
+    get_correct_pairing,
 )
 from hh.shared.clahh_utils import get_inferences, get_deepset_inputs
 
@@ -150,8 +151,8 @@ def process_batch(
                 )
                 ## apply 2 b-tag pre-selection ##
                 valid_jets_2bjets_mask = select_n_bjets_events(
-                    jets=valid_jets_mask,
-                    btags=ak.mask(jets_p4.btag, valid_jets_mask),
+                    jet_mask=valid_jets_mask,
+                    btag_mask=ak.mask(jets_p4.btag, valid_events_mask),
                     selection={**i_bjets_sel, "count": {"operator": ">=", "value": 2}},
                 )
                 events[f"valid_2btags_{btagger}_jets"] = valid_jets_2bjets_mask
@@ -217,8 +218,8 @@ def process_batch(
 
                 ## select and save events with >= n central b-jets ##
                 valid_btagged_jets = select_n_bjets_events(
-                    jets=valid_jets_2bjets_mask,
-                    btags=ak.mask(jets_p4.btag, valid_jets_2bjets_mask),
+                    jet_mask=valid_jets_2bjets_mask,
+                    btag_mask=ak.mask(jets_p4.btag, valid_events_mask),
                     selection=i_bjets_sel,
                 )
                 events[f"valid_{n_btags}btags_{btagger}_jets"] = valid_btagged_jets
@@ -342,6 +343,15 @@ def process_batch(
                     )
                     events[f"non_hh_{n_btags}btags_{btagger}_truth_matched_jet_idx"] = (
                         non_hh_truth_matched_jet_idx
+                    )
+                    ###### Truth match the H1 and H2 to get correct pairing ######
+                    correct_pairing = get_correct_pairing(
+                        events.jet_truth_H_parent_mask[hh_jet_idx], invalid_label=-1
+                    )
+                    logger.info(
+                        "Analysis number of incorrect HH jet pairings: %s (fraction: %s)",
+                        ak.sum(correct_pairing < 0),
+                        ak.sum(correct_pairing < 0) / ak.sum(valid_events_mask),
                     )
 
                 ####################################
