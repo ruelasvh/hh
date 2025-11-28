@@ -217,7 +217,7 @@ def select_correct_hh_pair_events(h1_jets_idx, h2_jets_idx, jet_truth_H_parent_m
     return correct_hh_pairs_mask
 
 
-def get_correct_pairing(higgs_labels, invalid_label=np.nan):
+def get_truth_HH_pairing(higgs_labels, invalid_label=np.nan):
     """
     Determine the correct pairing (0, 1, 2, or nan) based on truth-matched Higgs labels.
 

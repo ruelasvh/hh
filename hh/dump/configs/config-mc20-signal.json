@@ -87,7 +87,12 @@
                     "value": 4
                 },
                 "btagging": {
-                    "model": "GN2v01"
+                    "model": "GN2v01",
+                    "efficiency": "pb",
+                    "count": {
+                        "operator": ">=",
+                        "value": 4
+                    }
                 }
             }
         },

@@ -27,7 +27,7 @@ from hh.nonresonantresolved.selection import (
     select_correct_hh_pair_events,
     select_discrim_events,
     select_vbf_events,
-    get_correct_pairing,
+    get_truth_HH_pairing,
 )
 from hh.shared.clahh_utils import get_inferences, get_deepset_inputs
 
@@ -345,7 +345,7 @@ def process_batch(
                         non_hh_truth_matched_jet_idx
                     )
                     ###### Truth match the H1 and H2 to get correct pairing ######
-                    correct_pairing = get_correct_pairing(
+                    correct_pairing = get_truth_HH_pairing(
                         events.jet_truth_H_parent_mask[hh_jet_idx], invalid_label=-1
                     )
                     logger.info(

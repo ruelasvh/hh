@@ -19,7 +19,7 @@ from hh.nonresonantresolved.selection import (
     select_n_jets_events,
     select_n_bjets_events,
     select_hh_jet_candidates,
-    get_correct_pairing,
+    get_truth_HH_pairing,
 )
 from hh.nonresonantresolved.processbatches import (
     process_batch as analysis_process_batch,
@@ -157,7 +157,7 @@ def process_batch(
         valid_jets = valid_jets[valid_events_mask]
         events = events[valid_events_mask]
         logger.info(
-            "Events passing previous cut and %s %s jets with pT %s %s, |eta| %s %s and 2 b-tags: %s (weighted: %s)",
+            "Events passing previous cut and %s %s jets with pT %s %s, |eta| %s %s: %s (weighted: %s)",
             jet_selection["count"]["operator"],
             jet_selection["count"]["value"],
             jet_selection["pt"]["operator"],
@@ -192,137 +192,116 @@ def process_batch(
                     events[OutputVariables(f"jet_btag_{btagger}_pu").value],
                 )
             )
-            if "efficiency" in bjet_selection:
-                btagger = format_btagger_model_name(
-                    btagger, bjet_selection["efficiency"]
+            btagger = format_btagger_model_name(btagger, bjet_selection["efficiency"])
+            btag_mask = events[f"jet_btag_{btagger}"]
+
+            # apply b-jet selection
+            if bjet_selection["efficiency"] == "pb":
+                # Form Higgs candidates from jets with highest b-tagging probabilities
+                top_btag_indices = ak.argsort(btag_mask, axis=1, ascending=False)[
+                    :, : bjet_selection["count"]["value"]
+                ]
+                local_indices = ak.local_index(btag_mask, axis=1)
+                btag_mask = ak.any(
+                    local_indices[:, :, None] == top_btag_indices[:, None, :], axis=2
                 )
-                events[OutputVariables.N_BTAGS.value] = ak.sum(
-                    events[f"jet_btag_{btagger}"], axis=1
+
+            valid_bjets = select_n_bjets_events(
+                jet_mask=valid_jets,
+                btag_mask=btag_mask,
+                selection=bjet_selection,
+            )
+            valid_events_mask = ~ak.is_none(valid_bjets, axis=0)
+            valid_bjets = valid_bjets[valid_events_mask]
+            events = events[valid_events_mask]
+            logger.info(
+                "Events passing previous cut and %s %s b-tags with %s and %s efficiency: %s (weighted: %s)",
+                bjet_selection["count"]["operator"],
+                bjet_selection["count"]["value"],
+                bjet_selection["model"],
+                bjet_selection["efficiency"],
+                len(events),
+                ak.sum(events.event_weight),
+            )
+            cutname = "_".join(
+                [
+                    "bjets",
+                    f"tagger_{btagger}",
+                    f"count_{bjet_selection['count']['value']}",
+                ]
+            ).replace(".", "p")
+            update_cutflow(cutflow, cutname, valid_events_mask, events.event_weight)
+            if len(events) == 0:
+                out_fields = get_common(
+                    events.fields, [*output_variable_names, *output_label_names]
                 )
-                valid_bjets = select_n_bjets_events(
-                    jet_mask=valid_jets,
-                    btag_mask=ak.mask(events[f"jet_btag_{btagger}"], valid_events_mask),
-                    selection=bjet_selection,
+                return events[out_fields], cutflow
+
+            # select and save diHiggs candidates jets
+            jets_p4 = ak.zip(
+                {
+                    **{k: events[f"jet_{k}"] for k in kin_labels},
+                    "btag": events[f"jet_btag_{btagger}"],
+                },
+                with_name="Momentum4D",
+            )
+            hh_jet_idx, non_hh_jet_idx = select_hh_jet_candidates(
+                jets=jets_p4, valid_jets_mask=valid_bjets
+            )
+            events["hh_jet_idx"] = hh_jet_idx
+            events["non_hh_jet_idx"] = non_hh_jet_idx
+            four_bjets_p4 = jets_p4[events.hh_jet_idx]
+            events[OutputVariables.M_4B.value] = (
+                ak.sum(four_bjets_p4, axis=1).mass * GeV
+            )
+            events[OutputVariables.PT_4B.value] = (
+                ak.sum(four_bjets_p4, axis=1, keepdims=True).pt * GeV
+            )
+            events[OutputVariables.ETA_4B.value] = ak.sum(
+                four_bjets_p4, axis=1, keepdims=True
+            ).eta
+            events[OutputVariables.PHI_4B.value] = ak.sum(
+                four_bjets_p4, axis=1, keepdims=True
+            ).phi
+            # calculate bb features
+            if OutputVariables.BB_DM.value in output_variable_names:
+                events[OutputVariables.BB_DM.value] = (
+                    make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass) * GeV
                 )
-                valid_events_mask = ~ak.is_none(valid_bjets, axis=0)
-                valid_bjets = valid_bjets[valid_events_mask]
-                events = events[valid_events_mask]
+            if OutputVariables.BB_DR.value in output_variable_names:
+                events[OutputVariables.BB_DR.value] = make_4jet_comb_array(
+                    four_bjets_p4, lambda x, y: x.deltaR(y)
+                )
+            if OutputVariables.BB_DETA.value in output_variable_names:
+                events[OutputVariables.BB_DETA.value] = make_4jet_comb_array(
+                    four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
+                )
+
+            if is_mc:
+                ###### Truth match the H1 and H2 to get correct pairing ######
+                events[OutputVariables.LABEL_PAIRING.value] = get_truth_HH_pairing(
+                    events.jet_truth_H_parent_mask[hh_jet_idx],
+                    invalid_label=-1,
+                )
                 logger.info(
-                    "Events passing previous cut and %s %s b-tags with %s and %s efficiency: %s (weighted: %s)",
-                    bjet_selection["count"]["operator"],
-                    bjet_selection["count"]["value"],
-                    bjet_selection["model"],
-                    bjet_selection["efficiency"],
-                    len(events),
-                    ak.sum(events.event_weight),
+                    "Events with incorrect HH jet pairings: %s (fraction: %s)",
+                    ak.sum(events[OutputVariables.LABEL_PAIRING.value] < 0),
+                    ak.sum(events[OutputVariables.LABEL_PAIRING.value] < 0)
+                    / len(events),
                 )
                 cutname = "_".join(
                     [
-                        "bjets",
-                        f"tagger_{btagger}",
-                        f"count_{bjet_selection['count']['value']}",
+                        "incorrect_HH_pairs",
                     ]
                 ).replace(".", "p")
-                update_cutflow(cutflow, cutname, valid_events_mask, events.event_weight)
-                if len(events) == 0:
-                    out_fields = get_common(
-                        events.fields, [*output_variable_names, *output_label_names]
-                    )
-                    return events[out_fields], cutflow
-
-                # select and save diHiggs candidates jets
-                jets_p4 = ak.zip(
-                    {
-                        "btag": events[f"jet_btag_{btagger}"],
-                        **{k: events[f"jet_{k}"] for k in kin_labels},
-                    },
-                    with_name="Momentum4D",
+                update_cutflow(
+                    cutflow,
+                    cutname,
+                    events[OutputVariables.LABEL_PAIRING.value] < 0,
+                    events.event_weight[
+                        events[OutputVariables.LABEL_PAIRING.value] < 0
+                    ],
                 )
-                hh_jet_idx, non_hh_jet_idx = select_hh_jet_candidates(
-                    jets=jets_p4, valid_jets_mask=valid_bjets
-                )
-                events["hh_jet_idx"] = hh_jet_idx
-                events["non_hh_jet_idx"] = non_hh_jet_idx
-                four_bjets_p4 = jets_p4[events.hh_jet_idx]
-                events[OutputVariables.M_4B.value] = (
-                    ak.sum(four_bjets_p4, axis=1).mass * GeV
-                )
-                events[OutputVariables.PT_4B.value] = (
-                    ak.sum(four_bjets_p4, axis=1, keepdims=True).pt * GeV
-                )
-                events[OutputVariables.ETA_4B.value] = ak.sum(
-                    four_bjets_p4, axis=1, keepdims=True
-                ).eta
-                events[OutputVariables.PHI_4B.value] = ak.sum(
-                    four_bjets_p4, axis=1, keepdims=True
-                ).phi
-                # calculate bb features
-                if OutputVariables.BB_DM.value in output_variable_names:
-                    events[OutputVariables.BB_DM.value] = (
-                        make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass)
-                        * GeV
-                    )
-                if OutputVariables.BB_DR.value in output_variable_names:
-                    events[OutputVariables.BB_DR.value] = make_4jet_comb_array(
-                        four_bjets_p4, lambda x, y: x.deltaR(y)
-                    )
-                if OutputVariables.BB_DETA.value in output_variable_names:
-                    events[OutputVariables.BB_DETA.value] = make_4jet_comb_array(
-                        four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
-                    )
-            else:
-                # Form Higgs candidates from jets with highest b-tagging probabilities
-                btag_jets_descending = ak.argsort(
-                    events[f"jet_btag_{btagger}_pb"], axis=1, ascending=False
-                )
-                jets_p4 = ak.zip(
-                    {
-                        **{k: events[f"jet_{k}"] for k in kin_labels},
-                        "btag": events[f"jet_btag_{btagger}_pb"],
-                    },
-                    with_name="Momentum4D",
-                )
-                top_btag_indices = btag_jets_descending[:, :4]
-                four_bjets_p4 = jets_p4[top_btag_indices]
-                events[OutputVariables.M_4B.value] = (
-                    ak.sum(four_bjets_p4, axis=1).mass * GeV
-                )
-                events[OutputVariables.PT_4B.value] = (
-                    ak.sum(four_bjets_p4, axis=1, keepdims=True).pt * GeV
-                )
-                events[OutputVariables.ETA_4B.value] = ak.sum(
-                    four_bjets_p4, axis=1, keepdims=True
-                ).eta
-                events[OutputVariables.PHI_4B.value] = ak.sum(
-                    four_bjets_p4, axis=1, keepdims=True
-                ).phi
-                # calculate bb features
-                if OutputVariables.BB_DM.value in output_variable_names:
-                    events[OutputVariables.BB_DM.value] = (
-                        make_4jet_comb_array(four_bjets_p4, lambda x, y: (x + y).mass)
-                        * GeV
-                    )
-                if OutputVariables.BB_DR.value in output_variable_names:
-                    events[OutputVariables.BB_DR.value] = make_4jet_comb_array(
-                        four_bjets_p4, lambda x, y: x.deltaR(y)
-                    )
-                if OutputVariables.BB_DETA.value in output_variable_names:
-                    events[OutputVariables.BB_DETA.value] = make_4jet_comb_array(
-                        four_bjets_p4, lambda x, y: abs(x.eta - y.eta)
-                    )
-
-                if is_mc:
-                    ###### Truth match the H1 and H2 to get correct pairing ######
-                    events[OutputVariables.LABEL_PAIRING.value] = get_correct_pairing(
-                        events.jet_truth_H_parent_mask[top_btag_indices],
-                        invalid_label=-1,
-                    )
-                    logger.info(
-                        "Number of incorrect HH jet pairings: %s (fraction: %s)",
-                        ak.sum(events[OutputVariables.LABEL_PAIRING.value] < 0),
-                        ak.sum(events[OutputVariables.LABEL_PAIRING.value] < 0)
-                        / len(events),
-                    )
 
     ############################################
     # Analysis selections
